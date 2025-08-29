@@ -1,0 +1,6 @@
+
+<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <rect width="24" height="24" rx="4" fill="#FCBC7C"/>
+  <text x="12" y="16" textAnchor="middle" fontSize="10" fontWeight="bold" fill="white">PT</text>
+  <circle cx="18" cy="6" r="2" fill="#ff0000"/>
+</svg>

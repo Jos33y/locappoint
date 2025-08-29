@@ -1,33 +1,40 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import Header from './components/Header'
+import Hero from './components/Hero'
+import Features from './components/Features'
+import Audience from './components/Audience'
+import Benefits from './components/Benefits'
+import Validation from './components/Validation'
+import Waitlist from './components/Waitlist'
+import Footer from './components/Footer'
+import './styles/variables.css'
+import './styles/globals.css'
+import './styles/layout.css'
+import './styles/components.css'
+import './styles/forms.css'
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const App = () => {
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="announcement-bar">
+        <div className="container">
+          <p className="announcement-bar__text">
+            🚀 Launching soon in Lisbon & Porto — Join the waitlist
+          </p>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+
+      <Header />
+
+      <main>
+        <Hero />
+        <Features />
+        <Audience />
+        <Benefits />
+        <Validation />
+        <Waitlist />
+      </main>
+
+      <Footer />
     </>
   )
 }
