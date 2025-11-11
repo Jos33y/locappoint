@@ -8,7 +8,7 @@ const Footer = () => {
                             © 2025 LocAppoint • A FlowleXx Group initiative
                         </p>
                         <p className="footer__dev">
-                            Crafted with ❤️ by <a href="#" className="footer__dev-link">The Brick Dev</a>
+                            Crafted with ❤️ by <a href="https://thebrickdev.com/" target="_blank" className="footer__dev-link">The Brick Dev</a>
                         </p>
                     </div>
                     <nav className="footer__nav" aria-label="Footer navigation">

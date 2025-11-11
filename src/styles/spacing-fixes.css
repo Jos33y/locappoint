@@ -1,0 +1,223 @@
+/* ========== SECTION SPACING FIXES - MOBILE OPTIMIZED ========== */
+
+/* Base section padding with mobile-first approach */
+section {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Specific sections with adjusted spacing */
+.stats {
+    padding: clamp(2rem, 5vw, 3rem) 0;
+}
+
+.features {
+    padding-top: clamp(3rem, 8vw, 5rem);
+    padding-bottom: clamp(2.5rem, 6vw, 4rem);
+}
+
+.how-it-works {
+    padding-top: clamp(2.5rem, 6vw, 4rem);
+    padding-bottom: clamp(3rem, 8vw, 5rem);
+}
+
+.testimonials {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+}
+
+.audience {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+}
+
+.benefits {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+}
+
+.problem-solution {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+}
+
+.comparison {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+}
+
+.pricing {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+}
+
+.validation {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+}
+
+.faq {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+}
+
+.cta-section {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+}
+
+.waitlist {
+    padding: clamp(3rem, 8vw, 5rem) 0;
+}
+
+/* Hero specific - account for header */
+.hero {
+    padding-top: calc(var(--header-height) + clamp(2rem, 6vw, 5rem));
+    padding-bottom: clamp(3rem, 8vw, 5rem);
+    min-height: calc(100vh - var(--header-height));
+}
+
+/* Section headers - consistent spacing */
+.section-title {
+    margin-bottom: clamp(1rem, 3vw, 1.5rem);
+}
+
+.section-subtitle {
+    margin-bottom: clamp(2rem, 5vw, 3rem);
+}
+
+/* Card grids - consistent gaps */
+.features__main-grid,
+.features__additional-grid,
+.audience__grid,
+.benefits__grid,
+.testimonials__grid {
+    gap: clamp(1.5rem, 4vw, 2rem);
+}
+
+.stats__grid {
+    gap: clamp(1rem, 3vw, 2rem);
+}
+
+/* ========== MOBILE RESPONSIVE SPACING (< 768px) ========== */
+@media (max-width: 768px) {
+    section {
+        padding: clamp(2.5rem, 7vw, 4rem) 0;
+    }
+
+    .stats {
+        padding: clamp(1.5rem, 4vw, 2.5rem) 0;
+    }
+
+    .features {
+        padding-bottom: clamp(2rem, 5vw, 3rem);
+    }
+
+    .how-it-works {
+        padding-top: clamp(2rem, 5vw, 3rem);
+    }
+
+    .hero {
+        padding-top: calc(var(--header-height) + clamp(1.5rem, 5vw, 3rem));
+        padding-bottom: clamp(2.5rem, 6vw, 4rem);
+        min-height: auto;
+    }
+
+    /* Reduce internal spacing */
+    .section-title {
+        margin-bottom: clamp(0.75rem, 2.5vw, 1.25rem);
+    }
+
+    .section-subtitle {
+        margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+    }
+
+    /* Tighter grid gaps on mobile */
+    .features__main-grid,
+    .audience__grid,
+    .benefits__grid,
+    .testimonials__grid {
+        gap: clamp(1.25rem, 3vw, 1.5rem);
+    }
+
+    .stats__grid {
+        gap: clamp(0.75rem, 2vw, 1rem);
+    }
+}
+
+/* ========== SMALL MOBILE (< 480px) ========== */
+@media (max-width: 480px) {
+    section {
+        padding: clamp(2rem, 6vw, 3rem) 0;
+    }
+
+    .stats {
+        padding: clamp(1.25rem, 3vw, 2rem) 0;
+    }
+
+    .hero {
+        padding-top: calc(var(--header-height) + clamp(1.25rem, 4vw, 2rem));
+        padding-bottom: clamp(2rem, 5vw, 3rem);
+    }
+
+    .features {
+        padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
+    }
+
+    .how-it-works {
+        padding-top: clamp(1.5rem, 4vw, 2.5rem);
+    }
+
+    /* Even tighter spacing */
+    .section-title {
+        margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+        margin-bottom: 1.5rem;
+    }
+
+    .features__main-grid,
+    .audience__grid,
+    .benefits__grid,
+    .testimonials__grid {
+        gap: 1.25rem;
+    }
+
+    .stats__grid {
+        gap: 0.75rem;
+    }
+}
+
+/* ========== VERY SMALL SCREENS (< 380px) ========== */
+@media (max-width: 380px) {
+    section {
+        padding: 2rem 0;
+    }
+
+    .stats {
+        padding: 1.5rem 0;
+    }
+
+    .hero {
+        padding-top: calc(var(--header-height) + 1.5rem);
+        padding-bottom: 2rem;
+    }
+
+    .features,
+    .how-it-works,
+    .audience,
+    .benefits,
+    .testimonials,
+    .comparison,
+    .pricing,
+    .validation,
+    .faq,
+    .cta-section,
+    .waitlist {
+        padding: 2rem 0;
+    }
+}
+
+/* ========== TABLET (768px - 1024px) ========== */
+@media (min-width: 769px) and (max-width: 1024px) {
+    section {
+        padding: clamp(3.5rem, 7vw, 5rem) 0;
+    }
+
+    .hero {
+        padding-top: calc(var(--header-height) + clamp(2.5rem, 5vw, 4rem));
+    }
+}

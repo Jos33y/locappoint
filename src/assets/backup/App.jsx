@@ -29,8 +29,7 @@ import './styles/waitlist.css'
 import './styles/spacing-fixes.css'
 import './styles/section-utilities.css'
 import './styles/components.css'
-import './styles/waitlist-msg.css'
-import './styles/responsive-fixes.css' 
+import './styles/responsive-fixes.css'
 
 
 const App = () => {

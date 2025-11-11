@@ -1,5 +1,6 @@
 import { useState } from 'react'
-
+import { WHATSAPP_NO } from '../config'
+import { supabase } from '../supabase/supabaseClient'
 const Waitlist = () => {
     const [formData, setFormData] = useState({
         fullName: '',
@@ -7,6 +8,8 @@ const Waitlist = () => {
         cityService: '',
         comments: ''
     })
+    const [loading, setLoading] = useState(false)
+    const [message, setMessage] = useState({ type: '', text: '' })
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
@@ -14,12 +17,80 @@ const Waitlist = () => {
             ...prev,
             [name]: value
         }))
+        // Clear message when user starts typing
+        if (message.text) setMessage({ type: '', text: '' })
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
-        // Form is non-functional as requested - just visual feedback
-        console.log('Form would submit:', formData)
+        setLoading(true)
+        setMessage({ type: '', text: '' })
+
+        // Trim all fields
+        const trimmedData = {
+            fullName: formData.fullName.trim(),
+            email: formData.email.trim(),
+            cityService: formData.cityService.trim(),
+            comments: formData.comments.trim()
+        }
+
+        // Simple validation - check required fields
+        if (!trimmedData.fullName || !trimmedData.email || !trimmedData.cityService) {
+            setMessage({
+                type: 'error',
+                text: 'Please fill in all required fields.'
+            })
+            setLoading(false)
+            return
+        }
+
+        // Simple email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(trimmedData.email)) {
+            setMessage({
+                type: 'error',
+                text: 'Please enter a valid email address.'
+            })
+            setLoading(false)
+            return
+        }
+
+        try {
+            const { error } = await supabase
+                .from('waitlist')
+                .insert([
+                    {
+                        full_name: trimmedData.fullName,
+                        email: trimmedData.email,
+                        city_service: trimmedData.cityService,
+                        comments: trimmedData.comments || null
+                    }
+                ])
+
+            if (error) throw error
+
+            // Success
+            setMessage({
+                type: 'success',
+                text: '🎉 Success! You\'re on the early access list!'
+            })
+            
+            // Clear form
+            setFormData({
+                fullName: '',
+                email: '',
+                cityService: '',
+                comments: ''
+            })
+        } catch (error) {
+            console.error('Error saving to waitlist:', error)
+            setMessage({
+                type: 'error',
+                text: 'Something went wrong. Please try again or contact us on WhatsApp.'
+            })
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -49,6 +120,7 @@ const Waitlist = () => {
                                     value={formData.fullName}
                                     onChange={handleInputChange}
                                     required
+                                    disabled={loading}
                                     aria-describedby="fullName-error"
                                 />
                             </div>
@@ -65,6 +137,7 @@ const Waitlist = () => {
                                     value={formData.email}
                                     onChange={handleInputChange}
                                     required
+                                    disabled={loading}
                                     aria-describedby="email-error"
                                 />
                             </div>
@@ -78,10 +151,11 @@ const Waitlist = () => {
                                     id="cityService"
                                     name="cityService"
                                     className="form-input"
-                                    placeholder="e.g., Lisbon — Fitness Trainer"
+                                    placeholder="e.g., Lisbon – Fitness Trainer"
                                     value={formData.cityService}
                                     onChange={handleInputChange}
                                     required
+                                    disabled={loading}
                                     aria-describedby="cityService-error"
                                 />
                             </div>
@@ -98,23 +172,30 @@ const Waitlist = () => {
                                     placeholder="Tell us about your business or any specific needs..."
                                     value={formData.comments}
                                     onChange={handleInputChange}
+                                    disabled={loading}
                                 />
                             </div>
 
+                            {message.text && (
+                                <div className={`form-message form-message--${message.type}`}>
+                                    {message.text}
+                                </div>
+                            )}
+
                             <div className="waitlist__actions">
                                 <button
-                                    type="button"
+                                    type="submit"
                                     className="btn btn--primary btn--large btn--full"
+                                    disabled={loading}
                                 >
-                                    Join the Early Access List
+                                    {loading ? 'Joining...' : 'Join the Early Access List'}
                                 </button>
 
                                 <a
-                                    href="https://wa.me/00000000000"
+                                    href={`https://wa.me/${WHATSAPP_NO}`}
                                     className="btn btn--secondary btn--large btn--full"
                                     target="_blank"
-                                    rel="noopener noreferrer"
-                                >
+                                    rel="noopener noreferrer">
                                     Chat with Us on WhatsApp
                                 </a>
                             </div>
