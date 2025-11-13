@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Handshake, User, Phone, Mail, Building2, MessageSquare } from 'lucide-react'
-import { supabase } from '../../config/supabase'
 import AppHeader from '../../components/common/AppHeader'
-import AppFooter from '../../components/common/AppFooter'
+import AppFooter from '../../components/common/Appfooter'
+import { supabase } from '../../config/supabase'
 import '../../styles/app/partnership.css'
 
 const AppPartnership = () => {

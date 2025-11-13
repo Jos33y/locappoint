@@ -6,7 +6,7 @@ const AppFooter = () => {
     const currentYear = new Date().getFullYear()
 
     return (
-        <footer className="app-footer">
+        <footer className="app-footer"> 
             <div className="container">
                 <div className="footer-content">
                     {/* Brand Section */}

@@ -29,7 +29,7 @@ const AppHeader = () => {
             navigate(dashboardPath)
         }
     }
-
+ 
     return (
         <header className="app-header-public">
             <div className="container">
