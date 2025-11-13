@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react'
 import { supabase } from '../../config/supabase'
-import AppHeader from '../../components/common/Appheader'
+import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 import '../../styles/app/contact.css'
 

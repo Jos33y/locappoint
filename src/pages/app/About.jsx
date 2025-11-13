@@ -1,5 +1,5 @@
 import { Calendar, Users, Clock, Heart, Target, Zap } from 'lucide-react'
-import AppHeader from '../../components/common/Appheader'
+import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 import '../../styles/app/about.css'
 

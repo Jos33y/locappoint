@@ -1,6 +1,6 @@
 
 import AppFooter from '../../../components/common/Appfooter'
-import AppHeader from '../../../components/common/Appheader'
+import AppHeader from '../../../components/common/AppHeader'
 import '../../../styles/app/legal.css'
 
 const PrivacyPolicy = () => {

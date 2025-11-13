@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Calendar, Users, Clock, ArrowRight } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import '../../styles/app/home.css'
-import AppHeader from '../../components/common/Appheader'
+import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 
 const AppHome = () => {

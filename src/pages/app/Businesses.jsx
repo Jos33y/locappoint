@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import AppHeader from '../../components/common/Appheader'
+import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 import { supabase } from '../../config/supabase'
 import { Search as SearchIcon, MapPin, Filter, X } from 'lucide-react'
