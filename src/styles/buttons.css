@@ -1,30 +1,31 @@
-/* ========== BUTTONS ========== */
+/* ========== BUTTONS - MODERATE SIZING ========== */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    padding: var(--space-4) var(--space-8);
-    font-size: var(--text-base);
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--text-sm);
     font-weight: var(--font-weight-semibold);
     font-family: var(--font-body);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     transition: all var(--transition-base);
     cursor: pointer;
     border: none;
     text-decoration: none;
     white-space: nowrap;
+    line-height: 1.5;
 }
 
 .btn--primary {
     background: var(--gradient-cta);
     color: var(--text-primary);
-    box-shadow: var(--shadow-glow-purple);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
 }
 
 .btn--primary:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 40px rgba(139, 92, 246, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
 }
 
 .btn--secondary {
@@ -35,7 +36,18 @@
 
 .btn--secondary:hover {
     background: var(--accent-primary);
-    box-shadow: var(--shadow-glow-orange);
+}
+
+.btn--outline {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+}
+
+.btn--outline:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-medium);
+    color: var(--text-primary);
 }
 
 .btn--whatsapp {
@@ -45,17 +57,23 @@
 
 .btn--whatsapp:hover {
     background: #1FAD54;
-    transform: translateY(-2px) scale(1.02);
+    transform: translateY(-2px);
 }
 
+/* Button Sizes */
 .btn--small {
     padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
+}
+
+.btn--medium {
+    padding: var(--space-3) var(--space-6);
     font-size: var(--text-sm);
 }
 
 .btn--large {
-    padding: var(--space-5) var(--space-12);
-    font-size: var(--text-lg);
+    padding: var(--space-4) var(--space-8);
+    font-size: var(--text-base);
 }
 
 .btn--full {
@@ -64,4 +82,45 @@
 
 .btn:active {
     transform: scale(0.98);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Icon buttons */
+.btn-icon {
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-medium);
+}
+
+/* Button groups */
+.btn-group {
+    display: inline-flex;
+    gap: var(--space-2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .btn {
+        padding: var(--space-3) var(--space-5);
+    }
+    
+    .btn--large {
+        padding: var(--space-3) var(--space-6);
+        font-size: var(--text-sm);
+    }
 }

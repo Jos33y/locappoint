@@ -1,0 +1,65 @@
+/* ========== LANGUAGE TOGGLE STYLES ========== */
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  margin-left: var(--space-3);
+  margin-right: var(--space-3);
+}
+
+.language-toggle:hover {
+  background: var(--glass-hover);
+  border-color: var(--accent-primary);
+  transform: scale(1.05);
+}
+
+.language-toggle:active {
+  transform: scale(0.98);
+}
+
+.language-toggle__flag {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.language-toggle__text {
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .language-toggle {
+    position: absolute;
+    top: 50%;
+    right: 60px; /* Space for hamburger button */
+    transform: translateY(-50%);
+    padding: var(--space-1) var(--space-2);
+    margin: 0;
+  }
+  
+  .language-toggle__text {
+    display: none; /* Show only flag on mobile */
+  }
+  
+  .language-toggle__flag {
+    font-size: 1.4em;
+  }
+}
+
+@media (max-width: 480px) {
+  .language-toggle {
+    right: 50px;
+  }
+}

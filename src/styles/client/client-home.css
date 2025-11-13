@@ -1,0 +1,118 @@
+/* ========================================
+   CLIENT HOME PAGE
+   ======================================== */
+
+.client-home {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.welcome-section {
+    background: var(--gradient-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    margin-bottom: var(--space-8);
+    text-align: center;
+}
+
+.welcome-section h1 {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.welcome-section p {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Quick Search */
+.quick-search {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+}
+
+.quick-search h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-4) 0;
+}
+
+.search-form {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.search-input-group {
+    flex: 1;
+    display: flex;
+    gap: var(--space-2);
+}
+
+.search-input-group input,
+.search-input-group select {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-input-group input:focus,
+.search-input-group select:focus {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: var(--accent-primary);
+}
+
+/* Upcoming Appointments Section */
+.upcoming-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+}
+
+.upcoming-section h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-4) 0;
+}
+
+.upcoming-appointments-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.upcoming-appointment-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.upcoming-appointment-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .welcome-section {
+        padding: var(--space-6) var(--space-4);
+    }
+
+    .search-form {
+        flex-direction: column;
+    }
+}

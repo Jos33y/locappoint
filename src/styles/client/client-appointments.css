@@ -1,0 +1,148 @@
+/* ========================================
+   MY APPOINTMENTS PAGE
+   ======================================== */
+
+.my-appointments-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.appointments-filters {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+    background: var(--bg-secondary);
+    padding: var(--space-2);
+    border-radius: var(--radius-lg);
+    overflow-x: auto;
+}
+
+.appointment-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.appointment-filter-btn:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.appointment-filter-btn.active {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.my-appointments-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.my-appointment-card {
+    display: flex;
+    gap: var(--space-4);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    transition: all var(--transition-fast);
+}
+
+.my-appointment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.appointment-date-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    height: 70px;
+    background: var(--accent-primary);
+    color: white;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.appointment-info-section {
+    flex: 1;
+    min-width: 0;
+}
+
+.appointment-business-name {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.appointment-service-name {
+    font-size: var(--text-base);
+    color: var(--accent-secondary);
+    margin: 0 0 var(--space-3) 0;
+}
+
+.appointment-details-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+}
+
+.appointment-detail-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.appointment-actions-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-3);
+}
+
+.appointment-action-buttons {
+    display: flex;
+    gap: var(--space-2);
+}
+
+@media (max-width: 768px) {
+    .my-appointment-card {
+        flex-direction: column;
+    }
+
+    .appointment-date-badge {
+        width: 100%;
+        flex-direction: row;
+        height: auto;
+        padding: var(--space-3);
+    }
+
+    .appointment-actions-section {
+        align-items: stretch;
+    }
+
+    .appointment-action-buttons {
+        flex-direction: column;
+    }
+
+    .appointment-action-buttons .btn {
+        width: 100%;
+    }
+}

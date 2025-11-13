@@ -1,0 +1,12 @@
+/* ========================================
+   CLIENT PORTAL - MAIN STYLES
+   Imports all client-related stylesheets
+   ======================================== */
+
+@import url('./client-base.css');
+@import url('./client-home.css');
+@import url('./client-search.css');
+@import url('./client-appointments.css');
+@import url('./client-profile.css');
+@import url('./client-business-page.css');
+@import url('./client-booking.css');

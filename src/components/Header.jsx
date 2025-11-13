@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
+import { useLandingTranslation } from '../contexts/LandingTranslationContext'
+import LanguageToggle from './LanguageToggle'
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const { t } = useLandingTranslation()
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -42,61 +45,73 @@ const Header = () => {
 
     return (
         <header className="header" role="banner">
-            <div className="container">
-                <div className="header__content">
-                    <div className="header__logo">
-                        <a href="#" className="header__logo-link" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                            LocAppoint
-                        </a>
-                    </div>
+            <div className="header__content">
+                {/* Logo */}
+                <div className="header__logo">
+                    <a 
+                        href="#" 
+                        className="header__logo-link" 
+                        onClick={(e) => {
+                            e.preventDefault()
+                            window.scrollTo({ top: 0, behavior: 'smooth' })
+                        }}>
+                        LocAppoint
+                    </a>
+                </div>
 
-                    {/* Desktop Navigation */}
-                    <nav className="header__nav header__nav--desktop" role="navigation" aria-label="Main navigation">
-                        <ul className="header__nav-list">
-                            <li className="header__nav-item">
-                                <button
-                                    className="header__nav-link"
-                                    onClick={() => scrollToSection('features')}
-                                    type="button">
-                                    Features
-                                </button>
-                            </li>
-                            <li className="header__nav-item">
-                                <button
-                                    className="header__nav-link"
-                                    onClick={() => scrollToSection('audience')}
-                                    type="button">
-                                    For Whom
-                                </button>
-                            </li>
-                            <li className="header__nav-item">
-                                <button
-                                    className="header__nav-link"
-                                    onClick={() => scrollToSection('benefits')}
-                                    type="button">
-                                    Why LocAppoint
-                                </button>
-                            </li>
-                            <li className="header__nav-item">
-                                <button
-                                    className="header__nav-link"
-                                    onClick={() => scrollToSection('waitlist')}
-                                    type="button">
-                                    Waitlist
-                                </button>
-                            </li>
-                        </ul>
-                    </nav>
+                {/* Desktop Navigation - Center */}
+                <nav className="header__nav header__nav--desktop" role="navigation" aria-label="Main navigation">
+                    <ul className="header__nav-list">
+                        <li className="header__nav-item">
+                            <button
+                                className="header__nav-link"
+                                onClick={() => scrollToSection('features')}
+                                type="button">
+                                {t('nav.features')}
+                            </button>
+                        </li>
+                        <li className="header__nav-item">
+                            <button
+                                className="header__nav-link"
+                                onClick={() => scrollToSection('audience')}
+                                type="button">
+                                {t('nav.forWhom')}
+                            </button>
+                        </li>
+                        <li className="header__nav-item">
+                            <button
+                                className="header__nav-link"
+                                onClick={() => scrollToSection('benefits')}
+                                type="button">
+                                {t('nav.whyLocAppoint')}
+                            </button>
+                        </li>
+                        <li className="header__nav-item">
+                            <button
+                                className="header__nav-link"
+                                onClick={() => scrollToSection('waitlist')}
+                                type="button">
+                                {t('nav.waitlist')}
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
 
-                    {/* Desktop CTA Button */}
+                {/* Desktop Actions - Right Side */}
+                <div className="header__actions">
+                    <LanguageToggle />
                     <button
                         className="btn btn--primary btn--small header__cta-btn"
                         onClick={() => scrollToSection('waitlist')}
                         type="button">
-                        Join the Waitlist
+                        {t('nav.joinWaitlist')}
                     </button>
+                </div>
 
-                    {/* Hamburger Menu Button */}
+                {/* Mobile Actions - Right Side */}
+                <div className="header__mobile-actions">
+              
+                    <LanguageToggle />
                     <button
                         className={`header__menu-toggle ${isMenuOpen ? 'header__menu-toggle--open' : ''}`}
                         onClick={toggleMenu}
@@ -119,7 +134,7 @@ const Header = () => {
                             className="header__nav-link"
                             onClick={() => scrollToSection('features')}
                             type="button">
-                            Features
+                            {t('nav.features')}
                         </button>
                     </li>
                     <li className="header__nav-item">
@@ -127,7 +142,7 @@ const Header = () => {
                             className="header__nav-link"
                             onClick={() => scrollToSection('audience')}
                             type="button">
-                            For Whom
+                            {t('nav.forWhom')}
                         </button>
                     </li>
                     <li className="header__nav-item">
@@ -135,7 +150,7 @@ const Header = () => {
                             className="header__nav-link"
                             onClick={() => scrollToSection('benefits')}
                             type="button">
-                            Why LocAppoint
+                            {t('nav.whyLocAppoint')}
                         </button>
                     </li>
                     <li className="header__nav-item">
@@ -143,7 +158,7 @@ const Header = () => {
                             className="header__nav-link"
                             onClick={() => scrollToSection('waitlist')}
                             type="button">
-                            Waitlist
+                            {t('nav.waitlist')}
                         </button>
                     </li>
                     <li className="header__nav-item header__nav-item--cta">
@@ -151,7 +166,7 @@ const Header = () => {
                             className="btn btn--primary btn--medium"
                             onClick={() => scrollToSection('waitlist')}
                             type="button">
-                            Join the Waitlist
+                            {t('nav.joinWaitlist')}
                         </button>
                     </li>
                 </ul>

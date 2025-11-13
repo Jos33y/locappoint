@@ -1,0 +1,261 @@
+/* ========================================
+   AVAILABILITY PAGE
+   ======================================== */
+
+.availability-page {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Presets Section */
+.presets-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+}
+
+.presets-section h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-4) 0;
+}
+
+.presets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-3);
+}
+
+.preset-btn {
+    padding: var(--space-4);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: center;
+    line-height: 1.4;
+}
+
+.preset-btn small {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-top: var(--space-1);
+    font-weight: var(--font-weight-normal);
+}
+
+.preset-btn:hover {
+    border-color: var(--accent-primary);
+    background: rgba(139, 92, 246, 0.05);
+    transform: translateY(-2px);
+}
+
+/* Schedule Section */
+.schedule-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+}
+
+.schedule-section h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-4) 0;
+}
+
+.schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+/* Day Row */
+.day-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.day-row.active {
+    border-color: var(--accent-primary);
+    background: rgba(139, 92, 246, 0.03);
+}
+
+.day-row.inactive {
+    opacity: 0.6;
+}
+
+.day-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 140px;
+}
+
+.day-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all var(--transition-fast);
+}
+
+.toggle-icon {
+    transition: all var(--transition-fast);
+}
+
+.toggle-icon.active {
+    color: var(--accent-success);
+}
+
+.toggle-icon.inactive {
+    color: var(--text-muted);
+}
+
+.day-name {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.day-name strong {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+}
+
+.closed-badge {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    background: var(--bg-tertiary);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+}
+
+/* Day Times */
+.day-times {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.time-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.time-input-group label {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    font-weight: var(--font-weight-medium);
+}
+
+.time-input-group input[type="time"] {
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.time-input-group input[type="time"]:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.time-separator {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin: 0 var(--space-1);
+}
+
+/* Tips Section */
+.tips-section {
+    background: rgba(6, 182, 212, 0.05);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+}
+
+.tips-section h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-3) 0;
+}
+
+.tips-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.tips-section li {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    padding-left: var(--space-4);
+    position: relative;
+}
+
+.tips-section li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--accent-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .day-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .day-header {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .day-times {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .presets-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .time-input-group {
+        flex: 1;
+        min-width: 100px;
+    }
+}
