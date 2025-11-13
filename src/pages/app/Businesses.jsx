@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 import { supabase } from '../../config/supabase'
 import { Search as SearchIcon, MapPin, Filter, X } from 'lucide-react'
 import '../../styles/app/businesses.css'
+import AppHeader from '../../components/common/AppHeader'
 
 const AppBusinesses = () => {
     const [searchParams, setSearchParams] = useSearchParams()
