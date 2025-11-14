@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../../contexts/AuthContext'
+import { useAuth } from '../../../hooks/useAuth'
 import { ArrowLeft, Mail, CheckCircle2, AlertCircle } from 'lucide-react'
 import '../../../styles/auth/auth.css'
 

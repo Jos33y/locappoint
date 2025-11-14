@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { Building2, MapPin, Phone, Mail, Globe, MessageCircle, Save, ArrowLeft } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/forms.css'

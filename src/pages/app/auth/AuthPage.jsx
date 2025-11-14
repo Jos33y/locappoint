@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { useAuth } from '../../../contexts/AuthContext'
+import { useAuth } from '../../../hooks/useAuth'
 import { User, Building2, AlertCircle, CheckCircle2 } from 'lucide-react'
 import '../../../styles/auth/auth.css'
 
@@ -15,7 +15,7 @@ const AuthPage = () => {
     const initialTab = isVerified ? 'signin' : (navState.tab || 'signup')  // Default to signup instead of signin
     const initialUserType = navState.userType || 'client'
 
-    const [activeTab, setActiveTab] = useState(initialTab)
+    const [activeTab, setActiveTab] = useState(initialTab) 
     const [userType, setUserType] = useState(initialUserType)
     const [formData, setFormData] = useState({
         email: '',
@@ -30,8 +30,6 @@ const AuthPage = () => {
 
 
     const { signIn, signUp, signInWithGoogle } = useAuth()
-
-    const from = location.state?.from?.pathname || '/app'
 
     // Update when navigation state changes
     useEffect(() => {
@@ -111,7 +109,7 @@ const AuthPage = () => {
                 navigate(redirectPath)
             } else {
                 // Sign up
-                const { data, error } = await signUp(formData.email, formData.password, {
+                const { error } = await signUp(formData.email, formData.password, {
                     full_name: formData.full_name,
                     phone: formData.phone,
                     user_type: userType,

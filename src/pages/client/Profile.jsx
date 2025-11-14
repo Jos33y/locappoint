@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../config/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { User, Mail, Phone, Lock, Bell, Eye, EyeOff, AlertTriangle, CheckCircle } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/forms.css'
@@ -9,7 +9,6 @@ import '../../styles/client/client.css'
 
 const ClientProfile = () => {
     const { userProfile, user } = useAuth()
-    const [loading, setLoading] = useState(false)
 
     // Profile data state
     const [profileData, setProfileData] = useState({

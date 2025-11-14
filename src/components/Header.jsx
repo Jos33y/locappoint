@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useLandingTranslation } from '../contexts/LandingTranslationContext'
+import { useLandingTranslation } from '../hooks/useLandingTranslation'
 import LanguageToggle from './LanguageToggle'
 
 const Header = () => {

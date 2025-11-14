@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../config/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { Clock, Save, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/forms.css'
@@ -26,15 +26,15 @@ const PortalAvailability = () => {
     ]
 
     // Initialize with default closed schedule
-    const initializeSchedule = () => {
-        return daysOfWeek.map(day => ({
-            day_of_week: day.id,
-            start_time: '09:00',
-            end_time: '18:00',
-            is_active: false,
-            isNew: true
-        }))
-    }
+    // const initializeSchedule = () => {
+    //     return daysOfWeek.map(day => ({
+    //         day_of_week: day.id,
+    //         start_time: '09:00',
+    //         end_time: '18:00',
+    //         is_active: false,
+    //         isNew: true
+    //     }))
+    // }
 
     useEffect(() => {
         fetchBusinessAndAvailability()

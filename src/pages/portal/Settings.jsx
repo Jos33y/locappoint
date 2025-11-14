@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../config/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import {
     Settings as SettingsIcon,
@@ -23,7 +23,6 @@ import '../../styles/portal/settings.css'
 const PortalSettings = () => {
     const { userProfile, signOut } = useAuth()
     const navigate = useNavigate()
-    const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
 

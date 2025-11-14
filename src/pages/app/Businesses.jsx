@@ -23,7 +23,7 @@ const AppBusinesses = () => {
 
     useEffect(() => {
         applyFilters()
-    }, [businesses, searchQuery, selectedCategory, selectedCity])
+    }, [businesses, searchQuery, selectedCategory, selectedCity, applyFilters])
 
     const fetchBusinesses = async () => {
         try {

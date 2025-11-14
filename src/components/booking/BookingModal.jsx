@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { X, Calendar, Clock, User, Mail, Phone, MessageSquare, CheckCircle } from 'lucide-react'
 import '../../styles/client/client.css'
 
 const BookingModal = ({ business, service, onClose, onSuccess }) => {
     const { user, userProfile } = useAuth()
     const navigate = useNavigate()
-    
+
     const [step, setStep] = useState(1)
     const [selectedDate, setSelectedDate] = useState(null)
     const [selectedTime, setSelectedTime] = useState(null)
     const [availableSlots, setAvailableSlots] = useState([])
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
-    
+
     const [formData, setFormData] = useState({
         name: userProfile?.full_name || '',
         email: userProfile?.email || user?.email || '',
@@ -36,7 +36,7 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
                     setSelectedDate(date)
                     setSelectedTime(booking.time)
                     setStep(2) // Go to time selection step (will show selected time)
-                    
+
                     // After a brief moment, move to form step
                     setTimeout(() => {
                         setStep(3)
@@ -60,7 +60,7 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
         setLoading(true)
         try {
             const dayOfWeek = selectedDate.getDay()
-            
+
             // Get business availability for this day
             const { data: availability, error: availError } = await supabase
                 .from('availability')
@@ -101,18 +101,18 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
 
     const generateTimeSlots = (availability, appointments, serviceDuration) => {
         const slots = []
-        
+
         availability.forEach(window => {
             let currentTime = parseTime(window.start_time)
             const endTime = parseTime(window.end_time)
-            
+
             while (currentTime < endTime) {
                 // Check if service fits in remaining window
                 const slotEnd = addMinutes(currentTime, serviceDuration)
                 if (slotEnd <= endTime) {
                     const timeString = formatTime(currentTime)
                     const isBooked = appointments.some(apt => apt.appointment_time === timeString)
-                    
+
                     if (!isBooked) {
                         slots.push({
                             time: timeString,
@@ -124,7 +124,7 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
                 currentTime = addMinutes(currentTime, 30) // 30-min intervals
             }
         })
-        
+
         return slots.sort((a, b) => a.time.localeCompare(b.time))
     }
 
@@ -151,7 +151,7 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
 
     const handleTimeSelect = (time) => {
         setSelectedTime(time)
-        
+
         // Check if user is logged in before proceeding to form
         if (!user) {
             // Save booking state to resume after login
@@ -162,18 +162,18 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
                 time: time
             }
             sessionStorage.setItem('pendingBooking', JSON.stringify(bookingState))
-            
+
             // Redirect to auth page
-            navigate('/app/auth', { 
-                state: { 
+            navigate('/app/auth', {
+                state: {
                     tab: 'signin',
                     returnTo: `/${business.slug}`,
                     message: 'Please sign in to complete your booking'
-                } 
+                }
             })
             return
         }
-        
+
         setStep(3)
     }
 
@@ -188,18 +188,18 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
 
     const validateForm = () => {
         const newErrors = {}
-        
+
         if (!formData.name.trim()) newErrors.name = 'Name is required'
         if (!formData.email.trim()) newErrors.email = 'Email is required'
         if (!formData.phone.trim()) newErrors.phone = 'Phone is required'
-        
+
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        
+
         if (!validateForm()) return
 
         setLoading(true)
@@ -217,7 +217,7 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
                 status: 'pending'
             }
 
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('appointments')
                 .insert([appointmentData])
                 .select()
@@ -243,13 +243,13 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
         const days = []
         const today = new Date()
         today.setHours(0, 0, 0, 0)
-        
+
         for (let i = 0; i < 30; i++) {
             const date = new Date(today)
             date.setDate(today.getDate() + i)
             days.push(date)
         }
-        
+
         return days
     }
 
@@ -342,7 +342,7 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
                         <p className="text-muted">
                             {selectedDate?.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })}
                         </p>
-                        
+
                         {loading ? (
                             <div className="loading-container">
                                 <div className="spinner"></div>
@@ -446,8 +446,8 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
                                 ></textarea>
                             </div>
 
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 className="btn btn--primary"
                                 style={{ width: '100%' }}
                                 disabled={loading}>

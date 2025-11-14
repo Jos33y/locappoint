@@ -1,4 +1,4 @@
-import { useLandingTranslation } from "../contexts/LandingTranslationContext";
+import { useLandingTranslation } from "../hooks/useLandingTranslation";
 
 const LanguageToggle = () => {
   const { language, toggleLanguage } = useLandingTranslation();

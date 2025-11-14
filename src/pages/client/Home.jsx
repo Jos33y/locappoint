@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { Search, Calendar, MapPin, Clock, ArrowRight } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/client/client.css'

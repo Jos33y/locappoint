@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
 import { MapPin, Phone, Mail, Globe, Clock, ArrowLeft } from 'lucide-react'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 import BookingModal from '../../components/booking/BookingModal'
@@ -12,7 +12,7 @@ const PublicBusinessPage = () => {
     const { businessSlug } = useParams()
     const navigate = useNavigate()
     const location = useLocation()
-    const { user, userProfile } = useAuth()
+    const { userProfile } = useAuth()
 
     const [business, setBusiness] = useState(null)
     const [services, setServices] = useState([])

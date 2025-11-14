@@ -1,4 +1,5 @@
-import { LandingTranslationProvider, useLandingTranslation } from "../../contexts/LandingTranslationContext";
+import { LandingTranslationProvider } from "../../contexts/LandingTranslationContext";
+import { useLandingTranslation } from "../../hooks/useLandingTranslation";
 import Footer from "../../components/Footer"
 import Header from "../../components/Header"
 import Hero from "./Hero";

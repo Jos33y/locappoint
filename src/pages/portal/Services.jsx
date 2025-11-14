@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../config/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { Briefcase, Plus, Edit2, Trash2, DollarSign, Clock, Save, X } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/forms.css'

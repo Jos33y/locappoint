@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../config/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { Calendar, Clock, Mail, Phone, User, CheckCircle, XCircle, MoreVertical, Filter } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/forms.css'
