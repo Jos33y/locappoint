@@ -24,7 +24,7 @@
   top: 0;
   z-index: 100;
 }
-
+ 
 .portal-sidebar-header,
 .client-sidebar-header {
   padding: var(--space-6);

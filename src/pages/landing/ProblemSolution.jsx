@@ -1,137 +1,230 @@
-import { X, Check, TrendingDown, TrendingUp } from 'lucide-react'
+// ProblemSolution.jsx - Enhanced Reality section with animated contrast
+// Location: src/pages/landing/ProblemSolution.jsx
+
+import { motion } from 'framer-motion'
+import { 
+    X, 
+    Check, 
+    Phone, 
+    Clock, 
+    Calendar, 
+    Users, 
+    TrendingUp, 
+    Bell, 
+    AlertCircle, 
+    Zap,
+    Sparkles 
+} from 'lucide-react'
 
 const ProblemSolution = () => {
     const problems = [
-        {
-            problem: "Missing calls = Lost revenue",
-            solution: "24/7 automated booking system",
-            problemIcon: <TrendingDown size={24} />,
-            solutionIcon: <TrendingUp size={24} />,
-            description: "Stop losing money from missed calls. Clients book anytime, anywhere—even when you're busy or sleeping."
-        },
-        {
-            problem: "Messy paper calendars & spreadsheets",
-            solution: "Smart digital calendar sync",
-            problemIcon: <TrendingDown size={24} />,
-            solutionIcon: <TrendingUp size={24} />,
-            description: "No more double bookings or scheduling conflicts. Everything is organized, synced, and accessible from any device."
-        },
-        {
-            problem: "Clients forget appointments (30% no-show rate)",
-            solution: "Automatic SMS & email reminders",
-            problemIcon: <TrendingDown size={24} />,
-            solutionIcon: <TrendingUp size={24} />,
-            description: "Reduce no-shows by 80%. Smart reminders go out automatically 24h and 2h before appointments."
-        },
-        {
-            problem: "Hard to get discovered locally",
-            solution: "Local discovery marketplace",
-            problemIcon: <TrendingDown size={24} />,
-            solutionIcon: <TrendingUp size={24} />,
-            description: "Get found by thousands of local clients actively searching for your services in Lisbon & Porto."
-        },
-        {
-            problem: "Unprofessional image hurts credibility",
-            solution: "Beautiful branded booking page",
-            problemIcon: <TrendingDown size={24} />,
-            solutionIcon: <TrendingUp size={24} />,
-            description: "Look professional with a custom booking page that builds trust and makes clients want to book you."
-        },
-        {
-            problem: "Hours wasted on admin work",
-            solution: "Everything on autopilot",
-            problemIcon: <TrendingDown size={24} />,
-            solutionIcon: <TrendingUp size={24} />,
-            description: "Save 10+ hours per week. Focus on your work while LocAppoint handles scheduling, reminders, and management."
-        }
+        { icon: Phone, text: 'Losing clients to missed calls and messages' },
+        { icon: Clock, text: 'Wasting hours on scheduling and reminders' },
+        { icon: Calendar, text: 'Double bookings and calendar chaos' },
+        { icon: Users, text: 'No way for new clients to find you' }
     ]
 
+    const solutions = [
+        { icon: Bell, text: 'Clients book 24/7, even when you sleep' },
+        { icon: Calendar, text: 'Smart scheduling with automatic reminders' },
+        { icon: TrendingUp, text: 'Get discovered by thousands of local clients' },
+        { icon: Users, text: 'Build loyalty with seamless rebooking' }
+    ]
+
+    const problemVariants = {
+        hidden: { opacity: 0, x: -30 },
+        visible: (i) => ({
+            opacity: 1,
+            x: 0,
+            transition: { 
+                duration: 0.5, 
+                delay: i * 0.1,
+                ease: [0.22, 1, 0.36, 1]
+            }
+        })
+    }
+
+    const solutionVariants = {
+        hidden: { opacity: 0, x: 30 },
+        visible: (i) => ({
+            opacity: 1,
+            x: 0,
+            transition: { 
+                duration: 0.5, 
+                delay: i * 0.1 + 0.2,
+                ease: [0.22, 1, 0.36, 1]
+            }
+        })
+    }
+
     return (
-        <section className="problem-solution" id="problem-solution">
+        <section className="problem-solution" id="problem">
+            {/* Background */}
+            <div className="problem-solution__bg">
+                <div className="problem-solution__grid" />
+                <div className="problem-solution__glow problem-solution__glow--1" />
+                <div className="problem-solution__glow problem-solution__glow--2" />
+                <div className="problem-solution__glow problem-solution__glow--center" />
+                
+                {/* Floating particles */}
+                {[...Array(6)].map((_, i) => (
+                    <motion.div
+                        key={i}
+                        className="problem-solution__particle"
+                        style={{
+                            left: `${15 + i * 15}%`,
+                            top: `${20 + (i % 3) * 25}%`,
+                        }}
+                        animate={{
+                            y: [0, -20, 0],
+                            opacity: [0.3, 0.6, 0.3]
+                        }}
+                        transition={{
+                            duration: 5 + i,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: i * 0.5
+                        }}
+                    />
+                ))}
+            </div>
+
             <div className="container">
-                <div className="problem-solution__header">
-                    <span className="section-badge">The Reality</span>
+                <motion.div 
+                    className="section-header"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <div className="section-badge">
+                        <AlertCircle size={14} />
+                        <span>The Reality</span>
+                    </div>
                     <h2 className="section-title">
-                        Running a local business is hard. We make it easier.
+                        Running a local business is 
+                        <span className="ai-gradient-text"> hard enough</span>
                     </h2>
                     <p className="section-subtitle">
-                        You didn't start your business to spend hours on admin work. 
-                        Here's how we solve the biggest headaches of local service providers.
+                        You started your business to do what you love, not to spend hours managing bookings.
                     </p>
-                </div>
+                </motion.div>
 
-                <div className="problem-solution__grid">
-                    {problems.map((item, index) => (
-                        <div key={index} className="solution-card">
-                            {/* Problem Side */}
-                            <div className="solution-card__problem">
-                                <div className="solution-card__icon solution-card__icon--problem">
-                                    <X size={20} />
-                                </div>
-                                <div className="solution-card__label solution-card__label--problem">
-                                    Problem
-                                </div>
-                                <h3 className="solution-card__title solution-card__title--problem">
-                                    {item.problem}
-                                </h3>
-                            </div>
-
-                            {/* Arrow */}
-                            <div className="solution-card__arrow">
-                                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                                    <path d="M10 20h20m0 0l-7-7m7 7l-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                            </div>
-
-                            {/* Solution Side */}
-                            <div className="solution-card__solution">
-                                <div className="solution-card__icon solution-card__icon--solution">
-                                    <Check size={20} />
-                                </div>
-                                <div className="solution-card__label solution-card__label--solution">
-                                    Solution
-                                </div>
-                                <h3 className="solution-card__title solution-card__title--solution">
-                                    {item.solution}
-                                </h3>
-                            </div>
-
-                            {/* Description */}
-                            <p className="solution-card__description">
-                                {item.description}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Stats Bar */}
-                <div className="problem-solution__stats">
-                    <div className="stat-item">
-                        <div className="stat-item__value">80%</div>
-                        <div className="stat-item__label">Fewer no-shows</div>
-                    </div>
-                    <div className="stat-item">
-                        <div className="stat-item__value">10+</div>
-                        <div className="stat-item__label">Hours saved/week</div>
-                    </div>
-                    <div className="stat-item">
-                        <div className="stat-item__value">2x</div>
-                        <div className="stat-item__label">More bookings</div>
-                    </div>
-                    <div className="stat-item">
-                        <div className="stat-item__value">24/7</div>
-                        <div className="stat-item__label">Always available</div>
-                    </div>
-                </div>
-
-                <div className="problem-solution__cta">
-                    <button
-                        className="btn btn--primary btn--large"
-                        onClick={() => document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' })}
+                <div className="problem-solution__layout">
+                    {/* Problems Column */}
+                    <motion.div 
+                        className="problem-solution__column problem-solution__column--problems"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5 }}
                     >
-                        Solve These Problems Today
-                    </button>
+                        {/* Column glow effect */}
+                        <div className="problem-solution__column-glow" />
+                        
+                        <div className="problem-solution__column-header">
+                            <div className="problem-solution__icon-badge problem-solution__icon-badge--red">
+                                <X size={18} strokeWidth={2.5} />
+                            </div>
+                            <span>Without LocAppoint</span>
+                        </div>
+                        
+                        <ul className="problem-solution__list">
+                            {problems.map((item, index) => (
+                                <motion.li 
+                                    key={index}
+                                    className="problem-solution__item problem-solution__item--problem"
+                                    custom={index}
+                                    variants={problemVariants}
+                                    initial="hidden"
+                                    whileInView="visible"
+                                    viewport={{ once: true }}
+                                >
+                                    <div className="problem-solution__item-x">
+                                        <X size={14} strokeWidth={3} />
+                                    </div>
+                                    <div className="problem-solution__item-icon">
+                                        <item.icon size={18} />
+                                    </div>
+                                    <span className="problem-solution__item-text">{item.text}</span>
+                                </motion.li>
+                            ))}
+                        </ul>
+                    </motion.div>
+
+                    {/* Center divider with transformation visual */}
+                    <div className="problem-solution__divider">
+                        <div className="problem-solution__divider-line" />
+                        <motion.div 
+                            className="problem-solution__vs"
+                            animate={{ 
+                                boxShadow: [
+                                    '0 0 20px rgba(139, 92, 246, 0.3)',
+                                    '0 0 40px rgba(139, 92, 246, 0.6)',
+                                    '0 0 20px rgba(139, 92, 246, 0.3)'
+                                ]
+                            }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                        >
+                            <Zap size={22} />
+                        </motion.div>
+                        <div className="problem-solution__divider-line" />
+                    </div>
+
+                    {/* Solutions Column */}
+                    <motion.div 
+                        className="problem-solution__column problem-solution__column--solutions"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                    >
+                        {/* Column glow effect */}
+                        <div className="problem-solution__column-glow" />
+                        
+                        <div className="problem-solution__column-header">
+                            <div className="problem-solution__icon-badge problem-solution__icon-badge--green">
+                                <Check size={18} strokeWidth={2.5} />
+                            </div>
+                            <span>With LocAppoint</span>
+                            <Sparkles size={14} className="problem-solution__sparkle" />
+                        </div>
+                        
+                        <ul className="problem-solution__list">
+                            {solutions.map((item, index) => (
+                                <motion.li 
+                                    key={index}
+                                    className="problem-solution__item problem-solution__item--solution"
+                                    custom={index}
+                                    variants={solutionVariants}
+                                    initial="hidden"
+                                    whileInView="visible"
+                                    viewport={{ once: true }}
+                                >
+                                    <div className="problem-solution__item-check">
+                                        <Check size={14} strokeWidth={3} />
+                                    </div>
+                                    <div className="problem-solution__item-icon">
+                                        <item.icon size={18} />
+                                    </div>
+                                    <span className="problem-solution__item-text">{item.text}</span>
+                                </motion.li>
+                            ))}
+                        </ul>
+                    </motion.div>
                 </div>
+
+                {/* Bottom transformation message */}
+                <motion.div 
+                    className="problem-solution__transform-msg"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                >
+                    <Zap size={16} />
+                    <span>Transform your business operations today</span>
+                </motion.div>
             </div>
         </section>
     )

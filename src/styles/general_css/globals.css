@@ -1,0 +1,214 @@
+/* ========== GLOBAL TYPOGRAPHY ========== */
+/* Note: Reset is in reset.css, utilities in utilities.css */
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    line-height: 1.2;
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+    letter-spacing: -0.02em;
+}
+
+h1 { font-size: var(--text-5xl); }
+h2 { font-size: var(--text-4xl); }
+h3 { font-size: var(--text-3xl); font-weight: var(--font-weight-medium); }
+h4 { font-size: var(--text-2xl); font-weight: var(--font-weight-medium); }
+h5 { font-size: var(--text-xl); font-weight: var(--font-weight-medium); }
+h6 { font-size: var(--text-lg); font-weight: var(--font-weight-medium); }
+
+/* Paragraphs */
+p {
+    margin-bottom: var(--space-4);
+    line-height: 1.65;
+}
+
+/* Links */
+a {
+    color: var(--accent-primary);
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--accent-secondary);
+}
+
+/* Strong text */
+strong, b {
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Small text */
+small {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+/* ========== KEYFRAME ANIMATIONS ========== */
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ========== RESPONSIVE TYPOGRAPHY ========== */
+
+@media (max-width: 768px) {
+    h1, h2 {
+        font-weight: var(--font-weight-medium);
+    }
+}
+
+@media (max-width: 400px) {
+    h1 { font-size: var(--text-3xl); }
+    h2 { font-size: var(--text-2xl); }
+    h3 { font-size: var(--text-xl); }
+}
+
+/* ========== SECTION HEADER - UNIFIED SYSTEM ========== */
+/* All sections use these exact same styles for consistency */
+
+.section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 64px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Badge - identical everywhere */
+.section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(139, 92, 246, 0.06);
+    border: 1px solid rgba(139, 92, 246, 0.12);
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #A78BFA;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.section-badge svg {
+    width: 12px;
+    height: 12px;
+    opacity: 0.7;
+}
+
+/* Title - larger, more prominent */
+.section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.5vw, 2.75rem) !important;
+    font-weight: 600;
+    color: #FAFAFA;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    display: block !important;
+    text-align: center;
+}
+
+/* Subtitle - balanced with title */
+.section-subtitle {
+    font-size: 1.05rem;
+    color: #71717A;
+    line-height: 1.7;
+    max-width: 540px;
+    margin: 0 auto;
+    font-weight: 400;
+}
+
+/* Gradient text for accent words */
+.ai-gradient-text {
+    background: linear-gradient(135deg, #A78BFA 0%, #22D3EE 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline !important;
+}
+
+@media (max-width: 768px) {
+    .section-header {
+        margin-bottom: 48px;
+    }
+
+    .section-badge {
+        padding: 5px 12px;
+        font-size: 0.65rem;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 1.85rem !important;
+        margin-bottom: 14px;
+    }
+
+    .section-subtitle {
+        font-size: 0.95rem;
+        padding: 0 16px;
+    }
+}
+
+@media (max-width: 400px) {
+    .section-header {
+        margin-bottom: 40px;
+    }
+
+    .section-title {
+        font-size: 1.6rem !important;
+    }
+
+    .section-subtitle {
+        font-size: 0.9rem;
+    }
+}

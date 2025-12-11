@@ -7,4 +7,4 @@ export const useLandingTranslation = () => {
     throw new Error('useLandingTranslation must be used within LandingTranslationProvider');
   }
   return context;
-}; 
+};  

@@ -1,0 +1,45 @@
+/* ========== MASTER CSS INDEX ========== */
+/* Import order matters - do not rearrange */
+
+/* 1. Design tokens (variables) - MUST be first */
+@import '../general_css/variables.css';
+
+/* 2. Reset and base styles */
+@import '../general_css/reset.css';
+
+/* 3. Global typography and utilities */
+@import '../general_css/globals.css';
+
+/* 4. Component styles (alphabetical for easy finding) */
+@import '../general_css/buttons.css';
+
+/* ===== AI AESTHETIC SYSTEM ===== */
+/* 5. AI visual foundation - glows, grids, cards */
+@import './ai-aesthetic.css';
+
+/* ===== LANDING PAGE SPECIFIC ===== */
+/* 6. Component styles */
+@import './language-toggle.css';
+
+/* 7. Layout components */
+@import './header-footer.css';
+
+/* 8. Page sections (in page order) */
+@import './hero.css';
+@import './hero-dashboard.css';
+@import './stats.css';
+@import './problem-solution.css';
+@import './features.css';
+@import './ai-capabilities.css';
+@import './audience.css';
+@import './benefits.css';
+@import './how-it-works.css';
+@import './faq.css';
+@import './final-cta.css';
+
+/* 9. Modals and floating elements */
+@import './modals.css';
+@import './floating-buttons.css';
+
+/* 10. Utilities - MUST be last */
+@import '../general_css/utilities.css';

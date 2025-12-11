@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import LandingPage from './pages/landing/LandingPage'
-import AdminPage from './pages/admin/admin_page'
+import AdminPage from './pages/admin/AdminPage'
 import AuthPage from './pages/app/auth/AuthPage'
 import ForgotPassword from './pages/app/auth/ForgotPassword'
 import AppHome from './pages/app/AppHome'
@@ -26,8 +26,8 @@ import ClientProfile from './pages/client/Profile'
 import TermsOfService from './pages/app/legal/TermsOfService'
 import PrivacyPolicy from './pages/app/legal/PrivacyPolicy'
 import ScrollToTop from './components/common/ScrollToTop'
-import './styles/variables.css'
-import './styles/buttons.css'
+// import './styles/variables.css'
+// import './styles/buttons.css'
 
 
 const App = () => {
@@ -39,7 +39,7 @@ const App = () => {
           <Routes>
             {/* landing page */}
             <Route path="/" element={<LandingPage />} />
-            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin" element={<AdminPage />} /> 
 
             {/* app pages */}
             <Route path="/app" element={<AppHome />} />

@@ -19,7 +19,7 @@ const AppPartnership = () => {
     })
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
-    const [error, setError] = useState('')
+    const [error, setError] = useState('') 
 
     const organizationTypes = [
         'Events & Entertainment',

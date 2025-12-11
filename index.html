@@ -4,42 +4,461 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description"
-    content="LocAppoint helps local businesses and independent professionals get discovered and get booked. Simple appointment booking for Portuguese SMEs." />
-  <meta name="keywords" content="appointment booking, local business, Portugal, SME, booking system" />
-  <meta name="theme-color" content="#0B0F1E">
+  
+  <!-- Primary Meta Tags -->
+  <title>LocAppoint - Let clients find you and book you</title>
+  <meta name="title" content="LocAppoint - Let clients find you and book you">
+  <meta name="description" content="LocAppoint helps local businesses and independent professionals get discovered and get booked. Simple appointment booking for businesses in Portugal and Nigeria." />
+  <meta name="keywords" content="appointment booking, local business, Portugal, Nigeria, Lisbon, Porto, Lagos, SME, booking system, online scheduling, business management, salon booking, spa booking" />
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+  <meta name="author" content="LocAppoint - A FlowleXx Group Initiative">
+  <meta name="theme-color" content="#08090c">
+  <meta name="msapplication-TileColor" content="#08090c">
   <link rel="canonical" href="https://locappoint.com/">
-  <meta name="author" content="LocAppoint">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://locappoint.com/">
   <meta property="og:title" content="LocAppoint - Let clients find you and book you">
-  <meta property="og:description" content="The booking platform for local businesses in Portugal">
-  <meta property="og:image" content="https://locappoint.com/og-image.svg">
+  <meta property="og:description" content="The booking platform for local businesses. Get discovered, get booked, grow your business.">
+  <meta property="og:image" content="https://locappoint.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="LocAppoint">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="pt_PT">
 
   <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://locappoint.com/">
-  <meta property="twitter:title" content="LocAppoint - Let clients find you and book you">
-  <meta property="twitter:description" content="The booking platform for local businesses in Portugal">
-  <meta property="twitter:image" content="https://locappoint.com/og-image.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://locappoint.com/">
+  <meta name="twitter:title" content="LocAppoint - Let clients find you and book you">
+  <meta name="twitter:description" content="The booking platform for local businesses. Get discovered, get booked, grow your business.">
+  <meta name="twitter:image" content="https://locappoint.com/og-image.png">
+  <meta name="twitter:site" content="@locappoint">
+  <meta name="twitter:creator" content="@locappoint">
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
+  <!-- Structured Data / JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "LocAppoint",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "LocAppoint helps local businesses and independent professionals get discovered and get booked. Simple appointment booking platform.",
+    "url": "https://locappoint.com",
+    "author": {
+      "@type": "Organization",
+      "name": "FlowleXx Group"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "sameAs": [
+      "https://www.facebook.com/profile.php?id=61583886238494",
+      "https://instagram.com/locappoint",
+      "https://twitter.com/locappoint",
+      "https://linkedin.com/company/locappoint",
+      "https://youtube.com/@locappoint",
+      "https://tiktok.com/@locappoint_"
+    ]
+  }
+  </script>
 
-  <title>LocAppoint - Let clients find you and book you</title>
+  <!-- Inline Loader Styles (prevents white flash) -->
+  <style>
+    /* Critical CSS for initial load */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      background: #08090c;
+      min-height: 100vh;
+    }
+
+    #root {
+      background: #08090c;
+      min-height: 100vh;
+    }
+
+    /* ========== PREMIUM LOADER ========== */
+    .initial-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #08090c;
+      overflow: hidden;
+    }
+
+    /* Animated grid background */
+    .loader-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%);
+      animation: grid-move 20s linear infinite;
+    }
+
+    @keyframes grid-move {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(60px, 60px); }
+    }
+
+    /* Floating particles */
+    .loader-particles {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .loader-particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(139, 92, 246, 0.6);
+      border-radius: 50%;
+      animation: particle-float 8s ease-in-out infinite;
+    }
+
+    .loader-particle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; }
+    .loader-particle:nth-child(2) { left: 20%; top: 80%; animation-delay: 1s; }
+    .loader-particle:nth-child(3) { left: 30%; top: 40%; animation-delay: 2s; background: rgba(6, 182, 212, 0.6); }
+    .loader-particle:nth-child(4) { left: 50%; top: 10%; animation-delay: 0.5s; }
+    .loader-particle:nth-child(5) { left: 60%; top: 70%; animation-delay: 1.5s; background: rgba(6, 182, 212, 0.6); }
+    .loader-particle:nth-child(6) { left: 70%; top: 30%; animation-delay: 2.5s; }
+    .loader-particle:nth-child(7) { left: 80%; top: 60%; animation-delay: 0.8s; }
+    .loader-particle:nth-child(8) { left: 90%; top: 50%; animation-delay: 1.8s; background: rgba(6, 182, 212, 0.6); }
+
+    @keyframes particle-float {
+      0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
+      50% { transform: translateY(-30px) scale(1.5); opacity: 0.8; }
+    }
+
+    /* Large animated orbs */
+    .loader-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      animation: orb-pulse 4s ease-in-out infinite;
+    }
+
+    .loader-orb-1 {
+      top: 30%;
+      left: 20%;
+      width: 300px;
+      height: 300px;
+      background: rgba(139, 92, 246, 0.2);
+    }
+
+    .loader-orb-2 {
+      bottom: 30%;
+      right: 20%;
+      width: 250px;
+      height: 250px;
+      background: rgba(6, 182, 212, 0.15);
+      animation-delay: 2s;
+    }
+
+    .loader-orb-3 {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+      animation: orb-center-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes orb-pulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.1); }
+    }
+
+    @keyframes orb-center-pulse {
+      0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.15); }
+    }
+
+    /* Main content container */
+    .loader-content {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Logo container - the star of the show */
+    .loader-logo-container {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    /* Rotating gradient ring */
+    .loader-spin-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      padding: 3px;
+      background: conic-gradient(
+        from 0deg,
+        #8B5CF6,
+        #06B6D4,
+        #8B5CF6,
+        transparent,
+        transparent
+      );
+      animation: spin-ring 2s linear infinite;
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      -webkit-mask-composite: xor;
+    }
+
+    @keyframes spin-ring {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Pulsing rings */
+    .loader-pulse-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid rgba(139, 92, 246, 0.3);
+      animation: pulse-ring 2.5s ease-out infinite;
+    }
+
+    .loader-pulse-ring-1 { inset: 10px; }
+    .loader-pulse-ring-2 { inset: 10px; animation-delay: 0.8s; }
+    .loader-pulse-ring-3 { inset: 10px; animation-delay: 1.6s; }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.6; border-color: rgba(139, 92, 246, 0.4); }
+      100% { transform: scale(1.8); opacity: 0; border-color: rgba(6, 182, 212, 0.1); }
+    }
+
+    /* Inner glass circle */
+    .loader-glass {
+      position: absolute;
+      inset: 15px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 
+        inset 0 0 30px rgba(139, 92, 246, 0.1),
+        0 0 40px rgba(139, 92, 246, 0.1);
+    }
+
+    /* Logo SVG */
+    .loader-logo {
+      position: relative;
+      z-index: 2;
+      width: 56px;
+      height: 56px;
+      animation: logo-breathe 3s ease-in-out infinite;
+    }
+
+    @keyframes logo-breathe {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.4)); }
+      50% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6)); }
+    }
+
+    /* Brand name with reveal animation */
+    .loader-brand {
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 50%, #8B5CF6 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      animation: gradient-shift 3s ease infinite;
+    }
+
+    @keyframes gradient-shift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    /* Tagline */
+    .loader-tagline {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 40px;
+      animation: fade-in 1s ease 0.5s both;
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Loading dots */
+    .loader-dots {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .loader-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #8B5CF6;
+      animation: dot-bounce 1.4s ease-in-out infinite;
+    }
+
+    .loader-dot:nth-child(1) { animation-delay: 0s; }
+    .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes dot-bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; background: #06B6D4; }
+    }
+
+    /* Fade out animation */
+    .initial-loader.fade-out {
+      animation: loader-exit 0.6s ease forwards;
+    }
+
+    @keyframes loader-exit {
+      0% { opacity: 1; }
+      50% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.02); visibility: hidden; }
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 480px) {
+      .loader-logo-container {
+        width: 120px;
+        height: 120px;
+      }
+      
+      .loader-logo {
+        width: 48px;
+        height: 48px;
+      }
+
+      .loader-brand {
+        font-size: 1.6rem;
+      }
+
+      .loader-orb-1, .loader-orb-2 {
+        display: none;
+      }
+    }
+  </style>
 </head>
 
 <body>
+  <!-- Premium Initial Loader -->
+  <div class="initial-loader" id="initial-loader">
+    <!-- Animated grid -->
+    <div class="loader-grid"></div>
+
+    <!-- Floating particles -->
+    <div class="loader-particles">
+      <div class="loader-particle"></div>
+      <div class="loader-particle"></div>
+      <div class="loader-particle"></div>
+      <div class="loader-particle"></div>
+      <div class="loader-particle"></div>
+      <div class="loader-particle"></div>
+      <div class="loader-particle"></div>
+      <div class="loader-particle"></div>
+    </div>
+
+    <!-- Animated orbs -->
+    <div class="loader-orb loader-orb-1"></div>
+    <div class="loader-orb loader-orb-2"></div>
+    <div class="loader-orb loader-orb-3"></div>
+
+    <!-- Main content -->
+    <div class="loader-content">
+      <!-- Logo with effects -->
+      <div class="loader-logo-container">
+        <!-- Rotating gradient ring -->
+        <div class="loader-spin-ring"></div>
+        
+        <!-- Pulsing rings -->
+        <div class="loader-pulse-ring loader-pulse-ring-1"></div>
+        <div class="loader-pulse-ring loader-pulse-ring-2"></div>
+        <div class="loader-pulse-ring loader-pulse-ring-3"></div>
+        
+        <!-- Glass effect circle -->
+        <div class="loader-glass"></div>
+        
+        <!-- Logo SVG -->
+        <svg class="loader-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 20C5.79 20 4 18.21 4 16C4 14.14 5.28 12.59 7 12.14C7 12.09 7 12.05 7 12C7 9.24 9.24 7 12 7C13.86 7 15.46 8.12 16.25 9.69C16.65 9.56 17.07 9.5 17.5 9.5C19.71 9.5 21.5 11.29 21.5 13.5C21.5 13.67 21.49 13.84 21.46 14H22C24.21 14 26 15.79 26 18C26 20.21 24.21 22 22 22H8V20Z" fill="url(#cloud-grad)" opacity="0.6"/>
+          <rect x="11" y="14" width="10" height="9" rx="2" stroke="url(#lock-grad)" stroke-width="2" fill="none"/>
+          <path d="M13 14V11C13 9.34 14.34 8 16 8C17.66 8 19 9.34 19 11V14" stroke="url(#lock-grad)" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <circle cx="16" cy="18" r="1.5" fill="url(#lock-grad)"/>
+          <defs>
+            <linearGradient id="cloud-grad" x1="4" y1="7" x2="26" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#06B6D4"/>
+              <stop offset="1" stop-color="#8B5CF6"/>
+            </linearGradient>
+            <linearGradient id="lock-grad" x1="11" y1="8" x2="21" y2="23" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#8B5CF6"/>
+              <stop offset="1" stop-color="#06B6D4"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <!-- Brand name -->
+      <div class="loader-brand">LocAppoint</div>
+      
+      <!-- Tagline -->
+      <div class="loader-tagline">Let clients find you and book you</div>
+
+      <!-- Loading dots -->
+      <div class="loader-dots">
+        <div class="loader-dot"></div>
+        <div class="loader-dot"></div>
+        <div class="loader-dot"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>

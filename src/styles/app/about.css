@@ -300,7 +300,7 @@
 
     .section-title {
         font-size: var(--text-2xl);
-    }
+    } 
 
     .values-grid {
         grid-template-columns: 1fr;

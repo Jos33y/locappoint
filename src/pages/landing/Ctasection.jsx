@@ -1,67 +1,185 @@
-import { WHATSAPP_NO } from "../../config"
+// FinalCTA.jsx - Enhanced Final Call to Action with particles and effects
+// Location: src/pages/landing/FinalCTA.jsx
 
-const CTASection = () => {
+import { motion } from 'framer-motion'
+import { ArrowRight, Sparkles, Rocket, Star, Zap } from 'lucide-react'
+
+const FinalCTA = ({ onWaitlistClick, onPartnershipClick }) => {
+    // Generate floating particles
+    const particles = [...Array(20)].map((_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 4 + 2,
+        duration: Math.random() * 10 + 10,
+        delay: Math.random() * 5
+    }))
+
+    // Floating icons data
+    const floatingIcons = [
+        { Icon: Star, x: '10%', y: '20%', delay: 0 },
+        { Icon: Zap, x: '85%', y: '25%', delay: 1 },
+        { Icon: Rocket, x: '15%', y: '75%', delay: 2 },
+        { Icon: Sparkles, x: '90%', y: '70%', delay: 0.5 },
+    ]
+
     return (
-        <section className="cta-section">
-            <div className="container">
-                <div className="cta-section__content">
-                    <div className="cta-section__badge">
-                        <span className="cta-section__badge-dot"></span>
-                        <span>Launching Soon</span>
-                    </div>
-
-                    <h2 className="cta-section__title">
-                        Ready to Stop Missing Bookings?
-                    </h2>
-
-                    <p className="cta-section__subtitle">
-                        Join 500+ local businesses building their digital presence with LocAppoint.
-                        Be among the first to launch in Lisbon & Porto.
-                    </p>
-
-                    <div className="cta-section__buttons">
-                        <button
-                            className="btn btn--primary btn--large"
-                            onClick={() => document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' })}
-                        >
-                            Join the Waitlist
-                        </button>
-                        <a
-                            href={`https://wa.me/${WHATSAPP_NO}`}
-                            className="btn btn--secondary btn--large"
-                            target="_blank"
-                            rel="noopener noreferrer">
-                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                            </svg>
-                            Chat with Us
-                        </a>
-                    </div>
-
-                    <div className="cta-section__trust">
-                        <div className="cta-section__trust-item">
-                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            <span>No credit card required</span>
-                        </div>
-                        <div className="cta-section__trust-item">
-                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            <span>3 months premium free</span>
-                        </div>
-                        <div className="cta-section__trust-item">
-                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            <span>Cancel anytime</span>
-                        </div>
-                    </div>
+        <section className="final-cta" id="cta">
+            {/* Background */}
+            <div className="final-cta__bg">
+                <div className="final-cta__grid-pattern" />
+                
+                {/* Floating particles */}
+                <div className="final-cta__particles">
+                    {particles.map((particle) => (
+                        <motion.div
+                            key={particle.id}
+                            className="final-cta__particle"
+                            style={{
+                                left: `${particle.x}%`,
+                                top: `${particle.y}%`,
+                                width: particle.size,
+                                height: particle.size,
+                            }}
+                            animate={{
+                                y: [0, -30, 0],
+                                opacity: [0.2, 0.6, 0.2],
+                                scale: [1, 1.2, 1]
+                            }}
+                            transition={{
+                                duration: particle.duration,
+                                delay: particle.delay,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }}
+                        />
+                    ))}
                 </div>
+
+                {/* Floating icons */}
+                {floatingIcons.map(({ Icon, x, y, delay }, index) => (
+                    <motion.div
+                        key={index}
+                        className="final-cta__floating-icon"
+                        style={{ left: x, top: y }}
+                        animate={{
+                            y: [0, -15, 0],
+                            rotate: [0, index % 2 === 0 ? 10 : -10, 0],
+                            opacity: [0.3, 0.5, 0.3]
+                        }}
+                        transition={{
+                            duration: 5 + index,
+                            delay: delay,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
+                    >
+                        <Icon size={20} />
+                    </motion.div>
+                ))}
+            </div>
+
+            <div className="container">
+                <motion.div 
+                    className="final-cta__card"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                >
+                    {/* Card background effects */}
+                    <div className="final-cta__card-bg">
+                        <div className="final-cta__orb final-cta__orb--1" />
+                        <div className="final-cta__orb final-cta__orb--2" />
+                        <div className="final-cta__orb final-cta__orb--3" />
+                    </div>
+
+                    {/* Animated border */}
+                    <div className="final-cta__border" />
+
+                    <div className="final-cta__content">
+                        {/* Animated icon */}
+                        <motion.div 
+                            className="final-cta__icon"
+                            animate={{ 
+                                rotate: [0, 5, -5, 0],
+                                scale: [1, 1.05, 1]
+                            }}
+                            transition={{ 
+                                duration: 4, 
+                                repeat: Infinity, 
+                                ease: "easeInOut" 
+                            }}
+                        >
+                            <div className="final-cta__icon-ring final-cta__icon-ring--1" />
+                            <div className="final-cta__icon-ring final-cta__icon-ring--2" />
+                            <Sparkles size={32} />
+                        </motion.div>
+
+                        <motion.h2 
+                            className="final-cta__title"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.1 }}
+                        >
+                            Ready to grow your business?
+                        </motion.h2>
+                        
+                        <motion.p 
+                            className="final-cta__subtitle"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                        >
+                            Join 100+ businesses already on the waitlist. Be among the first to launch when we go live.
+                        </motion.p>
+
+                        <motion.div 
+                            className="final-cta__buttons"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                        >
+                            {/* Primary CTA with pulse effect */}
+                            <motion.button
+                                className="final-cta__btn final-cta__btn--primary"
+                                onClick={onWaitlistClick}
+                                whileHover={{ scale: 1.03, y: -2 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <span className="final-cta__btn-pulse" />
+                                <span className="final-cta__btn-text">Join the Waitlist</span>
+                                <ArrowRight size={18} />
+                            </motion.button>
+                            
+                            <motion.button
+                                className="final-cta__btn final-cta__btn--secondary"
+                                onClick={onPartnershipClick}
+                                whileHover={{ scale: 1.03, y: -2 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                Become a Partner
+                            </motion.button>
+                        </motion.div>
+
+                        <motion.p 
+                            className="final-cta__note"
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.4 }}
+                        >
+                            <Zap size={14} />
+                            <span>Free to join • No credit card required • Launch early 2025</span>
+                        </motion.p>
+                    </div>
+                </motion.div>
             </div>
         </section>
     )
 }
 
-export default CTASection 
+export default FinalCTA

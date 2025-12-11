@@ -1,71 +1,261 @@
+// HowItWorks.jsx - Enhanced How It Works with animated timeline
+// Location: src/pages/landing/HowItWorks.jsx
+
+import { useRef } from 'react'
+import { motion, useInView } from 'framer-motion'
+import { 
+    Rocket, 
+    UserPlus, 
+    Search, 
+    CalendarCheck, 
+    TrendingUp,
+    Sparkles
+} from 'lucide-react'
+
 const HowItWorks = () => {
+    const containerRef = useRef(null)
+    const isInView = useInView(containerRef, { once: true, margin: "-100px" })
+    
     const steps = [
         {
-            number: "01",
-            title: "Create Your Profile",
-            description: "Sign up in under 2 minutes. Add your business details, services, and availability. No credit card required.",
-            icon: "👤"
+            number: '01',
+            icon: UserPlus,
+            title: 'Create Your Profile',
+            description: 'Sign up in minutes. Add your services, pricing, and availability. No technical skills needed.',
+            gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+            color: '#8B5CF6',
+            colorRgb: '139, 92, 246'
         },
         {
-            number: "02",
-            title: "Customize Your Booking Page",
-            description: "Set your prices, time slots, and booking rules. Make it uniquely yours with custom branding.",
-            icon: "⚙️"
+            number: '02',
+            icon: Search,
+            title: 'Get Discovered',
+            description: 'Your business appears in our marketplace. Share your booking link on social media and WhatsApp.',
+            gradient: 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
+            color: '#06B6D4',
+            colorRgb: '6, 182, 212'
         },
         {
-            number: "03", 
-            title: "Share & Get Discovered",
-            description: "Share your booking link on social media, WhatsApp, or get discovered by local clients searching for your services.",
-            icon: "📱"
+            number: '03',
+            icon: CalendarCheck,
+            title: 'Accept Bookings',
+            description: 'Clients book directly into your calendar. Automatic confirmations and reminders are sent.',
+            gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
+            color: '#10B981',
+            colorRgb: '16, 185, 129'
         },
         {
-            number: "04",
-            title: "Accept Bookings Automatically",
-            description: "Clients book instantly, you get notified, and both get automatic reminders. It's that simple.",
-            icon: "✅"
+            number: '04',
+            icon: TrendingUp,
+            title: 'Grow Your Business',
+            description: 'Focus on your craft. Let LocAppoint handle scheduling, reminders, and client management.',
+            gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+            color: '#F59E0B',
+            colorRgb: '245, 158, 11'
         }
     ]
 
     return (
         <section className="how-it-works" id="how-it-works">
+            {/* Background */}
+            <div className="how-it-works__bg">
+                <div className="how-it-works__grid-pattern" />
+                <div className="how-it-works__glow how-it-works__glow--1" />
+                <div className="how-it-works__glow how-it-works__glow--2" />
+                
+                {/* Floating particles */}
+                <div className="how-it-works__particles">
+                    {[...Array(8)].map((_, i) => (
+                        <div 
+                            key={i} 
+                            className="how-it-works__particle"
+                            style={{
+                                left: `${10 + (i * 12)}%`,
+                                top: `${15 + (i % 3) * 30}%`,
+                                animationDelay: `${i * 0.5}s`
+                            }}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Floating decorative icons */}
+            <motion.div 
+                className="how-it-works__float how-it-works__float--1"
+                animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            >
+                <Sparkles size={18} />
+            </motion.div>
+            <motion.div 
+                className="how-it-works__float how-it-works__float--2"
+                animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            >
+                <Rocket size={16} />
+            </motion.div>
+
             <div className="container">
-                <div className="how-it-works__header">
-                    <span className="section-badge">Simple Process</span>
+                <motion.div 
+                    className="section-header"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <div className="section-badge">
+                        <Rocket size={14} />
+                        <span>How It Works</span>
+                    </div>
                     <h2 className="section-title">
-                        How It Works
+                        Up and running 
+                        <span className="ai-gradient-text"> in minutes</span>
                     </h2>
                     <p className="section-subtitle">
-                        Get started in minutes, not hours. No technical skills required.
+                        Getting started is simple. No complicated setup, no hidden fees.
                     </p>
-                </div>
+                </motion.div>
 
-                <div className="how-it-works__steps">
+                <div className="how-it-works__timeline" ref={containerRef}>
+                    {/* Animated progress line */}
+                    <div className="how-it-works__progress-track">
+                        <motion.div 
+                            className="how-it-works__progress-fill"
+                            initial={{ scaleY: 0 }}
+                            animate={isInView ? { scaleY: 1 } : { scaleY: 0 }}
+                            transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
+                        />
+                        {/* Glowing dot that travels down */}
+                        <motion.div 
+                            className="how-it-works__progress-dot"
+                            initial={{ top: '0%', opacity: 0 }}
+                            animate={isInView ? { 
+                                top: ['0%', '100%'],
+                                opacity: [0, 1, 1, 0]
+                            } : {}}
+                            transition={{ duration: 2, ease: "easeInOut", delay: 0.5 }}
+                        />
+                    </div>
+
+                    {/* Steps */}
                     {steps.map((step, index) => (
-                        <div key={index} className="step-card">
-                            <div className="step-card__number">{step.number}</div>
-                            <div className="step-card__icon">{step.icon}</div>
-                            <h3 className="step-card__title">{step.title}</h3>
-                            <p className="step-card__description">{step.description}</p>
-
-                            {index < steps.length - 1 && (
-                                <div className="step-card__connector">
-                                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
+                        <motion.div 
+                            key={index}
+                            className="how-it-works__step"
+                            initial={{ opacity: 0, x: -40 }}
+                            whileInView={{ 
+                                opacity: 1, 
+                                x: 0,
+                                transition: {
+                                    duration: 0.6,
+                                    delay: index * 0.15,
+                                    ease: [0.22, 1, 0.36, 1]
+                                }
+                            }}
+                            viewport={{ once: true }}
+                        >
+                            {/* Step indicator with icon */}
+                            <div className="how-it-works__indicator">
+                                {/* Pulsing rings */}
+                                <div 
+                                    className="how-it-works__ring how-it-works__ring--1"
+                                    style={{ borderColor: `rgba(${step.colorRgb}, 0.3)` }}
+                                />
+                                <div 
+                                    className="how-it-works__ring how-it-works__ring--2"
+                                    style={{ borderColor: `rgba(${step.colorRgb}, 0.2)` }}
+                                />
+                                
+                                {/* Icon circle */}
+                                <motion.div 
+                                    className="how-it-works__icon-circle"
+                                    style={{ background: step.gradient }}
+                                    whileHover={{ scale: 1.1 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <step.icon size={22} strokeWidth={1.5} />
+                                </motion.div>
+                                
+                                {/* Step number */}
+                                <div 
+                                    className="how-it-works__number"
+                                    style={{ color: step.color }}
+                                >
+                                    {step.number}
                                 </div>
-                            )}
-                        </div>
+                            </div>
+
+                            {/* Content card */}
+                            <motion.div 
+                                className="how-it-works__card"
+                                whileHover={{ 
+                                    y: -6,
+                                    transition: { duration: 0.3 }
+                                }}
+                            >
+                                {/* Top glow line */}
+                                <div 
+                                    className="how-it-works__card-glow"
+                                    style={{ background: step.gradient }}
+                                />
+                                
+                                {/* Corner orb */}
+                                <div 
+                                    className="how-it-works__card-orb"
+                                    style={{ background: step.gradient }}
+                                />
+
+                                <h3 className="how-it-works__title">{step.title}</h3>
+                                <p className="how-it-works__description">{step.description}</p>
+                                
+                                {/* Decorative arrow for flow */}
+                                {index < steps.length - 1 && (
+                                    <div className="how-it-works__flow-hint">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                            <path 
+                                                d="M10 4L10 16M10 16L5 11M10 16L15 11" 
+                                                stroke={step.color}
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                opacity="0.5"
+                                            />
+                                        </svg>
+                                    </div>
+                                )}
+                            </motion.div>
+                        </motion.div>
                     ))}
                 </div>
 
-                <div className="how-it-works__cta">
-                    <button
-                        className="btn btn--primary btn--large"
-                        onClick={() => document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' })}>
-                        Start Your Free Account
-                    </button>
-                    <p className="how-it-works__note">No credit card required • Free forever plan</p>
-                </div> 
+                {/* Bottom CTA hint */}
+                <motion.button 
+                    className="how-it-works__cta-hint"
+                    onClick={() => window.openWaitlistModal?.()}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
+                >
+                    <span>Ready to start?</span>
+                    <div className="how-it-works__cta-arrow">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path 
+                                d="M5 12H19M19 12L12 5M19 12L12 19" 
+                                stroke="url(#arrow-gradient)"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                            <defs>
+                                <linearGradient id="arrow-gradient" x1="5" y1="12" x2="19" y2="12">
+                                    <stop stopColor="#8B5CF6"/>
+                                    <stop offset="1" stopColor="#06B6D4"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                </motion.button>
             </div>
         </section>
     )

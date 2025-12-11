@@ -39,28 +39,28 @@ export const LandingTranslationProvider = ({ children }) => {
 // Landing page translations - organized by language
 const translations = {
   en: {
-    // Header
+    // Navbar (short & compact)
     'nav.features': 'Features',
     'nav.forWhom': 'For Whom',
-    'nav.whyLocAppoint': 'Why LocAppoint',
-    'nav.waitlist': 'Waitlist',
-    'nav.joinWaitlist': 'Join the Waitlist',
+    'nav.whyLocAppoint': 'Benefits',
+    'nav.partnership': 'Partner',
+    'nav.joinWaitlist': 'Join Waitlist',
     
     // Announcement Bar
-    'announcement.launching': '🚀 Launching soon in Lisbon & Porto - Join the waitlist',
+    'announcement.launching': 'Launching soon in Lisbon & Porto - Join the waitlist',
     
     // Add more translations as needed...
   },
   pt: {
-    // Header
-    'nav.features': 'Funcionalidades',
+    // Navbar (short & compact)
+    'nav.features': 'Recursos',
     'nav.forWhom': 'Para Quem',
-    'nav.whyLocAppoint': 'Porquê LocAppoint',
-    'nav.waitlist': 'Lista de Espera',
-    'nav.joinWaitlist': 'Entrar na Lista de Espera',
+    'nav.whyLocAppoint': 'Benefícios',
+    'nav.partnership': 'Parceiro',
+    'nav.joinWaitlist': 'Lista de Espera',
     
     // Announcement Bar
-    'announcement.launching': '🚀 Lançamento em breve em Lisboa e Porto - Entre na lista de espera',
+    'announcement.launching': 'Lançamento em breve em Lisboa e Porto - Entre na lista',
     
     // Add more translations as needed...
   }

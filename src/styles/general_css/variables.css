@@ -1,0 +1,195 @@
+/* ========== CSS VARIABLES - DESIGN SYSTEM ========== */
+
+:root {
+    /* ========== COLOR PALETTE ========== */
+    /* Background Layers */
+    --bg-primary: #0F1419;
+    --bg-secondary: #1A1F28;
+    --bg-tertiary: #252B38;
+    --bg-elevated: #2D3441;
+    
+    /* Light Theme Mix */
+    --bg-light: #F8FAFC;
+    --bg-light-secondary: #F1F5F9;
+    --bg-light-tertiary: #E2E8F0;
+    
+    /* Card Backgrounds */
+    --bg-card-dark: rgba(255, 255, 255, 0.03);
+    --bg-card-light: rgba(255, 255, 255, 0.06);
+    
+    /* Accent Colors */
+    --accent-primary: #8B5CF6;
+    --accent-secondary: #06B6D4;
+    --accent-tertiary: #A855F7;
+    --accent-success: #10B981;
+    --accent-warning: #FBBF24;
+    --accent-error: #EF4444;
+    --accent-pink: #EC4899;
+    --accent-blue: #3B82F6;
+    
+    /* WhatsApp */
+    --whatsapp-green: #25D366;
+    
+    /* Text Colors */
+    --text-primary: #FFFFFF;
+    --text-secondary: #E2E8F0;
+    --text-muted: #94A3B8;
+    --text-subtle: #64748B;
+    
+    /* Text for Light Backgrounds */
+    --text-dark: #1E293B;
+    --text-dark-secondary: #475569;
+    --text-dark-muted: #64748B;
+    
+    /* Borders */
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-medium: rgba(255, 255, 255, 0.12);
+    --border-focus: rgba(255, 255, 255, 0.20);
+    
+    /* Glass Effect */
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-hover: rgba(255, 255, 255, 0.06);
+    
+    /* Gradients */
+    --gradient-hero: radial-gradient(ellipse at top, rgba(139, 92, 246, 0.12) 0%, var(--bg-primary) 50%);
+    --gradient-purple-cyan: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+    --gradient-purple-pink: linear-gradient(135deg, #A855F7 0%, #EC4899 100%);
+    --gradient-cyan-blue: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
+    --gradient-card: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+    --gradient-text: linear-gradient(135deg, #A855F7 0%, #06B6D4 100%);
+    --gradient-accent: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+    --gradient-accent-2: linear-gradient(135deg, #06B6D4 0%, #8B5CF6 100%);
+    --gradient-cta: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+    
+    /* ========== TYPOGRAPHY ========== */
+    --font-hero: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+    
+    /* Font Weights - Reduced for readability */
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 600;
+    --font-weight-extrabold: 700;
+    --font-weight-black: 700;
+    
+    /* Font Sizes */
+    --text-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
+    --text-sm: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+    --text-base: clamp(0.875rem, 0.85rem + 0.15vw, 1rem);
+    --text-lg: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+    --text-xl: clamp(1.125rem, 1.05rem + 0.35vw, 1.25rem);
+    --text-2xl: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem);
+    --text-3xl: clamp(1.5rem, 1.35rem + 0.75vw, 2rem);
+    --text-4xl: clamp(1.875rem, 1.6rem + 1.25vw, 2.5rem);
+    --text-5xl: clamp(2.25rem, 1.9rem + 1.75vw, 3rem);
+    --text-6xl: clamp(2.75rem, 2.2rem + 2.5vw, 4rem);
+    
+    /* ========== SPACING ========== */
+    --space-px: 1px;
+    --space-0: 0;
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-14: 3.5rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+    --space-24: 6rem;
+    --space-28: 7rem;
+    --space-32: 8rem;
+    
+    /* ========== LAYOUT ========== */
+    --container-max-width: 1200px;
+    --container-padding: clamp(1rem, 4vw, 2rem);
+    --header-height: 70px;
+    --section-spacing: clamp(3rem, 8vw, 5rem);
+    --section-padding: clamp(3rem, 8vw, 5rem);
+    
+    /* ========== BORDER RADIUS ========== */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
+    
+    /* ========== SHADOWS ========== */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.15);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.18);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.22);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.28);
+    --shadow-glow-purple: 0 0 30px rgba(139, 92, 246, 0.25);
+    --shadow-glow-cyan: 0 0 30px rgba(6, 182, 212, 0.25);
+    
+    /* ========== TRANSITIONS ========== */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* ========== Z-INDEX ========== */
+    --z-base: 1;
+    --z-sticky: 50;
+    --z-header: 100;
+    --z-dropdown: 200;
+    --z-overlay: 300;
+    --z-modal: 400;
+    --z-tooltip: 500;
+    --z-floating: 600;
+    
+    /* ========== BACKDROP BLUR ========== */
+    --blur-xs: 4px;
+    --blur-sm: 8px;
+    --blur-md: 16px;
+    --blur-lg: 24px;
+    --blur-xl: 40px;
+    
+    /* ========== LINE HEIGHTS ========== */
+    --leading-none: 1;
+    --leading-tight: 1.2;
+    --leading-snug: 1.35;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.65;
+    --leading-loose: 2;
+    
+    /* ========== LETTER SPACING ========== */
+    --tracking-tighter: -0.04em;
+    --tracking-tight: -0.02em;
+    --tracking-normal: 0;
+    --tracking-wide: 0.02em;
+    --tracking-wider: 0.04em;
+    --tracking-widest: 0.08em;
+}
+
+/* ========== RESPONSIVE ADJUSTMENTS ========== */
+@media (max-width: 768px) {
+    :root {
+        --header-height: 60px;
+        --container-padding: clamp(1rem, 4vw, 1.25rem);
+    }
+}
+
+@media (max-width: 400px) {
+    :root {
+        --container-padding: 1rem;
+        --section-spacing: 2.5rem;
+        --header-height: 56px;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+    }
+}

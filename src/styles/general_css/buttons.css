@@ -1,0 +1,173 @@
+/* ========== BUTTONS - PREMIUM STYLES ========== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-body);
+    border-radius: var(--radius-lg);
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
+    max-width: 100%; /* Prevent overflow */
+    text-overflow: ellipsis;
+}
+
+/* Primary Button */
+.btn--primary {
+    background: var(--gradient-accent);
+    color: var(--text-primary);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25);
+}
+
+.btn--primary:hover {
+    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35);
+}
+
+.btn--primary:active {
+    transform: scale(0.98);
+}
+
+/* Secondary Button */
+.btn--secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.btn--secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+}
+
+/* Outline Button */
+.btn--outline {
+    background: transparent;
+    color: var(--text-primary);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.btn--outline:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: var(--accent-primary);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+}
+
+/* Ghost Button */
+.btn--ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+}
+
+.btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+/* WhatsApp Button */
+.btn--whatsapp {
+    background: var(--whatsapp-green);
+    color: var(--text-primary);
+}
+
+.btn--whatsapp:hover {
+    background: #1FAD54;
+    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
+}
+
+/* Size variants */
+.btn--small {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    border-radius: var(--radius-md);
+}
+
+.btn--medium {
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--text-base);
+}
+
+.btn--large {
+    padding: var(--space-4) var(--space-8);
+    font-size: var(--text-lg);
+}
+
+.btn--full {
+    width: 100%;
+}
+
+/* Disabled state */
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Icon in button */
+.btn__icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Loading state */
+.btn--loading {
+    color: transparent;
+    pointer-events: none;
+}
+
+.btn--loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin: -10px 0 0 -10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: var(--text-primary);
+    border-radius: 50%;
+    animation: btn-spinner 0.6s linear infinite;
+}
+
+@keyframes btn-spinner {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .btn {
+        padding: var(--space-3) var(--space-5);
+    }
+
+    .btn--large {
+        padding: var(--space-4) var(--space-6);
+        font-size: var(--text-base);
+    }
+}
+
+@media (max-width: 400px) {
+    .btn {
+        padding: var(--space-3) var(--space-4);
+        font-size: var(--text-sm);
+    }
+
+    .btn--large {
+        padding: var(--space-3) var(--space-5);
+    }
+}

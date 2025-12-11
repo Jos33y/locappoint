@@ -1,6 +1,10 @@
+// Waitlist Section - No Emojis
+// Location: src/pages/landing/Waitlist.jsx
+
 import { useState } from 'react'
 import { WHATSAPP_NO } from '../../config'
 import { supabase } from '../../config/supabase'
+import { CheckCircle } from 'lucide-react'
 
 const Waitlist = () => {
     const [formData, setFormData] = useState({
@@ -18,7 +22,6 @@ const Waitlist = () => {
             ...prev,
             [name]: value
         }))
-        // Clear message when user starts typing
         if (message.text) setMessage({ type: '', text: '' })
     }
 
@@ -27,7 +30,6 @@ const Waitlist = () => {
         setLoading(true)
         setMessage({ type: '', text: '' }) 
 
-        // Trim all fields
         const trimmedData = {
             fullName: formData.fullName.trim(),
             email: formData.email.trim(),
@@ -35,7 +37,6 @@ const Waitlist = () => {
             comments: formData.comments.trim()
         }
 
-        // Simple validation - check required fields
         if (!trimmedData.fullName || !trimmedData.email || !trimmedData.cityService) {
             setMessage({
                 type: 'error',
@@ -45,7 +46,6 @@ const Waitlist = () => {
             return
         }
 
-        // Simple email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(trimmedData.email)) {
             setMessage({
@@ -70,13 +70,11 @@ const Waitlist = () => {
 
             if (error) throw error
 
-            // Success
             setMessage({
                 type: 'success',
-                text: '🎉 Success! You\'re on the early access list!'
+                text: "Success! You're on the early access list!"
             })
             
-            // Clear form
             setFormData({
                 fullName: '',
                 email: '',
@@ -99,10 +97,11 @@ const Waitlist = () => {
             <div className="container">
                 <div className="waitlist__content">
                     <div className="waitlist__header">
+                        <span className="section-badge">Early Access</span>
                         <h2 id="waitlist-title" className="waitlist__title section-title">
                             Join the early access list
                         </h2>
-                        <p className="waitlist__subtitle">
+                        <p className="waitlist__subtitle section-subtitle">
                             Be the first to know when LocAppoint launches in your city
                         </p>
                     </div>
@@ -152,7 +151,7 @@ const Waitlist = () => {
                                     id="cityService"
                                     name="cityService"
                                     className="form-input"
-                                    placeholder="e.g., Lisbon – Fitness Trainer"
+                                    placeholder="e.g., Lisbon - Fitness Trainer"
                                     value={formData.cityService}
                                     onChange={handleInputChange}
                                     required
@@ -179,6 +178,7 @@ const Waitlist = () => {
 
                             {message.text && (
                                 <div className={`form-message form-message--${message.type}`}>
+                                    {message.type === 'success' && <CheckCircle size={18} style={{ marginRight: '8px' }} />}
                                     {message.text}
                                 </div>
                             )}

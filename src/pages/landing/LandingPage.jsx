@@ -1,67 +1,135 @@
-import { LandingTranslationProvider } from "../../contexts/LandingTranslationContext";
-import { useLandingTranslation } from "../../hooks/useLandingTranslation";
-import Footer from "../../components/Footer"
-import Header from "../../components/Header"
-import Hero from "./Hero";
-import Stats from "./Stats";
-import ProblemSolution from "./ProblemSolution";
-import Features from "./Features";
-import HowItWorks from "./HowItWorks";
-import Testimonials from "./Testimonials";
-import Audience from "./Audience";
-import Benefits from "./Benefits";
-import Validation from "./Validation";
-import FAQ from "./Faq";
-import CTASection from "./Ctasection";
-import Waitlist from "./Waitlist";
+// LandingPage.jsx - Main landing page with Partnership Modal
+// Location: src/pages/landing/LandingPage.jsx
 
-import '../../styles/landing/variables.css'
-import '../../styles/landing/globals.css'
-import '../../styles/landing/buttons.css'
-import '../../styles/landing/header-footer.css'
-import '../../styles/landing/hero.css'
-import '../../styles/landing/features.css'
-import '../../styles/landing/problem-solution.css'
-import '../../styles/landing/testimonials.css'
-import '../../styles/landing/audience.css'
-import '../../styles/landing/benefits.css'
-import '../../styles/landing/validation.css'
-import '../../styles/landing/waitlist.css'
-import '../../styles/landing/spacing-fixes.css'
-import '../../styles/landing/section-utilities.css'
-import '../../styles/landing/components.css'
-import '../../styles/landing/waitlist-msg.css'
-import '../../styles/landing/responsive-fixes.css'
-import '../../styles/landing/language-toggle.css'
+import { useState, useEffect } from 'react'
+// Styles
+import '../../styles/landing/index.css'
+
+import { LandingTranslationProvider } from "../../contexts/LandingTranslationContext"
+import { useLandingTranslation } from "../../hooks/useLandingTranslation"
+
+// Components
+import Header from '../../components/Header'
+import Hero from "./Hero"
+import Stats from "./Stats"
+import ProblemSolution from "./ProblemSolution"
+import Features from "./Features"
+import AICapabilities from './AICapabilities'
+import Audience from "./Audience"
+import Benefits from "./Benefits"
+import HowItWorks from "./HowItWorks"
+import FAQ from "./Faq"
+import FinalCTA from './Ctasection'
+import Footer from '../../components/Footer'
+import WaitlistModal from './WaitlistModal'
+import PartnershipModal from './PartnershipModal'
+import FloatingButtons from '../../components/FloatingButtons'
+
+// Minimum loader display time (ms)
+const MIN_LOADER_TIME = 2500;
 
 const LandingPageContent = () => {
-    const { t } = useLandingTranslation();
+    const { t } = useLandingTranslation()
+    const [isWaitlistOpen, setIsWaitlistOpen] = useState(false)
+    const [isPartnershipOpen, setIsPartnershipOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+
+    useEffect(() => {
+        // Track when component mounted
+        const mountTime = Date.now()
+
+        // Function to hide loader
+        const hideLoader = () => {
+            const loader = document.getElementById('initial-loader')
+            if (loader) {
+                loader.classList.add('fade-out')
+                // Remove from DOM after animation
+                setTimeout(() => {
+                    loader.remove()
+                }, 400)
+            }
+            setIsLoading(false)
+        }
+
+        // Wait for all images and fonts to load
+        const handleLoad = () => {
+            const elapsed = Date.now() - mountTime
+            const remainingTime = Math.max(0, MIN_LOADER_TIME - elapsed)
+
+            // Ensure minimum display time
+            setTimeout(hideLoader, remainingTime)
+        }
+
+        // Check if document already loaded
+        if (document.readyState === 'complete') {
+            handleLoad()
+        } else {
+            window.addEventListener('load', handleLoad)
+        }
+
+        // Fallback: hide loader after max time regardless
+        const fallbackTimer = setTimeout(hideLoader, MIN_LOADER_TIME + 1000)
+
+        return () => {
+            window.removeEventListener('load', handleLoad)
+            clearTimeout(fallbackTimer)
+        }
+    }, [])
+
+    // Expose modal functions globally for other components
+    useEffect(() => {
+        window.openWaitlistModal = () => setIsWaitlistOpen(true)
+        window.openPartnershipModal = () => setIsPartnershipOpen(true)
+
+        return () => {
+            delete window.openWaitlistModal
+            delete window.openPartnershipModal
+        }
+    }, [])
+
     return (
         <>
-            <div className="announcement-bar">
-                <div className="container">
-                    <p className="announcement-bar__text">
-                        {t('announcement.launching')}
-                    </p>
-                </div>
-            </div>
+            {/* Header with Partnership callback */}
+            <Header
+                onWaitlistClick={() => setIsWaitlistOpen(true)}
+                onPartnershipClick={() => setIsPartnershipOpen(true)}
+            />
 
-            <Header />
+            {/* Main Content */}
             <main>
-                <Hero />
+                <Hero
+                    onWaitlistClick={() => setIsWaitlistOpen(true)}
+                    onPartnershipClick={() => setIsPartnershipOpen(true)}
+                />
                 <Stats />
                 <ProblemSolution />
                 <Features />
-                <HowItWorks />
+                <AICapabilities />
                 <Audience />
                 <Benefits />
-                <Testimonials />
-                <Validation />
+                <HowItWorks />
                 <FAQ />
-                <CTASection />
-                <Waitlist />
+                <FinalCTA
+                    onWaitlistClick={() => setIsWaitlistOpen(true)}
+                    onPartnershipClick={() => setIsPartnershipOpen(true)}
+                />
             </main>
-            <Footer />
+            {/* Footer */}
+            <Footer
+                onPartnershipClick={() => setIsPartnershipOpen(true)}
+            />
+
+            {/* Modals */}
+            <WaitlistModal
+                isOpen={isWaitlistOpen}
+                onClose={() => setIsWaitlistOpen(false)}
+            />
+            <PartnershipModal
+                isOpen={isPartnershipOpen}
+                onClose={() => setIsPartnershipOpen(false)}
+            />
+            {/* Floating Buttons */}
+            <FloatingButtons />
         </>
     )
 }
@@ -74,4 +142,4 @@ const LandingPage = () => {
     )
 }
 
-export default LandingPage;
+export default LandingPage

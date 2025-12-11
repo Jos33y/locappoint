@@ -1,0 +1,19 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://locappoint.com/sitemap.xml
+
+# Disallow admin and portal routes from indexing
+Disallow: /admin
+Disallow: /portal
+Disallow: /client
+Disallow: /app/auth
+
+# Allow all other pages
+Allow: /
+Allow: /terms
+Allow: /privacy
+Allow: /app
+Allow: /app/businesses

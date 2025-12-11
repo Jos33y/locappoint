@@ -1,0 +1,822 @@
+/* ========== FLOATING BUTTONS ========== */
+
+/* ===== BASE BUTTON ===== */
+.floating-btn {
+    position: fixed;
+    bottom: 24px;
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.floating-btn:hover {
+    transform: scale(1.1) translateY(-4px);
+}
+
+.floating-btn:active {
+    transform: scale(1.05);
+}
+
+/* Pulse animation */
+.floating-btn__pulse {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: inherit;
+    opacity: 0;
+    animation: floating-pulse 2s ease-out infinite;
+}
+
+@keyframes floating-pulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(1.4);
+        opacity: 0;
+    }
+}
+
+.floating-btn__icon {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.floating-btn__icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Tooltip */
+.floating-btn__tooltip {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 12px);
+    transform: translateY(-50%);
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #FAFAFA;
+    background: #1a1a2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.floating-btn__tooltip::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -6px;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-right-color: #1a1a2e;
+}
+
+.floating-btn__tooltip--left {
+    left: auto;
+    right: calc(100% + 12px);
+}
+
+.floating-btn__tooltip--left::before {
+    left: auto;
+    right: -6px;
+    border-right-color: transparent;
+    border-left-color: #1a1a2e;
+}
+
+.floating-btn:hover .floating-btn__tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ===== WHATSAPP BUTTON ===== */
+.floating-btn--whatsapp {
+    left: 24px;
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+}
+
+.floating-btn--whatsapp:hover {
+    box-shadow: 0 8px 30px rgba(37, 211, 102, 0.4);
+}
+
+.floating-btn--whatsapp .floating-btn__pulse {
+    background: #25D366;
+}
+
+/* ===== ASK LOCA BUTTON ===== */
+.floating-btn--loca {
+    right: 24px;
+    background: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+    overflow: visible;
+}
+
+.floating-btn--loca:hover {
+    box-shadow: 
+        0 8px 30px rgba(139, 92, 246, 0.5),
+        0 0 40px rgba(6, 182, 212, 0.3);
+}
+
+.floating-btn--loca .floating-btn__pulse--purple {
+    background: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+}
+
+/* Glow effect */
+.floating-btn__glow {
+    position: absolute;
+    inset: -8px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+    0%, 100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.1);
+    }
+}
+
+/* AI Badge */
+.floating-btn__badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    padding: 2px 6px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #0c0e14;
+    background: linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%);
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.5);
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.floating-btn--loca.floating-btn--active {
+    background: linear-gradient(135deg, #6D28D9 0%, #0E7490 100%);
+}
+
+.floating-btn--loca.floating-btn--active .floating-btn__pulse,
+.floating-btn--loca.floating-btn--active .floating-btn__glow {
+    animation: none;
+    opacity: 0;
+}
+
+.floating-btn--loca.floating-btn--active .floating-btn__badge {
+    display: none;
+}
+
+/* ===== LOCA POPUP ===== */
+.loca-popup {
+    position: fixed;
+    bottom: 92px;
+    right: 24px;
+    z-index: 8999;
+    width: 360px;
+    background: #0c0e14;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    border-radius: 24px;
+    box-shadow: 
+        0 0 80px rgba(139, 92, 246, 0.2),
+        0 0 40px rgba(6, 182, 212, 0.1),
+        0 25px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    animation: popup-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popup-in {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Background effects */
+.loca-popup__bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.loca-popup__orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.5;
+}
+
+.loca-popup__orb--1 {
+    top: -40px;
+    right: -40px;
+    width: 120px;
+    height: 120px;
+    background: rgba(139, 92, 246, 0.4);
+    animation: orb-float 6s ease-in-out infinite;
+}
+
+.loca-popup__orb--2 {
+    bottom: 20px;
+    left: -30px;
+    width: 100px;
+    height: 100px;
+    background: rgba(6, 182, 212, 0.3);
+    animation: orb-float 8s ease-in-out infinite reverse;
+}
+
+@keyframes orb-float {
+    0%, 100% {
+        transform: translate(0, 0);
+    }
+    50% {
+        transform: translate(10px, -10px);
+    }
+}
+
+/* Header */
+.loca-popup__header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+/* AI Avatar with animated rings */
+.loca-avatar {
+    position: relative;
+    width: 44px;
+    height: 44px;
+}
+
+.loca-avatar__rings {
+    position: absolute;
+    inset: -4px;
+}
+
+.loca-avatar__ring {
+    position: absolute;
+    inset: 0;
+    border: 2px solid transparent;
+    border-radius: 50%;
+}
+
+.loca-avatar__ring--1 {
+    border-top-color: #8B5CF6;
+    border-right-color: #8B5CF6;
+    animation: ring-spin 3s linear infinite;
+}
+
+.loca-avatar__ring--2 {
+    inset: 3px;
+    border-bottom-color: #06B6D4;
+    border-left-color: #06B6D4;
+    animation: ring-spin 2s linear infinite reverse;
+}
+
+@keyframes ring-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.loca-avatar__icon {
+    position: absolute;
+    inset: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+    border-radius: 50%;
+    color: #fff;
+}
+
+.loca-popup__title {
+    flex: 1;
+}
+
+.loca-popup__title h4 {
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #FAFAFA;
+    margin: 0;
+    background: linear-gradient(135deg, #FAFAFA 0%, #A78BFA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.loca-popup__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: #22D3EE;
+    margin-top: 2px;
+}
+
+.loca-popup__status svg {
+    animation: zap-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes zap-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.loca-popup__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    color: #71717A;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.loca-popup__close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #FAFAFA;
+}
+
+/* Body */
+.loca-popup__body {
+    position: relative;
+    padding: 16px 18px;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+/* Training Notice */
+.loca-popup__notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: #A78BFA;
+}
+
+.loca-popup__notice svg {
+    flex-shrink: 0;
+    color: #22D3EE;
+    animation: zap-pulse 1.5s ease-in-out infinite;
+}
+
+.loca-popup__message {
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.loca-popup__message--bot {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #D4D4D8;
+}
+
+.loca-popup__message p {
+    margin: 0 0 8px 0;
+}
+
+.loca-popup__message p:last-child {
+    margin-bottom: 0;
+}
+
+.loca-popup__message strong {
+    color: #A78BFA;
+    font-weight: 600;
+}
+
+/* Suggestions */
+.loca-popup__suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.loca-popup__suggestions button {
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #E4E4E7;
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.loca-popup__suggestions button:hover {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.35);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* Input */
+.loca-popup__input {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    padding: 14px 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.loca-popup__input input {
+    flex: 1;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: #FAFAFA;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.loca-popup__input input::placeholder {
+    color: #52525B;
+}
+
+.loca-popup__input input:focus {
+    border-color: rgba(139, 92, 246, 0.5);
+    background: rgba(139, 92, 246, 0.05);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.loca-popup__input button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.loca-popup__input button:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+}
+
+.loca-popup__input button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Note */
+.loca-popup__note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 18px 14px;
+    font-size: 0.7rem;
+    color: #52525B;
+    margin: 0;
+}
+
+.loca-popup__note-dot {
+    width: 6px;
+    height: 6px;
+    background: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+    border-radius: 50%;
+    animation: dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes dot-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+    .floating-btn {
+        width: 52px;
+        height: 52px;
+        bottom: 20px;
+    }
+
+    .floating-btn--whatsapp {
+        left: 16px;
+    }
+
+    .floating-btn--loca {
+        right: 16px;
+    }
+
+    .floating-btn__icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .floating-btn__tooltip {
+        display: none;
+    }
+
+    .floating-btn__badge {
+        top: -2px;
+        right: -2px;
+        font-size: 0.55rem;
+        padding: 2px 5px;
+    }
+
+    .loca-popup {
+        right: 12px;
+        left: 12px;
+        width: auto;
+        bottom: 84px;
+        border-radius: 20px;
+    }
+
+    .loca-popup__header {
+        padding: 14px 16px;
+    }
+
+    .loca-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .loca-popup__title h4 {
+        font-size: 1rem;
+    }
+
+    .loca-popup__body {
+        padding: 14px 16px;
+        max-height: 220px;
+    }
+
+    .loca-popup__notice {
+        padding: 8px 12px;
+        font-size: 0.7rem;
+    }
+
+    .loca-popup__message {
+        padding: 12px 14px;
+        font-size: 0.875rem;
+    }
+
+    .loca-popup__suggestions {
+        gap: 6px;
+    }
+
+    .loca-popup__suggestions button {
+        padding: 7px 12px;
+        font-size: 0.75rem;
+    }
+
+    .loca-popup__input {
+        padding: 12px 16px;
+    }
+
+    .loca-popup__input input {
+        padding: 10px 14px;
+        font-size: 0.875rem;
+    }
+
+    .loca-popup__input button {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 400px) {
+    .floating-btn {
+        width: 48px;
+        height: 48px;
+        bottom: 16px;
+    }
+
+    .floating-btn--whatsapp {
+        left: 12px;
+    }
+
+    .floating-btn--loca {
+        right: 12px;
+    }
+
+    .floating-btn__icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .floating-btn__glow {
+        inset: -6px;
+    }
+
+    .loca-popup {
+        bottom: 76px;
+        border-radius: 18px;
+    }
+
+    .loca-popup__header {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .loca-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .loca-avatar__icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .loca-popup__title h4 {
+        font-size: 0.95rem;
+    }
+
+    .loca-popup__status {
+        font-size: 0.65rem;
+    }
+
+    .loca-popup__close {
+        width: 28px;
+        height: 28px;
+    }
+
+    .loca-popup__body {
+        padding: 12px 14px;
+        max-height: 200px;
+    }
+
+    .loca-popup__notice {
+        padding: 8px 10px;
+        font-size: 0.65rem;
+        margin-bottom: 12px;
+        border-radius: 10px;
+    }
+
+    .loca-popup__message {
+        padding: 10px 12px;
+        font-size: 0.825rem;
+        border-radius: 14px;
+    }
+
+    .loca-popup__suggestions {
+        gap: 6px;
+        margin-top: 12px;
+    }
+
+    .loca-popup__suggestions button {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+    }
+
+    .loca-popup__input {
+        padding: 10px 14px;
+        gap: 8px;
+    }
+
+    .loca-popup__input input {
+        padding: 9px 12px;
+        font-size: 0.825rem;
+        border-radius: 10px;
+    }
+
+    .loca-popup__input button {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+    }
+
+    .loca-popup__note {
+        padding: 8px 14px 12px;
+        font-size: 0.65rem;
+    }
+}
+
+/* Extra small - 360px */
+@media (max-width: 374px) {
+    .floating-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .floating-btn__icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .floating-btn__badge {
+        font-size: 0.5rem;
+        padding: 1px 4px;
+    }
+
+    .loca-popup {
+        left: 8px;
+        right: 8px;
+        bottom: 70px;
+        border-radius: 16px;
+    }
+
+    .loca-popup__header {
+        padding: 10px 12px;
+    }
+
+    .loca-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .loca-popup__title h4 {
+        font-size: 0.9rem;
+    }
+
+    .loca-popup__body {
+        padding: 10px 12px;
+    }
+
+    .loca-popup__notice {
+        font-size: 0.6rem;
+        gap: 6px;
+    }
+
+    .loca-popup__message {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    .loca-popup__suggestions button {
+        padding: 5px 8px;
+        font-size: 0.65rem;
+    }
+
+    .loca-popup__input {
+        padding: 8px 12px;
+    }
+
+    .loca-popup__input input {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    .loca-popup__input button {
+        width: 32px;
+        height: 32px;
+    }
+}
