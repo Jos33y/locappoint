@@ -1,11 +1,13 @@
-// WaitlistModal.jsx - Waitlist modal with AI aesthetic (pure CSS)
+// WaitlistModal.jsx - Waitlist modal with AI aesthetic (Translated)
 // Location: src/pages/landing/WaitlistModal.jsx
 
 import { useState, useEffect } from 'react'
 import { X, Sparkles, Mail, User, MapPin, MessageSquare, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { supabase } from '../../config/supabase'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const WaitlistModal = ({ isOpen, onClose }) => {
+    const { t } = useLandingTranslation()
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -75,13 +77,13 @@ const WaitlistModal = ({ isOpen, onClose }) => {
 
         // Validation
         if (!trimmedData.fullName || !trimmedData.email || !trimmedData.cityService) {
-            setError('Please fill in all required fields')
+            setError(t('waitlistModal.errorRequired'))
             return
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(trimmedData.email)) {
-            setError('Please enter a valid email address')
+            setError(t('waitlistModal.errorEmail'))
             return
         }
 
@@ -110,7 +112,7 @@ const WaitlistModal = ({ isOpen, onClose }) => {
 
         } catch (err) {
             console.error('Error saving to waitlist:', err)
-            setError('Something went wrong. Please try again.')
+            setError(t('waitlistModal.errorGeneric'))
         } finally {
             setLoading(false)
         }
@@ -138,7 +140,7 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                 <button 
                     className="modal__close" 
                     onClick={handleClose}
-                    aria-label="Close modal"
+                    aria-label={t('common.close')}
                 >
                     <X size={20} />
                 </button>
@@ -152,9 +154,9 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                                 <div className="modal__icon">
                                     <Sparkles size={24} />
                                 </div>
-                                <h2 className="modal__title">Join the Waitlist</h2>
+                                <h2 className="modal__title">{t('waitlistModal.title')}</h2>
                                 <p className="modal__subtitle">
-                                    Be the first to know when LocAppoint launches in your city
+                                    {t('waitlistModal.subtitle')}
                                 </p>
                             </div>
 
@@ -172,7 +174,7 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                                 <div className="modal__field">
                                     <label htmlFor="waitlist-fullName">
                                         <User size={14} />
-                                        Full Name <span className="required">*</span>
+                                        {t('waitlistModal.fullName')} <span className="required">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -180,7 +182,7 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                                         name="fullName"
                                         value={formData.fullName}
                                         onChange={handleChange}
-                                        placeholder="Your full name"
+                                        placeholder={t('waitlistModal.fullName')}
                                         disabled={loading}
                                         required
                                     />
@@ -190,7 +192,7 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                                 <div className="modal__field">
                                     <label htmlFor="waitlist-email">
                                         <Mail size={14} />
-                                        Email Address <span className="required">*</span>
+                                        {t('waitlistModal.email')} <span className="required">*</span>
                                     </label>
                                     <input
                                         type="email"
@@ -208,7 +210,7 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                                 <div className="modal__field">
                                     <label htmlFor="waitlist-cityService">
                                         <MapPin size={14} />
-                                        City & Service Type <span className="required">*</span>
+                                        {t('waitlistModal.cityService')} <span className="required">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -216,7 +218,7 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                                         name="cityService"
                                         value={formData.cityService}
                                         onChange={handleChange}
-                                        placeholder="e.g., Lisbon – Hair Salon"
+                                        placeholder={t('waitlistModal.cityServicePlaceholder')}
                                         disabled={loading}
                                         required
                                     />
@@ -226,14 +228,14 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                                 <div className="modal__field">
                                     <label htmlFor="waitlist-comments">
                                         <MessageSquare size={14} />
-                                        Comments <span className="optional">(optional)</span>
+                                        {t('waitlistModal.comments')} <span className="optional">{t('common.optional')}</span>
                                     </label>
                                     <textarea
                                         id="waitlist-comments"
                                         name="comments"
                                         value={formData.comments}
                                         onChange={handleChange}
-                                        placeholder="Tell us about your business..."
+                                        placeholder={t('waitlistModal.commentsPlaceholder')}
                                         rows="3"
                                         disabled={loading}
                                     />
@@ -248,18 +250,18 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                                     {loading ? (
                                         <>
                                             <Loader2 size={18} className="spin" />
-                                            <span>Joining...</span>
+                                            <span>{t('waitlistModal.submitting')}</span>
                                         </>
                                     ) : (
                                         <>
                                             <Sparkles size={18} />
-                                            <span>Join the Waitlist</span>
+                                            <span>{t('waitlistModal.submit')}</span>
                                         </>
                                     )}
                                 </button>
 
                                 <p className="modal__privacy">
-                                    We'll only contact you about the launch. No spam, ever.
+                                    {t('waitlistModal.privacy')}
                                 </p>
                             </form>
                         </>
@@ -269,17 +271,16 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                             <div className="modal__success-icon">
                                 <CheckCircle size={48} />
                             </div>
-                            <h2>You're on the list!</h2>
+                            <h2>{t('waitlistModal.successTitle')}</h2>
                             <p>
-                                Thanks for joining! We'll notify you as soon as LocAppoint 
-                                launches in your area.
+                                {t('waitlistModal.successMessage')}
                             </p>
                             <button
                                 type="button"
                                 className="modal__submit"
                                 onClick={handleClose}
                             >
-                                Done
+                                {t('waitlistModal.successBtn')}
                             </button>
                         </div>
                     )}

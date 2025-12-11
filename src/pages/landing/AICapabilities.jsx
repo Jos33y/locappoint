@@ -1,4 +1,4 @@
-// AICapabilities.jsx - AI Features section
+// AICapabilities.jsx - AI Features section (Translated)
 // Location: src/pages/landing/AICapabilities.jsx
 
 import { motion } from 'framer-motion'
@@ -11,45 +11,28 @@ import {
     Zap,
     Bot
 } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const AICapabilities = () => {
-    const capabilities = [
-        {
-            icon: Sparkles,
-            title: 'AI Visibility Engine',
-            description: 'Our AI analyzes search patterns and client behavior to boost your visibility. Get matched with clients actively searching for your services.',
-            features: ['Smart search ranking', 'Personalized recommendations', 'Local SEO optimization'],
-            gradient: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)'
-        },
-        {
-            icon: Brain,
-            title: 'Smart Booking System',
-            description: 'Intelligent scheduling that learns your preferences. Auto-fills gaps, prevents conflicts, and optimizes your calendar for maximum efficiency.',
-            features: ['Predictive scheduling', 'Smart gap filling', 'Conflict prevention'],
-            gradient: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)'
-        },
-        {
-            icon: Shield,
-            title: 'Compliance Assistant',
-            description: 'Stay compliant without the headache. AI monitors regulatory requirements and automatically handles GDPR, data protection, and consent management.',
-            features: ['Auto GDPR compliance', 'Consent tracking', 'Data protection alerts'],
-            gradient: 'linear-gradient(135deg, #10B981 0%, #14B8A6 100%)'
-        },
-        {
-            icon: Star,
-            title: 'Reputation Builder',
-            description: 'AI-powered review management that identifies happy clients and encourages reviews at the perfect moment. Build trust on autopilot.',
-            features: ['Smart review timing', 'Sentiment analysis', 'Response suggestions'],
-            gradient: 'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)'
-        },
-        {
-            icon: BarChart3,
-            title: 'Insight Dashboard',
-            description: 'Transform data into action. AI analyzes your business patterns, predicts trends, and delivers personalized recommendations to grow revenue.',
-            features: ['Revenue predictions', 'Client insights', 'Growth recommendations'],
-            gradient: 'linear-gradient(135deg, #A855F7 0%, #8B5CF6 100%)'
-        }
+    const { t } = useLandingTranslation()
+    const capabilitiesData = t('ai.capabilities')
+    
+    const icons = [Sparkles, Brain, Shield, Star, BarChart3]
+    const gradients = [
+        'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
+        'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
+        'linear-gradient(135deg, #10B981 0%, #14B8A6 100%)',
+        'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)',
+        'linear-gradient(135deg, #A855F7 0%, #8B5CF6 100%)'
     ]
+
+    const capabilities = capabilitiesData.map((cap, index) => ({
+        icon: icons[index],
+        title: cap.title,
+        description: cap.description,
+        features: cap.features,
+        gradient: gradients[index]
+    }))
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -90,17 +73,17 @@ const AICapabilities = () => {
                 >
                     <div className="ai-capabilities__badge">
                         <Bot size={14} />
-                        <span>Powered by AI</span>
+                        <span>{t('ai.badge')}</span>
                         <Zap size={12} className="ai-capabilities__badge-pulse" />
                     </div>
                     
                     <h2 className="section-title">
-                        Intelligence that works
-                        <span className="ai-gradient-text"> for you</span>
+                        {t('ai.title')}
+                        <span className="ai-gradient-text">{t('ai.titleHighlight')}</span>
                     </h2>
                     
                     <p className="section-subtitle">
-                        LocAppoint uses advanced AI to automate the tedious, optimize the complex, and give you superpowers to compete with the big players.
+                        {t('ai.subtitle')}
                     </p>
                 </motion.div>
 
@@ -187,7 +170,7 @@ const AICapabilities = () => {
                 >
                     <p>
                         <Sparkles size={16} />
-                        All AI features included. No extra cost. No complicated setup.
+                        {t('ai.footer')}
                     </p>
                 </motion.div>
             </div>

@@ -1,10 +1,18 @@
 import { useContext } from 'react';
-import { LandingTranslationContext } from '../context_definition/LandingTranslationContextDefinition';
+import { LandingTranslationContext } from '../contexts/LandingTranslationContext'
 
 export const useLandingTranslation = () => {
   const context = useContext(LandingTranslationContext);
   if (!context) {
-    throw new Error('useLandingTranslation must be used within LandingTranslationProvider');
+     // Return fallback if used outside provider
+        console.warn('useLandingTranslation: No provider found, using fallback')
+        return {
+            language: 'en',
+            toggleLanguage: () => {},
+            setLanguage: () => {},
+            t: (key) => key,
+            translations: {}
+        }
   }
   return context;
 };  

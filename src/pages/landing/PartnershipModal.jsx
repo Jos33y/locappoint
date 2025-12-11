@@ -1,4 +1,4 @@
-// PartnershipModal.jsx - Partnership modal with AI aesthetic (pure CSS)
+// PartnershipModal.jsx - Partnership modal with AI aesthetic (Translated)
 // Location: src/pages/landing/PartnershipModal.jsx
 
 import { useState, useEffect } from 'react'
@@ -17,8 +17,10 @@ import {
     ChevronDown
 } from 'lucide-react'
 import { supabase } from '../../config/supabase'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const PartnershipModal = ({ isOpen, onClose }) => {
+    const { t } = useLandingTranslation()
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -35,18 +37,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
     const [error, setError] = useState('')
     const [isClosing, setIsClosing] = useState(false)
 
-    const organizationTypes = [
-        'Events & Entertainment',
-        'Healthcare Services',
-        'Beauty & Wellness',
-        'Legal Services',
-        'Home Services',
-        'Auto Services',
-        'Education & Tutoring',
-        'Fitness & Sports',
-        'Restaurant & Food',
-        'Other'
-    ]
+    const organizationTypes = t('partnershipModal.orgTypes')
 
     // Reset form when modal opens
     useEffect(() => {
@@ -100,13 +91,13 @@ const PartnershipModal = ({ isOpen, onClose }) => {
         // Validation
         if (!formData.firstName || !formData.lastName || !formData.email || 
             !formData.phone || !formData.organizationType) {
-            setError('Please fill in all required fields')
+            setError(t('partnershipModal.errorRequired'))
             return
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(formData.email)) {
-            setError('Please enter a valid email address')
+            setError(t('partnershipModal.errorEmail'))
             return
         }
 
@@ -145,7 +136,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
 
         } catch (err) {
             console.error('Error submitting partnership request:', err)
-            setError('Something went wrong. Please try again.')
+            setError(t('partnershipModal.errorGeneric'))
         } finally {
             setLoading(false)
         }
@@ -173,7 +164,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                 <button 
                     className="modal__close" 
                     onClick={handleClose}
-                    aria-label="Close modal"
+                    aria-label={t('common.close')}
                 >
                     <X size={20} />
                 </button>
@@ -187,9 +178,9 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                 <div className="modal__icon modal__icon--cyan">
                                     <Handshake size={24} />
                                 </div>
-                                <h2 className="modal__title">Become a Partner</h2>
+                                <h2 className="modal__title">{t('partnershipModal.title')}</h2>
                                 <p className="modal__subtitle">
-                                    Join our early partnership program and grow with us
+                                    {t('partnershipModal.subtitle')}
                                 </p>
                             </div>
 
@@ -208,7 +199,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                     <div className="modal__field">
                                         <label htmlFor="partner-firstName">
                                             <User size={14} />
-                                            First Name <span className="required">*</span>
+                                            {t('partnershipModal.firstName')} <span className="required">*</span>
                                         </label>
                                         <input
                                             type="text"
@@ -216,14 +207,14 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             name="firstName"
                                             value={formData.firstName}
                                             onChange={handleChange}
-                                            placeholder="First name"
+                                            placeholder={t('partnershipModal.firstName')}
                                             disabled={loading}
                                             required
                                         />
                                     </div>
                                     <div className="modal__field">
                                         <label htmlFor="partner-lastName">
-                                            Last Name <span className="required">*</span>
+                                            {t('partnershipModal.lastName')} <span className="required">*</span>
                                         </label>
                                         <input
                                             type="text"
@@ -231,7 +222,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             name="lastName"
                                             value={formData.lastName}
                                             onChange={handleChange}
-                                            placeholder="Last name"
+                                            placeholder={t('partnershipModal.lastName')}
                                             disabled={loading}
                                             required
                                         />
@@ -243,7 +234,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                     <div className="modal__field">
                                         <label htmlFor="partner-email">
                                             <Mail size={14} />
-                                            Email <span className="required">*</span>
+                                            {t('partnershipModal.email')} <span className="required">*</span>
                                         </label>
                                         <input
                                             type="email"
@@ -259,7 +250,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                     <div className="modal__field">
                                         <label htmlFor="partner-phone">
                                             <Phone size={14} />
-                                            Phone <span className="required">*</span>
+                                            {t('partnershipModal.phone')} <span className="required">*</span>
                                         </label>
                                         <input
                                             type="tel"
@@ -267,7 +258,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleChange}
-                                            placeholder="+351 912 345 678"
+                                            placeholder={t('partnershipModal.phonePlaceholder')}
                                             disabled={loading}
                                             required
                                         />
@@ -278,7 +269,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                 <div className="modal__field">
                                     <label htmlFor="partner-organizationType">
                                         <Building2 size={14} />
-                                        Organization Type <span className="required">*</span>
+                                        {t('partnershipModal.orgType')} <span className="required">*</span>
                                     </label>
                                     <div className="modal__select-wrapper">
                                         <select
@@ -289,7 +280,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             disabled={loading}
                                             required
                                         >
-                                            <option value="">Select type...</option>
+                                            <option value="">{t('partnershipModal.orgTypePlaceholder')}</option>
                                             {organizationTypes.map(type => (
                                                 <option key={type} value={type}>{type}</option>
                                             ))}
@@ -301,7 +292,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                 {/* Organization Name */}
                                 <div className="modal__field">
                                     <label htmlFor="partner-organizationName">
-                                        Organization Name <span className="optional">(optional)</span>
+                                        {t('partnershipModal.orgName')} <span className="optional">{t('partnershipModal.optional')}</span>
                                     </label>
                                     <input
                                         type="text"
@@ -309,7 +300,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                         name="organizationName"
                                         value={formData.organizationName}
                                         onChange={handleChange}
-                                        placeholder="Your business name"
+                                        placeholder={t('partnershipModal.orgNamePlaceholder')}
                                         disabled={loading}
                                     />
                                 </div>
@@ -319,7 +310,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                     <div className="modal__field">
                                         <label htmlFor="partner-city">
                                             <MapPin size={14} />
-                                            City <span className="optional">(optional)</span>
+                                            {t('partnershipModal.city')} <span className="optional">{t('partnershipModal.optional')}</span>
                                         </label>
                                         <input
                                             type="text"
@@ -327,13 +318,13 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             name="city"
                                             value={formData.city}
                                             onChange={handleChange}
-                                            placeholder="Lisbon, Porto, Lagos..."
+                                            placeholder={t('partnershipModal.cityPlaceholder')}
                                             disabled={loading}
                                         />
                                     </div>
                                     <div className="modal__field">
                                         <label htmlFor="partner-country">
-                                            Country <span className="optional">(optional)</span>
+                                            {t('partnershipModal.country')} <span className="optional">{t('partnershipModal.optional')}</span>
                                         </label>
                                         <input
                                             type="text"
@@ -341,7 +332,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             name="country"
                                             value={formData.country}
                                             onChange={handleChange}
-                                            placeholder="Portugal, Nigeria..."
+                                            placeholder={t('partnershipModal.countryPlaceholder')}
                                             disabled={loading}
                                         />
                                     </div>
@@ -351,14 +342,14 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                 <div className="modal__field">
                                     <label htmlFor="partner-interest">
                                         <MessageSquare size={14} />
-                                        Why partner with us? <span className="optional">(optional)</span>
+                                        {t('partnershipModal.interest')} <span className="optional">{t('partnershipModal.optional')}</span>
                                     </label>
                                     <textarea
                                         id="partner-interest"
                                         name="partnershipInterest"
                                         value={formData.partnershipInterest}
                                         onChange={handleChange}
-                                        placeholder="Share your goals or how you'd like to collaborate..."
+                                        placeholder={t('partnershipModal.interestPlaceholder')}
                                         rows="3"
                                         disabled={loading}
                                     />
@@ -373,18 +364,18 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                     {loading ? (
                                         <>
                                             <Loader2 size={18} className="spin" />
-                                            <span>Submitting...</span>
+                                            <span>{t('partnershipModal.submitting')}</span>
                                         </>
                                     ) : (
                                         <>
                                             <Handshake size={18} />
-                                            <span>Submit Partnership Request</span>
+                                            <span>{t('partnershipModal.submit')}</span>
                                         </>
                                     )}
                                 </button>
 
                                 <p className="modal__privacy">
-                                    We'll review your application and contact you within 48 hours.
+                                    {t('partnershipModal.privacy')}
                                 </p>
                             </form>
                         </>
@@ -394,17 +385,16 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                             <div className="modal__success-icon modal__success-icon--cyan">
                                 <CheckCircle size={48} />
                             </div>
-                            <h2>Application Received!</h2>
+                            <h2>{t('partnershipModal.successTitle')}</h2>
                             <p>
-                                Thanks for your interest in partnering with LocAppoint. 
-                                We'll review your application and get back to you within 48 hours.
+                                {t('partnershipModal.successMessage')}
                             </p>
                             <button
                                 type="button"
                                 className="modal__submit modal__submit--cyan"
                                 onClick={handleClose}
                             >
-                                Done
+                                {t('partnershipModal.successBtn')}
                             </button>
                         </div>
                     )}

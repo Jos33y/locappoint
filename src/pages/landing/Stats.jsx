@@ -1,9 +1,10 @@
-// Stats.jsx - Enhanced Stats section with count-up and visual effects
+// Stats.jsx - Enhanced Stats section with count-up and visual effects (Translated)
 // Location: src/pages/landing/Stats.jsx
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Building2, LayoutGrid, MapPin, CreditCard, Sparkles } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 // Count-up hook
 const useCountUp = (end, duration = 2000, startCounting = false) => {
@@ -112,6 +113,7 @@ const StatCard = ({ stat, index, isInView }) => {
 }
 
 const Stats = () => {
+    const { t } = useLandingTranslation()
     const ref = useRef(null)
     const isInView = useInView(ref, { once: true, margin: "-100px" })
     
@@ -121,7 +123,7 @@ const Stats = () => {
             numericValue: 100,
             prefix: '',
             suffix: '+',
-            label: 'Businesses Waiting',
+            label: t('stats.businessesWaiting'),
             gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
             color: 'rgba(139, 92, 246, 0.5)'
         },
@@ -130,7 +132,7 @@ const Stats = () => {
             numericValue: 10,
             prefix: '',
             suffix: '+',
-            label: 'Service Categories',
+            label: t('stats.serviceCategories'),
             gradient: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
             color: 'rgba(6, 182, 212, 0.5)'
         },
@@ -139,7 +141,7 @@ const Stats = () => {
             numericValue: 4,
             prefix: '',
             suffix: '',
-            label: 'Cities Launching',
+            label: t('stats.citiesLaunching'),
             gradient: 'linear-gradient(135deg, #A855F7 0%, #EC4899 100%)',
             color: 'rgba(168, 85, 247, 0.5)'
         },
@@ -148,7 +150,7 @@ const Stats = () => {
             numericValue: 0,
             prefix: '',
             suffix: '€',
-            label: 'Setup Cost',
+            label: t('stats.setupCost'),
             gradient: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
             color: 'rgba(16, 185, 129, 0.5)'
         }
@@ -234,7 +236,7 @@ const Stats = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
                 >
-                    <span className="stats__intro-text">The numbers speak</span>
+                    <span className="stats__intro-text">{t('stats.intro')}</span>
                 </motion.div>
 
                 <div className="stats__grid">

@@ -1,47 +1,16 @@
-// FAQ.jsx - Enhanced FAQ section with numbered items and CTA
+// FAQ.jsx - Enhanced FAQ section with numbered items and CTA (Translated)
 // Location: src/pages/landing/FAQ.jsx
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, HelpCircle, MessageCircle, Plus, Minus } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const FAQ = () => {
+    const { t } = useLandingTranslation()
     const [openIndex, setOpenIndex] = useState(null)
 
-    const faqs = [
-        {
-            question: 'Is LocAppoint really free to start?',
-            answer: 'Yes! You can create your profile, list your services, and start accepting bookings completely free. We only charge a small transaction fee when you get paid through our platform. No hidden fees, no monthly subscriptions required to get started.'
-        },
-        {
-            question: 'Do I need technical skills to use LocAppoint?',
-            answer: 'Not at all. LocAppoint is designed for busy business owners, not tech experts. If you can use WhatsApp, you can use LocAppoint. Our setup wizard guides you through everything step by step.'
-        },
-        {
-            question: 'How do clients find my business?',
-            answer: 'Your business appears in the LocAppoint marketplace where clients search for local services. You also get a unique booking link to share on social media, WhatsApp, Instagram, and anywhere else. Clients can book directly without needing to call or message.'
-        },
-        {
-            question: 'What if a client needs to cancel or reschedule?',
-            answer: 'Clients can easily reschedule or cancel through their booking confirmation. You set your own cancellation policy, and we enforce it automatically. No awkward conversations needed.'
-        },
-        {
-            question: 'How do automatic reminders work?',
-            answer: 'We send SMS and email reminders to your clients before their appointments. You choose when reminders go out. This alone reduces no-shows by up to 90% for most businesses.'
-        },
-        {
-            question: 'Can I accept payments through LocAppoint?',
-            answer: 'Yes! You can require deposits, full prepayment, or let clients pay at the venue. We support multiple payment methods including cards and mobile money. Funds are transferred directly to your account.'
-        },
-        {
-            question: 'What happens when I go on holiday?',
-            answer: 'Simply block out dates in your calendar. No bookings will be accepted for those times. You can also set specific working hours for each day of the week.'
-        },
-        {
-            question: 'Is my data and my clients\' data secure?',
-            answer: 'Absolutely. We use bank-level encryption and are fully GDPR compliant. Your data is yours, we never sell it to third parties or use it for advertising.'
-        }
-    ]
+    const faqs = t('faq.items')
 
     const toggleFAQ = (index) => {
         setOpenIndex(openIndex === index ? null : index)
@@ -70,14 +39,14 @@ const FAQ = () => {
                 >
                     <div className="section-badge">
                         <HelpCircle size={14} />
-                        <span>FAQ</span>
+                        <span>{t('faq.badge')}</span>
                     </div>
                     <h2 className="section-title">
-                        Questions? 
-                        <span className="ai-gradient-text"> We've got answers</span>
+                        {t('faq.title')}
+                        <span className="ai-gradient-text">{t('faq.titleHighlight')}</span>
                     </h2>
                     <p className="section-subtitle">
-                        Everything you need to know about getting started with LocAppoint.
+                        {t('faq.subtitle')}
                     </p>
                 </motion.div>
 
@@ -154,15 +123,15 @@ const FAQ = () => {
                     <div className="faq__cta-content">
                         <MessageCircle size={20} />
                         <div className="faq__cta-text">
-                            <span className="faq__cta-title">Still have questions?</span>
-                            <span className="faq__cta-subtitle">We're here to help you get started</span>
+                            <span className="faq__cta-title">{t('faq.ctaTitle')}</span>
+                            <span className="faq__cta-subtitle">{t('faq.ctaSubtitle')}</span>
                         </div>
                     </div>
                     <button 
                         className="faq__cta-btn"
                         onClick={() => window.openWaitlistModal?.()}
                     >
-                        Contact Us
+                        {t('faq.ctaBtn')}
                         <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
                     </button>
                 </motion.div>

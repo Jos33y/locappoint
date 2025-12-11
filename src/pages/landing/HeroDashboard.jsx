@@ -1,4 +1,4 @@
-// HeroDashboard.jsx - Animated floating product mockup
+// HeroDashboard.jsx - Animated floating product mockup (Translated)
 // Location: src/pages/landing/HeroDashboard.jsx
 
 import { motion } from 'framer-motion'
@@ -12,8 +12,11 @@ import {
     Star,
     MapPin
 } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const HeroDashboard = () => {
+    const { t } = useLandingTranslation()
+    
     // Sample booking data
     const timeSlots = [
         { time: '09:00', status: 'booked', name: 'Maria S.' },
@@ -25,15 +28,17 @@ const HeroDashboard = () => {
     ]
 
     const stats = [
-        { label: 'Today', value: '12', icon: Calendar, color: '#8B5CF6' },
-        { label: 'Revenue', value: '€847', icon: TrendingUp, color: '#10B981' },
-        { label: 'Rating', value: '4.9', icon: Star, color: '#FBBF24' },
+        { label: t('heroDashboard.today'), value: '12', icon: Calendar, color: '#8B5CF6' },
+        { label: t('heroDashboard.revenue'), value: '€847', icon: TrendingUp, color: '#10B981' },
+        { label: t('heroDashboard.rating'), value: '4.9', icon: Star, color: '#FBBF24' },
     ]
 
     const notifications = [
-        { text: 'New booking confirmed', time: '2m ago', type: 'success' },
-        { text: 'Reminder sent to Maria', time: '5m ago', type: 'info' },
+        { text: t('heroDashboard.notifConfirmed'), time: '2m ago', type: 'success' },
+        { text: t('heroDashboard.notifReminder'), time: '5m ago', type: 'info' },
     ]
+
+    const days = t('heroDashboard.days')
 
     return (
         <div className="hero-dashboard">
@@ -55,10 +60,10 @@ const HeroDashboard = () => {
                             <span>BS</span>
                         </div>
                         <div className="hero-dashboard__business">
-                            <span className="hero-dashboard__business-name">Beauty Studio</span>
+                            <span className="hero-dashboard__business-name">{t('heroDashboard.businessName')}</span>
                             <span className="hero-dashboard__business-location">
                                 <MapPin size={10} />
-                                Lisbon, PT
+                                {t('heroDashboard.location')}
                             </span>
                         </div>
                     </div>
@@ -104,7 +109,7 @@ const HeroDashboard = () => {
                     <div className="hero-dashboard__schedule">
                         <div className="hero-dashboard__schedule-header">
                             <Calendar size={14} />
-                            <span>Today's Schedule</span>
+                            <span>{t('heroDashboard.todaysSchedule')}</span>
                         </div>
                         <div className="hero-dashboard__slots">
                             {timeSlots.map((slot, index) => (
@@ -126,7 +131,7 @@ const HeroDashboard = () => {
                                         </div>
                                     ) : (
                                         <div className="hero-dashboard__slot-available">
-                                            Available
+                                            {t('heroDashboard.available')}
                                         </div>
                                     )}
                                 </motion.div>
@@ -139,7 +144,7 @@ const HeroDashboard = () => {
                         <div className="hero-dashboard__notifications">
                             <div className="hero-dashboard__notifications-header">
                                 <Bell size={12} />
-                                <span>Activity</span>
+                                <span>{t('heroDashboard.activity')}</span>
                             </div>
                             {notifications.map((notif, index) => (
                                 <motion.div 
@@ -162,7 +167,7 @@ const HeroDashboard = () => {
                         <div className="hero-dashboard__chart">
                             <div className="hero-dashboard__chart-header">
                                 <TrendingUp size={12} />
-                                <span>This Week</span>
+                                <span>{t('heroDashboard.thisWeek')}</span>
                             </div>
                             <div className="hero-dashboard__chart-bars">
                                 {[40, 65, 45, 80, 55, 90, 70].map((height, i) => (
@@ -176,7 +181,7 @@ const HeroDashboard = () => {
                                 ))}
                             </div>
                             <div className="hero-dashboard__chart-labels">
-                                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
+                                {days.map((day, i) => (
                                     <span key={i}>{day}</span>
                                 ))}
                             </div>
@@ -195,8 +200,8 @@ const HeroDashboard = () => {
                         <CheckCircle size={16} />
                     </div>
                     <div className="hero-dashboard__floating-notif-content">
-                        <span className="hero-dashboard__floating-notif-title">New Booking!</span>
-                        <span className="hero-dashboard__floating-notif-text">Sofia M. booked for 18:00</span>
+                        <span className="hero-dashboard__floating-notif-title">{t('heroDashboard.newBooking')}</span>
+                        <span className="hero-dashboard__floating-notif-text">{t('heroDashboard.bookedFor')}</span>
                     </div>
                 </motion.div>
             </motion.div>

@@ -44,7 +44,7 @@ const LanguageToggle = () => {
             className="language-toggle"
             onClick={toggleLanguage}
             aria-label={language === 'en' ? 'Switch to Portuguese' : 'Switch to English'}
-            title={language === 'en' ? 'Portugues' : 'English'}
+            title={language === 'en' ? 'Switch to Português' : 'Switch to English'}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
         >
@@ -52,7 +52,7 @@ const LanguageToggle = () => {
                 {language === 'en' ? <UKFlag /> : <PortugalFlag />}
             </span>
             <span className="language-toggle__text">
-                {language === 'en' ? 'PT' : 'EN'}
+                {language === 'en' ? 'EN' : 'PT'}
             </span>
         </motion.button>
     )

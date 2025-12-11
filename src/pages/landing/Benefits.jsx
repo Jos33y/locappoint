@@ -1,4 +1,4 @@
-// Benefits.jsx - Enhanced Why LocAppoint section with animated stats
+// Benefits.jsx - Enhanced Why LocAppoint section with animated stats (Translated)
 // Location: src/pages/landing/Benefits.jsx
 
 import { useState, useEffect, useRef } from 'react'
@@ -12,6 +12,7 @@ import {
     Sparkles,
     CheckCircle2
 } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 // Animated counter hook
 const useCountUp = (end, duration = 2000, startCounting = false) => {
@@ -186,63 +187,26 @@ const BenefitCard = ({ benefit, index, isInView }) => {
 }
 
 const Benefits = () => {
+    const { t } = useLandingTranslation()
     const containerRef = useRef(null)
     const isInView = useInView(containerRef, { once: true, margin: "-100px" })
     
-    const benefits = [
-        {
-            icon: Clock,
-            title: 'Save 10+ Hours Weekly',
-            description: 'Stop playing phone tag. Automated booking, reminders, and scheduling free up your time.',
-            numericValue: 10,
-            maxValue: 15,
-            prefix: '',
-            suffix: '+',
-            statLabel: 'hours saved weekly',
-            gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-            color: '#8B5CF6',
-            colorRgb: '139, 92, 246'
-        },
-        {
-            icon: TrendingUp,
-            title: 'Grow Your Client Base',
-            description: 'Get discovered by thousands searching for local services. Turn browsers into clients.',
-            numericValue: 3,
-            maxValue: 5,
-            prefix: '',
-            suffix: 'x',
-            statLabel: 'more visibility',
-            gradient: 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
-            color: '#06B6D4',
-            colorRgb: '6, 182, 212'
-        },
-        {
-            icon: Heart,
-            title: 'Reduce No-Shows',
-            description: 'Automatic SMS and email reminders ensure clients remember appointments.',
-            numericValue: 90,
-            maxValue: 100,
-            prefix: '',
-            suffix: '%',
-            statLabel: 'fewer no-shows',
-            gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-            color: '#10B981',
-            colorRgb: '16, 185, 129'
-        },
-        {
-            icon: Wallet,
-            title: 'Increase Revenue',
-            description: 'Accept bookings 24/7, even while you sleep. Never miss an opportunity.',
-            numericValue: 30,
-            maxValue: 50,
-            prefix: '+',
-            suffix: '%',
-            statLabel: 'revenue increase',
-            gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
-            color: '#F59E0B',
-            colorRgb: '245, 158, 11'
-        }
+    const benefitsData = t('benefits.items')
+    const benefitIcons = [Clock, TrendingUp, Heart, Wallet]
+    const benefitMeta = [
+        { numericValue: 10, maxValue: 15, prefix: '', suffix: '+', gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)', color: '#8B5CF6', colorRgb: '139, 92, 246' },
+        { numericValue: 3, maxValue: 5, prefix: '', suffix: 'x', gradient: 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)', color: '#06B6D4', colorRgb: '6, 182, 212' },
+        { numericValue: 90, maxValue: 100, prefix: '', suffix: '%', gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)', color: '#10B981', colorRgb: '16, 185, 129' },
+        { numericValue: 30, maxValue: 50, prefix: '+', suffix: '%', gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)', color: '#F59E0B', colorRgb: '245, 158, 11' }
     ]
+    
+    const benefits = benefitsData.map((item, index) => ({
+        icon: benefitIcons[index],
+        title: item.title,
+        description: item.description,
+        statLabel: item.statLabel,
+        ...benefitMeta[index]
+    }))
 
     return (
         <section className="benefits" id="benefits" ref={containerRef}>
@@ -293,14 +257,14 @@ const Benefits = () => {
                 >
                     <div className="section-badge">
                         <Award size={14} />
-                        <span>Why LocAppoint</span>
+                        <span>{t('benefits.badge')}</span>
                     </div>
                     <h2 className="section-title">
-                        Results that 
-                        <span className="ai-gradient-text"> speak for themselves</span>
+                        {t('benefits.title')}
+                        <span className="ai-gradient-text">{t('benefits.titleHighlight')}</span>
                     </h2>
                     <p className="section-subtitle">
-                        Join business owners who are saving time, reducing stress, and growing their revenue.
+                        {t('benefits.subtitle')}
                     </p>
                 </motion.div>
 

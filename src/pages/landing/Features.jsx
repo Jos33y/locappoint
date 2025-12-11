@@ -1,4 +1,4 @@
-// Features.jsx - Bento Grid Layout
+// Features.jsx - Bento Grid Layout (Translated)
 // Location: src/pages/landing/Features.jsx
 
 import { motion } from 'framer-motion'
@@ -13,8 +13,11 @@ import {
     CheckCircle,
     Zap
 } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const Features = () => {
+    const { t } = useLandingTranslation()
+    const days = t('features.days')
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -56,14 +59,14 @@ const Features = () => {
                 >
                     <div className="section-badge">
                         <Zap size={12} />
-                        <span>Core Features</span>
+                        <span>{t('features.badge')}</span>
                     </div>
                     <h2 className="section-title">
-                        The essentials,
-                        <span className="ai-gradient-text"> done right</span>
+                        {t('features.title')}
+                        <span className="ai-gradient-text">{t('features.titleHighlight')}</span>
                     </h2>
                     <p className="section-subtitle">
-                        Everything you need to manage bookings professionally, without the complexity.
+                        {t('features.subtitle')}
                     </p>
                 </motion.div>
 
@@ -85,19 +88,19 @@ const Features = () => {
                             <div className="features__card-icon" style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }}>
                                 <Calendar size={24} />
                             </div>
-                            <h3 className="features__card-title">24/7 Online Booking</h3>
+                            <h3 className="features__card-title">{t('features.onlineBooking.title')}</h3>
                             <p className="features__card-description">
-                                Let clients book appointments anytime, anywhere. Your calendar stays updated automatically while you focus on what matters.
+                                {t('features.onlineBooking.description')}
                             </p>
                             
                             {/* Mini Calendar Visual */}
                             <div className="features__card-visual">
                                 <div className="features__mini-calendar">
                                     <div className="features__mini-calendar-header">
-                                        <span>December 2025</span>
+                                        <span>{t('features.onlineBooking.month')}</span>
                                     </div>
                                     <div className="features__mini-calendar-grid">
-                                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
+                                        {days.map((day, i) => (
                                             <span key={i} className="features__mini-calendar-day-label">{day}</span>
                                         ))}
                                         {[...Array(31)].map((_, i) => (
@@ -128,9 +131,9 @@ const Features = () => {
                             <div className="features__card-icon" style={{ background: 'linear-gradient(135deg, #F59E0B, #F97316)' }}>
                                 <Bell size={22} />
                             </div>
-                            <h3 className="features__card-title">Automatic Reminders</h3>
+                            <h3 className="features__card-title">{t('features.reminders.title')}</h3>
                             <p className="features__card-description">
-                                Reduce no-shows by up to 70% with SMS and email reminders sent automatically.
+                                {t('features.reminders.description')}
                             </p>
                             
                             {/* Notification Stack Visual */}
@@ -141,7 +144,7 @@ const Features = () => {
                                     transition={{ duration: 3, repeat: Infinity, delay: 0 }}
                                 >
                                     <Bell size={14} />
-                                    <span>Reminder: Tomorrow 10:00</span>
+                                    <span>{t('features.reminders.notif1')}</span>
                                 </motion.div>
                                 <motion.div 
                                     className="features__notif features__notif--2"
@@ -149,7 +152,7 @@ const Features = () => {
                                     transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
                                 >
                                     <CheckCircle size={14} />
-                                    <span>Booking confirmed!</span>
+                                    <span>{t('features.reminders.notif2')}</span>
                                 </motion.div>
                             </div>
                         </div>
@@ -165,9 +168,9 @@ const Features = () => {
                             <div className="features__card-icon" style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
                                 <CreditCard size={20} />
                             </div>
-                            <h3 className="features__card-title">Easy Payments</h3>
+                            <h3 className="features__card-title">{t('features.payments.title')}</h3>
                             <p className="features__card-description">
-                                Accept deposits and full payments online.
+                                {t('features.payments.description')}
                             </p>
                         </div>
                     </motion.div>
@@ -182,9 +185,9 @@ const Features = () => {
                             <div className="features__card-icon" style={{ background: 'linear-gradient(135deg, #EC4899, #DB2777)' }}>
                                 <Users size={20} />
                             </div>
-                            <h3 className="features__card-title">Client Management</h3>
+                            <h3 className="features__card-title">{t('features.clients.title')}</h3>
                             <p className="features__card-description">
-                                Track history, preferences, and notes.
+                                {t('features.clients.description')}
                             </p>
                         </div>
                     </motion.div>
@@ -201,9 +204,9 @@ const Features = () => {
                                     <div className="features__card-icon" style={{ background: 'linear-gradient(135deg, #06B6D4, #0891B2)' }}>
                                         <BarChart3 size={22} />
                                     </div>
-                                    <h3 className="features__card-title">Real-time Analytics</h3>
+                                    <h3 className="features__card-title">{t('features.analytics.title')}</h3>
                                     <p className="features__card-description">
-                                        Understand your business with insights on bookings, revenue, peak hours, and client retention.
+                                        {t('features.analytics.description')}
                                     </p>
                                 </div>
                                 
@@ -256,9 +259,9 @@ const Features = () => {
                             <div className="features__card-icon" style={{ background: 'linear-gradient(135deg, #A855F7, #9333EA)' }}>
                                 <Smartphone size={20} />
                             </div>
-                            <h3 className="features__card-title">Mobile First</h3>
+                            <h3 className="features__card-title">{t('features.mobile.title')}</h3>
                             <p className="features__card-description">
-                                Works perfectly on any device.
+                                {t('features.mobile.description')}
                             </p>
                         </div>
                     </motion.div>
@@ -273,9 +276,9 @@ const Features = () => {
                             <div className="features__card-icon" style={{ background: 'linear-gradient(135deg, #3B82F6, #2563EB)' }}>
                                 <Globe size={20} />
                             </div>
-                            <h3 className="features__card-title">Multi-Language</h3>
+                            <h3 className="features__card-title">{t('features.language.title')}</h3>
                             <p className="features__card-description">
-                                English & Portuguese supported.
+                                {t('features.language.description')}
                             </p>
                         </div>
                     </motion.div>

@@ -1,4 +1,4 @@
-// ProblemSolution.jsx - Enhanced Reality section with animated contrast
+// ProblemSolution.jsx - Enhanced Reality section with animated contrast (Translated)
 // Location: src/pages/landing/ProblemSolution.jsx
 
 import { motion } from 'framer-motion'
@@ -15,20 +15,26 @@ import {
     Zap,
     Sparkles 
 } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const ProblemSolution = () => {
+    const { t } = useLandingTranslation()
+    
+    const problemTexts = t('problem.problems')
+    const solutionTexts = t('problem.solutions')
+    
     const problems = [
-        { icon: Phone, text: 'Losing clients to missed calls and messages' },
-        { icon: Clock, text: 'Wasting hours on scheduling and reminders' },
-        { icon: Calendar, text: 'Double bookings and calendar chaos' },
-        { icon: Users, text: 'No way for new clients to find you' }
+        { icon: Phone, text: problemTexts[0] },
+        { icon: Clock, text: problemTexts[1] },
+        { icon: Calendar, text: problemTexts[2] },
+        { icon: Users, text: problemTexts[3] }
     ]
 
     const solutions = [
-        { icon: Bell, text: 'Clients book 24/7, even when you sleep' },
-        { icon: Calendar, text: 'Smart scheduling with automatic reminders' },
-        { icon: TrendingUp, text: 'Get discovered by thousands of local clients' },
-        { icon: Users, text: 'Build loyalty with seamless rebooking' }
+        { icon: Bell, text: solutionTexts[0] },
+        { icon: Calendar, text: solutionTexts[1] },
+        { icon: TrendingUp, text: solutionTexts[2] },
+        { icon: Users, text: solutionTexts[3] }
     ]
 
     const problemVariants = {
@@ -99,14 +105,14 @@ const ProblemSolution = () => {
                 >
                     <div className="section-badge">
                         <AlertCircle size={14} />
-                        <span>The Reality</span>
+                        <span>{t('problem.badge')}</span>
                     </div>
                     <h2 className="section-title">
-                        Running a local business is 
-                        <span className="ai-gradient-text"> hard enough</span>
+                        {t('problem.title')}
+                        <span className="ai-gradient-text">{t('problem.titleHighlight')}</span>
                     </h2>
                     <p className="section-subtitle">
-                        You started your business to do what you love, not to spend hours managing bookings.
+                        {t('problem.subtitle')}
                     </p>
                 </motion.div>
 
@@ -126,7 +132,7 @@ const ProblemSolution = () => {
                             <div className="problem-solution__icon-badge problem-solution__icon-badge--red">
                                 <X size={18} strokeWidth={2.5} />
                             </div>
-                            <span>Without LocAppoint</span>
+                            <span>{t('problem.without')}</span>
                         </div>
                         
                         <ul className="problem-solution__list">
@@ -186,7 +192,7 @@ const ProblemSolution = () => {
                             <div className="problem-solution__icon-badge problem-solution__icon-badge--green">
                                 <Check size={18} strokeWidth={2.5} />
                             </div>
-                            <span>With LocAppoint</span>
+                            <span>{t('problem.with')}</span>
                             <Sparkles size={14} className="problem-solution__sparkle" />
                         </div>
                         
@@ -223,7 +229,7 @@ const ProblemSolution = () => {
                     transition={{ duration: 0.5, delay: 0.6 }}
                 >
                     <Zap size={16} />
-                    <span>Transform your business operations today</span>
+                    <span>{t('problem.transform')}</span>
                 </motion.div>
             </div>
         </section>

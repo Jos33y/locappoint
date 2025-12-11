@@ -13,13 +13,11 @@ const translations = {
     en: {
         // ========== NAVIGATION ==========
         nav: {
-            items: [
-                { label: 'Features', href: 'features' },
-                { label: 'For Whom', href: 'audience' },
-                { label: 'Benefits', href: 'benefits' }
-            ],
+            features: 'Features',
+            forWhom: 'For Whom',
+            whyLocAppoint: 'Why LocAppoint',
             partnership: 'Partnership',
-            joinWaitlist: 'Join Waitlist'
+            joinWaitlist: 'Join the Waitlist'
         },
 
         // ========== HERO SECTION ==========
@@ -417,11 +415,9 @@ const translations = {
     pt: {
         // ========== NAVIGATION ==========
         nav: {
-            items: [
-                { label: 'Funcionalidades', href: 'features' },
-                { label: 'Para Quem', href: 'audience' },
-                { label: 'Benefícios', href: 'benefits' }
-            ],
+            features: 'Funcionalidades',
+            forWhom: 'Para Quem',
+            whyLocAppoint: 'Porquê LocAppoint',
             partnership: 'Parceria',
             joinWaitlist: 'Entrar na Lista'
         },
@@ -822,60 +818,26 @@ const translations = {
 
 export const LandingTranslationProvider = ({ children }) => {
     const [language, setLanguage] = useState(() => {
-        // Check localStorage first (user's manual choice takes priority)
+        // Check localStorage first
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('locappoint-landing-lang')
             if (saved && (saved === 'en' || saved === 'pt')) {
                 return saved
             }
+            // Check browser language
+            const browserLang = navigator.language?.toLowerCase()
+            if (browserLang?.startsWith('pt')) {
+                return 'pt'
+            }
         }
-        return 'en' // Default, will be updated by country detection
+        return 'en'
     })
-    
-    const [isDetecting, setIsDetecting] = useState(true)
-
-    // Detect country on mount (only if no saved preference)
-    useEffect(() => {
-        const detectCountry = async () => {
-            // Skip if user already has a saved preference
-            const saved = localStorage.getItem('locappoint-landing-lang')
-            if (saved) {
-                setIsDetecting(false)
-                return
-            }
-
-            try {
-                // Use free IP geolocation API
-                const response = await fetch('https://api.country.is/', { 
-                    signal: AbortSignal.timeout(3000) // 3 second timeout
-                })
-                const data = await response.json()
-                
-                // If user is in Portugal, set Portuguese
-                if (data.country === 'PT') {
-                    setLanguage('pt')
-                }
-            } catch (error) {
-                // Fallback: check browser language if API fails
-                const browserLang = navigator.language?.toLowerCase()
-                if (browserLang?.startsWith('pt')) {
-                    setLanguage('pt')
-                }
-            } finally {
-                setIsDetecting(false)
-            }
-        }
-
-        detectCountry()
-    }, [])
 
     // Save language preference
     useEffect(() => {
-        if (!isDetecting) {
-            localStorage.setItem('locappoint-landing-lang', language)
-        }
+        localStorage.setItem('locappoint-landing-lang', language)
         document.documentElement.lang = language
-    }, [language, isDetecting])
+    }, [language])
 
     // Toggle between languages
     const toggleLanguage = useCallback(() => {

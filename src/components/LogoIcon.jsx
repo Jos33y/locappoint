@@ -51,4 +51,4 @@ const LogoIcon = ({ size = 32, className = '' }) => (
     </svg>
 )
 
-export default LogoIcon
+export default LogoIcon 

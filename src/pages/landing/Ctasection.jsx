@@ -1,10 +1,13 @@
-// FinalCTA.jsx - Enhanced Final Call to Action with particles and effects
-// Location: src/pages/landing/FinalCTA.jsx
+// Ctasection.jsx - Enhanced Final Call to Action with particles and effects (Translated)
+// Location: src/pages/landing/Ctasection.jsx
 
 import { motion } from 'framer-motion'
 import { ArrowRight, Sparkles, Rocket, Star, Zap } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const FinalCTA = ({ onWaitlistClick, onPartnershipClick }) => {
+    const { t } = useLandingTranslation()
+    
     // Generate floating particles
     const particles = [...Array(20)].map((_, i) => ({
         id: i,
@@ -123,7 +126,7 @@ const FinalCTA = ({ onWaitlistClick, onPartnershipClick }) => {
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.1 }}
                         >
-                            Ready to grow your business?
+                            {t('finalCta.title')}
                         </motion.h2>
                         
                         <motion.p 
@@ -133,7 +136,7 @@ const FinalCTA = ({ onWaitlistClick, onPartnershipClick }) => {
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.2 }}
                         >
-                            Join 100+ businesses already on the waitlist. Be among the first to launch when we go live.
+                            {t('finalCta.subtitle')}
                         </motion.p>
 
                         <motion.div 
@@ -151,7 +154,7 @@ const FinalCTA = ({ onWaitlistClick, onPartnershipClick }) => {
                                 whileTap={{ scale: 0.98 }}
                             >
                                 <span className="final-cta__btn-pulse" />
-                                <span className="final-cta__btn-text">Join the Waitlist</span>
+                                <span className="final-cta__btn-text">{t('finalCta.btnPrimary')}</span>
                                 <ArrowRight size={18} />
                             </motion.button>
                             
@@ -161,7 +164,7 @@ const FinalCTA = ({ onWaitlistClick, onPartnershipClick }) => {
                                 whileHover={{ scale: 1.03, y: -2 }}
                                 whileTap={{ scale: 0.98 }}
                             >
-                                Become a Partner
+                                {t('finalCta.btnSecondary')}
                             </motion.button>
                         </motion.div>
 
@@ -173,7 +176,7 @@ const FinalCTA = ({ onWaitlistClick, onPartnershipClick }) => {
                             transition={{ duration: 0.5, delay: 0.4 }}
                         >
                             <Zap size={14} />
-                            <span>Free to join • No credit card required • Launch early 2025</span>
+                            <span>{t('finalCta.note')}</span>
                         </motion.p>
                     </div>
                 </motion.div>

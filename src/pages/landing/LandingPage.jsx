@@ -23,7 +23,7 @@ import FinalCTA from './Ctasection'
 import Footer from '../../components/Footer'
 import WaitlistModal from './WaitlistModal'
 import PartnershipModal from './PartnershipModal'
-import FloatingButtons from '../../components/FloatingButtons'
+import FloatingButtons from '../../components/FloatingButtons' 
 
 // Minimum loader display time (ms)
 const MIN_LOADER_TIME = 2500;

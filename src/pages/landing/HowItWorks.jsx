@@ -1,4 +1,4 @@
-// HowItWorks.jsx - Enhanced How It Works with animated timeline
+// HowItWorks.jsx - Enhanced How It Works with animated timeline (Translated)
 // Location: src/pages/landing/HowItWorks.jsx
 
 import { useRef } from 'react'
@@ -11,49 +11,28 @@ import {
     TrendingUp,
     Sparkles
 } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const HowItWorks = () => {
+    const { t } = useLandingTranslation()
     const containerRef = useRef(null)
     const isInView = useInView(containerRef, { once: true, margin: "-100px" })
     
-    const steps = [
-        {
-            number: '01',
-            icon: UserPlus,
-            title: 'Create Your Profile',
-            description: 'Sign up in minutes. Add your services, pricing, and availability. No technical skills needed.',
-            gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-            color: '#8B5CF6',
-            colorRgb: '139, 92, 246'
-        },
-        {
-            number: '02',
-            icon: Search,
-            title: 'Get Discovered',
-            description: 'Your business appears in our marketplace. Share your booking link on social media and WhatsApp.',
-            gradient: 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
-            color: '#06B6D4',
-            colorRgb: '6, 182, 212'
-        },
-        {
-            number: '03',
-            icon: CalendarCheck,
-            title: 'Accept Bookings',
-            description: 'Clients book directly into your calendar. Automatic confirmations and reminders are sent.',
-            gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-            color: '#10B981',
-            colorRgb: '16, 185, 129'
-        },
-        {
-            number: '04',
-            icon: TrendingUp,
-            title: 'Grow Your Business',
-            description: 'Focus on your craft. Let LocAppoint handle scheduling, reminders, and client management.',
-            gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
-            color: '#F59E0B',
-            colorRgb: '245, 158, 11'
-        }
+    const stepsData = t('howItWorks.steps')
+    const stepIcons = [UserPlus, Search, CalendarCheck, TrendingUp]
+    const stepMeta = [
+        { number: '01', gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)', color: '#8B5CF6', colorRgb: '139, 92, 246' },
+        { number: '02', gradient: 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)', color: '#06B6D4', colorRgb: '6, 182, 212' },
+        { number: '03', gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)', color: '#10B981', colorRgb: '16, 185, 129' },
+        { number: '04', gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)', color: '#F59E0B', colorRgb: '245, 158, 11' }
     ]
+    
+    const steps = stepsData.map((step, index) => ({
+        icon: stepIcons[index],
+        title: step.title,
+        description: step.description,
+        ...stepMeta[index]
+    }))
 
     return (
         <section className="how-it-works" id="how-it-works">
@@ -105,14 +84,14 @@ const HowItWorks = () => {
                 >
                     <div className="section-badge">
                         <Rocket size={14} />
-                        <span>How It Works</span>
+                        <span>{t('howItWorks.badge')}</span>
                     </div>
                     <h2 className="section-title">
-                        Up and running 
-                        <span className="ai-gradient-text"> in minutes</span>
+                        {t('howItWorks.title')}
+                        <span className="ai-gradient-text">{t('howItWorks.titleHighlight')}</span>
                     </h2>
                     <p className="section-subtitle">
-                        Getting started is simple. No complicated setup, no hidden fees.
+                        {t('howItWorks.subtitle')}
                     </p>
                 </motion.div>
 
@@ -237,7 +216,7 @@ const HowItWorks = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.8 }}
                 >
-                    <span>Ready to start?</span>
+                    <span>{t('howItWorks.cta')}</span>
                     <div className="how-it-works__cta-arrow">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path 

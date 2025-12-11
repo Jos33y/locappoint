@@ -1,8 +1,10 @@
-// Footer.jsx - Premium footer with social links and modal triggers
-// Location: src/pages/landing/Footer.jsx
+// Footer.jsx - Premium footer with social links and modal triggers (Translated)
+// Location: src/components/Footer.jsx
 
 import { Heart } from 'lucide-react'
+import { useLandingTranslation } from '../hooks/useLandingTranslation'
 import LogoIcon from './LogoIcon'
+
 
 // Social media icons as SVG components
 const FacebookIcon = () => (
@@ -59,6 +61,7 @@ const socialLinks = [
 ]
 
 const Footer = ({ onPartnershipClick }) => {
+    const { t } = useLandingTranslation()
     const currentYear = new Date().getFullYear()
 
     const scrollToSection = (id) => {
@@ -83,57 +86,46 @@ const Footer = ({ onPartnershipClick }) => {
                             <span className="footer__logo-text">LocAppoint</span>
                         </a>
                         <p className="footer__tagline">
-                            Get discovered. Get booked. Grow your business.
+                            {t('footer.tagline')}
                         </p>
                     </div>
 
                     {/* Navigate column */}
                     <div className="footer__links">
-                        <h4 className="footer__links-title">Navigate</h4>
+                        <h4 className="footer__links-title">{t('footer.navigate')}</h4>
                         <nav className="footer__nav" aria-label="Footer navigation">
-                            <button 
-                                className="footer__link footer__link--btn"
-                                onClick={() => scrollToSection('features')}
-                                type="button"
-                            >
-                                Features
-                            </button>
-                            <button 
-                                className="footer__link footer__link--btn"
-                                onClick={() => scrollToSection('audience')}
-                                type="button"
-                            >
-                                For Whom
-                            </button>
-                            <button 
-                                className="footer__link footer__link--btn"
-                                onClick={() => scrollToSection('benefits')}
-                                type="button"
-                            >
-                                Why LocAppoint
-                            </button>
+                            {t('nav.items').map((item) => (
+                                <button 
+                                    key={item.href}
+                                    className="footer__link footer__link--btn"
+                                    onClick={() => scrollToSection(item.href)}
+                                    type="button"
+                                >
+                                    {item.label}
+                                </button>
+                            ))}
                             <button 
                                 className="footer__link footer__link--btn"
                                 onClick={onPartnershipClick}
                                 type="button"
                             >
-                                Partnership
+                                {t('nav.partnership')}
                             </button>
                         </nav>
                     </div>
 
                     {/* Legal column */}
                     <div className="footer__links">
-                        <h4 className="footer__links-title">Legal</h4>
+                        <h4 className="footer__links-title">{t('footer.legal')}</h4>
                         <nav className="footer__nav" aria-label="Legal navigation">
-                            <a href="/terms" className="footer__link">Terms of Service</a>
-                            <a href="/privacy" className="footer__link">Privacy Policy</a>
+                            <a href="/terms" className="footer__link">{t('footer.terms')}</a>
+                            <a href="/privacy" className="footer__link">{t('footer.privacy')}</a>
                         </nav>
                     </div>
 
                     {/* Social column */}
                     <div className="footer__social-wrapper">
-                        <h4 className="footer__links-title">Follow Us</h4>
+                        <h4 className="footer__links-title">{t('footer.followUs')}</h4>
                         <div className="footer__social">
                             {socialLinks.map((social) => (
                                 <a
@@ -154,17 +146,17 @@ const Footer = ({ onPartnershipClick }) => {
                 {/* Bottom bar */}
                 <div className="footer__bottom">
                     <p className="footer__copyright">
-                        &copy; {currentYear} LocAppoint. A FlowleXx Group initiative.
+                        {t('footer.copyright', { year: currentYear })}
                     </p>
                     <p className="footer__dev">
-                        Crafted with{' '}
+                        {t('footer.craftedWith')}{' '}
                         <Heart 
                             size={14} 
                             fill="#ef4444" 
                             color="#ef4444" 
                             style={{ display: 'inline', verticalAlign: 'middle', margin: '0 3px' }} 
                         />
-                        {' '}by{' '}
+                        {' '}{t('footer.by')}{' '}
                         <a 
                             href="https://thebrickdev.com/" 
                             target="_blank" 

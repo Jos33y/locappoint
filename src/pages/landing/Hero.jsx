@@ -1,11 +1,13 @@
-// Hero.jsx - Premium hero with floating dashboard mockup
+// Hero.jsx - Premium hero with floating dashboard mockup (Translated)
 // Location: src/pages/landing/Hero.jsx
 
 import { motion } from 'framer-motion'
 import { Rocket } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 import HeroDashboard from './HeroDashboard'
 
 const Hero = ({ onWaitlistClick, onPartnershipClick }) => {
+    const { t } = useLandingTranslation()
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -52,17 +54,17 @@ const Hero = ({ onWaitlistClick, onPartnershipClick }) => {
                     >
                         <motion.div className="hero__badge" variants={itemVariants}>
                             <Rocket size={12} />
-                            <span>Launching Soon</span>
+                            <span>{t('hero.badge')}</span>
                         </motion.div>
 
                         <motion.h1 className="hero__title" variants={itemVariants}>
-                            <span className="hero__title-line">Get Discovered.</span>
-                            <span className="hero__title-line hero__title-gradient">Get Booked.</span>
-                            <span className="hero__title-line">Grow Your Business.</span>
+                            <span className="hero__title-line">{t('hero.titleLine1')}</span>
+                            <span className="hero__title-line hero__title-gradient">{t('hero.titleLine2')}</span>
+                            <span className="hero__title-line">{t('hero.titleLine3')}</span>
                         </motion.h1>
 
                         <motion.p className="hero__subtitle" variants={itemVariants}>
-                            The all-in-one booking platform for local businesses. Accept bookings 24/7 and grow your revenue on autopilot.
+                            {t('hero.subtitle')}
                         </motion.p>
 
                         <motion.div className="hero__buttons" variants={itemVariants}>
@@ -70,23 +72,23 @@ const Hero = ({ onWaitlistClick, onPartnershipClick }) => {
                                 className="hero__btn hero__btn--primary"
                                 onClick={onWaitlistClick}
                             >
-                                <span>Join the Waitlist</span>
+                                <span>{t('hero.btnPrimary')}</span>
                             </button>
                             
                             <button
                                 className="hero__btn hero__btn--secondary"
                                 onClick={onPartnershipClick}
                             >
-                                Early Partnership
+                                {t('hero.btnSecondary')}
                             </button>
                         </motion.div>
 
                         <motion.div className="hero__trust" variants={itemVariants}>
-                            <span className="hero__trust-item">Free to start</span>
+                            <span className="hero__trust-item">{t('hero.trust1')}</span>
                             <span className="hero__trust-dot" />
-                            <span className="hero__trust-item">No technical skills needed</span>
+                            <span className="hero__trust-item">{t('hero.trust2')}</span>
                             <span className="hero__trust-dot" />
-                            <span className="hero__trust-item">GDPR compliant</span>
+                            <span className="hero__trust-item">{t('hero.trust3')}</span>
                         </motion.div>
                     </motion.div>
 

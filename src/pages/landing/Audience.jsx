@@ -1,4 +1,4 @@
-// Audience.jsx - Enhanced For Whom section with animated marquee
+// Audience.jsx - Enhanced For Whom section with animated marquee (Translated)
 // Location: src/pages/landing/Audience.jsx
 
 import { motion } from 'framer-motion'
@@ -17,71 +17,38 @@ import {
     Music,
     Utensils
 } from 'lucide-react'
+import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const Audience = () => {
-    // Main categories (displayed in grid)
-    const mainCategories = [
-        {
-            icon: Scissors,
-            title: 'Salons & Barbershops',
-            description: 'Hair stylists, barbers, and beauty professionals',
-            gradient: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
-            color: '#EC4899',
-            colorRgb: '236, 72, 153'
-        },
-        {
-            icon: Sparkles,
-            title: 'Spas & Wellness',
-            description: 'Massage therapists, estheticians, wellness centers',
-            gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-            color: '#8B5CF6',
-            colorRgb: '139, 92, 246'
-        },
-        {
-            icon: Dumbbell,
-            title: 'Fitness & Training',
-            description: 'Personal trainers, yoga instructors, studios',
-            gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
-            color: '#F59E0B',
-            colorRgb: '245, 158, 11'
-        },
-        {
-            icon: Stethoscope,
-            title: 'Health & Medical',
-            description: 'Dentists, physiotherapists, healthcare',
-            gradient: 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
-            color: '#06B6D4',
-            colorRgb: '6, 182, 212'
-        },
-        {
-            icon: Dog,
-            title: 'Pet Services',
-            description: 'Groomers, veterinarians, pet care',
-            gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-            color: '#10B981',
-            colorRgb: '16, 185, 129'
-        },
-        {
-            icon: Camera,
-            title: 'Creative Services',
-            description: 'Photographers, makeup artists, events',
-            gradient: 'linear-gradient(135deg, #F97316 0%, #FB923C 100%)',
-            color: '#F97316',
-            colorRgb: '249, 115, 22'
-        }
+    const { t } = useLandingTranslation()
+    
+    const categoriesData = t('audience.categories')
+    const marqueeLabels = t('audience.marquee')
+    
+    const categoryIcons = [Scissors, Sparkles, Dumbbell, Stethoscope, Dog, Camera]
+    const categoryGradients = [
+        { gradient: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)', color: '#EC4899', colorRgb: '236, 72, 153' },
+        { gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)', color: '#8B5CF6', colorRgb: '139, 92, 246' },
+        { gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)', color: '#F59E0B', colorRgb: '245, 158, 11' },
+        { gradient: 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)', color: '#06B6D4', colorRgb: '6, 182, 212' },
+        { gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)', color: '#10B981', colorRgb: '16, 185, 129' },
+        { gradient: 'linear-gradient(135deg, #F97316 0%, #FB923C 100%)', color: '#F97316', colorRgb: '249, 115, 22' }
     ]
 
+    // Main categories (displayed in grid)
+    const mainCategories = categoriesData.map((cat, index) => ({
+        icon: categoryIcons[index],
+        title: cat.title,
+        description: cat.description,
+        ...categoryGradients[index]
+    }))
+
     // Extra categories for marquee
-    const marqueeCategories = [
-        { icon: Brush, label: 'Lash & Brow Artists' },
-        { icon: Car, label: 'Auto Detailing' },
-        { icon: GraduationCap, label: 'Tutors & Coaches' },
-        { icon: Heart, label: 'Life Coaches' },
-        { icon: Music, label: 'Music Teachers' },
-        { icon: Utensils, label: 'Personal Chefs' },
-        { icon: Scissors, label: 'Nail Technicians' },
-        { icon: Sparkles, label: 'Aestheticians' },
-    ]
+    const marqueeIcons = [Brush, Car, GraduationCap, Heart, Music, Utensils, Scissors, Sparkles]
+    const marqueeCategories = marqueeLabels.map((label, index) => ({
+        icon: marqueeIcons[index],
+        label: label
+    }))
 
     return (
         <section className="audience" id="audience">
@@ -129,14 +96,14 @@ const Audience = () => {
                 >
                     <div className="section-badge">
                         <Users size={14} />
-                        <span>For Whom</span>
+                        <span>{t('audience.badge')}</span>
                     </div>
                     <h2 className="section-title">
-                        Built for 
-                        <span className="ai-gradient-text"> service businesses</span>
+                        {t('audience.title')}
+                        <span className="ai-gradient-text">{t('audience.titleHighlight')}</span>
                     </h2>
                     <p className="section-subtitle">
-                        If you book appointments, LocAppoint is built for you.
+                        {t('audience.subtitle')}
                     </p>
                 </motion.div>
 
@@ -218,7 +185,7 @@ const Audience = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.3 }}
                 >
-                    <p className="audience__marquee-label">And many more...</p>
+                    <p className="audience__marquee-label">{t('audience.marqueeLabel')}</p>
                     
                     <div className="audience__marquee-wrapper">
                         <div className="audience__marquee">
@@ -248,12 +215,12 @@ const Audience = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.5 }}
                 >
-                    <span>Don't see your industry?</span>
+                    <span>{t('audience.ctaText')}</span>
                     <button 
                         className="audience__cta-link"
                         onClick={() => window.openWaitlistModal?.()}
                     >
-                        Join waitlist & let us know
+                        {t('audience.ctaLink')}
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path 
                                 d="M3 8H13M13 8L9 4M13 8L9 12" 
