@@ -455,6 +455,22 @@
     line-height: 1;
 }
 
+.country-code-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 18px;
+    padding: 0 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--admin-purple), var(--admin-cyan));
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
 .country-name {
     font-size: 0.9rem;
     color: var(--admin-text);
