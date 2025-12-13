@@ -222,7 +222,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             name="firstName"
                                             value={formData.firstName}
                                             onChange={handleChange}
-                                            placeholder={t('partnershipModal.firstNamePlaceholder')}
+                                            placeholder={t('partnershipModal.firstName')}
                                             disabled={loading}
                                             required
                                         />
@@ -238,7 +238,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             name="lastName"
                                             value={formData.lastName}
                                             onChange={handleChange}
-                                            placeholder={t('partnershipModal.lastNamePlaceholder')}
+                                            placeholder={t('partnershipModal.lastName')}
                                             disabled={loading}
                                             required
                                         />
