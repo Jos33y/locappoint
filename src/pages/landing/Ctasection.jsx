@@ -1,8 +1,8 @@
-// Ctasection.jsx - Enhanced Final Call to Action with particles and effects (Translated)
+// Ctasection.jsx - Enhanced Final Call to Action with particles and effects
 // Location: src/pages/landing/Ctasection.jsx
 
 import { motion } from 'framer-motion'
-import { ArrowRight, Sparkles, Rocket, Star, Zap } from 'lucide-react'
+import { ArrowRight, Sparkles, Rocket, Star, Zap, CheckCircle } from 'lucide-react'
 import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const FinalCTA = ({ onWaitlistClick, onPartnershipClick }) => {
@@ -24,6 +24,13 @@ const FinalCTA = ({ onWaitlistClick, onPartnershipClick }) => {
         { Icon: Zap, x: '85%', y: '25%', delay: 1 },
         { Icon: Rocket, x: '15%', y: '75%', delay: 2 },
         { Icon: Sparkles, x: '90%', y: '70%', delay: 0.5 },
+    ]
+
+    // Trust points using translations
+    const trustPoints = [
+        t('finalCta.trustFree'),
+        t('finalCta.trustNoCard'),
+        t('finalCta.trustLaunch')
     ]
 
     return (
@@ -168,16 +175,21 @@ const FinalCTA = ({ onWaitlistClick, onPartnershipClick }) => {
                             </motion.button>
                         </motion.div>
 
-                        <motion.p 
-                            className="final-cta__note"
+                        {/* Trust indicators */}
+                        <motion.div 
+                            className="final-cta__trust-list"
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.4 }}
                         >
-                            <Zap size={14} />
-                            <span>{t('finalCta.note')}</span>
-                        </motion.p>
+                            {trustPoints.map((point, index) => (
+                                <div key={index} className="final-cta__trust-item">
+                                    <CheckCircle size={14} />
+                                    <span>{point}</span>
+                                </div>
+                            ))}
+                        </motion.div>
                     </div>
                 </motion.div>
             </div>

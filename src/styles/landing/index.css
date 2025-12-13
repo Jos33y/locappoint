@@ -31,11 +31,16 @@
 @import './problem-solution.css';
 @import './features.css';
 @import './ai-capabilities.css';
+@import './product-preview.css';   /* Phase 2 */
 @import './audience.css';
+@import './client-value.css';      /* Phase 2 */
 @import './benefits.css';
+@import './social-proof.css';      /* Phase 2 */
 @import './how-it-works.css';
 @import './faq.css';
+@import './whatsapp-cta.css';      /* Phase 2 */
 @import './final-cta.css';
+
 
 /* 9. Modals and floating elements */
 @import './modals.css';

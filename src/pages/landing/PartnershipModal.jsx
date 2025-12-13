@@ -1,4 +1,4 @@
-// PartnershipModal.jsx - Partnership modal with AI aesthetic (Translated)
+// PartnershipModal.jsx - Partnership modal with Analytics
 // Location: src/pages/landing/PartnershipModal.jsx
 
 import { useState, useEffect } from 'react'
@@ -9,7 +9,8 @@ import {
     Mail, 
     Phone, 
     Building2, 
-    MapPin, 
+    MapPin,
+    Globe, 
     MessageSquare,
     CheckCircle, 
     AlertCircle, 
@@ -18,9 +19,13 @@ import {
 } from 'lucide-react'
 import { supabase } from '../../config/supabase'
 import { useLandingTranslation } from '../../hooks/useLandingTranslation'
+import { COUNTRIES } from '../../constants/countries'
+import { useUserCountry } from '../../hooks/useUserCountry'
+import { trackFormSubmit } from '../../services/analytics'
 
 const PartnershipModal = ({ isOpen, onClose }) => {
     const { t } = useLandingTranslation()
+    const { countryCode } = useUserCountry()
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -59,6 +64,13 @@ const PartnershipModal = ({ isOpen, onClose }) => {
             document.body.style.overflow = ''
         }
     }, [isOpen])
+
+    // Auto-set country from detected location
+    useEffect(() => {
+        if (countryCode && !formData.country) {
+            setFormData(prev => ({ ...prev, country: countryCode }))
+        }
+    }, [countryCode])
 
     // Close on escape key
     useEffect(() => {
@@ -115,11 +127,17 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                     organization_type: formData.organizationType,
                     organization_name: formData.organizationName.trim() || null,
                     city: formData.city.trim() || null,
-                    country: formData.country.trim() || null,
+                    country: formData.country || null,
                     partnership_interest: formData.partnershipInterest.trim() || null
                 }])
 
             if (dbError) throw dbError
+
+            // Track successful submission
+            await trackFormSubmit('partnership', {
+                country: formData.country,
+                organizationType: formData.organizationType
+            })
 
             setSuccess(true)
             setFormData({
@@ -164,36 +182,33 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                 <button 
                     className="modal__close" 
                     onClick={handleClose}
-                    aria-label={t('common.close')}
+                    aria-label="Close modal"
                 >
                     <X size={20} />
                 </button>
 
-                {/* Content */}
                 <div className="modal__content">
                     {!success ? (
                         <>
                             {/* Header */}
-                            <div className="modal__header">
+                            <div className="modal__header modal__header--cyan">
                                 <div className="modal__icon modal__icon--cyan">
-                                    <Handshake size={24} />
+                                    <Handshake size={28} />
                                 </div>
-                                <h2 className="modal__title">{t('partnershipModal.title')}</h2>
-                                <p className="modal__subtitle">
-                                    {t('partnershipModal.subtitle')}
-                                </p>
+                                <h2>{t('partnershipModal.title')}</h2>
+                                <p>{t('partnershipModal.subtitle')}</p>
                             </div>
+
+                            {/* Error message */}
+                            {error && (
+                                <div className="modal__alert modal__alert--error">
+                                    <AlertCircle size={18} />
+                                    <span>{error}</span>
+                                </div>
+                            )}
 
                             {/* Form */}
                             <form onSubmit={handleSubmit} className="modal__form">
-                                {/* Error message */}
-                                {error && (
-                                    <div className="modal__alert modal__alert--error">
-                                        <AlertCircle size={16} />
-                                        <span>{error}</span>
-                                    </div>
-                                )}
-
                                 {/* Name row */}
                                 <div className="modal__row">
                                     <div className="modal__field">
@@ -207,13 +222,14 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             name="firstName"
                                             value={formData.firstName}
                                             onChange={handleChange}
-                                            placeholder={t('partnershipModal.firstName')}
+                                            placeholder={t('partnershipModal.firstNamePlaceholder')}
                                             disabled={loading}
                                             required
                                         />
                                     </div>
                                     <div className="modal__field">
                                         <label htmlFor="partner-lastName">
+                                            <User size={14} />
                                             {t('partnershipModal.lastName')} <span className="required">*</span>
                                         </label>
                                         <input
@@ -222,7 +238,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             name="lastName"
                                             value={formData.lastName}
                                             onChange={handleChange}
-                                            placeholder={t('partnershipModal.lastName')}
+                                            placeholder={t('partnershipModal.lastNamePlaceholder')}
                                             disabled={loading}
                                             required
                                         />
@@ -292,7 +308,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                 {/* Organization Name */}
                                 <div className="modal__field">
                                     <label htmlFor="partner-organizationName">
-                                        {t('partnershipModal.orgName')} <span className="optional">{t('partnershipModal.optional')}</span>
+                                        {t('partnershipModal.orgName')} <span className="optional">({t('common.optional')})</span>
                                     </label>
                                     <input
                                         type="text"
@@ -305,12 +321,12 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                     />
                                 </div>
 
-                                {/* Location row */}
+                                {/* Location row - City text input, Country dropdown */}
                                 <div className="modal__row">
                                     <div className="modal__field">
                                         <label htmlFor="partner-city">
                                             <MapPin size={14} />
-                                            {t('partnershipModal.city')} <span className="optional">{t('partnershipModal.optional')}</span>
+                                            {t('partnershipModal.city')} <span className="optional">({t('common.optional')})</span>
                                         </label>
                                         <input
                                             type="text"
@@ -324,17 +340,26 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                     </div>
                                     <div className="modal__field">
                                         <label htmlFor="partner-country">
-                                            {t('partnershipModal.country')} <span className="optional">{t('partnershipModal.optional')}</span>
+                                            <Globe size={14} />
+                                            {t('partnershipModal.country')} <span className="optional">({t('common.optional')})</span>
                                         </label>
-                                        <input
-                                            type="text"
-                                            id="partner-country"
-                                            name="country"
-                                            value={formData.country}
-                                            onChange={handleChange}
-                                            placeholder={t('partnershipModal.countryPlaceholder')}
-                                            disabled={loading}
-                                        />
+                                        <div className="modal__select-wrapper">
+                                            <select
+                                                id="partner-country"
+                                                name="country"
+                                                value={formData.country}
+                                                onChange={handleChange}
+                                                disabled={loading}
+                                            >
+                                                <option value="">{t('partnershipModal.countryPlaceholder')}</option>
+                                                {COUNTRIES.map(country => (
+                                                    <option key={country.code} value={country.code}>
+                                                        {country.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown size={16} className="modal__select-icon" />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -342,7 +367,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                 <div className="modal__field">
                                     <label htmlFor="partner-interest">
                                         <MessageSquare size={14} />
-                                        {t('partnershipModal.interest')} <span className="optional">{t('partnershipModal.optional')}</span>
+                                        {t('partnershipModal.interest')} <span className="optional">({t('common.optional')})</span>
                                     </label>
                                     <textarea
                                         id="partner-interest"

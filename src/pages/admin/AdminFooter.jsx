@@ -1,4 +1,4 @@
-// AdminFooter.jsx - Simple admin footer
+// AdminFooter.jsx - Admin footer
 // Location: src/pages/admin/AdminFooter.jsx
 
 const AdminFooter = () => {

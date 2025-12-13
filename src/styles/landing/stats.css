@@ -316,6 +316,13 @@
     letter-spacing: -0.02em;
 }
 
+/* Text-based value (like "Worldwide") - slightly smaller */
+.stats__value--text {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    letter-spacing: -0.01em;
+    font-weight: 600;
+}
+
 /* ===== LABEL ===== */
 .stats__label {
     font-size: 0.85rem;
@@ -400,6 +407,10 @@
         font-size: 2rem;
     }
 
+    .stats__value--text {
+        font-size: 1.25rem;
+    }
+
     .stats__label {
         font-size: 0.7rem;
         letter-spacing: 0.05em;
@@ -426,6 +437,10 @@
 
     .stats__value {
         font-size: 1.75rem;
+    }
+
+    .stats__value--text {
+        font-size: 1.1rem;
     }
 
     .stats__label {

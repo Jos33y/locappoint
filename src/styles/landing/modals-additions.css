@@ -1,0 +1,21 @@
+/* ========== PHASE 1 ADDITIONS ========== */
+/* Add these styles to the END of your existing modals.css */
+
+/* Animated conditional field (for business type dropdown) */
+.modal__field--animate {
+    animation: fieldSlideDown 0.3s ease-out;
+    overflow: hidden;
+}
+
+@keyframes fieldSlideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        max-height: 150px;
+        transform: translateY(0);
+    }
+}

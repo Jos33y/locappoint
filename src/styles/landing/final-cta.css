@@ -269,7 +269,29 @@
     background: rgba(139, 92, 246, 0.1);
 }
 
-/* ===== NOTE ===== */
+/* ===== TRUST LIST (NEW) ===== */
+.final-cta__trust-list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.final-cta__trust-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.final-cta__trust-item svg {
+    color: #10B981;
+    flex-shrink: 0;
+}
+
+/* ===== OLD NOTE STYLES (kept for backwards compatibility) ===== */
 .final-cta__note {
     display: flex;
     align-items: center;
@@ -331,6 +353,11 @@
         padding: 14px 28px;
     }
 
+    .final-cta__trust-list {
+        flex-direction: column;
+        gap: 12px;
+    }
+
     /* Hide floating icons on tablet */
     .final-cta__floating-icon {
         display: none;
@@ -370,10 +397,12 @@
         font-size: 0.95rem;
     }
 
-    .final-cta__note {
+    .final-cta__trust-list {
+        gap: 10px;
+    }
+
+    .final-cta__trust-item {
         font-size: 0.8rem;
-        flex-wrap: wrap;
-        text-align: center;
     }
 
     /* Reduce particle count effect on mobile */

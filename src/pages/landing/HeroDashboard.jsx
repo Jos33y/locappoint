@@ -16,6 +16,9 @@ import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 const HeroDashboard = () => {
     const { t } = useLandingTranslation()
+
+    // Get current day with leading zero
+    const currentDay = new Date().getDate().toString().padStart(2, '0')
     
     // Sample booking data
     const timeSlots = [
@@ -28,7 +31,7 @@ const HeroDashboard = () => {
     ]
 
     const stats = [
-        { label: t('heroDashboard.today'), value: '12', icon: Calendar, color: '#8B5CF6' },
+        { label: t('heroDashboard.today'), value: currentDay, icon: Calendar, color: '#8B5CF6' },
         { label: t('heroDashboard.revenue'), value: '€847', icon: TrendingUp, color: '#10B981' },
         { label: t('heroDashboard.rating'), value: '4.9', icon: Star, color: '#FBBF24' },
     ]

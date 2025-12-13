@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { Analytics } from "@vercel/analytics/react"
 import ProtectedRoute from './components/common/ProtectedRoute'
 import LandingPage from './pages/landing/LandingPage'
 import AdminPage from './pages/admin/AdminPage'
@@ -35,11 +36,11 @@ const App = () => {
     <>
       <AuthProvider>
         <BrowserRouter>
-        <ScrollToTop />
+          <ScrollToTop />
           <Routes>
             {/* landing page */}
             <Route path="/" element={<LandingPage />} />
-            <Route path="/admin" element={<AdminPage />} /> 
+            <Route path="/admin" element={<AdminPage />} />
 
             {/* app pages */}
             <Route path="/app" element={<AppHome />} />
@@ -90,6 +91,7 @@ const App = () => {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      {import.meta.env.PROD && <Analytics />}
     </>
   )
 }

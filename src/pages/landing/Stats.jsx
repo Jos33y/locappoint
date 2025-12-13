@@ -1,9 +1,9 @@
-// Stats.jsx - Enhanced Stats section with count-up and visual effects (Translated)
+// Stats.jsx - Enhanced Stats section with count-up and visual effects
 // Location: src/pages/landing/Stats.jsx
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { Building2, LayoutGrid, MapPin, CreditCard, Sparkles } from 'lucide-react'
+import { Building2, LayoutGrid, Globe, CreditCard, Sparkles } from 'lucide-react'
 import { useLandingTranslation } from '../../hooks/useLandingTranslation'
 
 // Count-up hook
@@ -38,6 +38,11 @@ const useCountUp = (end, duration = 2000, startCounting = false) => {
 // Individual stat card with count-up
 const StatCard = ({ stat, index, isInView }) => {
     const count = useCountUp(stat.numericValue, 2000 + index * 200, isInView)
+    
+    // For non-numeric stats (like "Worldwide"), show the display value directly
+    const displayValue = stat.isText 
+        ? stat.displayValue 
+        : `${stat.prefix}${count}${stat.suffix}`
     
     return (
         <motion.div 
@@ -91,14 +96,14 @@ const StatCard = ({ stat, index, isInView }) => {
             
             {/* Animated value */}
             <div 
-                className="stats__value"
+                className={`stats__value ${stat.isText ? 'stats__value--text' : ''}`}
                 style={{ 
                     background: stat.gradient,
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent'
                 }}
             >
-                {stat.prefix}{count}{stat.suffix}
+                {displayValue}
             </div>
             
             <div className="stats__label">{stat.label}</div>
@@ -113,7 +118,7 @@ const StatCard = ({ stat, index, isInView }) => {
 }
 
 const Stats = () => {
-    const { t } = useLandingTranslation()
+    const { t, language } = useLandingTranslation()
     const ref = useRef(null)
     const isInView = useInView(ref, { once: true, margin: "-100px" })
     
@@ -125,7 +130,8 @@ const Stats = () => {
             suffix: '+',
             label: t('stats.businessesWaiting'),
             gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-            color: 'rgba(139, 92, 246, 0.5)'
+            color: 'rgba(139, 92, 246, 0.5)',
+            isText: false
         },
         {
             icon: LayoutGrid,
@@ -134,16 +140,19 @@ const Stats = () => {
             suffix: '+',
             label: t('stats.serviceCategories'),
             gradient: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
-            color: 'rgba(6, 182, 212, 0.5)'
+            color: 'rgba(6, 182, 212, 0.5)',
+            isText: false
         },
         {
-            icon: MapPin,
-            numericValue: 4,
+            icon: Globe,
+            numericValue: 0,
             prefix: '',
             suffix: '',
-            label: t('stats.citiesLaunching'),
+            displayValue: language === 'pt' ? 'Mundial' : 'Worldwide',
+            label: t('stats.globalAccess'),
             gradient: 'linear-gradient(135deg, #A855F7 0%, #EC4899 100%)',
-            color: 'rgba(168, 85, 247, 0.5)'
+            color: 'rgba(168, 85, 247, 0.5)',
+            isText: true
         },
         {
             icon: CreditCard,
@@ -152,7 +161,8 @@ const Stats = () => {
             suffix: '€',
             label: t('stats.setupCost'),
             gradient: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
-            color: 'rgba(16, 185, 129, 0.5)'
+            color: 'rgba(16, 185, 129, 0.5)',
+            isText: false
         }
     ]
 

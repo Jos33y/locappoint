@@ -1,4 +1,4 @@
-// AdminHeader.jsx - Simple admin header with logout
+// AdminHeader.jsx - Admin header with logout
 // Location: src/pages/admin/AdminHeader.jsx
 
 import { LogOut, LayoutDashboard } from 'lucide-react'

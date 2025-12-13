@@ -16,7 +16,7 @@ export const PortugalFlag = ({ size = 20, className = '' }) => (
         <circle cx="12" cy="10" r="2.5" fill="#FFFFFF" />
     </svg>
 )
-
+ 
 export const UKFlag = ({ size = 20, className = '' }) => (
     <svg 
         width={size} 
