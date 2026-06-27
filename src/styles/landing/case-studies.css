@@ -1,0 +1,73 @@
+/* case-studies.css - The one light section on the page. Rhythm break per playbook. */
+
+.cases--light {
+    background: var(--surface-0-light);
+    color: var(--text-primary-light);
+    padding: var(--section-padding) 0;
+    border-top: 1px solid var(--border-medium-light);
+    border-bottom: 1px solid var(--border-medium-light);
+}
+
+.section-header--light .section-badge--light {
+    background: rgba(11, 21, 48, 0.06);
+    border-color: rgba(11, 21, 48, 0.12);
+    color: var(--ink);
+}
+
+.section-header--light .section-title--light {
+    color: var(--text-primary-light);
+}
+
+.section-header--light .section-subtitle--light {
+    color: var(--text-secondary-light);
+}
+
+.cases__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+}
+
+.placeholder {
+    background: var(--surface-1-light);
+    border: 1px dashed var(--border-strong-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.placeholder__city {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-secondary-light);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+}
+
+.placeholder__kind {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary-light);
+}
+
+.placeholder__divider {
+    width: 32px;
+    height: 1px;
+    background: var(--border-medium-light);
+}
+
+.placeholder__when {
+    font-size: var(--text-sm);
+    color: var(--text-muted-light);
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .cases__grid {
+        grid-template-columns: 1fr;
+    }
+}

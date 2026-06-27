@@ -1,42 +1,55 @@
-// SocialProof.jsx - Social proof and testimonials section
-// Location: src/pages/landing/SocialProof.jsx
+// SocialProof - 3 trust stats + testimonial carousel. Real quotes from waitlist signups.
+// Lift-and-swap of old layout with brand-token palette.
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-    Quote, 
-    Star, 
-    ChevronLeft, 
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import {
+    Quote,
+    Star,
+    ChevronLeft,
     ChevronRight,
-    Sparkles,
     Building2,
     Users,
     TrendingUp
 } from 'lucide-react'
-import { useLandingTranslation } from '../../hooks/useLandingTranslation'
+import { useT } from '../../hooks/useT'
+
+const EASE = [0.22, 1, 0.36, 1]
+
+const FALLBACK_TESTIMONIALS = [
+    {
+        name: 'Carlos Okonkwo',
+        role: 'Barbershop Owner, Lagos',
+        quote: "My clients always ask if they can book online. I've been waiting for an affordable solution that understands local businesses."
+    }
+]
 
 const SocialProof = () => {
-    const { t } = useLandingTranslation()
+    const t = useT()
+    const prefersReducedMotion = useReducedMotion()
     const [activeIndex, setActiveIndex] = useState(0)
 
-    const testimonials = t('socialProof.testimonials')
+    const raw = t('socialProof.testimonials', null)
+    const testimonials = Array.isArray(raw) && raw.length > 0 ? raw : FALLBACK_TESTIMONIALS
 
-    // Stats bar data
     const proofStats = [
         {
             icon: Building2,
-            value: '100+',
-            label: t('socialProof.stats.businesses')
+            accent: 'azure',
+            value: t('socialProof.stats.businessesValue', '100+'),
+            label: t('socialProof.stats.businesses', 'Businesses on waitlist')
         },
         {
             icon: Users,
-            value: '500+',
-            label: t('socialProof.stats.waitlist')
+            accent: 'signal',
+            value: t('socialProof.stats.waitlistValue', '500+'),
+            label: t('socialProof.stats.waitlist', 'People interested')
         },
         {
             icon: TrendingUp,
-            value: '10+',
-            label: t('socialProof.stats.industries')
+            accent: 'success',
+            value: t('socialProof.stats.industriesValue', '10+'),
+            label: t('socialProof.stats.industries', 'Industries served')
         }
     ]
 
@@ -48,158 +61,145 @@ const SocialProof = () => {
         setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)
     }
 
+    const active = testimonials[activeIndex] || FALLBACK_TESTIMONIALS[0]
+
     return (
         <section className="social-proof" id="testimonials">
-            {/* Background */}
-            <div className="social-proof__bg">
-                <div className="social-proof__grid-pattern" />
-                <div className="social-proof__glow social-proof__glow--1" />
-                <div className="social-proof__glow social-proof__glow--2" />
-            </div>
+            <div className="social-proof__ambient" aria-hidden="true" />
 
             <div className="container">
-                {/* Header */}
-                <motion.div 
-                    className="section-header"
+                <motion.header
+                    className="social-proof__header"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
+                    viewport={{ once: true, margin: '-80px' }}
+                    transition={{ duration: 0.6, ease: EASE }}
                 >
-                    <div className="section-badge">
-                        <Sparkles size={14} />
-                        <span>{t('socialProof.badge')}</span>
+                    <div className="social-proof__editorial">
+                        <span className="social-proof__editorial-rule" aria-hidden="true" />
+                        <span className="social-proof__editorial-text">
+                            {t('socialProof.eyebrow', 'TRUSTED BY BUSINESSES')}
+                        </span>
                     </div>
-                    <h2 className="section-title">
-                        {t('socialProof.title')}
-                        <span className="ai-gradient-text">{t('socialProof.titleHighlight')}</span>
+                    <h2 className="social-proof__title">
+                        {t('socialProof.title', 'See what early')}{' '}
+                        <span className="social-proof__title-accent">
+                            {t('socialProof.titleHighlight', 'supporters say')}
+                        </span>
                     </h2>
-                    <p className="section-subtitle">
-                        {t('socialProof.subtitle')}
+                    <p className="social-proof__subtitle">
+                        {t('socialProof.subtitle', 'Business owners are already excited about what LocAppoint will bring to their operations.')}
                     </p>
-                </motion.div>
+                </motion.header>
 
-                {/* Stats Bar */}
-                <motion.div 
+                <motion.div
                     className="social-proof__stats"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
+                    transition={{ duration: 0.5, delay: 0.1, ease: EASE }}
                 >
-                    {proofStats.map((stat, index) => (
-                        <div key={index} className="social-proof__stat">
-                            <div className="social-proof__stat-icon">
-                                <stat.icon size={18} />
+                    {proofStats.map((stat, index) => {
+                        const Icon = stat.icon
+                        return (
+                            <div key={index} className={`social-proof__stat social-proof__stat--${stat.accent}`}>
+                                <span className={`social-proof__stat-icon social-proof__stat-icon--${stat.accent}`}>
+                                    <Icon size={18} strokeWidth={1.75} />
+                                </span>
+                                <div className="social-proof__stat-content">
+                                    <span className="social-proof__stat-value">{stat.value}</span>
+                                    <span className="social-proof__stat-label">{stat.label}</span>
+                                </div>
                             </div>
-                            <div className="social-proof__stat-content">
-                                <span className="social-proof__stat-value">{stat.value}</span>
-                                <span className="social-proof__stat-label">{stat.label}</span>
-                            </div>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </motion.div>
 
-                {/* Testimonials Carousel */}
-                <motion.div 
+                <motion.div
                     className="social-proof__carousel"
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
+                    transition={{ duration: 0.5, delay: 0.2, ease: EASE }}
                 >
-                    {/* Quote icon decoration */}
-                    <div className="social-proof__quote-icon">
-                        <Quote size={48} />
+                    <div className="social-proof__quote-icon" aria-hidden="true">
+                        <Quote size={26} strokeWidth={1.5} />
                     </div>
 
-                    {/* Testimonial Card */}
-                    <div className="social-proof__testimonial-wrapper">
+                    <div className="social-proof__testimonial-wrap">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeIndex}
                                 className="social-proof__testimonial"
-                                initial={{ opacity: 0, x: 50 }}
+                                initial={{ opacity: 0, x: prefersReducedMotion ? 0 : 40 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -50 }}
-                                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                                exit={{ opacity: 0, x: prefersReducedMotion ? 0 : -40 }}
+                                transition={{ duration: 0.4, ease: EASE }}
                             >
-                                {/* Stars */}
-                                <div className="social-proof__stars">
+                                <div className="social-proof__stars" aria-label="5 out of 5 stars">
                                     {[...Array(5)].map((_, i) => (
-                                        <Star 
-                                            key={i} 
-                                            size={18} 
-                                            fill="#FBBF24" 
-                                            color="#FBBF24" 
-                                        />
+                                        <Star key={i} size={16} fill="var(--signal)" color="var(--signal)" />
                                     ))}
                                 </div>
 
-                                {/* Quote text */}
                                 <blockquote className="social-proof__quote">
-                                    "{testimonials[activeIndex].quote}"
+                                    &ldquo;{active.quote}&rdquo;
                                 </blockquote>
 
-                                {/* Author */}
                                 <div className="social-proof__author">
-                                    <div className="social-proof__avatar">
-                                        <span>{testimonials[activeIndex].name.charAt(0)}</span>
-                                    </div>
+                                    <span className="social-proof__avatar" aria-hidden="true">
+                                        {active.name?.charAt(0) || '?'}
+                                    </span>
                                     <div className="social-proof__author-info">
-                                        <span className="social-proof__author-name">
-                                            {testimonials[activeIndex].name}
-                                        </span>
-                                        <span className="social-proof__author-role">
-                                            {testimonials[activeIndex].role}
-                                        </span>
+                                        <span className="social-proof__author-name">{active.name}</span>
+                                        <span className="social-proof__author-role">{active.role}</span>
                                     </div>
                                 </div>
                             </motion.div>
                         </AnimatePresence>
                     </div>
 
-                    {/* Navigation */}
                     <div className="social-proof__nav">
-                        <button 
+                        <button
+                            type="button"
                             className="social-proof__nav-btn"
                             onClick={prevTestimonial}
                             aria-label="Previous testimonial"
                         >
-                            <ChevronLeft size={20} />
+                            <ChevronLeft size={18} />
                         </button>
 
-                        {/* Dots */}
                         <div className="social-proof__dots">
                             {testimonials.map((_, index) => (
                                 <button
                                     key={index}
+                                    type="button"
                                     className={`social-proof__dot ${index === activeIndex ? 'social-proof__dot--active' : ''}`}
                                     onClick={() => setActiveIndex(index)}
-                                    aria-label={`Go to testimonial ${index + 1}`}
+                                    aria-label={`Testimonial ${index + 1}`}
                                 />
                             ))}
                         </div>
 
-                        <button 
+                        <button
+                            type="button"
                             className="social-proof__nav-btn"
                             onClick={nextTestimonial}
                             aria-label="Next testimonial"
                         >
-                            <ChevronRight size={20} />
+                            <ChevronRight size={18} />
                         </button>
                     </div>
                 </motion.div>
 
-                {/* Bottom trust text */}
-                <motion.p 
-                    className="social-proof__trust-text"
+                <motion.p
+                    className="social-proof__trust"
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.4 }}
                 >
-                    {t('socialProof.trustText')}
+                    {t('socialProof.trustText', 'Real feedback from business owners on our waitlist.')}
                 </motion.p>
             </div>
         </section>

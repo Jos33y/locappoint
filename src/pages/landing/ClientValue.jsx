@@ -1,210 +1,139 @@
-// ClientValue.jsx - Value proposition for clients (people booking services)
-// Location: src/pages/landing/ClientValue.jsx
+// ClientValue - The marketplace side. What clients get from Locappoint.
+// Six benefits, lift-and-swap from old layout with brand-token palette.
 
-import { motion } from 'framer-motion'
-import { 
-    Search, 
-    Calendar, 
-    Clock, 
-    Star, 
-    Shield, 
+import { useRef } from 'react'
+import { motion, useInView, useReducedMotion } from 'framer-motion'
+import {
+    Search,
+    Calendar,
+    Clock,
+    Star,
+    Shield,
     Smartphone,
-    Users
+    ArrowRight
 } from 'lucide-react'
-import { useLandingTranslation } from '../../hooks/useLandingTranslation'
+import { useT } from '../../hooks/useT'
+
+const EASE = [0.22, 1, 0.36, 1]
 
 const ClientValue = () => {
-    const { t } = useLandingTranslation()
+    const t = useT()
+    const prefersReducedMotion = useReducedMotion()
+    const ref = useRef(null)
+    useInView(ref, { once: true, margin: '-100px' })
 
     const benefits = [
         {
             icon: Search,
-            title: t('clientValue.benefits.discover.title'),
-            description: t('clientValue.benefits.discover.description'),
-            gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-            color: '#8B5CF6',
-            colorRgb: '139, 92, 246'
+            accent: 'azure',
+            title: t('clientValue.discover.title', 'Discover Professionals'),
+            description: t('clientValue.discover.description', 'Find verified local professionals in your area with real reviews.')
         },
         {
             icon: Calendar,
-            title: t('clientValue.benefits.book.title'),
-            description: t('clientValue.benefits.book.description'),
-            gradient: 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
-            color: '#06B6D4',
-            colorRgb: '6, 182, 212'
+            accent: 'signal',
+            title: t('clientValue.book.title', 'Book Instantly'),
+            description: t('clientValue.book.description', 'See real-time availability and book in seconds, 24/7.')
         },
         {
             icon: Clock,
-            title: t('clientValue.benefits.time.title'),
-            description: t('clientValue.benefits.time.description'),
-            gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-            color: '#10B981',
-            colorRgb: '16, 185, 129'
+            accent: 'success',
+            title: t('clientValue.time.title', 'Save Time'),
+            description: t('clientValue.time.description', 'No more phone calls or waiting for replies. Book when it suits you.')
         },
         {
             icon: Star,
-            title: t('clientValue.benefits.reviews.title'),
-            description: t('clientValue.benefits.reviews.description'),
-            gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
-            color: '#F59E0B',
-            colorRgb: '245, 158, 11'
+            accent: 'signal',
+            title: t('clientValue.reviews.title', 'Trusted Reviews'),
+            description: t('clientValue.reviews.description', 'Make confident decisions based on real client feedback.')
         },
         {
             icon: Shield,
-            title: t('clientValue.benefits.secure.title'),
-            description: t('clientValue.benefits.secure.description'),
-            gradient: 'linear-gradient(135deg, #6366F1 0%, #818CF8 100%)',
-            color: '#6366F1',
-            colorRgb: '99, 102, 241'
+            accent: 'azure',
+            title: t('clientValue.secure.title', 'Secure Payments'),
+            description: t('clientValue.secure.description', 'Pay safely online or at the venue. Your data is always protected.')
         },
         {
             icon: Smartphone,
-            title: t('clientValue.benefits.mobile.title'),
-            description: t('clientValue.benefits.mobile.description'),
-            gradient: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
-            color: '#EC4899',
-            colorRgb: '236, 72, 153'
+            accent: 'success',
+            title: t('clientValue.mobile.title', 'Book Anywhere'),
+            description: t('clientValue.mobile.description', 'Use any device to manage your appointments on the go.')
         }
     ]
 
     return (
-        <section className="client-value" id="for-clients">
-            {/* Background - matches audience section */}
-            <div className="client-value__bg">
-                <div className="client-value__grid-pattern" />
-                <div className="client-value__glow client-value__glow--1" />
-                <div className="client-value__glow client-value__glow--2" />
-                
-                {/* Floating icons in background */}
-                <div className="client-value__floating-icons">
-                    {[Search, Calendar, Star, Shield, Smartphone].map((Icon, i) => (
-                        <motion.div
-                            key={i}
-                            className="client-value__floating-icon"
-                            style={{
-                                left: `${15 + i * 18}%`,
-                                top: `${20 + (i % 3) * 25}%`,
-                            }}
-                            animate={{
-                                y: [0, -15, 0],
-                                rotate: [0, i % 2 === 0 ? 8 : -8, 0],
-                                opacity: [0.08, 0.15, 0.08]
-                            }}
-                            transition={{
-                                duration: 5 + i,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                                delay: i * 0.5
-                            }}
-                        >
-                            <Icon size={24} />
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
+        <section className="client-value" id="for-clients" ref={ref}>
+            <div className="client-value__ambient" aria-hidden="true" />
 
             <div className="container">
-                {/* Header - uses global section-header pattern */}
-                <motion.div 
-                    className="section-header"
+                <motion.header
+                    className="client-value__header"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
+                    viewport={{ once: true, margin: '-80px' }}
+                    transition={{ duration: 0.6, ease: EASE }}
                 >
-                    <div className="section-badge section-badge--cyan">
-                        <Users size={14} />
-                        <span>{t('clientValue.badge')}</span>
+                    <div className="client-value__editorial">
+                        <span className="client-value__editorial-rule" aria-hidden="true" />
+                        <span className="client-value__editorial-text">
+                            {t('clientValue.eyebrow', 'FOR CLIENTS')}
+                        </span>
                     </div>
-                    <h2 className="section-title">
-                        {t('clientValue.title')}
-                        <span className="ai-gradient-text">{t('clientValue.titleHighlight')}</span>
+                    <h2 className="client-value__title">
+                        {t('clientValue.title', 'Finding services just got')}{' '}
+                        <span className="client-value__title-accent">
+                            {t('clientValue.titleHighlight', 'easier')}
+                        </span>
                     </h2>
-                    <p className="section-subtitle">
-                        {t('clientValue.subtitle')}
+                    <p className="client-value__subtitle">
+                        {t('clientValue.subtitle', 'Discover top-rated local professionals, book instantly, and enjoy a seamless experience from start to finish.')}
                     </p>
-                </motion.div>
+                </motion.header>
 
-                {/* Benefits Grid - matches audience card structure */}
                 <div className="client-value__grid">
-                    {benefits.map((benefit, index) => (
-                        <motion.div
-                            key={index}
-                            className="client-value__card"
-                            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                            whileInView={{ 
-                                opacity: 1, 
-                                y: 0, 
-                                scale: 1,
-                                transition: {
-                                    duration: 0.5,
-                                    delay: index * 0.08,
-                                    ease: [0.22, 1, 0.36, 1]
-                                }
-                            }}
-                            viewport={{ once: true }}
-                            whileHover={{ 
-                                y: -8,
-                                transition: { duration: 0.3 } 
-                            }}
-                        >
-                            {/* Top glow line */}
-                            <div 
-                                className="client-value__card-glow"
-                                style={{ background: benefit.gradient }}
-                            />
-                            
-                            {/* Ambient orb */}
-                            <div 
-                                className="client-value__card-orb"
-                                style={{ background: benefit.gradient }}
-                            />
-
-                            {/* Icon with ring effect */}
-                            <div className="client-value__icon-wrapper">
-                                <div 
-                                    className="client-value__icon-ring"
-                                    style={{ borderColor: `rgba(${benefit.colorRgb}, 0.3)` }}
-                                />
-                                <div 
-                                    className="client-value__icon"
-                                    style={{ background: benefit.gradient }}
-                                >
-                                    <benefit.icon size={24} strokeWidth={1.5} />
+                    {benefits.map((benefit, index) => {
+                        const Icon = benefit.icon
+                        return (
+                            <motion.article
+                                key={index}
+                                className={`client-value__card client-value__card--${benefit.accent}`}
+                                initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 28 }}
+                                whileInView={{
+                                    opacity: 1,
+                                    y: 0,
+                                    transition: {
+                                        duration: 0.5,
+                                        delay: prefersReducedMotion ? 0 : index * 0.08,
+                                        ease: EASE
+                                    }
+                                }}
+                                viewport={{ once: true }}
+                            >
+                                <div className="client-value__icon-wrap">
+                                    <span className="client-value__icon-ring" aria-hidden="true" />
+                                    <span className={`client-value__icon client-value__icon--${benefit.accent}`}>
+                                        <Icon size={22} strokeWidth={1.5} />
+                                    </span>
                                 </div>
-                            </div>
-
-                            <div className="client-value__content">
-                                <h3 className="client-value__title">{benefit.title}</h3>
-                                <p className="client-value__description">{benefit.description}</p>
-                            </div>
-
-                            {/* Arrow indicator on hover */}
-                            <div className="client-value__arrow">
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                    <path 
-                                        d="M4 10H16M16 10L11 5M16 10L11 15" 
-                                        stroke={benefit.color}
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
-                            </div>
-                        </motion.div>
-                    ))}
+                                <h3 className="client-value__card-title">{benefit.title}</h3>
+                                <p className="client-value__card-description">{benefit.description}</p>
+                                <span className="client-value__arrow" aria-hidden="true">
+                                    <ArrowRight size={16} />
+                                </span>
+                            </motion.article>
+                        )
+                    })}
                 </div>
 
-                {/* Bottom CTA - matches audience pattern */}
-                <motion.div 
-                    className="client-value__cta"
-                    initial={{ opacity: 0, y: 20 }}
+                <motion.p
+                    className="client-value__footnote"
+                    initial={{ opacity: 0, y: 12 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.5 }}
+                    transition={{ duration: 0.5, delay: 0.4, ease: EASE }}
                 >
-                    <span>{t('clientValue.ctaText')}</span>
-                </motion.div>
+                    {t('clientValue.footnote', 'Join the waitlist to be notified when we launch in your area.')}
+                </motion.p>
             </div>
         </section>
     )

@@ -95,7 +95,7 @@ LocAppoint is a clean, easy-to-use booking page for **local service providers** 
 * **Questions before you join?** We’re happy to help.
 * **Providers:** Need help setting up your profile when access opens? We’ll guide you.
 
-**Contact:** `hello@locappoint.com` *(placeholder — update when ready)*
+**Contact:** `hello@locappoint.com`
 
 ---
 
@@ -109,7 +109,7 @@ LocAppoint is a clean, easy-to-use booking page for **local service providers** 
 
 ## Legal
 
-* © 2025 LocAppoint. All rights reserved.
+* © 2026 LocAppoint. All rights reserved.
 * Terms of Use and Privacy Policy will be published at launch.
 
 ---

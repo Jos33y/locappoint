@@ -16,7 +16,7 @@ const ProtectedRoute = ({ children, userType }) => {
 
   if (!user) {
     // Redirect to auth page but save the location they were trying to go to
-    return <Navigate to="/app/auth" state={{ from: location }} replace />
+    return <Navigate to="/auth" state={{ from: location }} replace />
   }
 
   // Check if user type matches (business or client)

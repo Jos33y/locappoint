@@ -17,7 +17,7 @@ const ClientLayout = () => {
 
     const handleSignOut = () => {
         signOut()
-        navigate('/app/auth', { state: { tab: 'signin' } })
+        navigate('/auth', { state: { tab: 'signin' } })
     }
 
     const isActive = (path) => {

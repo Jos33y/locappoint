@@ -75,7 +75,7 @@ const PublicBusinessPage = () => {
         setShowBookingModal(false)
         setSelectedService(null)
         // Optionally navigate to appointments page
-        // navigate('/app/appointments')
+        // navigate('/appointments')
     }
 
     const handleBackButton = () => {
@@ -87,7 +87,7 @@ const PublicBusinessPage = () => {
             navigate('/client/search')
         } else {
             // Default - go to public businesses page
-            navigate('/app/businesses')
+            navigate('/businesses')
         }
     }
 
@@ -111,7 +111,7 @@ const PublicBusinessPage = () => {
                 <div className="empty-state" style={{ minHeight: '50vh' }}>
                     <h2>Business Not Found</h2>
                     <p>{error || 'The business you are looking for does not exist or is no longer active.'}</p>
-                    <button onClick={() => navigate('/app/businesses')} className="btn btn--primary">
+                    <button onClick={() => navigate('/businesses')} className="btn btn--primary">
                         Browse Businesses
                     </button>
                 </div>

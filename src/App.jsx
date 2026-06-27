@@ -1,99 +1,83 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
-import { Analytics } from "@vercel/analytics/react"
-import ProtectedRoute from './components/common/ProtectedRoute'
-import LandingPage from './pages/landing/LandingPage'
-import AdminPage from './pages/admin/AdminPage'
-import AuthPage from './pages/app/auth/AuthPage'
-import ForgotPassword from './pages/app/auth/ForgotPassword'
-import AppHome from './pages/app/AppHome'
-import AppBusinesses from './pages/app/Businesses'
-import PublicBusinessPage from './pages/app/BusinessPage'
-import AppAbout from './pages/app/About'
-import AppContact from './pages/app/Contact'
-import AppPartnership from './pages/app/Partnership'
-import PortalLayout from './pages/portal/PortalLayout'
-import PortalDashboard from './pages/portal/Dashboard'
-import PortalProfile from './pages/portal/Profile'
-import PortalServices from './pages/portal/Services'
-import PortalAvailability from './pages/portal/Availability'
-import PortalAppointments from './pages/portal/Appointments'
-import PortalSettings from './pages/portal/Settings'
-import ClientLayout from './pages/client/ClientLayout'
-import ClientHome from './pages/client/Home'
-import ClientSearch from './pages/client/Search'
-import ClientAppointments from './pages/client/MyAppointments'
-import ClientProfile from './pages/client/Profile'
-import TermsOfService from './pages/app/legal/TermsOfService'
-import PrivacyPolicy from './pages/app/legal/PrivacyPolicy'
-import ScrollToTop from './components/common/ScrollToTop'
-// import './styles/variables.css'
-// import './styles/buttons.css'
+import { Suspense, lazy, useEffect } from 'react'
 
+/* Hostname-based router selection + per-host code splitting.
+ *
+ * Each router tree lives in its own *App.jsx and is lazy-loaded so
+ * Vite/Rollup emits separate chunks. A visitor only downloads the
+ * chunk that matches their hostname:
+ *
+ *   dist/assets/WaitlistApp-{hash}.js  | locappoint.com
+ *   dist/assets/BookingApp-{hash}.js   | app.locappoint.com
+ *   dist/assets/StatusApp-{hash}.js    | status.locappoint.com
+ *
+ * Dev escapes (?app, ?status, ?waitlist) work via querystring. The
+ * mode is cached in sessionStorage so navigation within a chunk
+ * doesn't fall back to waitlist when the querystring drops off.
+ * Production hostname always wins over dev gates.
+ *
+ * Order: app -> status -> waitlist fallback. No /etc/hosts needed. */
 
-const App = () => {
-  return (
-    <>
-      <AuthProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            {/* landing page */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/admin" element={<AdminPage />} />
+const WaitlistApp = lazy(() => import('./WaitlistApp'))
+const BookingApp  = lazy(() => import('./BookingApp'))
+const StatusApp   = lazy(() => import('./StatusApp'))
 
-            {/* app pages */}
-            <Route path="/app" element={<AppHome />} />
-            <Route path="/app/businesses" element={<AppBusinesses />} />
-            <Route path="/app/about" element={<AppAbout />} />
-            <Route path="/app/contact" element={<AppContact />} />
-            <Route path="/app/partnership" element={<AppPartnership />} />
+const DEV_MODE_KEY = 'locappoint_dev_mode'
 
-            <Route path="/app/auth" element={<AuthPage />} />
-            <Route path="/app/forgot-password" element={<ForgotPassword />} />
+function detectMode() {
+    if (typeof window === 'undefined') return 'waitlist'
 
-            {/* legal pages */}
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
+    const host = window.location.hostname
+    if (host.startsWith('app.')) return 'app'
+    if (host.startsWith('status.')) return 'status'
 
-            {/* public business page */}
-            <Route path="/:businessSlug" element={<PublicBusinessPage />} />
+    if (import.meta.env.DEV) {
+        const params = new URLSearchParams(window.location.search)
 
-            {/* business portal */}
-            <Route path="/portal"
-              element={
-                <ProtectedRoute userType="business">
-                  <PortalLayout />
-                </ProtectedRoute>
-              }>
-              <Route index element={<PortalDashboard />} />
-              <Route path="profile" element={<PortalProfile />} />
-              <Route path="services" element={<PortalServices />} />
-              <Route path="availability" element={<PortalAvailability />} />
-              <Route path="appointments" element={<PortalAppointments />} />
-              <Route path="settings" element={<PortalSettings />} />
-            </Route>
+        if (params.has('app')) {
+            try { sessionStorage.setItem(DEV_MODE_KEY, 'app') } catch { /* noop */ }
+            return 'app'
+        }
+        if (params.has('status')) {
+            try { sessionStorage.setItem(DEV_MODE_KEY, 'status') } catch { /* noop */ }
+            return 'status'
+        }
+        if (params.has('waitlist')) {
+            try { sessionStorage.removeItem(DEV_MODE_KEY) } catch { /* noop */ }
+            return 'waitlist'
+        }
 
-            {/* client portal */}
-            <Route path="/client"
-              element={
-                <ProtectedRoute userType="client">
-                  <ClientLayout />
-                </ProtectedRoute>
-              }>
-              <Route index element={<ClientHome />} />
-              <Route path="search" element={<ClientSearch />} />
-              <Route path="appointments" element={<ClientAppointments />} />
-              <Route path="profile" element={<ClientProfile />} />
-            </Route>
+        // Bare / is the waitlist entry point. Always serves waitlist and
+        // clears the cache. To stay in app/status mode through a refresh,
+        // be on a sub-path (/portal/..., /businesses, /auth, etc.) - the
+        // cache holds there. To re-enter app mode from /, use ?app.
+        if (window.location.pathname === '/') {
+            try { sessionStorage.removeItem(DEV_MODE_KEY) } catch { /* noop */ }
+            return 'waitlist'
+        }
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-      {import.meta.env.PROD && <Analytics />}
-    </>
-  )
+        try {
+            const stored = sessionStorage.getItem(DEV_MODE_KEY)
+            if (stored === 'app') return 'app'
+            if (stored === 'status') return 'status'
+        } catch { /* noop */ }
+    }
+
+    return 'waitlist'
 }
 
-export default App 
+const App = () => {
+    const mode = detectMode()
+
+    let chunk
+    if (mode === 'app') chunk = <BookingApp />
+    else if (mode === 'status') chunk = <StatusApp />
+    else chunk = <WaitlistApp />
+
+    return (
+        <Suspense fallback={null}>
+            {chunk}
+        </Suspense>
+    )
+}
+
+export default App

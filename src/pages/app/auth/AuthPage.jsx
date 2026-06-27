@@ -328,7 +328,7 @@ const AuthPage = () => {
 
                     {activeTab === 'signin' && (
                         <div className="forgot-password">
-                            <a href="/app/forgot-password">Forgot password?</a>
+                            <a href="/forgot-password">Forgot password?</a>
                         </div>
                     )}
 

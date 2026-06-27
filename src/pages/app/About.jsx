@@ -173,10 +173,10 @@ const AppAbout = () => {
                                 appointment management.
                             </p>
                             <div className="cta-buttons">
-                                <a href="/app/auth" className="btn btn--primary btn--large">
+                                <a href="/auth" className="btn btn--primary btn--large">
                                     Create Free Account
                                 </a>
-                                <a href="/app/contact" className="btn btn--secondary btn--large">
+                                <a href="/contact" className="btn btn--secondary btn--large">
                                     Talk to Our Team
                                 </a>
                             </div>

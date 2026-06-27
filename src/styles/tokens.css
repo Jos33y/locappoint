@@ -1,0 +1,198 @@
+/* tokens.css - Locappoint design tokens. Single source of truth for color, type, scale. */
+
+@font-face {
+    font-family: 'Switzer';
+    src: url('/fonts/Switzer-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Switzer';
+    src: url('/fonts/Switzer-Medium.otf') format('opentype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Switzer';
+    src: url('/fonts/Switzer-Semibold.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Switzer';
+    src: url('/fonts/Switzer-Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    /* Brand anchors */
+    --ink: #0B1530;
+    --azure: #2D7FF0;
+    --azure-soft: #6BA5F5;
+    --azure-link: #5BA0FF;
+    --signal: #E89A3E;
+
+    /* Surface ramp, dark */
+    --surface-0: #08090C;
+    --surface-1: #12141A;
+    --surface-2: #1A1D26;
+    --surface-3: #232730;
+    --surface-4: #2C3140;
+
+    /* Surface ramp, light. Used in admin, portal, and the rhythm-break section on landing. */
+    --surface-0-light: #FAFBFC;
+    --surface-1-light: #F4F5F7;
+    --surface-2-light: #ECEEF2;
+    --surface-3-light: #DFE3E9;
+    --surface-4-light: #C9CFD8;
+
+    /* Text on dark */
+    --text-primary: #F4F6FB;
+    --text-secondary: #B8C0D0;
+    --text-muted: #8892A4;
+    --text-subtle: #4A5060;
+
+    /* Text on light */
+    --text-primary-light: #0B1530;
+    --text-secondary-light: #3D4660;
+    --text-muted-light: #6F7888;
+    --text-subtle-light: #A0A6B4;
+
+    /* Semantic */
+    --success: #2B8C5A;
+    --warning: #C28A1F;
+    --danger: #B43E33;
+    --info: #2D7FF0;
+
+    /* WhatsApp green is allowed on the WhatsApp button only. */
+    --whatsapp-green: #25D366;
+
+    /* Borders, dark surfaces */
+    --border-subtle: rgba(244, 246, 251, 0.06);
+    --border-medium: rgba(244, 246, 251, 0.10);
+    --border-strong: rgba(244, 246, 251, 0.16);
+
+    /* Borders, light surfaces */
+    --border-subtle-light: rgba(11, 21, 48, 0.06);
+    --border-medium-light: rgba(11, 21, 48, 0.10);
+    --border-strong-light: rgba(11, 21, 48, 0.16);
+
+    /* Typography */
+    --font-display: 'Switzer', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-hero: 'Switzer', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    --text-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
+    --text-sm: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+    --text-base: clamp(0.875rem, 0.85rem + 0.15vw, 1rem);
+    --text-lg: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+    --text-xl: clamp(1.125rem, 1.05rem + 0.35vw, 1.25rem);
+    --text-2xl: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem);
+    --text-3xl: clamp(1.5rem, 1.35rem + 0.75vw, 2rem);
+    --text-4xl: clamp(1.875rem, 1.6rem + 1.25vw, 2.5rem);
+    --text-5xl: clamp(2.25rem, 1.9rem + 1.75vw, 3rem);
+    --text-6xl: clamp(2.75rem, 2.2rem + 2.5vw, 4rem);
+
+    /* Spacing */
+    --space-px: 1px;
+    --space-0: 0;
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-14: 3.5rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+    --space-24: 6rem;
+    --space-28: 7rem;
+    --space-32: 8rem;
+
+    /* Layout */
+    --container-max-width: 1200px;
+    --container-padding: clamp(1rem, 4vw, 2rem);
+    --header-height: 70px;
+    --section-spacing: clamp(3rem, 8vw, 5rem);
+    --section-padding: clamp(3rem, 8vw, 5rem);
+
+    /* Radius */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
+
+    /* Shadows. Three steps only, no glow. Real depth comes from surface value contrast. */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.22);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.28);
+
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* Z-index */
+    --z-base: 1;
+    --z-sticky: 50;
+    --z-header: 100;
+    --z-dropdown: 200;
+    --z-overlay: 300;
+    --z-modal: 400;
+    --z-tooltip: 500;
+    --z-floating: 600;
+
+    /* Line heights */
+    --leading-none: 1;
+    --leading-tight: 1.2;
+    --leading-snug: 1.35;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.65;
+
+    /* Letter spacing */
+    --tracking-tighter: -0.04em;
+    --tracking-tight: -0.02em;
+    --tracking-normal: 0;
+    --tracking-wide: 0.02em;
+    --tracking-wider: 0.04em;
+    --tracking-widest: 0.08em;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --header-height: 60px;
+        --container-padding: clamp(1rem, 4vw, 1.25rem);
+    }
+}
+
+@media (max-width: 400px) {
+    :root {
+        --container-padding: 1rem;
+        --section-spacing: 2.5rem;
+        --header-height: 56px;
+    }
+}
+
+:root {
+    color-scheme: dark;
+}

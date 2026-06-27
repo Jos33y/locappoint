@@ -1,0 +1,136 @@
+/* waitlist-cta.css - Conversion section near footer. Single email field, opens modal on submit. */
+
+.cta {
+    position: relative;
+    padding: var(--space-20) 0;
+    background: var(--surface-0);
+    overflow: hidden;
+}
+
+.cta__radial {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(45, 127, 240, 0.10) 0%, transparent 70%);
+    z-index: 0;
+}
+
+.cta__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* Editorial eyebrow - signal rule + caps */
+.cta__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: var(--font-weight-medium);
+    color: var(--signal);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    margin-bottom: var(--space-6);
+}
+
+.cta__eyebrow::before {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 1px;
+    background: var(--signal);
+    flex-shrink: 0;
+}
+
+.cta__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 4.5vw, 3rem);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 var(--space-4);
+}
+
+.cta__subtitle {
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: var(--leading-relaxed);
+    margin: 0 0 var(--space-8);
+}
+
+.cta__form {
+    display: flex;
+    gap: var(--space-2);
+    max-width: 480px;
+    margin: 0 auto var(--space-6);
+}
+
+.cta__input {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    padding: 0 var(--space-4);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    height: 52px;
+}
+
+.cta__input::placeholder {
+    color: var(--text-muted);
+}
+
+.cta__input:focus {
+    outline: none;
+    border-color: var(--azure);
+}
+
+.cta__submit {
+    flex-shrink: 0;
+}
+
+.cta__trust {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.cta__trust li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.cta__trust li::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--azure);
+}
+
+@media (max-width: 540px) {
+    .cta__form {
+        flex-direction: column;
+    }
+
+    .cta__submit {
+        width: 100%;
+    }
+
+    .cta__trust {
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+}

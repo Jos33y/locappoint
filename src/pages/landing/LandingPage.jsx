@@ -1,14 +1,10 @@
-// LandingPage.jsx - Main landing page with Partnership Modal
-// Location: src/pages/landing/LandingPage.jsx
+// LandingPage - Phase 1 waitlist. HowItWorks (today) precedes AICapabilities (roadmap).
 
-import { useState, useEffect } from "react"
-// Styles
-import "../../styles/landing/index.css"
+import { useState, useEffect, useCallback } from 'react'
+import '../../styles/landing/index.css'
 
-import { LandingTranslationProvider } from "../../contexts/LandingTranslationContext"
-import { useLandingTranslation } from "../../hooks/useLandingTranslation"
+import { LandingTranslationProvider } from '../../contexts/LandingTranslationContext'
 
-// Analytics
 import {
     initSession,
     startTimeTracking,
@@ -19,212 +15,140 @@ import {
     trackModalClose
 } from '../../services/analytics'
 
-// Components
-import Header from "../../components/Header"
-import Hero from "./Hero"
-import Stats from "./Stats"
-import ProblemSolution from "./ProblemSolution"
-import Features from "./Features"
-import AICapabilities from "./AICapabilities"
-import ProductPreview from "./ProductPreview"
-import Audience from "./Audience"
-import ClientValue from "./ClientValue"
-import Benefits from "./Benefits"
-import SocialProof from "./SocialProof"
-import HowItWorks from "./HowItWorks"
-import FAQ from "./Faq"
-import WhatsAppCTA from "./WhatsAppCTA"
-import FinalCTA from "./Ctasection"
-import Footer from "../../components/Footer"
-import WaitlistModal from "./WaitlistModal"
-import PartnershipModal from "./PartnershipModal"
-import FloatingButtons from "../../components/FloatingButtons"
+import Header from '../../components/Header'
+import Footer from '../../components/Footer'
+import FloatingButtons from '../../components/FloatingButtons'
 
-// Minimum loader display time (ms)
-const MIN_LOADER_TIME = 2500;
+import Hero from './Hero'
+import Stats from './Stats'
+import Problem from './Problem'
+import Features from './Features'
+import HowItWorks from './HowItWorks'
+import AICapabilities from './AICapabilities'
+import Audience from './Audience'
+import ClientValue from './ClientValue'
+import SocialProof from './SocialProof'
+import FounderNote from './FounderNote'
+import Faq from './Faq'
+import WaitlistCTASection from './WaitlistCTASection'
 
-// Section IDs for tracking
+import WaitlistModal from './WaitlistModal'
+import PartnershipModal from './PartnershipModal'
+
 const TRACKED_SECTIONS = [
     'hero',
     'stats',
-    'problem-solution',
+    'problem',
     'features',
-    'ai-capabilities',
-    'preview',
-    'audience',
-    'client-value',
-    'benefits',
-    'testimonials',
     'how-it-works',
+    'ai',
+    'audience',
+    'for-clients',
+    'testimonials',
+    'founder',
     'faq',
-    'whatsapp-cta',
-    'final-cta'
+    'waitlist-cta'
 ]
 
 const LandingPageContent = () => {
-    const { t } = useLandingTranslation()
     const [isWaitlistOpen, setIsWaitlistOpen] = useState(false)
     const [isPartnershipOpen, setIsPartnershipOpen] = useState(false)
-    const [isLoading, setIsLoading] = useState(true)
+    const [prefillEmail, setPrefillEmail] = useState('')
 
-    // Initialize analytics on mount
     useEffect(() => {
-        const initAnalytics = async () => {
+        const init = async () => {
             await initSession()
             startTimeTracking()
             initScrollTracking()
         }
-
-        initAnalytics()
-
-        return () => {
-            stopTimeTracking()
-        }
+        init()
+        return () => stopTimeTracking()
     }, [])
 
-    // Observe sections after load
     useEffect(() => {
-        if (!isLoading) {
-            // Small delay to ensure DOM is ready
-            const timer = setTimeout(() => {
-                observeSections(TRACKED_SECTIONS)
-            }, 500)
-            return () => clearTimeout(timer)
-        }
-    }, [isLoading])
-
-    useEffect(() => {
-        // Track when component mounted
-        const mountTime = Date.now()
-
-        // Function to hide loader
-        const hideLoader = () => {
-            const loader = document.getElementById('initial-loader')
-            if (loader) {
-                loader.classList.add('fade-out')
-                // Remove from DOM after animation
-                setTimeout(() => {
-                    loader.remove()
-                }, 400)
-            }
-            setIsLoading(false)
-        }
-
-        // Wait for all images and fonts to load
-        const handleLoad = () => {
-            const elapsed = Date.now() - mountTime
-            const remainingTime = Math.max(0, MIN_LOADER_TIME - elapsed)
-
-            // Ensure minimum display time
-            setTimeout(hideLoader, remainingTime)
-        }
-
-        // Check if document already loaded
-        if (document.readyState === 'complete') {
-            handleLoad()
-        } else {
-            window.addEventListener('load', handleLoad)
-        }
-
-        // Fallback: hide loader after max time regardless
-        const fallbackTimer = setTimeout(hideLoader, MIN_LOADER_TIME + 1000)
-
-        return () => {
-            window.removeEventListener('load', handleLoad)
-            clearTimeout(fallbackTimer)
-        }
+        const t = setTimeout(() => observeSections(TRACKED_SECTIONS), 200)
+        return () => clearTimeout(t)
     }, [])
 
-    // Expose modal functions globally for other components
-    useEffect(() => {
-        window.openWaitlistModal = () => handleWaitlistOpen()
-        window.openPartnershipModal = () => handlePartnershipOpen()
-
-        return () => {
-            delete window.openWaitlistModal
-            delete window.openPartnershipModal
-        }
-    }, [])
-
-    // Modal handlers with analytics
-    const handleWaitlistOpen = () => {
+    const openWaitlist = useCallback((opts = {}) => {
         trackModalOpen('waitlist')
+        if (opts && opts.email) setPrefillEmail(opts.email)
         setIsWaitlistOpen(true)
-    }
+    }, [])
 
-    const handleWaitlistClose = () => {
+    const closeWaitlist = useCallback(() => {
         trackModalClose('waitlist')
         setIsWaitlistOpen(false)
-    }
+        setPrefillEmail('')
+    }, [])
 
-    const handlePartnershipOpen = () => {
+    const openPartnership = useCallback(() => {
         trackModalOpen('partnership')
         setIsPartnershipOpen(true)
-    }
+    }, [])
 
-    const handlePartnershipClose = () => {
+    const closePartnership = useCallback(() => {
         trackModalClose('partnership')
         setIsPartnershipOpen(false)
-    }
+    }, [])
 
+    useEffect(() => {
+        window.openWaitlistModal = () => openWaitlist()
+        window.openWaitlistModalWithEmail = (email) => openWaitlist({ email })
+        window.openPartnershipModal = () => openPartnership()
+        return () => {
+            delete window.openWaitlistModal
+            delete window.openWaitlistModalWithEmail
+            delete window.openPartnershipModal
+        }
+    }, [openWaitlist, openPartnership])
 
     return (
         <>
-            {/* Header with Partnership callback */}
             <Header
-                onWaitlistClick={handleWaitlistOpen}
-                onPartnershipClick={handlePartnershipOpen}
+                onWaitlistClick={openWaitlist}
+                onPartnershipClick={openPartnership}
             />
 
-            {/* Main Content */}
             <main>
                 <Hero
-                    onWaitlistClick={handleWaitlistOpen}
-                    onPartnershipClick={handlePartnershipOpen}
+                    onWaitlistClick={openWaitlist}
+                    onPartnershipClick={openPartnership}
                 />
                 <Stats />
-                <ProblemSolution />
+                <Problem />
                 <Features />
+                <HowItWorks />
                 <AICapabilities />
-                <ProductPreview />
                 <Audience />
                 <ClientValue />
-                <Benefits />
                 <SocialProof />
-                <HowItWorks />
-                <FAQ />
-                <WhatsAppCTA />
-                <FinalCTA
-                    onWaitlistClick={handleWaitlistOpen}
-                    onPartnershipClick={handlePartnershipOpen}
-                />
+                <FounderNote />
+                <Faq />
+                <WaitlistCTASection onWaitlistClick={openWaitlist} />
             </main>
-            {/* Footer */}
-            <Footer
-                onPartnershipClick={handlePartnershipOpen}
-            />
 
-            {/* Modals */}
+            <Footer onPartnershipClick={openPartnership} />
+
             <WaitlistModal
                 isOpen={isWaitlistOpen}
-                onClose={handleWaitlistClose}
+                onClose={closeWaitlist}
+                initialEmail={prefillEmail}
             />
             <PartnershipModal
                 isOpen={isPartnershipOpen}
-                onClose={handlePartnershipClose}
+                onClose={closePartnership}
             />
-            {/* Floating Buttons */}
+
             <FloatingButtons />
         </>
     )
 }
 
-const LandingPage = () => {
-    return (
-        <LandingTranslationProvider>
-            <LandingPageContent />
-        </LandingTranslationProvider>
-    )
-}
+const LandingPage = () => (
+    <LandingTranslationProvider>
+        <LandingPageContent />
+    </LandingTranslationProvider>
+)
 
-export default LandingPage;
+export default LandingPage

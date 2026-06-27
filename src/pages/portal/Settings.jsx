@@ -220,7 +220,7 @@ const PortalSettings = () => {
 
             // Sign out and redirect
             await signOut()
-            navigate('/app/auth?tab=signup')
+            navigate('/auth?tab=signup')
         } catch (error) {
             console.error('Error deleting account:', error)
             setDeleteError('Failed to delete account. Please contact support.')

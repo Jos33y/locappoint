@@ -1,154 +1,248 @@
-/* ========================================
-   APP HEADER STYLES - DROPDOWN FIX
-   Public-facing header with navigation
-   ======================================== */
+/* src/styles/app/header.css
+   Public header for app.locappoint.com.
+   Locked brand: ink, azure, signal. No glass, no glow. */
 
-.app-header-public {
+
+.loca-app-header {
     position: sticky;
     top: 0;
-    z-index: 1000; /* High z-index */
-    background: rgba(15, 20, 25, 0.95);
-    backdrop-filter: blur(12px);
+    z-index: 100;
+    background: var(--surface-0);
     border-bottom: 1px solid var(--border-subtle);
-    overflow: visible !important; /* Force visible */
 }
 
-/* Container fix - allow overflow */
-.app-header-public .container {
-    overflow: visible !important;
-}
-
-.header-content {
+.loca-app-header__inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: var(--header-height);
-    gap: var(--space-8);
-    position: relative;
-    overflow: visible !important; /* Force visible */
+    height: 64px;
+    gap: 24px;
 }
 
-/* Logo */
-.header-logo {
-    font-family: var(--font-display);
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-semibold);
-    color: var(--text-primary);
+
+/* Brand lockup: mark + wordmark + beta tag */
+
+.loca-app-header__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     text-decoration: none;
-    transition: color var(--transition-fast);
+    color: inherit;
+    flex-shrink: 0;
+}
+
+.loca-app-header__mark {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.loca-app-header__wm {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
     white-space: nowrap;
 }
 
-.header-logo:hover {
-    color: var(--accent-primary);
+.loca-app-header__wm-loc {
+    color: var(--text-primary);
 }
 
-/* Navigation */
-.header-nav {
+.loca-app-header__wm-app {
+    color: var(--azure);
+}
+
+.loca-app-header__beta {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 3px 7px 4px;
+    border-radius: 999px;
+    background: rgba(232, 154, 62, 0.10);
+    border: 1px solid rgba(232, 154, 62, 0.28);
+    color: var(--signal);
+    line-height: 1;
+    margin-left: 2px;
+    /* Flip to live: change this class to .loca-app-header__beta--live in JSX */
+}
+
+.loca-app-header__beta--live {
+    background: rgba(43, 140, 90, 0.10);
+    border-color: rgba(43, 140, 90, 0.28);
+    color: var(--success);
+}
+
+
+/* Nav */
+
+.loca-app-header__nav {
     display: flex;
     align-items: center;
-    gap: var(--space-6);
+    gap: 28px;
     flex: 1;
     justify-content: center;
-    overflow: visible;
 }
 
-.nav-link {
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-medium);
+.loca-app-header__navlink {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
     color: var(--text-secondary);
     text-decoration: none;
-    transition: color var(--transition-fast);
-    white-space: nowrap;
+    padding: 8px 0;
     position: relative;
-    padding: var(--space-2) 0;
+    transition: color 180ms ease;
 }
 
-.nav-link:hover {
+.loca-app-header__navlink:hover {
     color: var(--text-primary);
 }
 
-.nav-link::after {
+.loca-app-header__navlink::after {
     content: '';
     position: absolute;
-    bottom: 0;
     left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--accent-primary);
-    transition: width var(--transition-fast);
+    right: 0;
+    bottom: 2px;
+    height: 1px;
+    background: var(--azure);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms ease;
 }
 
-.nav-link:hover::after {
-    width: 100%;
+.loca-app-header__navlink:hover::after {
+    transform: scaleX(1);
 }
 
-/* Header Actions */
-.header-actions {
+
+/* Actions */
+
+.loca-app-header__actions {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    position: relative;
-    z-index: 1100; /* Higher than header */
-    overflow: visible !important;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
-/* Mobile Menu Toggle */
-.mobile-menu-btn {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--text-primary);
+.loca-app-header__btn {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    padding: 8px 14px;
+    border-radius: 8px;
     cursor: pointer;
-    padding: var(--space-2);
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+    border: 1px solid transparent;
+    line-height: 1.2;
+    white-space: nowrap;
 }
+
+.loca-app-header__btn--ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border-color: transparent;
+}
+
+.loca-app-header__btn--ghost:hover {
+    color: var(--text-primary);
+    background: var(--surface-1);
+}
+
+.loca-app-header__btn--primary {
+    background: var(--azure);
+    color: #fff;
+    border-color: var(--azure);
+}
+
+.loca-app-header__btn--primary:hover {
+    background: var(--azure-soft);
+    border-color: var(--azure-soft);
+}
+
+
+/* Mobile menu button - hidden on desktop */
+
+.loca-app-header__menu-btn {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+.loca-app-header__menu-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-medium);
+}
+
 
 /* Responsive */
-@media (max-width: 768px) {
-    .header-nav {
+
+@media (max-width: 900px) {
+    .loca-app-header__nav {
         display: none;
         position: absolute;
-        top: var(--header-height);
+        top: 64px;
         left: 0;
         right: 0;
-        background: var(--bg-primary);
         flex-direction: column;
-        padding: var(--space-4);
+        background: var(--surface-0);
         border-bottom: 1px solid var(--border-subtle);
-        gap: var(--space-3);
+        padding: 16px 20px 20px;
+        gap: 4px;
+        justify-content: flex-start;
+        align-items: stretch;
     }
 
-    .header-nav.open {
+    .loca-app-header__nav.is-open {
         display: flex;
     }
 
-    .nav-link {
-        width: 100%;
-        padding: var(--space-3);
-        text-align: center;
+    .loca-app-header__navlink {
+        padding: 12px 4px;
+        font-size: 15px;
+        border-bottom: 1px solid var(--border-subtle);
     }
 
-    .mobile-menu-btn {
-        display: block;
+    .loca-app-header__navlink:last-child {
+        border-bottom: none;
     }
 
-    .header-content {
-        gap: var(--space-4);
-        overflow: visible !important;
+    .loca-app-header__navlink::after {
+        display: none;
     }
 
-    .header-actions {
-        gap: var(--space-2);
+    .loca-app-header__menu-btn {
+        display: inline-flex;
     }
 }
 
-@media (max-width: 480px) {
-    .header-logo {
-        font-size: var(--text-lg);
+@media (max-width: 560px) {
+    .loca-app-header__inner {
+        height: 60px;
+        gap: 12px;
     }
 
-    .header-actions .btn {
-        font-size: var(--text-xs);
-        padding: var(--space-2) var(--space-3);
+    .loca-app-header__btn--ghost {
+        display: none;
+    }
+
+    .loca-app-header__wm {
+        font-size: 17px;
+    }
+
+    .loca-app-header__beta {
+        font-size: 8px;
+        padding: 2px 6px 3px;
     }
 }

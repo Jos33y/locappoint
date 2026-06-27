@@ -17,8 +17,7 @@ const translations = {
         nav: {
             items: [
                 { label: 'Features', href: 'features' },
-                { label: 'For Whom', href: 'audience' },
-                { label: 'Benefits', href: 'benefits' }
+                { label: 'For Whom', href: 'audience' }
             ],
             partnership: 'Partnership',
             joinWaitlist: 'Join Waitlist'
@@ -565,8 +564,7 @@ const translations = {
         nav: {
             items: [
                 { label: 'Funcionalidades', href: 'features' },
-                { label: 'Para Quem', href: 'audience' },
-                { label: 'Benefícios', href: 'benefits' }
+                { label: 'Para Quem', href: 'audience' }
             ],
             partnership: 'Parceria',
             joinWaitlist: 'Entrar na Lista'

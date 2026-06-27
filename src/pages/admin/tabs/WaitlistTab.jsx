@@ -1,151 +1,248 @@
-// WaitlistTab.jsx - Waitlist management tab
-// Location: src/pages/admin/tabs/WaitlistTab.jsx
-
-import { 
-    Users, 
-    Download, 
-    Mail, 
-    Phone, 
-    Building2, 
-    MessageSquare,
-    Calendar,
-    Sparkles
-} from 'lucide-react'
+import { useState } from 'react'
+import { Users, Download, MessageSquareText } from 'lucide-react'
 import CountryDisplay from '../components/CountryDisplay'
+import SectionHead from '../components/SectionHead'
+import TypeChip from '../components/TypeChip'
+import WaitlistDrawer from '../components/WaitlistDrawer'
+
+/* ============================================================
+   WaitlistTab
+   6-col compact table. Row click opens detail drawer.
+   Mobile cards tap into the same drawer.
+   ============================================================ */
+
+const initial = (name) => (name ? name.charAt(0).toUpperCase() : 'U')
+
+const avatarClass = (type) => {
+    if (type === 'client') return 'cell-avatar cell-avatar--signal'
+    if (type === 'business') return 'cell-avatar'
+    return 'cell-avatar cell-avatar--muted'
+}
+
+// Compact relative date for table. "Today", "Yesterday", "3d ago", "Dec 13", "Dec 13, 2025".
+const formatShort = (timestamp) => {
+    if (!timestamp) return ''
+    const date = new Date(timestamp)
+    if (Number.isNaN(date.getTime())) return ''
+
+    const now = new Date()
+    const days = Math.floor((now - date) / 86400000)
+
+    if (days === 0) return 'Today'
+    if (days === 1) return 'Yesterday'
+    if (days < 7) return `${days}d ago`
+
+    const sameYear = date.getFullYear() === now.getFullYear()
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: sameYear ? undefined : 'numeric'
+    }).format(date)
+}
+
+const EmptyCell = ({ label }) => (
+    <span className="cell-empty" role="presentation" aria-label={label} />
+)
+
+const NotesIndicator = ({ hasNotes }) => {
+    if (!hasNotes) return <EmptyCell label="No notes" />
+    return (
+        <span className="notes-indicator" aria-label="Has notes">
+            <MessageSquareText size={13} aria-hidden="true" />
+        </span>
+    )
+}
+
+const handleKeyActivate = (e, callback) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        callback()
+    }
+}
 
 const WaitlistTab = ({ data, formatDate, onExport }) => {
-    if (data.length === 0) {
+    const [selected, setSelected] = useState(null)
+    const count = data.length
+
+    const openDetail = (item) => setSelected(item)
+    const closeDetail = () => setSelected(null)
+
+    if (count === 0) {
         return (
-            <div className="empty-state">
-                <div className="empty-state__icon">
-                    <Users size={48} />
+            <div className="tab-content">
+                <SectionHead icon={Users} title="Waitlist" meta="0 signups" />
+                <div className="empty-state">
+                    <div className="empty-state__icon">
+                        <Users size={28} />
+                    </div>
+                    <h3 className="empty-state__title">No waitlist signups yet</h3>
+                    <p className="empty-state__text">
+                        When users sign up for early access, they will appear here.
+                    </p>
                 </div>
-                <h3 className="empty-state__title">No waitlist signups yet</h3>
-                <p className="empty-state__text">
-                    When users sign up for early access, they'll appear here.
-                </p>
             </div>
         )
     }
 
     return (
         <div className="tab-content">
-            {/* Toolbar */}
-            <div className="tab-toolbar">
-                <div className="tab-toolbar__info">
-                    <Sparkles size={16} />
-                    <span>Showing {data.length} signup{data.length !== 1 ? 's' : ''}</span>
-                </div>
-                <button onClick={onExport} className="btn btn--primary btn--sm">
-                    <Download size={16} />
-                    <span>Export CSV</span>
-                </button>
-            </div>
+            <SectionHead
+                icon={Users}
+                title="Waitlist"
+                meta={`${count} ${count === 1 ? 'signup' : 'signups'}`}
+                action={
+                    <button onClick={onExport} className="btn btn--primary btn--sm">
+                        <Download size={13} aria-hidden="true" />
+                        <span>Export CSV</span>
+                    </button>
+                }
+            />
 
-            {/* Mobile Cards */}
-            <div className="mobile-cards">
-                {data.map((item) => (
-                    <div key={item.id} className="data-card">
-                        <div className="data-card__header">
-                            <div className="data-card__avatar">
-                                {item.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                            </div>
-                            <div className="data-card__title-group">
-                                <h3 className="data-card__name">{item.full_name}</h3>
-                                <span className={`type-badge type-badge--${item.user_type}`}>
-                                    {item.user_type || 'user'}
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <div className="data-card__body">
-                            <div className="data-card__row">
-                                <Mail size={14} />
-                                <span>{item.email}</span>
-                            </div>
-                            {item.phone && (
-                                <div className="data-card__row">
-                                    <Phone size={14} />
-                                    <span>{item.phone}</span>
-                                </div>
-                            )}
-                            <div className="data-card__row">
-                                <CountryDisplay code={item.country} size={16} />
-                            </div>
-                            {item.business_type && (
-                                <div className="data-card__row">
-                                    <Building2 size={14} />
-                                    <span className="data-card__business-type">{item.business_type}</span>
-                                </div>
-                            )}
-                            {item.comments && (
-                                <div className="data-card__row data-card__row--comments">
-                                    <MessageSquare size={14} />
-                                    <span>{item.comments}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="data-card__footer">
-                            <Calendar size={14} />
-                            <span>{formatDate(item.created_at)}</span>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Desktop Table */}
-            <div className="data-table-container">
+            {/* Desktop table - 6 cols */}
+            <div className="data-table-wrap">
                 <table className="data-table">
+                    <colgroup>
+                        <col style={{ width: 'auto' }} />
+                        <col style={{ width: '150px' }} />
+                        <col style={{ width: '80px' }} />
+                        <col style={{ width: '120px' }} />
+                        <col style={{ width: '70px' }} />
+                        <col style={{ width: '110px' }} />
+                    </colgroup>
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Email</th>
+                            <th>User</th>
                             <th>Phone</th>
                             <th>Country</th>
                             <th>Type</th>
-                            <th>Business</th>
-                            <th>Comments</th>
-                            <th>Date</th>
+                            <th>Notes</th>
+                            <th>Joined</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((item) => (
-                            <tr key={item.id}>
-                                <td>
-                                    <div className="cell-user">
-                                        <div className="cell-avatar">
-                                            {item.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                        {data.map((item) => {
+                            const isSelected = selected?.id === item.id
+                            const rowLabel = `View details for ${item.full_name || item.email}`
+                            return (
+                                <tr
+                                    key={item.id}
+                                    className={`data-table__row--clickable${isSelected ? ' data-table__row--selected' : ''}`}
+                                    onClick={() => openDetail(item)}
+                                    onKeyDown={(e) => handleKeyActivate(e, () => openDetail(item))}
+                                    tabIndex={0}
+                                    role="button"
+                                    aria-label={rowLabel}
+                                >
+                                    <td>
+                                        <div className="cell-user">
+                                            <div className={avatarClass(item.user_type)} aria-hidden="true">
+                                                {initial(item.full_name)}
+                                            </div>
+                                            <div className="cell-user__text">
+                                                <span className="cell-user__name">{item.full_name || 'Unknown'}</span>
+                                                <span className="cell-user__email">{item.email}</span>
+                                            </div>
                                         </div>
-                                        <span className="cell-name">{item.full_name}</span>
-                                    </div>
-                                </td>
-                                <td className="cell-email">{item.email}</td>
-                                <td>{item.phone || <span className="cell-empty">—</span>}</td>
-                                <td>
-                                    <CountryDisplay code={item.country} size={16} showName={false} />
-                                </td>
-                                <td>
-                                    <span className={`type-badge type-badge--${item.user_type}`}>
-                                        {item.user_type || 'user'}
-                                    </span>
-                                </td>
-                                <td>
-                                    {item.business_type ? (
-                                        <span className="business-badge">{item.business_type}</span>
-                                    ) : (
-                                        <span className="cell-empty">—</span>
-                                    )}
-                                </td>
-                                <td className="cell-comments">
-                                    {item.comments || <span className="cell-empty">—</span>}
-                                </td>
-                                <td className="cell-date">{formatDate(item.created_at)}</td>
-                            </tr>
-                        ))}
+                                    </td>
+                                    <td>
+                                        {item.phone
+                                            ? <span className="cell-mono">{item.phone}</span>
+                                            : <EmptyCell label="No phone" />}
+                                    </td>
+                                    <td>
+                                        {item.country
+                                            ? <CountryDisplay code={item.country} size={16} showName={false} />
+                                            : <EmptyCell label="Unknown country" />}
+                                    </td>
+                                    <td>
+                                        <TypeChip type={item.user_type} />
+                                    </td>
+                                    <td>
+                                        <NotesIndicator hasNotes={!!item.comments} />
+                                    </td>
+                                    <td>
+                                        <span className="cell-date" title={formatDate(item.created_at)}>
+                                            {formatShort(item.created_at)}
+                                        </span>
+                                    </td>
+                                </tr>
+                            )
+                        })}
                     </tbody>
                 </table>
             </div>
+
+            {/* Mobile cards */}
+            <div className="mobile-cards">
+                {data.map((item) => (
+                    <article
+                        key={item.id}
+                        className="data-card data-card--clickable"
+                        onClick={() => openDetail(item)}
+                        onKeyDown={(e) => handleKeyActivate(e, () => openDetail(item))}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`View details for ${item.full_name || item.email}`}
+                    >
+                        <header className="data-card__head">
+                            <div className={avatarClass(item.user_type)} aria-hidden="true">
+                                {initial(item.full_name)}
+                            </div>
+                            <div className="data-card__identity">
+                                <h3 className="data-card__name">{item.full_name || 'Unknown'}</h3>
+                                <p className="data-card__email">{item.email}</p>
+                            </div>
+                            <TypeChip type={item.user_type} />
+                        </header>
+
+                        <dl className="data-card__details">
+                            {item.phone && (
+                                <>
+                                    <dt>Phone</dt>
+                                    <dd>
+                                        {item.country && (
+                                            <CountryDisplay code={item.country} size={14} showName={false} />
+                                        )}
+                                        <span className="cell-mono">{item.phone}</span>
+                                    </dd>
+                                </>
+                            )}
+                            {!item.phone && item.country && (
+                                <>
+                                    <dt>Country</dt>
+                                    <dd>
+                                        <CountryDisplay code={item.country} size={14} showName={true} />
+                                    </dd>
+                                </>
+                            )}
+                            {item.business_type && (
+                                <>
+                                    <dt>Business</dt>
+                                    <dd className="cell-text--capitalize">{item.business_type}</dd>
+                                </>
+                            )}
+                            {item.comments && (
+                                <>
+                                    <dt>Notes</dt>
+                                    <dd className="data-card__detail--block">
+                                        <p className="data-card__note data-card__note--clamped">{item.comments}</p>
+                                    </dd>
+                                </>
+                            )}
+                        </dl>
+
+                        <footer className="data-card__foot">
+                            <time className="data-card__date">{formatDate(item.created_at)}</time>
+                        </footer>
+                    </article>
+                ))}
+            </div>
+
+            <WaitlistDrawer
+                item={selected}
+                onClose={closeDetail}
+                formatDate={formatDate}
+            />
         </div>
     )
 }

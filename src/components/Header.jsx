@@ -1,5 +1,4 @@
-// Header.jsx - Premium header with logo icon + text (Translated)
-// Location: src/components/Header.jsx
+// Header - Logo, nav, language toggle, waitlist CTA. Mobile menu with body-lock.
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -62,7 +61,9 @@ const Header = ({ onPartnershipClick, onWaitlistClick }) => {
         setIsMenuOpen(!isMenuOpen)
     }
 
-    const navItems = t('nav.items') // Array from translations
+    // Defensive fallback - if i18n key missing, render nav without items rather than crashing.
+    const rawNav = t('nav.items')
+    const navItems = Array.isArray(rawNav) ? rawNav : []
 
     return (
         <motion.header 
@@ -72,7 +73,6 @@ const Header = ({ onPartnershipClick, onWaitlistClick }) => {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
             <div className="header__content">
-                {/* Logo with icon + text */}
                 <motion.a 
                     href="#" 
                     className="header__logo"
@@ -87,7 +87,6 @@ const Header = ({ onPartnershipClick, onWaitlistClick }) => {
                     <span className="header__logo-text">LocAppoint</span>
                 </motion.a>
 
-                {/* Desktop Navigation */}
                 <nav className="header__nav">
                     <ul className="header__nav-list">
                         {navItems.map((item, index) => (
@@ -122,7 +121,6 @@ const Header = ({ onPartnershipClick, onWaitlistClick }) => {
                     </ul>
                 </nav>
 
-                {/* Desktop Actions */}
                 <motion.div 
                     className="header__actions"
                     initial={{ opacity: 0 }}
@@ -141,7 +139,6 @@ const Header = ({ onPartnershipClick, onWaitlistClick }) => {
                     </motion.button>
                 </motion.div>
 
-                {/* Mobile Actions */}
                 <div className="header__mobile-actions">
                     <LanguageToggle />
                     <button
@@ -158,7 +155,6 @@ const Header = ({ onPartnershipClick, onWaitlistClick }) => {
                 </div>
             </div>
 
-            {/* Mobile Menu - Always rendered, visibility controlled by CSS */}
             <nav className={`header__mobile-nav ${isMenuOpen ? 'header__mobile-nav--open' : ''}`}>
                 <ul className="header__mobile-list">
                     {navItems.map((item) => (

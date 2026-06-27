@@ -1,77 +1,60 @@
-// HeroDashboard.jsx - Animated floating product mockup (Translated)
-// Location: src/pages/landing/HeroDashboard.jsx
+// HeroDashboard - Old structure preserved. Token swap only.
 
 import { motion } from 'framer-motion'
-import { 
-    Calendar, 
-    Clock, 
-    User, 
-    Bell, 
-    TrendingUp, 
-    CheckCircle,
-    Star,
-    MapPin
-} from 'lucide-react'
-import { useLandingTranslation } from '../../hooks/useLandingTranslation'
+import { Calendar, Clock, User, Bell, TrendingUp, CheckCircle, Star, MapPin } from 'lucide-react'
+import { useT } from '../../hooks/useT'
 
 const HeroDashboard = () => {
-    const { t } = useLandingTranslation()
+    const t = useT()
 
-    // Get current day with leading zero
     const currentDay = new Date().getDate().toString().padStart(2, '0')
-    
-    // Sample booking data
+
     const timeSlots = [
-        { time: '09:00', status: 'booked', name: 'Maria S.' },
+        { time: '09:00', status: 'booked',    name: 'Maria S.' },
         { time: '10:30', status: 'available' },
-        { time: '12:00', status: 'booked', name: 'João P.' },
+        { time: '12:00', status: 'booked',    name: 'João P.' },
         { time: '14:00', status: 'available' },
-        { time: '15:30', status: 'booked', name: 'Ana R.' },
-        { time: '17:00', status: 'available' },
+        { time: '15:30', status: 'booked',    name: 'Ana R.' },
+        { time: '17:00', status: 'available' }
     ]
 
+    // Stat tints map to brand tokens via CSS classes (not inline styles).
     const stats = [
-        { label: t('heroDashboard.today'), value: currentDay, icon: Calendar, color: '#8B5CF6' },
-        { label: t('heroDashboard.revenue'), value: '€847', icon: TrendingUp, color: '#10B981' },
-        { label: t('heroDashboard.rating'), value: '4.9', icon: Star, color: '#FBBF24' },
+        { key: 'today',   label: t('heroDashboard.today',   'TODAY'),   value: currentDay, icon: Calendar,    tint: 'azure'   },
+        { key: 'revenue', label: t('heroDashboard.revenue', 'REVENUE'), value: '€847',     icon: TrendingUp,  tint: 'success' },
+        { key: 'rating',  label: t('heroDashboard.rating',  'RATING'),  value: '4.9',      icon: Star,        tint: 'signal'  }
     ]
 
     const notifications = [
-        { text: t('heroDashboard.notifConfirmed'), time: '2m ago', type: 'success' },
-        { text: t('heroDashboard.notifReminder'), time: '5m ago', type: 'info' },
+        { text: t('heroDashboard.notifConfirmed', 'New booking confirmed'), time: '2m ago' },
+        { text: t('heroDashboard.notifReminder',  'Reminder sent to Maria'), time: '5m ago' }
     ]
 
-    const days = t('heroDashboard.days')
+    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
     return (
-        <div className="hero-dashboard">
-            {/* Glow effects behind dashboard */}
+        <div className="hero-dashboard" aria-hidden="true">
             <div className="hero-dashboard__glow hero-dashboard__glow--1" />
-            <div className="hero-dashboard__glow hero-dashboard__glow--2" />
-            
-            {/* Main dashboard container */}
-            <motion.div 
+
+            <motion.div
                 className="hero-dashboard__container"
                 initial={{ opacity: 0, y: 40, rotateX: 10 }}
                 animate={{ opacity: 1, y: 0, rotateX: 0 }}
                 transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
             >
-                {/* Dashboard Header */}
                 <div className="hero-dashboard__header">
                     <div className="hero-dashboard__header-left">
-                        <div className="hero-dashboard__avatar">
-                            <span>BS</span>
-                        </div>
+                        <div className="hero-dashboard__avatar"><span>BS</span></div>
                         <div className="hero-dashboard__business">
-                            <span className="hero-dashboard__business-name">{t('heroDashboard.businessName')}</span>
+                            <span className="hero-dashboard__business-name">{t('heroDashboard.businessName', 'Beauty Studio')}</span>
                             <span className="hero-dashboard__business-location">
                                 <MapPin size={10} />
-                                {t('heroDashboard.location')}
+                                {t('heroDashboard.location', 'Lisbon, PT')}
                             </span>
                         </div>
                     </div>
                     <div className="hero-dashboard__header-right">
-                        <motion.div 
+                        <motion.div
                             className="hero-dashboard__notification-badge"
                             animate={{ scale: [1, 1.2, 1] }}
                             transition={{ duration: 2, repeat: Infinity }}
@@ -82,20 +65,16 @@ const HeroDashboard = () => {
                     </div>
                 </div>
 
-                {/* Stats Row */}
                 <div className="hero-dashboard__stats">
                     {stats.map((stat, index) => (
-                        <motion.div 
-                            key={stat.label}
-                            className="hero-dashboard__stat"
+                        <motion.div
+                            key={stat.key}
+                            className={`hero-dashboard__stat hero-dashboard__stat--${stat.tint}`}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.8 + index * 0.1 }}
                         >
-                            <div 
-                                className="hero-dashboard__stat-icon"
-                                style={{ background: `${stat.color}20`, color: stat.color }}
-                            >
+                            <div className="hero-dashboard__stat-icon">
                                 <stat.icon size={14} />
                             </div>
                             <div className="hero-dashboard__stat-content">
@@ -106,17 +85,15 @@ const HeroDashboard = () => {
                     ))}
                 </div>
 
-                {/* Main Content Area */}
                 <div className="hero-dashboard__content">
-                    {/* Calendar/Schedule */}
                     <div className="hero-dashboard__schedule">
                         <div className="hero-dashboard__schedule-header">
                             <Calendar size={14} />
-                            <span>{t('heroDashboard.todaysSchedule')}</span>
+                            <span>{t('heroDashboard.todaysSchedule', "Today's Schedule")}</span>
                         </div>
                         <div className="hero-dashboard__slots">
                             {timeSlots.map((slot, index) => (
-                                <motion.div 
+                                <motion.div
                                     key={slot.time}
                                     className={`hero-dashboard__slot hero-dashboard__slot--${slot.status}`}
                                     initial={{ opacity: 0, x: -20 }}
@@ -134,7 +111,7 @@ const HeroDashboard = () => {
                                         </div>
                                     ) : (
                                         <div className="hero-dashboard__slot-available">
-                                            {t('heroDashboard.available')}
+                                            {t('heroDashboard.available', 'Available')}
                                         </div>
                                     )}
                                 </motion.div>
@@ -142,15 +119,14 @@ const HeroDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Side Panel - Notifications */}
                     <div className="hero-dashboard__sidebar">
                         <div className="hero-dashboard__notifications">
                             <div className="hero-dashboard__notifications-header">
                                 <Bell size={12} />
-                                <span>{t('heroDashboard.activity')}</span>
+                                <span>{t('heroDashboard.activity', 'Activity')}</span>
                             </div>
                             {notifications.map((notif, index) => (
-                                <motion.div 
+                                <motion.div
                                     key={index}
                                     className="hero-dashboard__notif"
                                     initial={{ opacity: 0, x: 20 }}
@@ -166,15 +142,14 @@ const HeroDashboard = () => {
                             ))}
                         </div>
 
-                        {/* Mini Chart */}
                         <div className="hero-dashboard__chart">
                             <div className="hero-dashboard__chart-header">
                                 <TrendingUp size={12} />
-                                <span>{t('heroDashboard.thisWeek')}</span>
+                                <span>{t('heroDashboard.thisWeek', 'This Week')}</span>
                             </div>
                             <div className="hero-dashboard__chart-bars">
                                 {[40, 65, 45, 80, 55, 90, 70].map((height, i) => (
-                                    <motion.div 
+                                    <motion.div
                                         key={i}
                                         className="hero-dashboard__chart-bar"
                                         initial={{ height: 0 }}
@@ -184,16 +159,13 @@ const HeroDashboard = () => {
                                 ))}
                             </div>
                             <div className="hero-dashboard__chart-labels">
-                                {days.map((day, i) => (
-                                    <span key={i}>{day}</span>
-                                ))}
+                                {days.map((day, i) => <span key={i}>{day}</span>)}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Floating New Booking Notification */}
-                <motion.div 
+                <motion.div
                     className="hero-dashboard__floating-notif"
                     initial={{ opacity: 0, y: 20, x: 20 }}
                     animate={{ opacity: 1, y: 0, x: 0 }}
@@ -203,33 +175,36 @@ const HeroDashboard = () => {
                         <CheckCircle size={16} />
                     </div>
                     <div className="hero-dashboard__floating-notif-content">
-                        <span className="hero-dashboard__floating-notif-title">{t('heroDashboard.newBooking')}</span>
-                        <span className="hero-dashboard__floating-notif-text">{t('heroDashboard.bookedFor')}</span>
+                        <span className="hero-dashboard__floating-notif-title">
+                            {t('heroDashboard.newBooking', 'New Booking!')}
+                        </span>
+                        <span className="hero-dashboard__floating-notif-text">
+                            {t('heroDashboard.bookedFor', 'Sofia M. booked for 18:00')}
+                        </span>
                     </div>
                 </motion.div>
             </motion.div>
 
-            {/* Floating Elements */}
-            <motion.div 
+            <motion.div
                 className="hero-dashboard__float hero-dashboard__float--1"
                 animate={{ y: [-5, 5, -5] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
                 <Calendar size={20} />
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
                 className="hero-dashboard__float hero-dashboard__float--2"
                 animate={{ y: [5, -5, 5] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
             >
                 <Star size={16} />
             </motion.div>
 
-            <motion.div 
+            <motion.div
                 className="hero-dashboard__float hero-dashboard__float--3"
                 animate={{ y: [-3, 7, -3] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
             >
                 <TrendingUp size={18} />
             </motion.div>

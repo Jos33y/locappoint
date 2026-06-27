@@ -1,209 +1,157 @@
-// FloatingButtons.jsx - WhatsApp and Ask Loca floating buttons (Translated)
-// Location: src/components/FloatingButtons.jsx
+// FloatingButtons - WhatsApp + Loca AI. Brand-aligned, full UX surface.
 
 import { useState } from 'react'
-import { X, Send, Zap } from 'lucide-react'
+import { X, Send, Bot, Zap } from 'lucide-react'
 import { useLandingTranslation } from '../hooks/useLandingTranslation'
+import { trackWhatsAppClick } from '../services/analytics'
 
-// WhatsApp config
 const WHATSAPP_NUMBER = '351934695914'
 
-// AI Bot Icon Component
-const AIBotIcon = ({ size = 24 }) => (
-    <svg 
-        width={size} 
-        height={size} 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-    >
-        {/* Robot head */}
-        <rect x="4" y="6" width="16" height="14" rx="3" fill="currentColor" opacity="0.2"/>
-        <rect x="4" y="6" width="16" height="14" rx="3" stroke="currentColor" strokeWidth="1.5"/>
-        
-        {/* Antenna */}
-        <path d="M12 6V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="12" cy="2" r="1.5" fill="currentColor"/>
-        
-        {/* Eyes - glowing */}
-        <circle cx="9" cy="12" r="2" fill="currentColor">
-            <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
-        </circle>
-        <circle cx="15" cy="12" r="2" fill="currentColor">
-            <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" begin="0.5s"/>
-        </circle>
-        
-        {/* Mouth - speaking animation */}
-        <rect x="8" y="16" width="8" height="2" rx="1" fill="currentColor">
-            <animate attributeName="width" values="8;6;8" dur="1.5s" repeatCount="indefinite"/>
-            <animate attributeName="x" values="8;9;8" dur="1.5s" repeatCount="indefinite"/>
-        </rect>
-        
-        {/* Side details */}
-        <path d="M2 10V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M22 10V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-)
-
-// Animated AI Avatar for popup
-const AIAvatar = () => (
-    <div className="loca-avatar">
-        <div className="loca-avatar__rings">
-            <div className="loca-avatar__ring loca-avatar__ring--1" />
-            <div className="loca-avatar__ring loca-avatar__ring--2" />
-        </div>
-        <div className="loca-avatar__icon">
-            <AIBotIcon size={22} />
-        </div>
-    </div>
-)
+const FALLBACK_SUGGESTIONS = ['How does it work?', 'Pricing info', 'Launch date', 'Features']
 
 const FloatingButtons = () => {
-    const { t, language } = useLandingTranslation()
+    const { t } = useLandingTranslation()
     const [isLocaOpen, setIsLocaOpen] = useState(false)
-    const [locaMessage, setLocaMessage] = useState('')
-    
-    const whatsappMessage = t('floating.whatsappMessage')
-    const suggestions = t('floating.locaSuggestions')
+    const [message, setMessage] = useState('')
 
-    const handleWhatsAppClick = () => {
-        const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`
-        window.open(url, '_blank', 'noopener,noreferrer')
+    const handleWhatsApp = () => {
+        const text = t('floating.whatsappMessage', 'Hi! I want to learn more about Locappoint.')
+        trackWhatsAppClick()
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
     }
 
-    const handleLocaSubmit = (e) => {
+    const handleLocaToggle = () => setIsLocaOpen((v) => !v)
+
+    // Loca routes to WhatsApp until the AI flow ships.
+    const handleSubmit = (e) => {
         e.preventDefault()
-        if (!locaMessage.trim()) return
-        
-        // For now, redirect to WhatsApp with the message
-        // Later this can be connected to an AI chat system
-        const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(locaMessage)}`
+        const trimmed = message.trim()
+        if (!trimmed) return
+        const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(trimmed)}`
+        trackWhatsAppClick()
         window.open(url, '_blank', 'noopener,noreferrer')
-        setLocaMessage('')
+        setMessage('')
         setIsLocaOpen(false)
     }
 
-    const handleSuggestionClick = (suggestion) => {
-        // Map suggestion to a question based on language
-        const questionMap = {
-            en: {
-                'How does it work?': 'How does LocAppoint work?',
-                'Pricing info': 'What are the pricing plans?',
-                'Launch date': 'When will LocAppoint launch?',
-                'Features': 'What features will be available?'
-            },
-            pt: {
-                'Como funciona?': 'Como funciona o LocAppoint?',
-                'Informação de preços': 'Quais são os planos de preços?',
-                'Data de lançamento': 'Quando é que o LocAppoint vai lançar?',
-                'Funcionalidades': 'Que funcionalidades vão estar disponíveis?'
-            }
-        }
-        
-        const question = questionMap[language]?.[suggestion] || suggestion
-        setLocaMessage(question)
-    }
+    const handleSuggestionClick = (s) => setMessage(s)
+
+    const rawSuggestions = t('floating.locaSuggestions', null)
+    const suggestions = Array.isArray(rawSuggestions) && rawSuggestions.length > 0
+        ? rawSuggestions
+        : FALLBACK_SUGGESTIONS
 
     return (
         <>
-            {/* WhatsApp Button - Left Side */}
-            <button 
+            <button
+                type="button"
                 className="floating-btn floating-btn--whatsapp"
-                onClick={handleWhatsAppClick}
-                aria-label={t('floating.whatsappTooltip')}
+                onClick={handleWhatsApp}
+                aria-label={t('floating.whatsappTooltip', 'Message us on WhatsApp')}
+                title={t('floating.whatsappTooltip', 'Message us on WhatsApp')}
             >
-                <div className="floating-btn__pulse" />
-                <div className="floating-btn__icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
-                </div>
-                <span className="floating-btn__tooltip">{t('floating.whatsappTooltip')}</span>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+                    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.79 14.16c-.24.68-1.42 1.32-1.95 1.36-.51.04-.51.4-3.21-.67-2.69-1.07-4.4-3.85-4.54-4.03-.13-.18-1.08-1.44-1.08-2.74 0-1.3.68-1.94.92-2.21.24-.27.53-.34.7-.34.18 0 .35 0 .5.01.16.01.38-.06.59.45.24.58.79 2.01.86 2.15.07.14.12.31.02.5-.1.18-.15.3-.29.46-.14.16-.3.36-.43.49-.14.13-.29.27-.13.54.17.27.74 1.22 1.59 1.98 1.09.97 2.01 1.27 2.28 1.41.27.13.43.11.59-.06.16-.18.69-.8.87-1.07.18-.27.36-.22.6-.13.24.09 1.55.73 1.81.86.27.13.45.2.51.31.06.11.06.65-.18 1.32z"/>
+                </svg>
             </button>
 
-            {/* Ask Loca AI Button - Right Side */}
-            <button 
-                className={`floating-btn floating-btn--loca ${isLocaOpen ? 'floating-btn--active' : ''}`}
-                onClick={() => setIsLocaOpen(!isLocaOpen)}
-                aria-label={t('floating.locaTooltip')}
-            >
-                <div className="floating-btn__glow" />
-                <div className="floating-btn__pulse floating-btn__pulse--purple" />
-                <div className="floating-btn__icon">
-                    {isLocaOpen ? <X size={24} /> : <AIBotIcon size={26} />}
-                </div>
-                <span className="floating-btn__tooltip floating-btn__tooltip--left">{t('floating.locaTooltip')}</span>
-                {!isLocaOpen && <span className="floating-btn__badge">AI</span>}
-            </button>
+            <div className="floating-loca">
+                {isLocaOpen && (
+                    <div className="loca-panel" role="dialog" aria-label="Loca AI">
+                        <header className="loca-panel__head">
+                            <div className="loca-panel__avatar" aria-hidden="true">
+                                <Bot size={22} />
+                            </div>
+                            <div className="loca-panel__title">
+                                <div className="loca-panel__name">
+                                    {t('floating.locaTitle', 'Loca AI')}
+                                </div>
+                                <div className="loca-panel__status">
+                                    <Zap size={11} aria-hidden="true" />
+                                    <span>{t('floating.locaStatus', 'Learning & Improving')}</span>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                className="loca-panel__close"
+                                onClick={() => setIsLocaOpen(false)}
+                                aria-label="Close"
+                            >
+                                <X size={16} />
+                            </button>
+                        </header>
 
-            {/* Loca Chat Popup */}
-            {isLocaOpen && (
-                <div className="loca-popup">
-                    {/* Decorative elements */}
-                    <div className="loca-popup__bg">
-                        <div className="loca-popup__orb loca-popup__orb--1" />
-                        <div className="loca-popup__orb loca-popup__orb--2" />
+                        <div className="loca-panel__body">
+                            <div className="loca-panel__notice">
+                                <Zap size={13} aria-hidden="true" />
+                                <span>
+                                    {t('floating.locaNotice', 'AI is currently undergoing training to serve you better')}
+                                </span>
+                            </div>
+
+                            <div className="loca-panel__bubble">
+                                <p>
+                                    {t('floating.locaGreeting', 'Hi there! I\u2019m ')}
+                                    <strong>{t('floating.locaName', 'Loca')}</strong>
+                                    {t('floating.locaIntro', ', your AI assistant.')}
+                                </p>
+                                <p>
+                                    {t('floating.locaMessage', 'I\u2019m still learning, but I\u2019d love to help. What would you like to know about Locappoint?')}
+                                </p>
+                            </div>
+
+                            <div className="loca-panel__suggestions">
+                                {suggestions.map((s, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        className="loca-panel__chip"
+                                        onClick={() => handleSuggestionClick(s)}
+                                    >
+                                        {s}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="loca-panel__form">
+                            <input
+                                type="text"
+                                className="loca-panel__input"
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                placeholder={t('floating.locaPlaceholder', 'Ask me anything...')}
+                                aria-label="Message"
+                            />
+                            <button
+                                type="submit"
+                                className="loca-panel__send"
+                                disabled={!message.trim()}
+                                aria-label="Send"
+                            >
+                                <Send size={15} />
+                            </button>
+                        </form>
+
+                        <div className="loca-panel__footer">
+                            <span className="loca-panel__dot" aria-hidden="true" />
+                            <span>{t('floating.locaPowered', 'Powered by Locappoint AI')}</span>
+                        </div>
                     </div>
+                )}
 
-                    <div className="loca-popup__header">
-                        <AIAvatar />
-                        <div className="loca-popup__title">
-                            <h4>{t('floating.locaTitle')}</h4>
-                            <span className="loca-popup__status">
-                                <Zap size={10} />
-                                {t('floating.locaStatus')}
-                            </span>
-                        </div>
-                        <button 
-                            className="loca-popup__close"
-                            onClick={() => setIsLocaOpen(false)}
-                        >
-                            <X size={18} />
-                        </button>
-                    </div>
-                    
-                    <div className="loca-popup__body">
-                        {/* AI Training Notice */}
-                        <div className="loca-popup__notice">
-                            <Zap size={14} />
-                            <span>{t('floating.locaNotice')}</span>
-                        </div>
-
-                        <div className="loca-popup__message loca-popup__message--bot">
-                            <p>{t('floating.locaGreeting')} <strong>{t('floating.locaName')}</strong>{t('floating.locaIntro')}</p>
-                            <p>{t('floating.locaMessage')}</p>
-                        </div>
-
-                        <div className="loca-popup__suggestions">
-                            {suggestions.map((suggestion, index) => (
-                                <button 
-                                    key={index}
-                                    onClick={() => handleSuggestionClick(suggestion)}
-                                >
-                                    {suggestion}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <form className="loca-popup__input" onSubmit={handleLocaSubmit}>
-                        <input
-                            type="text"
-                            placeholder={t('floating.locaPlaceholder')}
-                            value={locaMessage}
-                            onChange={(e) => setLocaMessage(e.target.value)}
-                        />
-                        <button type="submit" disabled={!locaMessage.trim()}>
-                            <Send size={18} />
-                        </button>
-                    </form>
-
-                    <p className="loca-popup__note">
-                        <span className="loca-popup__note-dot" />
-                        {t('floating.locaPowered')}
-                    </p>
-                </div>
-            )}
+                <button
+                    type="button"
+                    className="floating-btn floating-btn--loca"
+                    onClick={handleLocaToggle}
+                    aria-label={t('floating.locaTooltip', 'Ask Loca')}
+                    title={t('floating.locaTooltip', 'Ask Loca')}
+                    aria-expanded={isLocaOpen}
+                >
+                    <Bot size={22} aria-hidden="true" />
+                    <span className="floating-btn__dot" aria-hidden="true" />
+                </button>
+            </div>
         </>
     )
 }

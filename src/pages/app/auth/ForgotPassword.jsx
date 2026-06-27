@@ -59,7 +59,7 @@ const ForgotPassword = () => {
                 </div>
 
                 {/* Back Link */}
-                <Link to="/app/auth" className="back-link">
+                <Link to="/auth" className="back-link">
                     <ArrowLeft size={16} />
                     <span>Back to Sign In</span>
                 </Link>
@@ -92,7 +92,7 @@ const ForgotPassword = () => {
                                 try again
                             </button>
                         </p>
-                        <Link to="/app/auth" className="btn btn--primary btn-full">
+                        <Link to="/auth" className="btn btn--primary btn-full">
                             Back to Sign In
                         </Link>
                     </div>
@@ -136,7 +136,7 @@ const ForgotPassword = () => {
                         <div className="auth-footer">
                             <p>
                                 Remember your password?{' '}
-                                <Link to="/app/auth" className="link-button">
+                                <Link to="/auth" className="link-button">
                                     Sign in
                                 </Link>
                             </p>

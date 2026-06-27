@@ -1,210 +1,243 @@
-
-// PartnershipTab.jsx - Partnership requests management tab
-// Location: src/pages/admin/tabs/PartnershipTab.jsx
-
-import { 
-    Handshake, 
-    Download, 
-    Mail, 
-    Phone, 
-    Building2, 
-    MapPin,
-    MessageSquare,
-    Calendar,
-    ChevronDown
-} from 'lucide-react'
+import { useState } from 'react'
+import { Handshake, Download } from 'lucide-react'
 import CountryDisplay from '../components/CountryDisplay'
+import SectionHead from '../components/SectionHead'
+import StatusBadge from '../components/StatusBadge'
+import PartnershipDrawer from '../components/PartnershipDrawer'
+
+/* ============================================================
+   PartnershipTab
+   5-col compact table. Row click opens drawer with editable status.
+   Selected uses id-lookup so status updates propagate live.
+   ============================================================ */
+
+const initial = (first, last) => {
+    const f = (first || '').charAt(0)
+    const l = (last || '').charAt(0)
+    return (f + l).toUpperCase() || 'U'
+}
+
+// Compact relative date. "Today", "Yesterday", "3d ago", "Dec 13", "Dec 13, 2025".
+const formatShort = (timestamp) => {
+    if (!timestamp) return ''
+    const date = new Date(timestamp)
+    if (Number.isNaN(date.getTime())) return ''
+
+    const now = new Date()
+    const days = Math.floor((now - date) / 86400000)
+
+    if (days === 0) return 'Today'
+    if (days === 1) return 'Yesterday'
+    if (days < 7) return `${days}d ago`
+
+    const sameYear = date.getFullYear() === now.getFullYear()
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: sameYear ? undefined : 'numeric'
+    }).format(date)
+}
+
+const EmptyCell = ({ label }) => (
+    <span className="cell-empty" role="presentation" aria-label={label} />
+)
+
+const handleKeyActivate = (e, callback) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        callback()
+    }
+}
 
 const PartnershipTab = ({ data, formatDate, onExport, onStatusChange }) => {
-    const getStatusClass = (status) => {
-        switch (status) {
-            case 'contacted': return 'status-badge--contacted'
-            case 'approved': return 'status-badge--approved'
-            case 'rejected': return 'status-badge--rejected'
-            default: return 'status-badge--pending'
-        }
-    }
+    const [selectedId, setSelectedId] = useState(null)
+    const count = data.length
 
-    if (data.length === 0) {
+    // Id-based lookup so status edits flow back into the drawer immediately
+    const selected = selectedId ? data.find((d) => d.id === selectedId) : null
+
+    const openDetail = (item) => setSelectedId(item.id)
+    const closeDetail = () => setSelectedId(null)
+
+    if (count === 0) {
         return (
-            <div className="empty-state">
-                <div className="empty-state__icon">
-                    <Handshake size={48} />
+            <div className="tab-content">
+                <SectionHead icon={Handshake} title="Partnerships" meta="0 requests" />
+                <div className="empty-state">
+                    <div className="empty-state__icon">
+                        <Handshake size={28} />
+                    </div>
+                    <h3 className="empty-state__title">No partnership requests yet</h3>
+                    <p className="empty-state__text">
+                        When organizations apply, they will appear here.
+                    </p>
                 </div>
-                <h3 className="empty-state__title">No partnership requests yet</h3>
-                <p className="empty-state__text">
-                    When organizations submit partnership interest, they'll appear here.
-                </p>
             </div>
         )
     }
 
     return (
         <div className="tab-content">
-            {/* Toolbar */}
-            <div className="tab-toolbar">
-                <div className="tab-toolbar__info">
-                    <Handshake size={16} />
-                    <span>Showing {data.length} request{data.length !== 1 ? 's' : ''}</span>
-                </div>
-                <button onClick={onExport} className="btn btn--primary btn--sm">
-                    <Download size={16} />
-                    <span>Export CSV</span>
-                </button>
-            </div>
+            <SectionHead
+                icon={Handshake}
+                title="Partnerships"
+                meta={`${count} ${count === 1 ? 'request' : 'requests'}`}
+                action={
+                    <button onClick={onExport} className="btn btn--primary btn--sm">
+                        <Download size={13} aria-hidden="true" />
+                        <span>Export CSV</span>
+                    </button>
+                }
+            />
 
-            {/* Mobile Cards */}
-            <div className="mobile-cards">
-                {data.map((item) => (
-                    <div key={item.id} className="data-card">
-                        <div className="data-card__header">
-                            <div className="data-card__avatar data-card__avatar--cyan">
-                                {item.first_name?.charAt(0)?.toUpperCase() || 'P'}
-                            </div>
-                            <div className="data-card__title-group">
-                                <h3 className="data-card__name">
-                                    {item.first_name} {item.last_name}
-                                </h3>
-                                <span className={`status-badge ${getStatusClass(item.status)}`}>
-                                    {item.status || 'pending'}
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <div className="data-card__body">
-                            <div className="data-card__row">
-                                <Mail size={14} />
-                                <span>{item.email}</span>
-                            </div>
-                            <div className="data-card__row">
-                                <Phone size={14} />
-                                <span>{item.phone}</span>
-                            </div>
-                            <div className="data-card__row">
-                                <Building2 size={14} />
-                                <span>{item.organization_type}</span>
-                            </div>
-                            {item.organization_name && (
-                                <div className="data-card__row data-card__row--secondary">
-                                    <span className="data-card__label">Organization:</span>
-                                    <span>{item.organization_name}</span>
-                                </div>
-                            )}
-                            {(item.city || item.country) && (
-                                <div className="data-card__row">
-                                    <MapPin size={14} />
-                                    <span>
-                                        {item.city && `${item.city}, `}
-                                        <CountryDisplay code={item.country} showName={true} size={14} />
-                                    </span>
-                                </div>
-                            )}
-                            {item.partnership_interest && (
-                                <div className="data-card__row data-card__row--comments">
-                                    <MessageSquare size={14} />
-                                    <span>{item.partnership_interest}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="data-card__footer data-card__footer--between">
-                            <div className="data-card__date">
-                                <Calendar size={14} />
-                                <span>{formatDate(item.created_at)}</span>
-                            </div>
-                            <div className="status-select-wrapper">
-                                <select
-                                    value={item.status || 'pending'}
-                                    onChange={(e) => onStatusChange(item.id, e.target.value)}
-                                    className={`status-select ${getStatusClass(item.status)}`}
-                                >
-                                    <option value="pending">Pending</option>
-                                    <option value="contacted">Contacted</option>
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
-                                </select>
-                                <ChevronDown size={14} className="status-select-icon" />
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Desktop Table */}
-            <div className="data-table-container">
+            {/* Desktop table - 5 cols */}
+            <div className="data-table-wrap">
                 <table className="data-table">
+                    <colgroup>
+                        <col style={{ width: 'auto' }} />
+                        <col style={{ width: '180px' }} />
+                        <col style={{ width: '160px' }} />
+                        <col style={{ width: '130px' }} />
+                        <col style={{ width: '110px' }} />
+                    </colgroup>
                     <thead>
                         <tr>
-                            <th>Name</th>
                             <th>Contact</th>
                             <th>Organization</th>
                             <th>Location</th>
-                            <th>Interest</th>
                             <th>Status</th>
-                            <th>Date</th>
+                            <th>Submitted</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((item) => (
-                            <tr key={item.id}>
-                                <td>
-                                    <div className="cell-user">
-                                        <div className="cell-avatar cell-avatar--cyan">
-                                            {item.first_name?.charAt(0)?.toUpperCase() || 'P'}
+                        {data.map((item) => {
+                            const isSelected = selectedId === item.id
+                            const fullName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Unknown'
+                            return (
+                                <tr
+                                    key={item.id}
+                                    className={`data-table__row--clickable${isSelected ? ' data-table__row--selected' : ''}`}
+                                    onClick={() => openDetail(item)}
+                                    onKeyDown={(e) => handleKeyActivate(e, () => openDetail(item))}
+                                    tabIndex={0}
+                                    role="button"
+                                    aria-label={`View details for ${fullName}`}
+                                >
+                                    <td>
+                                        <div className="cell-user">
+                                            <div className="cell-avatar" aria-hidden="true">
+                                                {initial(item.first_name, item.last_name)}
+                                            </div>
+                                            <div className="cell-user__text">
+                                                <span className="cell-user__name">{fullName}</span>
+                                                <span className="cell-user__email">{item.email}</span>
+                                            </div>
                                         </div>
-                                        <span className="cell-name">
-                                            {item.first_name} {item.last_name}
+                                    </td>
+                                    <td>
+                                        <div className="cell-org">
+                                            <span className="cell-org__type">{item.organization_type || 'Other'}</span>
+                                            {item.organization_name && (
+                                                <span className="cell-org__name">{item.organization_name}</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {(item.city || item.country) ? (
+                                            <div className="cell-location">
+                                                {item.country && <CountryDisplay code={item.country} size={14} showName={false} />}
+                                                {item.city && <span className="cell-location__city">{item.city}</span>}
+                                            </div>
+                                        ) : <EmptyCell label="Unknown location" />}
+                                    </td>
+                                    <td>
+                                        <StatusBadge status={item.status} />
+                                    </td>
+                                    <td>
+                                        <span className="cell-date" title={formatDate(item.created_at)}>
+                                            {formatShort(item.created_at)}
                                         </span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="cell-contact">
-                                        <span>{item.email}</span>
-                                        <small>{item.phone}</small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="cell-org">
-                                        <span className="cell-org-type">{item.organization_type}</span>
-                                        {item.organization_name && (
-                                            <small className="cell-org-name">{item.organization_name}</small>
-                                        )}
-                                    </div>
-                                </td>
-                                <td>
-                                    {item.city || item.country ? (
-                                        <div className="cell-location">
-                                            <CountryDisplay code={item.country} size={16} showName={false} />
-                                            {item.city && <span>{item.city}</span>}
-                                        </div>
-                                    ) : (
-                                        <span className="cell-empty">—</span>
-                                    )}
-                                </td>
-                                <td className="cell-comments">
-                                    {item.partnership_interest || <span className="cell-empty">—</span>}
-                                </td>
-                                <td>
-                                    <div className="status-select-wrapper">
-                                        <select
-                                            value={item.status || 'pending'}
-                                            onChange={(e) => onStatusChange(item.id, e.target.value)}
-                                            className={`status-select ${getStatusClass(item.status)}`}
-                                        >
-                                            <option value="pending">Pending</option>
-                                            <option value="contacted">Contacted</option>
-                                            <option value="approved">Approved</option>
-                                            <option value="rejected">Rejected</option>
-                                        </select>
-                                        <ChevronDown size={14} className="status-select-icon" />
-                                    </div>
-                                </td>
-                                <td className="cell-date">{formatDate(item.created_at)}</td>
-                            </tr>
-                        ))}
+                                    </td>
+                                </tr>
+                            )
+                        })}
                     </tbody>
                 </table>
             </div>
+
+            {/* Mobile cards */}
+            <div className="mobile-cards">
+                {data.map((item) => {
+                    const fullName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Unknown'
+                    return (
+                        <article
+                            key={item.id}
+                            className="data-card data-card--clickable"
+                            onClick={() => openDetail(item)}
+                            onKeyDown={(e) => handleKeyActivate(e, () => openDetail(item))}
+                            tabIndex={0}
+                            role="button"
+                            aria-label={`View details for ${fullName}`}
+                        >
+                            <header className="data-card__head">
+                                <div className="cell-avatar" aria-hidden="true">
+                                    {initial(item.first_name, item.last_name)}
+                                </div>
+                                <div className="data-card__identity">
+                                    <h3 className="data-card__name">{fullName}</h3>
+                                    <p className="data-card__email">{item.email}</p>
+                                </div>
+                                <StatusBadge status={item.status} />
+                            </header>
+
+                            <dl className="data-card__details">
+                                <dt>Org</dt>
+                                <dd className="cell-text--capitalize">
+                                    {item.organization_type || 'Other'}
+                                    {item.organization_name && ` · ${item.organization_name}`}
+                                </dd>
+
+                                {(item.city || item.country) && (
+                                    <>
+                                        <dt>Location</dt>
+                                        <dd>
+                                            {item.country && <CountryDisplay code={item.country} size={14} showName={false} />}
+                                            {item.city && <span>{item.city}</span>}
+                                        </dd>
+                                    </>
+                                )}
+
+                                {item.phone && (
+                                    <>
+                                        <dt>Phone</dt>
+                                        <dd><span className="cell-mono">{item.phone}</span></dd>
+                                    </>
+                                )}
+
+                                {item.partnership_interest && (
+                                    <>
+                                        <dt>Interest</dt>
+                                        <dd className="data-card__detail--block">
+                                            <p className="data-card__note data-card__note--clamped">{item.partnership_interest}</p>
+                                        </dd>
+                                    </>
+                                )}
+                            </dl>
+
+                            <footer className="data-card__foot">
+                                <time className="data-card__date">{formatDate(item.created_at)}</time>
+                            </footer>
+                        </article>
+                    )
+                })}
+            </div>
+
+            <PartnershipDrawer
+                item={selected}
+                onClose={closeDetail}
+                onStatusChange={onStatusChange}
+                formatDate={formatDate}
+            />
         </div>
     )
 }

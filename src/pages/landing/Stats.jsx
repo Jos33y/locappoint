@@ -1,264 +1,111 @@
-// Stats.jsx - Enhanced Stats section with count-up and visual effects
-// Location: src/pages/landing/Stats.jsx
+// Stats - The cost of phone-and-DM bookings. Three no-show stats with motion stagger.
 
-import { useState, useEffect, useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
-import { Building2, LayoutGrid, Globe, CreditCard, Sparkles } from 'lucide-react'
-import { useLandingTranslation } from '../../hooks/useLandingTranslation'
+import { motion, useReducedMotion } from 'framer-motion'
+import { Wallet, Phone, BellRing } from 'lucide-react'
+import { useT } from '../../hooks/useT'
 
-// Count-up hook
-const useCountUp = (end, duration = 2000, startCounting = false) => {
-    const [count, setCount] = useState(0)
-    
-    useEffect(() => {
-        if (!startCounting) return
-        
-        let startTime = null
-        const endValue = parseInt(end) || 0
-        
-        const animate = (timestamp) => {
-            if (!startTime) startTime = timestamp
-            const progress = Math.min((timestamp - startTime) / duration, 1)
-            
-            // Easing function for smooth finish
-            const easeOut = 1 - Math.pow(1 - progress, 3)
-            setCount(Math.floor(easeOut * endValue))
-            
-            if (progress < 1) {
-                requestAnimationFrame(animate)
-            }
-        }
-        
-        requestAnimationFrame(animate)
-    }, [end, duration, startCounting])
-    
-    return count
-}
-
-// Individual stat card with count-up
-const StatCard = ({ stat, index, isInView }) => {
-    const count = useCountUp(stat.numericValue, 2000 + index * 200, isInView)
-    
-    // For non-numeric stats (like "Worldwide"), show the display value directly
-    const displayValue = stat.isText 
-        ? stat.displayValue 
-        : `${stat.prefix}${count}${stat.suffix}`
-    
-    return (
-        <motion.div 
-            className="stats__card"
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            whileInView={{ 
-                opacity: 1, 
-                y: 0, 
-                scale: 1,
-                transition: { 
-                    duration: 0.6, 
-                    delay: index * 0.1,
-                    ease: [0.22, 1, 0.36, 1] 
-                }
-            }}
-            viewport={{ once: true }}
-            whileHover={{ 
-                y: -12,
-                transition: { duration: 0.3 }
-            }}
-        >
-            {/* Animated glow orb behind card */}
-            <div 
-                className="stats__card-orb"
-                style={{ background: stat.gradient }}
-            />
-            
-            {/* Top glow line */}
-            <div 
-                className="stats__card-glow"
-                style={{ background: stat.gradient }}
-            />
-            
-            {/* Pulsing rings around icon */}
-            <div className="stats__icon-wrapper">
-                <div 
-                    className="stats__icon-ring stats__icon-ring--1"
-                    style={{ borderColor: stat.color }}
-                />
-                <div 
-                    className="stats__icon-ring stats__icon-ring--2"
-                    style={{ borderColor: stat.color }}
-                />
-                <div 
-                    className="stats__icon"
-                    style={{ background: stat.gradient }}
-                >
-                    <stat.icon size={24} strokeWidth={1.5} />
-                </div>
-            </div>
-            
-            {/* Animated value */}
-            <div 
-                className={`stats__value ${stat.isText ? 'stats__value--text' : ''}`}
-                style={{ 
-                    background: stat.gradient,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                }}
-            >
-                {displayValue}
-            </div>
-            
-            <div className="stats__label">{stat.label}</div>
-            
-            {/* Decorative corner accent */}
-            <div 
-                className="stats__corner-accent"
-                style={{ background: stat.gradient }}
-            />
-        </motion.div>
-    )
-}
+const EASE = [0.22, 1, 0.36, 1]
 
 const Stats = () => {
-    const { t, language } = useLandingTranslation()
-    const ref = useRef(null)
-    const isInView = useInView(ref, { once: true, margin: "-100px" })
-    
+    const t = useT()
+    const prefersReducedMotion = useReducedMotion()
+
     const stats = [
         {
-            icon: Building2,
-            numericValue: 100,
-            prefix: '',
-            suffix: '+',
-            label: t('stats.businessesWaiting'),
-            gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-            color: 'rgba(139, 92, 246, 0.5)',
-            isText: false
+            icon: Wallet,
+            value: '\u20AC45K',
+            label: t('stats.stat1', 'Average lost per year to missed appointments per business'),
+            accent: 'azure'
         },
         {
-            icon: LayoutGrid,
-            numericValue: 10,
-            prefix: '',
-            suffix: '+',
-            label: t('stats.serviceCategories'),
-            gradient: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
-            color: 'rgba(6, 182, 212, 0.5)',
-            isText: false
+            icon: Phone,
+            value: '15-25%',
+            label: t('stats.stat2', 'No-show rate on phone-based bookings'),
+            accent: 'signal'
         },
         {
-            icon: Globe,
-            numericValue: 0,
-            prefix: '',
-            suffix: '',
-            displayValue: language === 'pt' ? 'Mundial' : 'Worldwide',
-            label: t('stats.globalAccess'),
-            gradient: 'linear-gradient(135deg, #A855F7 0%, #EC4899 100%)',
-            color: 'rgba(168, 85, 247, 0.5)',
-            isText: true
-        },
-        {
-            icon: CreditCard,
-            numericValue: 0,
-            prefix: '',
-            suffix: '€',
-            label: t('stats.setupCost'),
-            gradient: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
-            color: 'rgba(16, 185, 129, 0.5)',
-            isText: false
+            icon: BellRing,
+            value: '<25%',
+            label: t('stats.stat3', 'Reduction in no-shows with automated reminders'),
+            accent: 'success'
         }
     ]
 
-    // Floating particles data
-    const particles = [
-        { size: 4, x: '10%', y: '20%', delay: 0 },
-        { size: 3, x: '85%', y: '15%', delay: 1 },
-        { size: 5, x: '75%', y: '75%', delay: 2 },
-        { size: 3, x: '15%', y: '80%', delay: 0.5 },
-        { size: 4, x: '50%', y: '10%', delay: 1.5 },
-        { size: 3, x: '90%', y: '50%', delay: 2.5 },
-    ]
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: prefersReducedMotion ? 0 : 0.12,
+                delayChildren: 0.1
+            }
+        }
+    }
+
+    const cardVariants = {
+        hidden: { opacity: 0, y: 24 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.6, ease: EASE }
+        }
+    }
 
     return (
-        <section className="stats" id="stats" ref={ref}>
-            {/* Enhanced background */}
-            <div className="stats__bg">
-                {/* Gradient orbs */}
-                <div className="stats__glow stats__glow--1" />
-                <div className="stats__glow stats__glow--2" />
-                <div className="stats__glow stats__glow--3" />
-                
-                {/* Grid pattern */}
-                <div className="stats__grid-pattern" />
-                
-                {/* Floating particles */}
-                {particles.map((particle, i) => (
-                    <div
-                        key={i}
-                        className="stats__particle"
-                        style={{
-                            width: particle.size,
-                            height: particle.size,
-                            left: particle.x,
-                            top: particle.y,
-                            animationDelay: `${particle.delay}s`
-                        }}
-                    />
-                ))}
-            </div>
-
-            {/* Decorative floating icons */}
-            <div className="stats__floating-elements">
-                <motion.div 
-                    className="stats__floating-icon stats__floating-icon--1"
-                    animate={{ 
-                        y: [0, -15, 0],
-                        rotate: [0, 10, 0]
-                    }}
-                    transition={{ 
-                        duration: 4, 
-                        repeat: Infinity, 
-                        ease: "easeInOut" 
-                    }}
-                >
-                    <Sparkles size={20} />
-                </motion.div>
-                <motion.div 
-                    className="stats__floating-icon stats__floating-icon--2"
-                    animate={{ 
-                        y: [0, 12, 0],
-                        rotate: [0, -8, 0]
-                    }}
-                    transition={{ 
-                        duration: 5, 
-                        repeat: Infinity, 
-                        ease: "easeInOut",
-                        delay: 1
-                    }}
-                >
-                    <Sparkles size={16} />
-                </motion.div>
-            </div>
+        <section className="stats" id="stats">
+            <div className="stats__ambient" aria-hidden="true" />
 
             <div className="container">
-                {/* Optional section intro */}
-                <motion.div 
-                    className="stats__intro"
-                    initial={{ opacity: 0, y: 20 }}
+                <motion.div
+                    className="stats__editorial"
+                    initial={{ opacity: 0, y: 12 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
+                    viewport={{ once: true, margin: '-80px' }}
+                    transition={{ duration: 0.5, ease: EASE }}
                 >
-                    <span className="stats__intro-text">{t('stats.intro')}</span>
+                    <span className="stats__editorial-rule" aria-hidden="true" />
+                    <span className="stats__editorial-text">
+                        {t('stats.eyebrow', 'THE COST')}
+                    </span>
                 </motion.div>
 
-                <div className="stats__grid">
-                    {stats.map((stat, index) => (
-                        <StatCard 
-                            key={index} 
-                            stat={stat} 
-                            index={index}
-                            isInView={isInView}
-                        />
-                    ))}
-                </div>
+                <motion.div
+                    className="stats__grid"
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: '-80px' }}
+                >
+                    {stats.map((stat, i) => {
+                        const Icon = stat.icon
+                        return (
+                            <motion.div
+                                key={i}
+                                className={`stats__card stats__card--${stat.accent}`}
+                                variants={cardVariants}
+                            >
+                                <span className="stats__card-rule" aria-hidden="true" />
+                                <div className="stats__card-row">
+                                    <span className="stats__card-icon">
+                                        <Icon size={18} strokeWidth={1.75} />
+                                    </span>
+                                    <div className="stats__card-value">{stat.value}</div>
+                                </div>
+                                <div className="stats__card-label">{stat.label}</div>
+                            </motion.div>
+                        )
+                    })}
+                </motion.div>
+
+                <motion.p
+                    className="stats__source"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: 0.4, ease: EASE }}
+                >
+                    {t('stats.source', 'SOURCES: BOULEVARD 2025, VOCALY AI 2025, EDEN INDUSTRY ANALYSIS')}
+                </motion.p>
             </div>
         </section>
     )

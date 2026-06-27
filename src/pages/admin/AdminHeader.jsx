@@ -1,5 +1,4 @@
-// AdminHeader.jsx - Admin header with logout
-// Location: src/pages/admin/AdminHeader.jsx
+// AdminHeader - Fixed top. Logo, admin badge, ghost logout button.
 
 import { LogOut, LayoutDashboard } from 'lucide-react'
 import LogoIcon from '../../components/LogoIcon'
@@ -8,23 +7,20 @@ const AdminHeader = ({ onLogout }) => {
     return (
         <header className="admin-header">
             <div className="admin-header__container">
-                {/* Logo */}
                 <a href="/" className="admin-header__logo">
-                    <div className="admin-header__logo-icon">
+                    <span className="admin-header__logo-icon">
                         <LogoIcon />
-                    </div>
+                    </span>
                     <span className="admin-header__logo-text">LocAppoint</span>
                 </a>
 
-                {/* Center - Admin Badge */}
                 <div className="admin-header__badge">
-                    <LayoutDashboard size={16} />
-                    <span>Admin Dashboard</span>
+                    <LayoutDashboard size={12} aria-hidden="true" />
+                    <span>Admin</span>
                 </div>
 
-                {/* Right - Logout */}
-                <button onClick={onLogout} className="admin-header__logout">
-                    <LogOut size={18} />
+                <button type="button" onClick={onLogout} className="admin-header__logout">
+                    <LogOut size={15} aria-hidden="true" />
                     <span>Logout</span>
                 </button>
             </div>

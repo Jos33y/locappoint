@@ -1,0 +1,82 @@
+/* geography.css - Three cities, phase tags. Lisbon highlighted. */
+
+.geo {
+    padding: var(--section-padding) 0;
+    background: var(--surface-1);
+}
+
+.geo__cities {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.city {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.city--active {
+    border-color: var(--azure);
+    background: rgba(45, 127, 240, 0.06);
+}
+
+.city__head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.city__name {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    letter-spacing: var(--tracking-tight);
+}
+
+.city__country {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.city__phase {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: var(--tracking-widest);
+    color: var(--text-muted);
+    padding: 6px var(--space-3);
+    background: var(--surface-3);
+    border-radius: var(--radius-full);
+    align-self: center;
+}
+
+.city--active .city__phase {
+    background: var(--azure);
+    color: #FFFFFF;
+}
+
+.geo__caption {
+    max-width: 620px;
+    margin: 0 auto;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+}
+
+@media (max-width: 640px) {
+    .geo__cities {
+        grid-template-columns: 1fr;
+    }
+}

@@ -164,7 +164,7 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
             sessionStorage.setItem('pendingBooking', JSON.stringify(bookingState))
 
             // Redirect to auth page
-            navigate('/app/auth', {
+            navigate('/auth', {
                 state: {
                     tab: 'signin',
                     returnTo: `/${business.slug}`,

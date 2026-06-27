@@ -28,4 +28,6 @@ dist-ssr
 *.sln
 *.sw?
 
-rough/
+rough
+docs
+locappoint-tree.txt

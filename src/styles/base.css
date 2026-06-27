@@ -1,0 +1,211 @@
+/* base.css - Global typography, section-header system, reveal animations. */
+
+/* Headings */
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    line-height: var(--leading-tight);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+    letter-spacing: var(--tracking-tight);
+}
+
+h1 { font-size: var(--text-5xl); }
+h2 { font-size: var(--text-4xl); }
+h3 { font-size: var(--text-3xl); font-weight: var(--font-weight-medium); }
+h4 { font-size: var(--text-2xl); font-weight: var(--font-weight-medium); }
+h5 { font-size: var(--text-xl); font-weight: var(--font-weight-medium); }
+h6 { font-size: var(--text-lg); font-weight: var(--font-weight-medium); }
+
+p {
+    margin-bottom: var(--space-4);
+    line-height: var(--leading-relaxed);
+}
+
+a {
+    color: var(--azure-link);
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    color: var(--azure-soft);
+}
+
+strong, b {
+    font-weight: var(--font-weight-semibold);
+}
+
+small {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+code, pre {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+}
+
+/* Keyframes. Only reveal animations survive. pulse and float deleted. */
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms;
+        animation-iteration-count: 1;
+        transition-duration: 0.01ms;
+        scroll-behavior: auto;
+    }
+}
+
+/* Responsive type clamp on small screens */
+
+@media (max-width: 768px) {
+    h1, h2 {
+        font-weight: var(--font-weight-medium);
+    }
+}
+
+@media (max-width: 400px) {
+    h1 { font-size: var(--text-3xl); }
+    h2 { font-size: var(--text-2xl); }
+    h3 { font-size: var(--text-xl); }
+}
+
+/* Section header. One unified system across all landing sections. */
+
+.section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: var(--space-16);
+    position: relative;
+    z-index: var(--z-base);
+}
+
+.section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: rgba(45, 127, 240, 0.08);
+    border: 1px solid rgba(45, 127, 240, 0.16);
+    border-radius: var(--radius-full);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: var(--font-weight-medium);
+    color: var(--azure-link);
+    margin-bottom: var(--space-6);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+}
+
+.section-badge svg {
+    width: 12px;
+    height: 12px;
+    opacity: 0.7;
+}
+
+.section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-5);
+    letter-spacing: var(--tracking-tight);
+    line-height: 1.15;
+    text-align: center;
+}
+
+.section-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    line-height: var(--leading-relaxed);
+    max-width: 540px;
+    margin: 0 auto;
+    font-weight: var(--font-weight-normal);
+}
+
+.accent-text {
+    color: var(--azure);
+}
+
+@media (max-width: 768px) {
+    .section-header {
+        margin-bottom: var(--space-12);
+    }
+
+    .section-badge {
+        padding: 5px 12px;
+        font-size: 0.65rem;
+        margin-bottom: var(--space-5);
+    }
+
+    .section-title {
+        font-size: 1.85rem;
+        margin-bottom: var(--space-3);
+    }
+
+    .section-subtitle {
+        font-size: 0.95rem;
+        padding: 0 var(--space-4);
+    }
+}
+
+@media (max-width: 400px) {
+    .section-header {
+        margin-bottom: var(--space-10);
+    }
+
+    .section-title {
+        font-size: 1.6rem;
+    }
+
+    .section-subtitle {
+        font-size: 0.9rem;
+    }
+}
+
+.container {
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+    padding: 0 var(--container-padding);
+}

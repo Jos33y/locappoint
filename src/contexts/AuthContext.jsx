@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
                         phone: userData.phone,
                         user_type: userData.user_type,
                     },
-                    emailRedirectTo: `${window.location.origin}/app/auth?verified=true` // Redirect after verification
+                    emailRedirectTo: `${window.location.origin}/auth?verified=true` // Redirect after verification
                 }
             })
 
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }) => {
     const resetPassword = async (email) => {
         try {
             const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/app/reset-password`,
+                redirectTo: `${window.location.origin}/reset-password`,
             })
 
             if (error) throw error
