@@ -1,255 +1,199 @@
-import AppFooter from '../../../components/common/Appfooter'
+// src/pages/app/legal/TermsOfService.jsx
+// Terms of Service for Locappoint. Portuguese governing law.
+// BEFORE PRODUCTION: replace [Operator Entity, registered address] with the
+// formal legal entity name + address. Review with counsel before launch.
+
 import AppHeader from '../../../components/common/AppHeader'
+import AppFooter from '../../../components/common/Appfooter'
+import '../../../styles/app/home.css'
 import '../../../styles/app/legal.css'
+
+
+const sections = [
+    { id: 'acceptance', label: 'Acceptance' },
+    { id: 'service', label: 'The service' },
+    { id: 'account', label: 'Your account' },
+    { id: 'use', label: 'Acceptable use' },
+    { id: 'bookings', label: 'Bookings between parties' },
+    { id: 'pricing', label: 'Pricing and payment' },
+    { id: 'termination', label: 'Termination' },
+    { id: 'ip', label: 'Intellectual property' },
+    { id: 'disclaimer', label: 'Disclaimer' },
+    { id: 'liability', label: 'Limitation of liability' },
+    { id: 'indemnification', label: 'Indemnification' },
+    { id: 'changes', label: 'Changes to these terms' },
+    { id: 'law', label: 'Governing law' },
+    { id: 'contact', label: 'Contact' },
+]
+
 
 const TermsOfService = () => {
     return (
         <div className="legal-page">
             <AppHeader />
 
-            <main className="legal-content">
-                <div className="container">
-                    <div className="legal-header">
-                        <h1>Terms of Service</h1>
-                        <p className="legal-date">Last Updated: November 13, 2025</p>
+            <main>
+
+                <section className="loca-section loca-section--s0 legal__hero">
+                    <div className="container container--legal">
+                        <span className="loca-eyebrow">
+                            <span className="loca-eyebrow__dot" aria-hidden="true"></span>
+                            Legal
+                        </span>
+                        <h1 className="legal__title">Terms of Service</h1>
+                        <p className="legal__meta">Last updated: 28 June 2026</p>
+                        <p className="legal__lede">
+                            These terms govern your use of Locappoint. By using our booking platform, you agree to them. We have written them in plain language where we can.
+                        </p>
                     </div>
+                </section>
 
-                    <div className="legal-body">
-                        <section className="legal-section">
-                            <h2>1. Acceptance of Terms</h2>
-                            <p>
-                                By accessing and using LocAppoint ("Service", "Platform", "we", "us", or "our"),
-                                you accept and agree to be bound by the terms and conditions of this agreement.
-                                If you do not agree to these terms, please do not use our Service.
-                            </p>
-                        </section>
+                <section className="loca-section loca-section--s0 legal__body">
+                    <div className="container container--legal">
 
-                        <section className="legal-section">
-                            <h2>2. Description of Service</h2>
-                            <p>
-                                LocAppoint provides an online appointment booking and management platform that connects
-                                service providers ("Business Users") with clients ("Client Users"). Our Service allows:
-                            </p>
-                            <ul>
-                                <li>Businesses to create profiles, list services, and manage appointments</li>
-                                <li>Clients to discover businesses, view services, and book appointments</li>
-                                <li>Communication between businesses and clients regarding appointments</li>
-                            </ul>
-                        </section>
+                        <nav className="legal__toc" aria-label="Table of contents">
+                            <p className="legal__toc-label">On this page</p>
+                            <ol className="legal__toc-list">
+                                {sections.map((s, i) => (
+                                    <li key={s.id}>
+                                        <a href={`#${s.id}`}>
+                                            <span className="legal__toc-num">{String(i + 1).padStart(2, '0')}</span>
+                                            <span>{s.label}</span>
+                                        </a>
+                                    </li>
+                                ))}
+                            </ol>
+                        </nav>
 
-                        <section className="legal-section">
-                            <h2>3. User Accounts</h2>
-                            <h3>3.1 Account Creation</h3>
-                            <p>
-                                To use certain features of our Service, you must create an account. You agree to:
-                            </p>
-                            <ul>
-                                <li>Provide accurate, current, and complete information</li>
-                                <li>Maintain and update your information to keep it accurate</li>
-                                <li>Maintain the security of your account credentials</li>
-                                <li>Accept responsibility for all activities under your account</li>
-                                <li>Notify us immediately of any unauthorized access</li>
-                            </ul>
+                        <article className="legal__article">
 
-                            <h3>3.2 Account Types</h3>
-                            <p>
-                                <strong>Business Accounts:</strong> Available to service providers who wish to offer
-                                appointment booking services. Business users are responsible for the accuracy of their
-                                business information, services, and availability.
-                            </p>
-                            <p>
-                                <strong>Client Accounts:</strong> Available to individuals who wish to book appointments
-                                with businesses. Client users are responsible for attending scheduled appointments or
-                                providing timely cancellation notice.
-                            </p>
-                        </section>
+                            <section id="acceptance" className="legal__section">
+                                <h2 className="legal__h2">1. Acceptance</h2>
+                                <p>By using Locappoint, you agree to these Terms of Service. If you do not agree, do not use the Service. If you are using Locappoint on behalf of a business, you confirm you have the authority to bind that business to these Terms.</p>
+                            </section>
 
-                        <section className="legal-section">
-                            <h2>4. User Conduct</h2>
-                            <p>You agree not to:</p>
-                            <ul>
-                                <li>Violate any applicable laws or regulations</li>
-                                <li>Infringe upon the rights of others</li>
-                                <li>Submit false, misleading, or fraudulent information</li>
-                                <li>Impersonate any person or entity</li>
-                                <li>Harass, abuse, or harm other users</li>
-                                <li>Interfere with or disrupt the Service</li>
-                                <li>Attempt to gain unauthorized access to the Service</li>
-                                <li>Use the Service for any commercial purpose without our consent</li>
-                                <li>Collect or harvest information about other users</li>
-                                <li>Upload viruses, malware, or malicious code</li>
-                            </ul>
-                        </section>
+                            <section id="service" className="legal__section">
+                                <h2 className="legal__h2">2. The service</h2>
+                                <p>Locappoint is a booking platform for local service businesses. We provide:</p>
+                                <ul className="legal__list">
+                                    <li>Tools for businesses to set their services, working hours, and booking pages</li>
+                                    <li>A search-and-book experience for clients</li>
+                                    <li>Automated email and WhatsApp confirmations and reminders</li>
+                                    <li>A public business page at locappoint.com/[your-slug]</li>
+                                </ul>
+                                <p>We are a facilitator. We are not a party to the booking transactions between businesses and their clients.</p>
+                            </section>
 
-                        <section className="legal-section">
-                            <h2>5. Appointments and Bookings</h2>
-                            <h3>5.1 Booking Process</h3>
-                            <p>
-                                LocAppoint facilitates appointment bookings between businesses and clients. The actual
-                                service agreement is between the business and the client. We are not a party to that
-                                agreement.
-                            </p>
+                            <section id="account" className="legal__section">
+                                <h2 className="legal__h2">3. Your account</h2>
+                                <p>You must:</p>
+                                <ul className="legal__list">
+                                    <li>Provide accurate, current information when you create an account</li>
+                                    <li>Keep your password confidential</li>
+                                    <li>Be at least 18 years old to create a business account</li>
+                                    <li>Use the Service for lawful purposes only</li>
+                                </ul>
+                                <p>You are responsible for everything that happens under your account.</p>
+                            </section>
 
-                            <h3>5.2 Cancellations and No-Shows</h3>
-                            <p>
-                                Cancellation policies are set by individual businesses. Clients should review and
-                                understand the cancellation policy before booking. Businesses may implement their
-                                own policies regarding no-shows and late cancellations.
-                            </p>
+                            <section id="use" className="legal__section">
+                                <h2 className="legal__h2">4. Acceptable use</h2>
+                                <p>You agree not to:</p>
+                                <ul className="legal__list">
+                                    <li>Use the Service for any illegal activity</li>
+                                    <li>Impersonate another person or business</li>
+                                    <li>Submit false or misleading information</li>
+                                    <li>Scrape, mirror, or copy the Service or its content without permission</li>
+                                    <li>Attempt to gain unauthorized access to the Service or other users&apos; accounts</li>
+                                    <li>Send spam, malware, or harmful content through the Service</li>
+                                    <li>Interfere with the Service&apos;s operation</li>
+                                </ul>
+                                <p>We reserve the right to suspend or terminate accounts that violate these rules.</p>
+                            </section>
 
-                            <h3>5.3 Payment</h3>
-                            <p>
-                                LocAppoint does not process payments. All payment arrangements are made directly
-                                between businesses and clients. We are not responsible for any payment disputes.
-                            </p>
-                        </section>
+                            <section id="bookings" className="legal__section">
+                                <h2 className="legal__h2">5. Bookings between businesses and clients</h2>
+                                <p>When a client books an appointment through Locappoint:</p>
+                                <ul className="legal__list">
+                                    <li>Locappoint records the booking and sends confirmations</li>
+                                    <li>The business and client agree directly on the terms of the appointment</li>
+                                    <li>We are not responsible for the quality, safety, legality, or outcome of services delivered</li>
+                                </ul>
+                                <p>Disputes about a specific appointment are between the business and the client. We may help by providing booking records on request, but we do not arbitrate.</p>
+                            </section>
 
-                        <section className="legal-section">
-                            <h2>6. Business Responsibilities</h2>
-                            <p>Business users agree to:</p>
-                            <ul>
-                                <li>Provide accurate business information and service descriptions</li>
-                                <li>Maintain up-to-date availability schedules</li>
-                                <li>Honor confirmed appointments or provide reasonable notice of changes</li>
-                                <li>Comply with all applicable laws and regulations in their industry</li>
-                                <li>Maintain appropriate licenses and insurance</li>
-                                <li>Respond to client inquiries in a timely manner</li>
-                                <li>Handle client data responsibly and in compliance with privacy laws</li>
-                            </ul>
-                        </section>
+                            <section id="pricing" className="legal__section">
+                                <h2 className="legal__h2">6. Pricing and payment</h2>
+                                <p><strong>Cohort 1 (current).</strong> Free for the first twelve (12) months from account creation, for the first 100 businesses in our launch cities (Lisbon, Porto, Lagos).</p>
+                                <p><strong>After the free period.</strong> Nineteen euros (€19) per month per business, flat. We do not charge commission on bookings. Payment is processed monthly in advance.</p>
+                                <p><strong>Cancellation.</strong> You can cancel your subscription at any time. Cancellation takes effect at the end of the current billing period. No refunds for partial months unless required by law.</p>
+                                <p><strong>Price changes.</strong> We will notify you at least 30 days before any price changes take effect. Continuing to use the Service after the change takes effect means you accept the new pricing.</p>
+                            </section>
 
-                        <section className="legal-section">
-                            <h2>7. Intellectual Property</h2>
-                            <p>
-                                The Service and its original content, features, and functionality are owned by
-                                LocAppoint and are protected by international copyright, trademark, and other
-                                intellectual property laws.
-                            </p>
-                            <p>
-                                Users retain ownership of content they submit but grant us a license to use,
-                                display, and distribute that content as necessary to provide the Service.
-                            </p>
-                        </section>
+                            <section id="termination" className="legal__section">
+                                <h2 className="legal__h2">7. Termination</h2>
+                                <p>You may close your account at any time from Settings.</p>
+                                <p>We may suspend or terminate your account if you violate these Terms, fail to pay after notice, or use the Service in a way that creates risk for us or other users.</p>
+                                <p>On termination, your business profile is removed from public listings within 24 hours. Your data is retained per our Privacy Policy.</p>
+                            </section>
 
-                        <section className="legal-section">
-                            <h2>8. Privacy and Data Protection</h2>
-                            <p>
-                                Your use of the Service is also governed by our Privacy Policy. Please review
-                                our Privacy Policy to understand our practices regarding your personal information.
-                            </p>
-                        </section>
+                            <section id="ip" className="legal__section">
+                                <h2 className="legal__h2">8. Intellectual property</h2>
+                                <p><strong>Yours.</strong> You keep all rights to the content you upload (business name, descriptions, logo, banner, photos). By uploading content, you grant us a non-exclusive license to display it through the Service for the purpose of operating your booking page.</p>
+                                <p><strong>Ours.</strong> Locappoint owns the Service itself (the platform, code, brand, design). You do not get any rights to these beyond using the Service.</p>
+                            </section>
 
-                        <section className="legal-section">
-                            <h2>9. Disclaimers</h2>
-                            <h3>9.1 Service "As Is"</h3>
-                            <p>
-                                The Service is provided "as is" and "as available" without warranties of any kind,
-                                either express or implied, including but not limited to warranties of merchantability,
-                                fitness for a particular purpose, or non-infringement.
-                            </p>
+                            <section id="disclaimer" className="legal__section">
+                                <h2 className="legal__h2">9. Disclaimer</h2>
+                                <p>The Service is provided &ldquo;as is&rdquo;. We do not guarantee:</p>
+                                <ul className="legal__list">
+                                    <li>Uninterrupted or error-free operation</li>
+                                    <li>That every feature will work as expected at all times</li>
+                                    <li>That bookings will result in successful appointments</li>
+                                </ul>
+                                <p>We work hard to keep the Service running well, but we cannot promise perfection.</p>
+                            </section>
 
-                            <h3>9.2 No Guarantee</h3>
-                            <p>
-                                We do not guarantee that the Service will be uninterrupted, secure, or error-free.
-                                We do not warrant the accuracy, completeness, or reliability of any content or
-                                information provided through the Service.
-                            </p>
+                            <section id="liability" className="legal__section">
+                                <h2 className="legal__h2">10. Limitation of liability</h2>
+                                <p>To the maximum extent allowed by law, our liability for any claim related to the Service is limited to the fees you paid us in the twelve months before the claim. We are not liable for indirect, consequential, or incidental damages (for example, lost profits or lost bookings) except where required by law.</p>
+                                <p>This does not limit liability for things that cannot legally be excluded, such as gross negligence or fraud.</p>
+                            </section>
 
-                            <h3>9.3 Third-Party Services</h3>
-                            <p>
-                                We are not responsible for the quality, safety, or legality of services provided
-                                by businesses listed on our platform. Users engage with businesses at their own risk.
-                            </p>
-                        </section>
+                            <section id="indemnification" className="legal__section">
+                                <h2 className="legal__h2">11. Indemnification</h2>
+                                <p>You agree to defend and hold us harmless from claims arising out of:</p>
+                                <ul className="legal__list">
+                                    <li>Your use of the Service</li>
+                                    <li>Your violation of these Terms</li>
+                                    <li>Your violation of any law or third-party right</li>
+                                </ul>
+                            </section>
 
-                        <section className="legal-section">
-                            <h2>10. Limitation of Liability</h2>
-                            <p>
-                                To the maximum extent permitted by law, LocAppoint shall not be liable for any
-                                indirect, incidental, special, consequential, or punitive damages, or any loss
-                                of profits or revenues, whether incurred directly or indirectly, or any loss of
-                                data, use, goodwill, or other intangible losses resulting from:
-                            </p>
-                            <ul>
-                                <li>Your use or inability to use the Service</li>
-                                <li>Any unauthorized access to or use of our servers and/or any personal information</li>
-                                <li>Any interruption or cessation of transmission to or from the Service</li>
-                                <li>Any bugs, viruses, or similar that may be transmitted through the Service</li>
-                                <li>Any errors or omissions in any content or for any loss or damage incurred</li>
-                                <li>The conduct or content of any third party on the Service</li>
-                            </ul>
-                        </section>
+                            <section id="changes" className="legal__section">
+                                <h2 className="legal__h2">12. Changes to these terms</h2>
+                                <p>We may update these Terms from time to time. For material changes, we will notify you at least 30 days in advance via email or through the platform. Continuing to use the Service after the change takes effect means you accept the new Terms.</p>
+                            </section>
 
-                        <section className="legal-section">
-                            <h2>11. Indemnification</h2>
-                            <p>
-                                You agree to indemnify, defend, and hold harmless LocAppoint, its officers, directors,
-                                employees, and agents from and against any claims, liabilities, damages, losses, and
-                                expenses arising out of or in any way connected with:
-                            </p>
-                            <ul>
-                                <li>Your access to or use of the Service</li>
-                                <li>Your violation of these Terms</li>
-                                <li>Your violation of any rights of another party</li>
-                            </ul>
-                        </section>
+                            <section id="law" className="legal__section">
+                                <h2 className="legal__h2">13. Governing law</h2>
+                                <p>These Terms are governed by Portuguese law. Disputes will be heard in the courts of Lisbon, Portugal, unless EU consumer law gives you the right to bring proceedings in your country of residence.</p>
+                            </section>
 
-                        <section className="legal-section">
-                            <h2>12. Termination</h2>
-                            <p>
-                                We may terminate or suspend your account and access to the Service immediately,
-                                without prior notice or liability, for any reason, including but not limited to
-                                breach of these Terms.
-                            </p>
-                            <p>
-                                Upon termination, your right to use the Service will immediately cease. If you
-                                wish to terminate your account, you may do so through your account settings or
-                                by contacting us.
-                            </p>
-                        </section>
+                            <section id="contact" className="legal__section">
+                                <h2 className="legal__h2">14. Contact</h2>
+                                <p>For questions about these Terms:</p>
+                                <ul className="legal__list">
+                                    <li>Email: hello@locappoint.com</li>
+                                    <li>Postal: [Operator Entity, registered address, Lisbon, Portugal]</li>
+                                </ul>
+                            </section>
 
-                        <section className="legal-section">
-                            <h2>13. Changes to Terms</h2>
-                            <p>
-                                We reserve the right to modify these Terms at any time. We will notify users of
-                                any material changes by posting the new Terms on this page and updating the "Last
-                                Updated" date.
-                            </p>
-                            <p>
-                                Your continued use of the Service after changes become effective constitutes
-                                acceptance of the revised Terms.
-                            </p>
-                        </section>
+                        </article>
 
-                        <section className="legal-section">
-                            <h2>14. Governing Law</h2>
-                            <p>
-                                These Terms shall be governed by and construed in accordance with the laws of
-                                Portugal, without regard to its conflict of law provisions.
-                            </p>
-                        </section>
-
-                        <section className="legal-section">
-                            <h2>15. Dispute Resolution</h2>
-                            <p>
-                                Any disputes arising out of or relating to these Terms or the Service shall be
-                                resolved through good faith negotiations. If negotiations fail, disputes shall
-                                be submitted to the courts of Lisbon, Portugal.
-                            </p>
-                        </section>
-
-                        <section className="legal-section">
-                            <h2>16. Contact Information</h2>
-                            <p>
-                                If you have any questions about these Terms, please contact us:
-                            </p>
-                            <ul className="contact-list">
-                                <li><strong>Email: </strong> legal@locappoint.com</li>
-                                <li><strong>Address:</strong> Avenida da Liberdade, 1250-096 Lisbon, Portugal</li>
-                            </ul>
-                        </section>
                     </div>
-                </div>
+                </section>
+
             </main>
 
             <AppFooter />

@@ -214,6 +214,23 @@
     border-color: var(--border-strong);
 }
 
+.detail-drawer__action--danger {
+    background: var(--surface-3);
+    color: var(--danger);
+    border-color: rgba(180, 62, 51, 0.4);
+}
+
+.detail-drawer__action--danger:hover {
+    background: rgba(180, 62, 51, 0.12);
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.detail-drawer__action:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Sections within drawer body */
 .detail-section {
     display: flex;

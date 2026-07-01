@@ -60,7 +60,7 @@ const handleKeyActivate = (e, callback) => {
     }
 }
 
-const WaitlistTab = ({ data, formatDate, onExport }) => {
+const WaitlistTab = ({ data, formatDate, onExport, onDelete }) => {
     const [selected, setSelected] = useState(null)
     const count = data.length
 
@@ -242,6 +242,7 @@ const WaitlistTab = ({ data, formatDate, onExport }) => {
                 item={selected}
                 onClose={closeDetail}
                 formatDate={formatDate}
+                onDelete={onDelete}
             />
         </div>
     )

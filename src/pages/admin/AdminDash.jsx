@@ -21,7 +21,9 @@ const AdminDash = ({
     onExportPartnership,
     onExportSessions,
     onExportEvents,
-    onStatusChange
+    onStatusChange,
+    onDeleteWaitlist,
+    onDeletePartnership
 }) => {
     if (loading) {
         return (
@@ -66,6 +68,7 @@ const AdminDash = ({
                     data={waitlistData}
                     formatDate={formatDate}
                     onExport={onExportWaitlist}
+                    onDelete={onDeleteWaitlist}
                 />
             )}
             {activeSection === 'partnership' && (
@@ -74,6 +77,7 @@ const AdminDash = ({
                     formatDate={formatDate}
                     onExport={onExportPartnership}
                     onStatusChange={onStatusChange}
+                    onDelete={onDeletePartnership}
                 />
             )}
         </div>

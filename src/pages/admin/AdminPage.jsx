@@ -2,23 +2,18 @@
 // Section persisted in URL hash. /admin#waitlist, /admin#partnership. Analytics is default (no hash).
 
 import { useState, useEffect, useCallback } from 'react'
-import { Eye, EyeOff, Lock, User } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { supabase } from '../../config/supabase'
 import AdminSidebar from './AdminSidebar'
 import AdminTopbar from './AdminTopbar'
 import AdminDash from './AdminDash'
 import '../../styles/admin/admin.css'
 
-const ADMIN_CREDENTIALS = {
-    username: 'locappoint',
-    password: 'admin2025'
-}
-
 const SECTION_LABELS = {
     analytics: 'Analytics',
     waitlist: 'Waitlist',
     partnership: 'Partnerships'
-}
+} 
 
 const VALID_SECTIONS = ['analytics', 'waitlist', 'partnership']
 const DEFAULT_SECTION = 'analytics'
@@ -46,7 +41,9 @@ const writeSectionToHash = (section) => {
 const AdminPage = () => {
     // Auth
     const [isAuthenticated, setIsAuthenticated] = useState(false)
-    const [username, setUsername] = useState('')
+    const [sessionChecked, setSessionChecked] = useState(false)
+    const [adminEmail, setAdminEmail] = useState('')
+    const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [authError, setAuthError] = useState('')
@@ -80,8 +77,37 @@ const AdminPage = () => {
 
     // Session restore + initial loader dismissal
     useEffect(() => {
-        const savedAuth = sessionStorage.getItem('admin-auth')
-        if (savedAuth === 'true') setIsAuthenticated(true)
+        const restoreSession = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession()
+
+                if (!session) {
+                    setSessionChecked(true)
+                    return
+                }
+
+                const { data: profile, error } = await supabase
+                    .from('users')
+                    .select('is_admin, email')
+                    .eq('id', session.user.id)
+                    .single()
+
+                if (error || !profile || !profile.is_admin) {
+                    // Session exists but not an admin. Sign out, stay on login.
+                    await supabase.auth.signOut()
+                    setSessionChecked(true)
+                    return
+                }
+
+                setIsAuthenticated(true)
+                setAdminEmail(profile.email)
+                setSessionChecked(true)
+            } catch (err) {
+                console.error('Session restore failed:', err)
+                setSessionChecked(true)
+            }
+        }
+        restoreSession()
 
         const hideLoader = () => {
             const loader = document.getElementById('initial-loader')
@@ -326,28 +352,106 @@ const AdminPage = () => {
         }
     }
 
+    const deleteWaitlist = async (id) => {
+        try {
+            const { error } = await supabase.from('waitlist').delete().eq('id', id)
+            if (error) throw error
+            setWaitlistData(prev => prev.filter(item => item.id !== id))
+        } catch (err) {
+            console.error('Error deleting waitlist entry:', err)
+            alert('Failed to delete entry')
+        }
+    }
+
+    const deletePartnership = async (id) => {
+        try {
+            const { error } = await supabase.from('partnership_requests').delete().eq('id', id)
+            if (error) throw error
+            setPartnershipData(prev => prev.filter(item => item.id !== id))
+        } catch (err) {
+            console.error('Error deleting partnership request:', err)
+            alert('Failed to delete request')
+        }
+    }
+
     // Auth
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault()
         setAuthError('')
         setAuthLoading(true)
-        setTimeout(() => {
-            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-                setIsAuthenticated(true)
-                sessionStorage.setItem('admin-auth', 'true')
-            } else {
-                setAuthError('Invalid credentials')
+
+        try {
+            // Step 1: Supabase email + password
+            const { data, error: signInError } = await supabase.auth.signInWithPassword({
+                email: email.trim().toLowerCase(),
+                password
+            })
+
+            if (signInError) {
+                throw new Error('Invalid email or password')
             }
+
+            const { user, session } = data
+            if (!session || !user) {
+                throw new Error('Authentication failed')
+            }
+
+            // Step 2: Verify is_admin = true on the users row
+            const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .select('is_admin, email')
+                .eq('id', user.id)
+                .single()
+
+            if (profileError || !profile) {
+                await supabase.auth.signOut()
+                throw new Error('Account not found')
+            }
+
+            if (!profile.is_admin) {
+                await supabase.auth.signOut()
+                throw new Error('This account does not have admin access')
+            }
+
+            setIsAuthenticated(true)
+            setAdminEmail(profile.email)
+        } catch (err) {
+            setAuthError(err.message || 'Authentication failed')
+        } finally {
             setAuthLoading(false)
-        }, 400)
+        }
     }
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await supabase.auth.signOut()
+        } catch (err) {
+            console.error('Sign out error:', err)
+        }
         setIsAuthenticated(false)
-        sessionStorage.removeItem('admin-auth')
-        setUsername('')
+        setAdminEmail('')
+        setEmail('')
         setPassword('')
         setSidebarOpen(false)
+    }
+
+    // Initial session check
+    if (!sessionChecked) {
+        return (
+            <div className="admin-login">
+                <div className="admin-login__container">
+                    <div className="admin-login__card">
+                        <header className="admin-login__header">
+                            <span className="admin-login__eyebrow">
+                                <span>ADMIN</span>
+                            </span>
+                            <h1>Checking session</h1>
+                            <p>One moment.</p>
+                        </header>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     // Login screen
@@ -361,7 +465,7 @@ const AdminPage = () => {
                                 <span>ADMIN</span>
                             </span>
                             <h1>Access Dashboard</h1>
-                            <p>Enter your credentials to continue.</p>
+                            <p>Sign in with your admin account.</p>
                         </header>
 
                         <form onSubmit={handleLogin} className="admin-login__form" noValidate>
@@ -372,18 +476,18 @@ const AdminPage = () => {
                             )}
 
                             <div className="admin-login__field">
-                                <label htmlFor="admin-username">
-                                    <User size={11} aria-hidden="true" />
-                                    Username
+                                <label htmlFor="admin-email">
+                                    <Mail size={11} aria-hidden="true" />
+                                    Email
                                 </label>
                                 <input
-                                    type="text"
-                                    id="admin-username"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    placeholder="username"
+                                    type="email"
+                                    id="admin-email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="you@example.com"
                                     disabled={authLoading}
-                                    autoComplete="username"
+                                    autoComplete="email"
                                     required
                                 />
                             </div>
@@ -417,7 +521,7 @@ const AdminPage = () => {
                             </div>
 
                             <button type="submit" className="admin-login__submit" disabled={authLoading}>
-                                {authLoading ? 'Authenticating...' : 'Access Dashboard'}
+                                {authLoading ? 'Signing in' : 'Access Dashboard'}
                             </button>
                         </form>
 
@@ -477,6 +581,8 @@ const AdminPage = () => {
                         onExportSessions={exportSessionsCSV}
                         onExportEvents={exportEventsCSV}
                         onStatusChange={updatePartnershipStatus}
+                        onDeleteWaitlist={deleteWaitlist}
+                        onDeletePartnership={deletePartnership}
                     />
                 </main>
             </div>

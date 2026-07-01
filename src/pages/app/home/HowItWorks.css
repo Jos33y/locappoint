@@ -1,0 +1,286 @@
+/* HowItWorks - 3 step cards with inline UI mockups */
+
+.hiw__head {
+    margin-bottom: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 720px;
+}
+
+.hiw__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.hiw__card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 26px 24px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color 200ms ease, transform 200ms ease;
+}
+
+.hiw__card:hover {
+    border-color: var(--border-medium);
+    transform: translateY(-2px);
+}
+
+.hiw__num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: var(--azure);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
+    width: fit-content;
+    padding-right: 14px;
+}
+
+.hiw__title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.25;
+}
+
+.hiw__body {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+
+/* Mockup zone */
+
+.hiw__mock {
+    margin-top: 14px;
+    background: var(--surface-3);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.hiw__mock-head {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+
+/* Step 1 - working hours mockup */
+
+.hiw__hours {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.hiw__hour-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 28px;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 8px;
+    background: var(--surface-2);
+    border-radius: 6px;
+    font-size: 11px;
+    opacity: 0.55;
+}
+
+.hiw__hour-row--on {
+    opacity: 1;
+    background: rgba(45, 127, 240, 0.08);
+}
+
+.hiw__hour-day {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+}
+
+.hiw__hour-range {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.hiw__hour-toggle {
+    width: 22px;
+    height: 12px;
+    background: var(--surface-4);
+    border-radius: 999px;
+    position: relative;
+}
+
+.hiw__hour-toggle::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 8px;
+    height: 8px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: left 200ms ease;
+}
+
+.hiw__hour-toggle--on {
+    background: var(--azure);
+}
+
+.hiw__hour-toggle--on::before {
+    left: 12px;
+    background: #fff;
+}
+
+
+/* Step 2 - share link mockup */
+
+.hiw__link {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    padding: 8px 10px 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+.hiw__link-base {
+    color: var(--text-muted);
+}
+
+.hiw__link-slug {
+    color: var(--azure);
+    font-weight: 500;
+    flex: 1;
+}
+
+.hiw__link-copy {
+    background: var(--surface-3);
+    border: 1px solid var(--border-subtle);
+    border-radius: 5px;
+    padding: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 180ms ease, color 180ms ease;
+}
+
+.hiw__link-copy:hover {
+    background: var(--surface-4);
+    color: var(--text-primary);
+}
+
+.hiw__link-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.hiw__link-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(43, 140, 90, 0.16);
+}
+
+
+/* Step 3 - notification feed mockup */
+
+.hiw__notif {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border-radius: 6px;
+}
+
+.hiw__notif-ico {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--surface-4);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.hiw__notif-ico--new {
+    background: rgba(43, 140, 90, 0.18);
+    color: var(--success);
+}
+
+.hiw__notif-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.hiw__notif-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.hiw__notif-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.2;
+}
+
+.hiw__notif-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+}
+
+
+@media (max-width: 980px) {
+    .hiw__grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hiw__card:hover {
+        transform: none;
+    }
+}

@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/app`,
+                    redirectTo: `${window.location.origin}/`,
                 },
             })
 
@@ -103,6 +103,22 @@ export const AuthProvider = ({ children }) => {
             return { data, error: null }
         } catch (error) {
             return { data: null, error } 
+        }
+    }
+
+    const signInWithApple = async () => {
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'apple',
+                options: {
+                    redirectTo: `${window.location.origin}/`,
+                },
+            })
+
+            if (error) throw error
+            return { data, error: null }
+        } catch (error) {
+            return { data: null, error }
         }
     }
 
@@ -138,6 +154,7 @@ export const AuthProvider = ({ children }) => {
         signUp,
         signIn,
         signInWithGoogle,
+        signInWithApple,
         signOut,
         resetPassword,
     }

@@ -65,6 +65,15 @@ function detectMode() {
     return 'waitlist'
 }
 
+const BootDismisser = () => {
+    useEffect(() => {
+        if (typeof window !== 'undefined' && typeof window.__locaBootReady === 'function') {
+            window.__locaBootReady()
+        }
+    }, [])
+    return null
+}
+
 const App = () => {
     const mode = detectMode()
 
@@ -75,6 +84,7 @@ const App = () => {
 
     return (
         <Suspense fallback={null}>
+            <BootDismisser />
             {chunk}
         </Suspense>
     )

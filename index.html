@@ -181,7 +181,8 @@
   <div id="root"></div>
 
   <script>
-    // Hide boot loader once the app bundle has loaded. Capped fallback in case of slow nets.
+    // Hide boot loader when React signals ready via window.__locaBootReady().
+    // Hard fallback at 3s in case the signal never fires.
     (function () {
       var boot = document.getElementById('loca-boot');
       if (!boot) return;
@@ -192,12 +193,14 @@
         boot.style.opacity = '0';
         setTimeout(function () { boot.remove(); }, 240);
       }
-      window.addEventListener('load', function () {
-        // Small delay so first paint of the React tree settles
-        setTimeout(remove, 360);
-      });
-      // Hard fallback at 3s
-      setTimeout(remove, 3000);
+      window.__locaBootReady = remove;
+      // Fallback: if React never signals ready (real bug OR very slow chunk load),
+      // dismiss after 30s. Vite dev cold loads can exceed 15s on Windows.
+      setTimeout(function () {
+        if (done) return;
+        console.warn('[loca-boot] Signal not received after 30s. Force-dismissing loader.');
+        remove();
+      }, 30000);
     })();
   </script>
 

@@ -1,8 +1,13 @@
+// src/pages/app/auth/ForgotPassword.jsx
+// Reset password flow. Uses AuthShell.
+
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
-import { ArrowLeft, Mail, CheckCircle2, AlertCircle } from 'lucide-react'
+import { ArrowLeft, MailCheck, AlertCircle, ArrowRight } from 'lucide-react'
+import AuthShell from './AuthShell'
 import '../../../styles/auth/auth.css'
+
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('')
@@ -18,133 +23,118 @@ const ForgotPassword = () => {
         setSuccess(false)
 
         if (!email.trim()) {
-            setError('Please enter your email address')
+            setError('Email is required.')
             return
         }
-
-        // Basic email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(email)) {
-            setError('Please enter a valid email address')
+            setError('Enter a valid email address.')
             return
         }
 
         setLoading(true)
-
         try {
-            const { error } = await resetPassword(email)
-
-            if (error) {
-                setError(error.message)
+            const { error: resetErr } = await resetPassword(email)
+            if (resetErr) {
+                setError(resetErr.message || 'Could not send reset link. Try again.')
                 return
             }
-
             setSuccess(true)
-            setEmail('')
         } catch (err) {
-            setError(err.message || 'An error occurred')
+            setError(err.message || 'Something went wrong. Try again.')
         } finally {
             setLoading(false)
         }
     }
 
     return (
-        <div className="auth-page">
-            <div className="auth-container">
-                <div className="auth-header">
-                    <Link to="/app" className="auth-logo">LocAppoint</Link>
-                    <p className="auth-tagline">
-                        Reset your password
+        <AuthShell
+            brandTitle="Resetting takes a minute."
+            brandSub="Enter your email below. We send a reset link straight to your inbox.">
+
+            <Link to="/auth" className="auth-back auth-back--inline">
+                <ArrowLeft size={14} strokeWidth={2} />
+                <span>Back to sign in</span>
+            </Link>
+
+            {success ? (
+                <div className="auth-success-state">
+                    <div className="auth-success-state__ico" aria-hidden="true">
+                        <MailCheck size={28} strokeWidth={1.8} />
+                    </div>
+                    <h1 className="auth-head__title">Check your inbox.</h1>
+                    <p className="auth-head__sub">
+                        We sent a password reset link to your email. The link expires in one hour.
+                    </p>
+
+                    <Link to="/auth" className="auth-submit auth-submit--ghost">
+                        <ArrowLeft size={16} strokeWidth={2} />
+                        Back to sign in
+                    </Link>
+
+                    <p className="auth-switch">
+                        Didn&apos;t receive it?{' '}
+                        <button
+                            type="button"
+                            className="auth-switch__link"
+                            onClick={() => setSuccess(false)}>
+                            Try a different email
+                        </button>
                     </p>
                 </div>
-
-                {/* Back Link */}
-                <Link to="/auth" className="back-link">
-                    <ArrowLeft size={16} />
-                    <span>Back to Sign In</span>
-                </Link>
-
-                {/* Error/Success Messages */}
-                {error && (
-                    <div className="auth-error">
-                        <AlertCircle size={16} />
-                        <span>{error}</span>
-                    </div>
-                )}
-
-                {success ? (
-                    <div className="success-container">
-                        <div className="success-icon">
-                            <CheckCircle2 size={64} />
-                        </div>
-                        <h2>Check your email</h2>
-                        <p className="success-message">
-                            We've sent a password reset link to your email address.
-                            Please check your inbox and follow the instructions to reset your password.
+            ) : (
+                <>
+                    <div className="auth-head">
+                        <h1 className="auth-head__title">Reset your password.</h1>
+                        <p className="auth-head__sub">
+                            Enter the email tied to your account. We send a reset link.
                         </p>
-                        <p className="success-note">
-                            Didn't receive the email? Check your spam folder or{' '}
-                            <button
-                                type="button"
-                                className="link-button"
-                                onClick={() => setSuccess(false)}
-                            >
-                                try again
-                            </button>
-                        </p>
-                        <Link to="/auth" className="btn btn--primary btn-full">
-                            Back to Sign In
-                        </Link>
                     </div>
-                ) : (
-                    <>
-                        <div className="forgot-password-info">
-                            <Mail size={48} className="info-icon" />
-                            <p>
-                                Enter your email address and we'll send you a link to reset your password.
-                            </p>
+
+                    {error && (
+                        <div className="auth-alert auth-alert--error" role="alert">
+                            <AlertCircle size={14} strokeWidth={2.2} />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="auth-form" noValidate>
+                        <div className="auth-field">
+                            <label htmlFor="email">Email</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={email}
+                                onChange={(e) => {
+                                    setEmail(e.target.value)
+                                    if (error) setError('')
+                                }}
+                                placeholder="you@example.com"
+                                required
+                                autoFocus
+                                autoComplete="email"
+                            />
                         </div>
 
-                        {/* Form */}
-                        <form onSubmit={handleSubmit} className="auth-form">
-                            <div className="form-group">
-                                <label htmlFor="email">Email Address</label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    value={email}
-                                    onChange={(e) => {
-                                        setEmail(e.target.value)
-                                        setError('')
-                                    }}
-                                    placeholder="you@example.com"
-                                    required
-                                    autoFocus
-                                />
-                            </div>
+                        <button type="submit" className="auth-submit" disabled={loading}>
+                            {loading ? 'Sending...' : (
+                                <>
+                                    Send reset link
+                                    <ArrowRight size={16} strokeWidth={2} />
+                                </>
+                            )}
+                        </button>
+                    </form>
 
-                            <button
-                                type="submit"
-                                className="btn btn--primary btn-full"
-                                disabled={loading}
-                            >
-                                {loading ? 'Sending...' : 'Send Reset Link'}
-                            </button>
-                        </form>
+                    <p className="auth-switch">
+                        Remembered it?{' '}
+                        <Link to="/auth" className="auth-switch__link">Sign in</Link>
+                    </p>
+                </>
+            )}
 
-                        <div className="auth-footer">
-                            <p>
-                                Remember your password?{' '}
-                                <Link to="/auth" className="link-button">
-                                    Sign in
-                                </Link>
-                            </p>
-                        </div>
-                    </>
-                )}
-            </div>
-        </div>
+        </AuthShell>
     )
 }
 

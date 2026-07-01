@@ -72,7 +72,7 @@ export default function StatusApp() {
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Launch ready</div>
                                 <div className="hero__stat-value"><span className="azure">40%</span></div>
-                                <div className="hero__stat-sub">Foundation + brand locked</div>
+                                <div className="hero__stat-sub">Foundation, brand, auth locked</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Now building</div>
@@ -82,7 +82,7 @@ export default function StatusApp() {
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Updated</div>
                                 <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>
-                                    <time className="js-relative" dateTime="2026-06-27T09:00:00Z">27 June 2026</time>
+                                    <time className="js-relative" dateTime="2026-07-01T09:00:00Z">1 July 2026</time>
                                 </div>
                                 <div className="hero__stat-sub">This page auto-refreshes</div>
                             </div>
@@ -186,13 +186,16 @@ export default function StatusApp() {
                                     <div className="detail__item detail__item--done">Analytics infrastructure: sessions, events, country, device, browser, funnel</div>
                                     <div className="detail__item detail__item--done">Subdomain routing: locappoint.com, app.locappoint.com, status.locappoint.com</div>
                                     <div className="detail__item detail__item--done">Market research informing the rebuild (no-show data, competitor analysis)</div>
+                                    <div className="detail__item detail__item--done">Waitlist capture: fixed a bug that was blocking some signups from saving</div>
+                                    <div className="detail__item detail__item--done">Sign-up and password reset emails redesigned to match our brand</div>
+                                    <div className="detail__item detail__item--done">Admin dashboard: delete workflow shipped, admins log in with real Supabase auth</div>
+                                    <div className="detail__item detail__item--done">Password reset flow works end-to-end (request, email, new password)</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--active">
                                 <div className="detail__col-label">In progress</div>
                                 <div className="detail__list">
                                     <div className="detail__item detail__item--active">Pitch video storyboard (Plan A: no founder cameo, Plan B: with Vincent if recorded)</div>
-                                    <div className="detail__item detail__item--active">Final admin polish (Step 5 shared components, Step 6 legacy cleanup)</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--next">

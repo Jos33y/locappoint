@@ -7,11 +7,14 @@ import ScrollToTop from './components/common/ScrollToTop'
 import AppHome from './pages/app/AppHome'
 import Businesses from './pages/app/Businesses'
 import BusinessPage from './pages/app/BusinessPage'
-import About from './pages/app/About'
 import Contact from './pages/app/Contact'
 import Partnership from './pages/app/Partnership'
+import PrivacyPolicy from './pages/app/legal/PrivacyPolicy'
+import TermsOfService from './pages/app/legal/TermsOfService'
+import AdminPage from './pages/admin/AdminPage'
 import AuthPage from './pages/app/auth/AuthPage'
 import ForgotPassword from './pages/app/auth/ForgotPassword'
+import ResetPassword from './pages/app/auth/ResetPassword'
 
 import PortalLayout from './pages/portal/PortalLayout'
 import PortalDashboard from './pages/portal/Dashboard'
@@ -37,12 +40,16 @@ const BookingApp = () => (
             <ScrollToTop />
             <Routes>
                 <Route path="/" element={<AppHome />} />
+                <Route path="/about" element={<Navigate to="/" replace />} />
                 <Route path="/businesses" element={<Businesses />} />
-                <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/partnership" element={<Partnership />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/admin" element={<AdminPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
 
                 <Route
                     path="/portal"

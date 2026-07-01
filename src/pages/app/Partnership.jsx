@@ -1,11 +1,30 @@
+// src/pages/app/Partnership.jsx
+// Partnership - multi-section form. Supabase insert into partnership_requests.
+
 import { useState } from 'react'
-import { Handshake, User, Phone, Mail, Building2, MessageSquare } from 'lucide-react'
+import { Handshake, User, AtSign, Building2, MessageSquare, Send, Check, AlertCircle } from 'lucide-react'
+import { supabase } from '../../config/supabase'
 import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
-import { supabase } from '../../config/supabase'
+import '../../styles/app/home.css'
 import '../../styles/app/partnership.css'
 
-const AppPartnership = () => {
+
+// Aligned to AppHome BuiltFor categories.
+const organizationTypes = [
+    'Salons & Hair',
+    'Barbershops',
+    'Spas & Wellness',
+    'Fitness',
+    'Beauty & Photo',
+    'Pet Services',
+    'Tutoring',
+    'Consulting',
+    'Other',
+]
+
+
+const Partnership = () => {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -15,38 +34,24 @@ const AppPartnership = () => {
         organizationName: '',
         city: '',
         country: '',
-        partnershipInterest: ''
+        partnershipInterest: '',
     })
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
-    const [error, setError] = useState('') 
-
-    const organizationTypes = [
-        'Events & Entertainment',
-        'Healthcare Services',
-        'Beauty & Wellness',
-        'Legal Services',
-        'Home Services',
-        'Auto Services',
-        'Education & Tutoring',
-        'Fitness & Sports',
-        'Restaurant & Food',
-        'Other'
-    ]
+    const [error, setError] = useState('')
 
     const handleChange = (e) => {
         const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: value }))
+        setFormData((prev) => ({ ...prev, [name]: value }))
         if (error) setError('')
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        // Validation
         if (!formData.firstName || !formData.lastName || !formData.email ||
             !formData.phone || !formData.organizationType) {
-            setError('Please fill in all required fields')
+            setError('First name, last name, email, phone, and organization type are required.')
             return
         }
 
@@ -65,30 +70,21 @@ const AppPartnership = () => {
                     organization_name: formData.organizationName,
                     city: formData.city,
                     country: formData.country,
-                    partnership_interest: formData.partnershipInterest
+                    partnership_interest: formData.partnershipInterest,
                 }])
 
             if (dbError) throw dbError
 
             setSuccess(true)
             setFormData({
-                firstName: '',
-                lastName: '',
-                email: '',
-                phone: '',
-                organizationType: '',
-                organizationName: '',
-                city: '',
-                country: '',
-                partnershipInterest: ''
+                firstName: '', lastName: '', email: '', phone: '',
+                organizationType: '', organizationName: '', city: '', country: '',
+                partnershipInterest: '',
             })
-
-            // Hide success message after 5 seconds
-            setTimeout(() => setSuccess(false), 5000)
-
-        } catch (error) {
-            console.error('Error submitting partnership request:', error)
-            setError('Failed to submit request. Please try again.')
+            setTimeout(() => setSuccess(false), 6000)
+        } catch (err) {
+            console.error('Partnership submit failed:', err)
+            setError('Could not submit. Try again, or email partners@locappoint.com.')
         } finally {
             setLoading(false)
         }
@@ -98,48 +94,58 @@ const AppPartnership = () => {
         <div className="partnership-page">
             <AppHeader />
 
-            <main className="partnership-content">
-                <div className="container">
-                    {/* Hero Section */}
-                    <div className="partnership-hero">
-                        <div className="hero-icon">
-                            <Handshake size={48} />
+            <main>
+
+                {/* Hero */}
+                <section className="loca-section loca-section--s0 part__hero">
+                    <div className="container">
+                        <div className="part__hero-inner">
+                            <span className="part__hero-icon" aria-hidden="true">
+                                <Handshake size={20} strokeWidth={1.8} />
+                            </span>
+                            <span className="loca-eyebrow">
+                                <span className="loca-eyebrow__dot" aria-hidden="true"></span>
+                                Founding partners program
+                            </span>
+                            <h1 className="part__hero-title">
+                                Help us build the booking platform <span className="loca-section__title-accent">for your industry.</span>
+                            </h1>
+                            <p className="part__hero-lede">
+                                Founding partners get direct input on features, founder-tier pricing locked for life, and a co-marketing slot when we open their city. Apply below.
+                            </p>
                         </div>
-                        <h1>Early Partnership Program</h1>
-                        <p>
-                            Join us as a founding partner and help shape the future of appointment
-                            booking for service professionals
-                        </p>
                     </div>
+                </section>
 
-                    {/* Form */}
-                    <div className="partnership-form-container">
-                        <form onSubmit={handleSubmit} className="partnership-form">
-                            {/* Success Message */}
+                {/* Form */}
+                <section className="loca-section loca-section--s1 part__main">
+                    <div className="container">
+                        <form onSubmit={handleSubmit} className="part-form" noValidate>
+
                             {success && (
-                                <div className="alert alert--success">
-                                    <span>✓</span>
-                                    Thank you! We'll review your application and contact you within 48 hours.
+                                <div className="form-alert form-alert--success" role="status">
+                                    <Check size={14} strokeWidth={2.5} />
+                                    <span>Application received. We will review and reply within 48 hours.</span>
                                 </div>
                             )}
 
-                            {/* Error Message */}
                             {error && (
-                                <div className="alert alert--error">
-                                    <span>!</span>
-                                    {error}
+                                <div className="form-alert form-alert--error" role="alert">
+                                    <AlertCircle size={14} strokeWidth={2.2} />
+                                    <span>{error}</span>
                                 </div>
                             )}
 
-                            {/* Personal Information */}
-                            <div className="form-section">
-                                <div className="section-header">
-                                    <User size={20} />
-                                    <h2>Personal Information</h2>
-                                </div>
+                            {/* Personal */}
+                            <fieldset className="part-form__group">
+                                <legend className="part-form__legend">
+                                    <span className="part-form__legend-num">01</span>
+                                    <span className="part-form__legend-ico"><User size={14} strokeWidth={2} /></span>
+                                    <span className="part-form__legend-text">Personal</span>
+                                </legend>
                                 <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="firstName">First Name *</label>
+                                    <div className="form-field">
+                                        <label htmlFor="firstName">First name *</label>
                                         <input
                                             type="text"
                                             id="firstName"
@@ -149,8 +155,8 @@ const AppPartnership = () => {
                                             required
                                         />
                                     </div>
-                                    <div className="form-group">
-                                        <label htmlFor="lastName">Last Name *</label>
+                                    <div className="form-field">
+                                        <label htmlFor="lastName">Last name *</label>
                                         <input
                                             type="text"
                                             id="lastName"
@@ -161,34 +167,30 @@ const AppPartnership = () => {
                                         />
                                     </div>
                                 </div>
-                            </div>
+                            </fieldset>
 
-                            {/* Contact Information */}
-                            <div className="form-section">
-                                <div className="section-header">
-                                    <Phone size={20} />
-                                    <h2>Contact Information</h2>
-                                </div>
+                            {/* Contact */}
+                            <fieldset className="part-form__group">
+                                <legend className="part-form__legend">
+                                    <span className="part-form__legend-num">02</span>
+                                    <span className="part-form__legend-ico"><AtSign size={14} strokeWidth={2} /></span>
+                                    <span className="part-form__legend-text">Contact</span>
+                                </legend>
                                 <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="email">
-                                            <Mail size={14} />
-                                            Email Address *
-                                        </label>
+                                    <div className="form-field">
+                                        <label htmlFor="email">Email *</label>
                                         <input
                                             type="email"
                                             id="email"
                                             name="email"
                                             value={formData.email}
                                             onChange={handleChange}
+                                            placeholder="you@example.com"
                                             required
                                         />
                                     </div>
-                                    <div className="form-group">
-                                        <label htmlFor="phone">
-                                            <Phone size={14} />
-                                            Phone Number *
-                                        </label>
+                                    <div className="form-field">
+                                        <label htmlFor="phone">Phone *</label>
                                         <input
                                             type="tel"
                                             id="phone"
@@ -200,42 +202,42 @@ const AppPartnership = () => {
                                         />
                                     </div>
                                 </div>
-                            </div>
+                            </fieldset>
 
-                            {/* Organization Information */}
-                            <div className="form-section">
-                                <div className="section-header">
-                                    <Building2 size={20} />
-                                    <h2>Organization Information</h2>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="organizationType">Organization Type *</label>
+                            {/* Organization */}
+                            <fieldset className="part-form__group">
+                                <legend className="part-form__legend">
+                                    <span className="part-form__legend-num">03</span>
+                                    <span className="part-form__legend-ico"><Building2 size={14} strokeWidth={2} /></span>
+                                    <span className="part-form__legend-text">Organization</span>
+                                </legend>
+                                <div className="form-field">
+                                    <label htmlFor="organizationType">Category *</label>
                                     <select
                                         id="organizationType"
                                         name="organizationType"
                                         value={formData.organizationType}
                                         onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="">Select type...</option>
-                                        {organizationTypes.map(type => (
+                                        required>
+                                        <option value="">Select category...</option>
+                                        {organizationTypes.map((type) => (
                                             <option key={type} value={type}>{type}</option>
                                         ))}
                                     </select>
                                 </div>
-                                <div className="form-group">
-                                    <label htmlFor="organizationName">Organization/Business Name</label>
+                                <div className="form-field">
+                                    <label htmlFor="organizationName">Business name</label>
                                     <input
                                         type="text"
                                         id="organizationName"
                                         name="organizationName"
                                         value={formData.organizationName}
                                         onChange={handleChange}
-                                        placeholder="Your business name (if applicable)"
+                                        placeholder="If applicable"
                                     />
                                 </div>
                                 <div className="form-row">
-                                    <div className="form-group">
+                                    <div className="form-field">
                                         <label htmlFor="city">City</label>
                                         <input
                                             type="text"
@@ -246,7 +248,7 @@ const AppPartnership = () => {
                                             placeholder="Lisbon, Porto, Lagos..."
                                         />
                                     </div>
-                                    <div className="form-group">
+                                    <div className="form-field">
                                         <label htmlFor="country">Country</label>
                                         <input
                                             type="text"
@@ -258,17 +260,18 @@ const AppPartnership = () => {
                                         />
                                     </div>
                                 </div>
-                            </div>
+                            </fieldset>
 
-                            {/* Partnership Interest */}
-                            <div className="form-section">
-                                <div className="section-header">
-                                    <MessageSquare size={20} />
-                                    <h2>Partnership Interest</h2>
-                                </div>
-                                <div className="form-group">
+                            {/* Interest */}
+                            <fieldset className="part-form__group">
+                                <legend className="part-form__legend">
+                                    <span className="part-form__legend-num">04</span>
+                                    <span className="part-form__legend-ico"><MessageSquare size={14} strokeWidth={2} /></span>
+                                    <span className="part-form__legend-text">Interest</span>
+                                </legend>
+                                <div className="form-field">
                                     <label htmlFor="partnershipInterest">
-                                        Tell us why you're interested in partnering with LocAppoint
+                                        How do you see Locappoint fitting your business?
                                     </label>
                                     <textarea
                                         id="partnershipInterest"
@@ -276,27 +279,30 @@ const AppPartnership = () => {
                                         value={formData.partnershipInterest}
                                         onChange={handleChange}
                                         rows="5"
-                                        placeholder="Share your goals, challenges, or how you envision using LocAppoint..."
-                                    ></textarea>
+                                        placeholder="Goals, what is broken today, what would make this a yes..."
+                                    />
                                 </div>
-                            </div>
+                            </fieldset>
 
-                            {/* Submit Button */}
                             <button
                                 type="submit"
-                                className="btn btn--primary btn--large"
-                                disabled={loading}
-                                style={{ width: '100%' }}
-                            >
-                                {loading ? 'Submitting...' : 'Submit Partnership Request'}
+                                className="loca-btn loca-btn--primary loca-btn--lg part-form__submit"
+                                disabled={loading}>
+                                {loading ? 'Submitting...' : (
+                                    <>
+                                        <Send size={16} strokeWidth={2} />
+                                        Submit application
+                                    </>
+                                )}
                             </button>
 
-                            <p className="form-footer-text">
-                                We'll review your application and contact you within 48 hours
+                            <p className="part-form__foot">
+                                We review every application. Reply within 48 hours.
                             </p>
                         </form>
                     </div>
-                </div>
+                </section>
+
             </main>
 
             <AppFooter />
@@ -304,4 +310,4 @@ const AppPartnership = () => {
     )
 }
 
-export default AppPartnership
+export default Partnership

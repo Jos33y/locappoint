@@ -49,7 +49,7 @@ const handleKeyActivate = (e, callback) => {
     }
 }
 
-const PartnershipTab = ({ data, formatDate, onExport, onStatusChange }) => {
+const PartnershipTab = ({ data, formatDate, onExport, onStatusChange, onDelete }) => {
     const [selectedId, setSelectedId] = useState(null)
     const count = data.length
 
@@ -237,6 +237,7 @@ const PartnershipTab = ({ data, formatDate, onExport, onStatusChange }) => {
                 onClose={closeDetail}
                 onStatusChange={onStatusChange}
                 formatDate={formatDate}
+                onDelete={onDelete}
             />
         </div>
     )

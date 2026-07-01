@@ -1,0 +1,321 @@
+/* Cta - final section with city phase tags and cohort progress */
+
+.cta {
+    overflow: hidden;
+    padding: 96px 0 112px;
+}
+
+.cta__radial {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 50% 60% at 50% 100%, rgba(45, 127, 240, 0.10), transparent 70%),
+        radial-gradient(ellipse 30% 40% at 80% 20%, rgba(232, 154, 62, 0.05), transparent 60%);
+}
+
+.cta .container {
+    position: relative;
+}
+
+
+/* City phase row */
+
+.cta__cities {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 64px;
+}
+
+.cta__city {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.cta__city-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 4px 9px 4px 7px;
+    border-radius: 999px;
+    background: var(--surface-3);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.cta__city-pill--live {
+    background: rgba(43, 140, 90, 0.10);
+    border-color: rgba(43, 140, 90, 0.28);
+    color: var(--success);
+}
+
+.cta__city-pill--next {
+    background: rgba(232, 154, 62, 0.10);
+    border-color: rgba(232, 154, 62, 0.28);
+    color: var(--signal);
+}
+
+.cta__city-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-subtle);
+}
+
+.cta__city-dot--live {
+    background: var(--success);
+    box-shadow: 0 0 0 3px rgba(43, 140, 90, 0.18);
+}
+
+.cta__city-dot--next {
+    background: var(--signal);
+}
+
+.cta__city-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    flex-shrink: 0;
+}
+
+.cta__city-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.3;
+    min-width: 0;
+}
+
+
+/* Core - headline, lede, buttons */
+
+.cta__core {
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 48px;
+}
+
+.cta__title {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 4.8vw, 52px);
+    font-weight: 600;
+    letter-spacing: -0.028em;
+    line-height: 1.05;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.cta__title-accent {
+    color: var(--azure);
+}
+
+.cta__lede {
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 580px;
+}
+
+.cta__buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+
+/* Cohort progress strip */
+
+.cta__cohort {
+    max-width: 580px;
+    margin: 0 auto;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cta__cohort-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.cta__cohort-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.cta__cohort-count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+}
+
+.cta__cohort-count-num {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--signal);
+}
+
+.cta__cohort-count-sep {
+    color: var(--text-subtle);
+}
+
+.cta__cohort-count-target {
+    color: var(--text-secondary);
+}
+
+.cta__cohort-count-label {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-left: 6px;
+}
+
+.cta__cohort-bar {
+    height: 6px;
+    background: var(--surface-3);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+}
+
+.cta__cohort-fill {
+    height: 100%;
+    background:
+        repeating-linear-gradient(
+            45deg,
+            var(--signal) 0,
+            var(--signal) 6px,
+            rgba(232, 154, 62, 0.65) 6px,
+            rgba(232, 154, 62, 0.65) 12px
+        );
+    border-radius: 999px;
+    transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+@media (max-width: 980px) {
+    .cta__cities {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .cta {
+        padding: 56px 0 72px;
+    }
+
+    .cta__cities {
+        margin-bottom: 40px;
+        gap: 10px;
+    }
+
+    .cta__city {
+        padding: 12px 14px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .cta__core {
+        gap: 16px;
+        margin-bottom: 36px;
+    }
+
+    .cta__lede {
+        font-size: 15px;
+    }
+
+    .cta__buttons {
+        width: 100%;
+        margin-top: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cta {
+        padding: 48px 0 64px;
+    }
+
+    .cta__title {
+        font-size: 30px;
+        line-height: 1.08;
+        letter-spacing: -0.024em;
+    }
+
+    .cta__lede {
+        font-size: 14.5px;
+        line-height: 1.5;
+    }
+
+    .cta__buttons {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .cta__buttons .loca-btn {
+        width: 100%;
+        padding: 14px 18px;
+    }
+
+    .cta__cohort {
+        padding: 14px 16px;
+    }
+
+    .cta__cohort-head {
+        gap: 8px;
+    }
+
+    .cta__cohort-label {
+        font-size: 9px;
+        letter-spacing: 0.14em;
+    }
+}
+
+@media (max-width: 380px) {
+    .cta__title {
+        font-size: 26px;
+    }
+
+    .cta__city-name {
+        font-size: 14px;
+    }
+
+    .cta__city-note {
+        font-size: 11px;
+    }
+}

@@ -6,6 +6,10 @@ import { Link } from 'react-router-dom'
 import '../../styles/app/footer.css'
 
 
+// Dev preserves app mode through wordmark clicks. Prod relies on hostname.
+const HOME_PATH = import.meta.env.DEV ? '/?app' : '/'
+
+
 const AppFooter = () => {
     const year = new Date().getFullYear()
 
@@ -16,7 +20,7 @@ const AppFooter = () => {
                 <div className="loca-app-footer__grid">
 
                     <div className="loca-app-footer__brand-col">
-                        <Link to="/" className="loca-app-footer__brand" aria-label="Locappoint home">
+                        <Link to={HOME_PATH} className="loca-app-footer__brand" aria-label="Locappoint home">
                             <svg className="loca-app-footer__mark" viewBox="0 0 100 100" aria-hidden="true">
                                 <path d="M 42 6 C 22 6, 6 22, 6 42 C 6 53, 10 62, 16 70 L 42 100 L 68 70 C 74 62, 78 53, 78 42 C 78 22, 62 6, 42 6 Z" fill="var(--azure)" transform="translate(14.3 4.9) scale(0.85)" />
                                 <rect x="16" y="22" width="52" height="36" rx="4" fill="var(--ink)" transform="translate(14.3 4.9) scale(0.85)" />
@@ -40,7 +44,6 @@ const AppFooter = () => {
                         <h3 className="loca-app-footer__col-title">Platform</h3>
                         <ul className="loca-app-footer__list">
                             <li><Link to="/businesses">Browse businesses</Link></li>
-                            <li><Link to="/about">About</Link></li>
                             <li><Link to="/partnership">Become a partner</Link></li>
                             <li><Link to="/portal">Business dashboard</Link></li>
                         </ul>

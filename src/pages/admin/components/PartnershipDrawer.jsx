@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Copy, MessageCircle, Check, ChevronDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Copy, MessageCircle, Check, ChevronDown, Trash2 } from 'lucide-react'
 import DetailDrawer from './DetailDrawer'
 import CountryDisplay from './CountryDisplay'
 import StatusBadge from './StatusBadge'
@@ -19,8 +19,22 @@ const initial = (first, last) => {
 
 const sanitizePhone = (phone) => (phone || '').replace(/[^\d]/g, '')
 
-const PartnershipDrawer = ({ item, onClose, onStatusChange, formatDate }) => {
+const PartnershipDrawer = ({ item, onClose, onStatusChange, formatDate, onDelete }) => {
     const [copied, setCopied] = useState(null)
+    const [confirmingDelete, setConfirmingDelete] = useState(false)
+    const [deleting, setDeleting] = useState(false)
+
+    useEffect(() => {
+        setConfirmingDelete(false)
+        setDeleting(false)
+    }, [item?.id])
+
+    const handleDelete = async () => {
+        if (!item || !onDelete || deleting) return
+        setDeleting(true)
+        await onDelete(item.id)
+        onClose()
+    }
 
     const copy = (text, key) => {
         if (!text || !navigator.clipboard) return
@@ -57,26 +71,61 @@ const PartnershipDrawer = ({ item, onClose, onStatusChange, formatDate }) => {
 
     const footer = item ? (
         <>
-            <button
-                type="button"
-                className="detail-drawer__action detail-drawer__action--secondary"
-                onClick={() => copy(item.email, 'email')}
-            >
-                {copied === 'email'
-                    ? <Check size={14} aria-hidden="true" />
-                    : <Copy size={14} aria-hidden="true" />}
-                <span>{copied === 'email' ? 'Copied' : 'Copy email'}</span>
-            </button>
-            {whatsappHref && (
-                <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="detail-drawer__action detail-drawer__action--primary"
-                >
-                    <MessageCircle size={14} aria-hidden="true" />
-                    <span>WhatsApp</span>
-                </a>
+            {!confirmingDelete && (
+                <>
+                    {onDelete && (
+                        <button
+                            type="button"
+                            className="detail-drawer__action detail-drawer__action--danger"
+                            onClick={() => setConfirmingDelete(true)}
+                        >
+                            <Trash2 size={14} aria-hidden="true" />
+                            <span>Delete</span>
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        className="detail-drawer__action detail-drawer__action--secondary"
+                        onClick={() => copy(item.email, 'email')}
+                    >
+                        {copied === 'email'
+                            ? <Check size={14} aria-hidden="true" />
+                            : <Copy size={14} aria-hidden="true" />}
+                        <span>{copied === 'email' ? 'Copied' : 'Copy email'}</span>
+                    </button>
+                    {whatsappHref && (
+                        <a
+                            href={whatsappHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="detail-drawer__action detail-drawer__action--primary"
+                        >
+                            <MessageCircle size={14} aria-hidden="true" />
+                            <span>WhatsApp</span>
+                        </a>
+                    )}
+                </>
+            )}
+            {confirmingDelete && (
+                <>
+                    <button
+                        type="button"
+                        className="detail-drawer__action detail-drawer__action--secondary"
+                        onClick={() => setConfirmingDelete(false)}
+                        disabled={deleting}
+                    >
+                        <span>Cancel</span>
+                    </button>
+                    <button
+                        type="button"
+                        className="detail-drawer__action detail-drawer__action--danger"
+                        onClick={handleDelete}
+                        disabled={deleting}
+                    >
+                        <Trash2 size={14} aria-hidden="true" />
+                        <span>{deleting ? 'Deleting' : 'Confirm delete'}</span>
+                    </button>
+                </>
             )}
         </>
     ) : null

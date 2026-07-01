@@ -11,6 +11,10 @@ import LanguageSwitcher from './LanguageSwitcher'
 import '../../styles/app/header.css'
 
 
+// Dev preserves app mode through wordmark clicks. Prod relies on hostname.
+const HOME_PATH = import.meta.env.DEV ? '/?app' : '/'
+
+
 const AppHeader = () => {
     const { t } = useTranslation()
     const { user, userProfile } = useAuth()
@@ -48,7 +52,7 @@ const AppHeader = () => {
             <div className="container">
                 <div className="loca-app-header__inner">
 
-                    <Link to="/" className="loca-app-header__brand" onClick={closeMenu} aria-label="Locappoint home">
+                    <Link to={HOME_PATH} className="loca-app-header__brand" onClick={closeMenu} aria-label="Locappoint home">
                         <svg className="loca-app-header__mark" viewBox="0 0 100 100" aria-hidden="true">
                             <path d="M 42 6 C 22 6, 6 22, 6 42 C 6 53, 10 62, 16 70 L 42 100 L 68 70 C 74 62, 78 53, 78 42 C 78 22, 62 6, 42 6 Z" fill="var(--azure)" transform="translate(14.3 4.9) scale(0.85)" />
                             <rect x="16" y="22" width="52" height="36" rx="4" fill="var(--ink)" transform="translate(14.3 4.9) scale(0.85)" />
@@ -67,9 +71,6 @@ const AppHeader = () => {
                     <nav className={`loca-app-header__nav ${open ? 'is-open' : ''}`} aria-label="Primary">
                         <Link to="/businesses" className="loca-app-header__navlink" onClick={closeMenu}>
                             {t('nav.browse', 'Browse')}
-                        </Link>
-                        <Link to="/about" className="loca-app-header__navlink" onClick={closeMenu}>
-                            {t('nav.about', 'About')}
                         </Link>
                         <Link to="/contact" className="loca-app-header__navlink" onClick={closeMenu}>
                             {t('nav.contact', 'Contact')}

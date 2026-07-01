@@ -1,277 +1,325 @@
-import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import AppFooter from '../../components/common/Appfooter'
-import { supabase } from '../../config/supabase'
-import { Search as SearchIcon, MapPin, Filter, X } from 'lucide-react'
-import '../../styles/app/businesses.css'
-import AppHeader from '../../components/common/AppHeader'
+// src/pages/app/Businesses.jsx
+// Browse - Cohort 1 marketplace.
+// Cover = banner image OR StreetGridCover placeholder (per-business variation).
+// Logo = avatar beside business name (image OR initials fallback).
+// Open slots remain informational; SME recruitment lives in the closing CTA.
 
-const AppBusinesses = () => {
-    const [searchParams, setSearchParams] = useSearchParams()
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, Calendar } from 'lucide-react'
+import { supabase } from '../../config/supabase'
+import AppHeader from '../../components/common/AppHeader'
+import AppFooter from '../../components/common/Appfooter'
+import StreetGridCover from '../../components/business/StreetGridCover'
+import '../../styles/app/home.css'
+import '../../styles/app/businesses.css'
+
+
+const COHORT_SIZE = 10
+
+
+// Defensive field access - tries common column-name variants.
+const fieldOf = (biz, ...keys) => {
+    for (const k of keys) {
+        if (biz[k] != null && biz[k] !== '') return biz[k]
+    }
+    return ''
+}
+
+
+// Category -> tint family. Drives StreetGridCover accent + avatar border.
+const CATEGORY_TINTS = {
+    // Hair / salons -> azure
+    salon: 'azure', 'hair salon': 'azure', hair: 'azure',
+    cabeleireiro: 'azure', salao: 'azure', 'salão': 'azure',
+    // Barbershops -> signal
+    barbershop: 'signal', barber: 'signal',
+    barbearia: 'signal', barbeiro: 'signal',
+    // Spa / wellness -> success
+    spa: 'success', wellness: 'success', massage: 'success',
+    massagem: 'success', 'bem-estar': 'success',
+    // Nail / beauty -> azure
+    nail: 'azure', manicure: 'azure', beauty: 'azure',
+    estetica: 'azure', 'estética': 'azure',
+    // Fitness -> signal
+    fitness: 'signal', gym: 'signal', studio: 'signal',
+    ginasio: 'signal', 'ginásio': 'signal',
+    // Yoga / pilates -> success
+    yoga: 'success', pilates: 'success',
+    // Tattoo -> ink
+    tattoo: 'ink', tatuagem: 'ink',
+    // Medical -> success
+    clinic: 'success', clinica: 'success', 'clínica': 'success',
+    physio: 'success', fisioterapia: 'success',
+}
+
+
+const resolveTint = (category) => {
+    const key = (category || '').toString().toLowerCase().trim()
+    return CATEGORY_TINTS[key] || 'azure'
+}
+
+
+// Initials from business name. Strips possessives + filler words.
+const getInitials = (name) => {
+    if (!name) return '?'
+    const cleaned = name.replace(/['']s\b/gi, '')
+    const filler = new Set(['the', 'a', 'an', 'of', 'and', '&', 'do', 'da', 'de'])
+    const parts = cleaned.trim().split(/\s+/).filter((w) => !filler.has(w.toLowerCase()))
+    if (parts.length === 0) return name.slice(0, 2).toUpperCase()
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+}
+
+
+const cities = [
+    { name: 'Lisbon', status: 'live', note: 'Cohort 1 open' },
+    { name: 'Porto', status: 'next', note: 'After Lisbon' },
+    { name: 'Lagos', status: 'soon', note: 'Q4 2026' },
+]
+
+
+const Businesses = () => {
     const [businesses, setBusinesses] = useState([])
-    const [filteredBusinesses, setFilteredBusinesses] = useState([])
     const [loading, setLoading] = useState(true)
 
-    // Search and filter states
-    const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
-    const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '')
-    const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || '')
-
     useEffect(() => {
+        const fetchBusinesses = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('businesses')
+                    .select('*')
+                    .order('created_at', { ascending: true })
+                    .limit(COHORT_SIZE)
+
+                if (error) {
+                    console.error('Browse fetch error:', error)
+                    setBusinesses([])
+                } else {
+                    setBusinesses(data || [])
+                }
+            } catch (err) {
+                console.error('Browse fetch failed:', err)
+                setBusinesses([])
+            } finally {
+                setLoading(false)
+            }
+        }
         fetchBusinesses()
     }, [])
 
-    useEffect(() => {
-        applyFilters()
-    }, [businesses, searchQuery, selectedCategory, selectedCity])
-
-    const fetchBusinesses = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('businesses')
-                .select(`
-                    id,
-                    business_name,
-                    slug,
-                    description,
-                    category,
-                    city,
-                    location,
-                    is_active
-                `)
-                .eq('is_active', true)
-                .order('created_at', { ascending: false })
-
-            if (error) throw error
-            setBusinesses(data || [])
-        } catch (error) {
-            console.error('Error fetching businesses:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const applyFilters = () => {
-        let filtered = [...businesses]
-
-        // Search query filter
-        if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase()
-            filtered = filtered.filter(business =>
-                business.business_name.toLowerCase().includes(query) ||
-                business.description?.toLowerCase().includes(query) ||
-                business.category?.toLowerCase().includes(query)
-            )
-        }
-
-        // Category filter
-        if (selectedCategory) {
-            filtered = filtered.filter(business =>
-                business.category === selectedCategory
-            )
-        }
-
-        // City filter
-        if (selectedCity) {
-            filtered = filtered.filter(business =>
-                business.city === selectedCity
-            )
-        }
-
-        setFilteredBusinesses(filtered)
-    }
-
-    const handleSearch = (e) => {
-        e.preventDefault()
-        updateSearchParams()
-    }
-
-    const updateSearchParams = () => {
-        const params = new URLSearchParams()
-        if (searchQuery) params.set('q', searchQuery)
-        if (selectedCategory) params.set('category', selectedCategory)
-        if (selectedCity) params.set('city', selectedCity)
-        setSearchParams(params)
-    }
-
-    const clearFilters = () => {
-        setSearchQuery('')
-        setSelectedCategory('')
-        setSelectedCity('')
-        setSearchParams(new URLSearchParams())
-    }
-
-    const hasActiveFilters = searchQuery || selectedCategory || selectedCity
-
-    if (loading) {
-        return (
-            <div className="businesses-page">
-                <AppHeader />
-                <div className="loading-container">
-                    <div className="spinner"></div>
-                    <p>Loading businesses...</p>
-                </div>
-                <AppFooter />
-            </div>
-        )
-    }
+    const filledCount = businesses.length
+    const openSlotCount = Math.max(0, COHORT_SIZE - filledCount)
 
     return (
-        <div className="businesses-page-wrapper">
+        <div className="browse-page">
             <AppHeader />
 
-            <main className="businesses-page">
-                <div className="container">
-                    {/* Header */}
-                    <div className="businesses-header">
-                        <h1>Find Local Businesses</h1>
-                        <p className="page-subtitle">
-                            Discover and book appointments with local businesses
-                        </p>
+            <main>
+
+                {/* Hero */}
+                <section className="loca-section loca-section--s0 browse__hero">
+                    <div className="browse__hero-radial" aria-hidden="true"></div>
+                    <div className="container">
+                        <div className="browse__hero-inner">
+                            <span className="loca-eyebrow">
+                                <span className="loca-eyebrow__dot" aria-hidden="true"></span>
+                                Browse · Cohort 1
+                            </span>
+                            <h1 className="browse__hero-title">
+                                The first Lisbon businesses <span className="loca-section__title-accent">on Locappoint.</span>
+                            </h1>
+                            <p className="browse__hero-lede">
+                                Cohort 1 is a curated group of ten Lisbon businesses taking bookings through Locappoint. As each one comes online, you can book them right here.
+                            </p>
+                            <div className="browse__hero-meta">
+                                <span className="browse__meta-stat">
+                                    <span className="browse__meta-num">{loading ? '·' : filledCount}</span>
+                                    <span className="browse__meta-label">Live</span>
+                                </span>
+                                <span className="browse__meta-sep"></span>
+                                <span className="browse__meta-stat">
+                                    <span className="browse__meta-num">{loading ? '·' : openSlotCount}</span>
+                                    <span className="browse__meta-label">Coming soon</span>
+                                </span>
+                                <span className="browse__meta-sep"></span>
+                                <span className="browse__meta-stat">
+                                    <span className="browse__meta-num">{COHORT_SIZE}</span>
+                                    <span className="browse__meta-label">Cohort target</span>
+                                </span>
+                            </div>
+                        </div>
                     </div>
+                </section>
 
-                    {/* Search Bar */}
-                    <form onSubmit={handleSearch} className="search-bar-large">
-                        <SearchIcon size={24} />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search by business name, service, or category..."
-                            className="search-input"
-                        />
-                        <button type="submit" className="btn btn--primary">
-                            Search
-                        </button>
-                    </form>
+                {/* City strip */}
+                <section className="loca-section loca-section--s1 browse__cities">
+                    <div className="container">
+                        <div className="browse__cities-row">
+                            {cities.map((city) => (
+                                <article key={city.name} className={`city-tile city-tile--${city.status}`}>
+                                    <div className="city-tile__head">
+                                        <span className={`city-tile__pill city-tile__pill--${city.status}`}>
+                                            <span className={`city-tile__dot city-tile__dot--${city.status}`}></span>
+                                            {city.status === 'live' ? 'Live' : city.status === 'next' ? 'Next' : 'Soon'}
+                                        </span>
+                                    </div>
+                                    <div className="city-tile__name">{city.name}</div>
+                                    <div className="city-tile__note">{city.note}</div>
+                                </article>
+                            ))}
+                        </div>
+                    </div>
+                </section>
 
-                    {/* Filters */}
-                    <div className="search-filters">
-                        <div className="filter-group">
-                            <label htmlFor="category">Category</label>
-                            <select
-                                id="category"
-                                value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="filter-select"
-                            >
-                                <option value="">All Categories</option>
-                                <option value="Salon">Salon</option>
-                                <option value="Spa">Spa</option>
-                                <option value="Barbershop">Barbershop</option>
-                                <option value="Dental">Dental</option>
-                                <option value="Clinic">Clinic</option>
-                                <option value="Gym">Gym</option>
-                                <option value="Restaurant">Restaurant</option>
-                                <option value="Other">Other</option>
-                            </select>
+                {/* Cohort showcase */}
+                <section className="loca-section loca-section--s0 browse__showcase">
+                    <div className="container">
+                        <div className="browse__showcase-head">
+                            <span className="loca-eyebrow">Lisbon · Cohort 1</span>
+                            <h2 className="browse__showcase-title">
+                                {filledCount > 0
+                                    ? 'Taking bookings now.'
+                                    : 'Slots filling as we onboard.'}
+                            </h2>
                         </div>
 
-                        <div className="filter-group">
-                            <label htmlFor="city">City</label>
-                            <select
-                                id="city"
-                                value={selectedCity}
-                                onChange={(e) => setSelectedCity(e.target.value)}
-                                className="filter-select"
-                            >
-                                <option value="">All Cities</option>
-                                <option value="Lisbon">Lisbon</option>
-                                <option value="Porto">Porto</option>
-                                <option value="Braga">Braga</option>
-                                <option value="Faro">Faro</option>
-                                <option value="Coimbra">Coimbra</option>
-                                <option value="Cascais">Cascais</option>
-                                <option value="Aveiro">Aveiro</option>
-                            </select>
-                        </div>
+                        {loading ? (
+                            <div className="browse__loading">Loading businesses...</div>
+                        ) : (
+                            <div className="browse__grid">
 
-                        {hasActiveFilters && (
-                            <div className="filter-group" style={{ justifyContent: 'flex-end', marginTop: 'auto' }}>
-                                <button
-                                    onClick={clearFilters}
-                                    className="btn btn--ghost"
-                                    type="button"
-                                >
-                                    <X size={16} />
-                                    Clear Filters
-                                </button>
+                                {businesses.map((biz) => {
+                                    const name = fieldOf(biz, 'business_name', 'name') || 'Business'
+                                    const category = fieldOf(biz, 'category', 'business_type', 'type')
+                                    const slug = fieldOf(biz, 'slug', 'id')
+                                    const neighborhood = fieldOf(biz, 'location', 'neighborhood', 'area', 'district', 'city') || 'Lisbon'
+                                    const banner = fieldOf(biz, 'banner_url', 'cover_image_url', 'image_url', 'photo_url', 'cover_url')
+                                    const logo = fieldOf(biz, 'logo_url', 'logo')
+                                    const tint = resolveTint(category)
+                                    const initials = getInitials(name)
+
+                                    return (
+                                        <Link
+                                            key={biz.id || slug}
+                                            to={`/${slug}`}
+                                            className="biz-card">
+
+                                            <div className="biz-card__cover">
+                                                {banner ? (
+                                                    <img
+                                                        src={banner}
+                                                        alt={name}
+                                                        className="biz-card__cover-img"
+                                                        loading="lazy"
+                                                    />
+                                                ) : (
+                                                    <StreetGridCover
+                                                        seed={biz.id || slug || name}
+                                                        tint={tint}
+                                                        className="biz-card__cover-svg"
+                                                    />
+                                                )}
+
+                                                <span className="biz-card__live-badge">
+                                                    <span className="biz-card__live-dot"></span>
+                                                    Live
+                                                </span>
+                                            </div>
+
+                                            <div className="biz-card__body">
+                                                <div className="biz-card__head">
+                                                    <div className={`biz-card__avatar biz-card__avatar--${tint}`}>
+                                                        {logo ? (
+                                                            <img src={logo} alt={name} loading="lazy" />
+                                                        ) : (
+                                                            <span>{initials}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="biz-card__heading">
+                                                        <h3 className="biz-card__name">{name}</h3>
+                                                        <div className="biz-card__meta">
+                                                            {category && <span className="biz-card__cat">{category}</span>}
+                                                            {category && <span className="biz-card__sep">·</span>}
+                                                            <span className="biz-card__loc">{neighborhood}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="biz-card__cta">
+                                                    <span>View booking page</span>
+                                                    <ArrowRight size={14} strokeWidth={2} />
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    )
+                                })}
+
+                                {Array.from({ length: openSlotCount }).map((_, i) => {
+                                    const slotNumber = filledCount + i + 1
+                                    return (
+                                        <article key={`slot-${slotNumber}`} className="biz-card biz-card--open">
+                                            <div className="biz-card__cover biz-card__cover--open">
+                                                <div className="biz-card__cover-fallback biz-card__cover-fallback--open">
+                                                    <span className="biz-card__slot-num">{String(slotNumber).padStart(2, '0')}</span>
+                                                    <span className="biz-card__slot-of">of {COHORT_SIZE}</span>
+                                                </div>
+                                                <span className="biz-card__live-badge biz-card__live-badge--soon">
+                                                    <span className="biz-card__open-dot"></span>
+                                                    Coming soon
+                                                </span>
+                                            </div>
+
+                                            <div className="biz-card__body">
+                                                <div className="biz-card__head">
+                                                    <div className="biz-card__avatar biz-card__avatar--signal">
+                                                        <Calendar size={16} strokeWidth={1.8} />
+                                                    </div>
+                                                    <div className="biz-card__heading">
+                                                        <h3 className="biz-card__name biz-card__name--open">Onboarding now</h3>
+                                                        <div className="biz-card__meta">
+                                                            <span>Cohort slot</span>
+                                                            <span className="biz-card__sep">·</span>
+                                                            <span>Lisbon</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <p className="biz-card__open-note">
+                                                    Reserved for a Lisbon business currently completing setup.
+                                                </p>
+                                            </div>
+                                        </article>
+                                    )
+                                })}
+
                             </div>
                         )}
                     </div>
+                </section>
 
-                    {/* Results Count */}
-                    <div style={{ marginBottom: 'var(--space-4)' }}>
-                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-                            Found {filteredBusinesses.length} {filteredBusinesses.length === 1 ? 'business' : 'businesses'}
-                        </p>
-                    </div>
-
-                    {/* Businesses Grid */}
-                    {filteredBusinesses.length === 0 ? (
-                        <div className="empty-state">
-                            <Filter size={48} className="empty-state-icon" />
-                            <h2>No businesses found</h2>
-                            <p>
-                                {hasActiveFilters
-                                    ? 'Try adjusting your filters or search terms'
-                                    : 'No businesses available at the moment'
-                                }
+                {/* CTA - SME recruitment */}
+                <section className="loca-section loca-section--s1 browse__cta">
+                    <div className="container">
+                        <div className="browse__cta-inner">
+                            <h2 className="browse__cta-title">
+                                Want to be on this page <span className="loca-section__title-accent">in cohort 1?</span>
+                            </h2>
+                            <p className="browse__cta-lede">
+                                {openSlotCount} slot{openSlotCount === 1 ? '' : 's'} remaining. Twelve months free, then nineteen euros a month flat. Set up takes ten minutes.
                             </p>
-                            {hasActiveFilters && (
-                                <button onClick={clearFilters} className="btn btn--primary">
-                                    Clear Filters
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="businesses-grid">
-                            {filteredBusinesses.map((business) => (
-                                <Link
-                                    key={business.id}
-                                    to={`/${business.slug}`}
-                                    className="business-card"
-                                >
-                                    <div className="business-card-banner">
-                                        <div className="business-card-logo">
-                                            {business.business_name.charAt(0).toUpperCase()}
-                                        </div>
-                                    </div>
-
-                                    <div className="business-card-content">
-                                        <h3 className="business-card-name">
-                                            {business.business_name}
-                                        </h3>
-
-                                        {business.category && (
-                                            <span className="business-card-category">
-                                                {business.category}
-                                            </span>
-                                        )}
-
-                                        {business.description && (
-                                            <p className="business-card-description">
-                                                {business.description}
-                                            </p>
-                                        )}
-
-                                        <div className="business-card-meta">
-                                            {business.city && (
-                                                <div className="business-card-meta-item">
-                                                    <MapPin size={14} />
-                                                    <span>
-                                                        {business.city}
-                                                        {business.location && `, ${business.location}`}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                            <div className="browse__cta-buttons">
+                                <Link to="/auth" className="loca-btn loca-btn--primary loca-btn--lg">
+                                    Get your booking page
+                                    <ArrowRight size={18} strokeWidth={2} />
                                 </Link>
-                            ))}
+                                <Link to="/partnership" className="loca-btn loca-btn--ghost loca-btn--lg">
+                                    Apply as a partner
+                                </Link>
+                            </div>
                         </div>
-                    )}
-                </div>
+                    </div>
+                </section>
+
             </main>
 
             <AppFooter />
@@ -279,4 +327,4 @@ const AppBusinesses = () => {
     )
 }
 
-export default AppBusinesses
+export default Businesses
