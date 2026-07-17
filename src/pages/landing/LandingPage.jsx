@@ -32,8 +32,8 @@ import FounderNote from './FounderNote'
 import Faq from './Faq'
 import WaitlistCTASection from './WaitlistCTASection'
 
-import WaitlistModal from './WaitlistModal'
-import PartnershipModal from './PartnershipModal'
+import WaitlistModal from '../../components/landing/WaitlistModal'
+import PartnershipModal from '../../components/landing/PartnershipModal'
 
 const TRACKED_SECTIONS = [
     'hero',

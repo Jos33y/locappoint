@@ -122,8 +122,8 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
         setStatus('submitting')
 
         try {
+            const email = formData.email.trim().toLowerCase()
             const payload = {
-                email: formData.email.trim().toLowerCase(),
                 country: formData.country || countryCode || null,
                 full_name: formData.fullName.trim() || null,
                 phone: formData.phone.trim() || null,
@@ -131,11 +131,13 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
                 business_type: formData.userType === 'business' ? formData.businessType : null,
                 comments: formData.comments.trim() || null
             }
+            // Row exists from step 1. Plain UPDATE avoids the ON CONFLICT RLS trip.
             const { error } = await supabase
                 .from('waitlist')
-                .upsert(payload, { onConflict: 'email' })
+                .update(payload)
+                .eq('email', email)
             if (error) throw error
-            trackFormSubmit('waitlist_step2', payload)
+            trackFormSubmit('waitlist_step2', { email, ...payload })
             setStatus('success')
         } catch (err) {
             console.error('Waitlist step 2 error:', err)
