@@ -5,7 +5,7 @@ import {
     X, Handshake, User, Mail, Phone, Building2, MapPin, Globe, MessageSquare,
     CheckCircle, AlertCircle, Loader2, ChevronDown
 } from 'lucide-react'
-import { supabase } from '../../config/supabase'
+import { supabaseAnon as supabase } from '../../config/supabaseAnon'
 import { useT } from '../../hooks/useT'
 import { COUNTRIES } from '../../constants/countries'
 import { useUserCountry } from '../../hooks/useUserCountry'

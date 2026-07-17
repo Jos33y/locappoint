@@ -2,7 +2,7 @@
 // Tracking is enabled in production. For local verification set
 // VITE_ANALYTICS_FORCE=true in .env.local then restart the dev server.
 
-import { supabase } from '../config/supabase'
+import { supabaseAnon as supabase } from '../config/supabaseAnon'
 
 // ============ ENVIRONMENT ============
 

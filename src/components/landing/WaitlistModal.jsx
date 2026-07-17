@@ -8,7 +8,7 @@ import {
 import { useT } from '../../hooks/useT'
 import { COUNTRIES, BUSINESS_TYPES } from '../../constants/countries'
 import { useUserCountry } from '../../hooks/useUserCountry'
-import { supabase } from '../../config/supabase'
+import { supabaseAnon as supabase } from '../../config/supabaseAnon'
 import { trackFormSubmit } from '../../services/analytics'
 
 const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
@@ -17,6 +17,7 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
 
     const [step, setStep] = useState(1)
     const [isClosing, setIsClosing] = useState(false)
+    const [rowId, setRowId] = useState(null)
 
     const [formData, setFormData] = useState({
         email: '', country: '', fullName: '', phone: '',
@@ -67,6 +68,7 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
             setStep(1)
             setStatus('idle')
             setErrorMessage('')
+            setRowId(null)
             setFormData({
                 email: '', country: '', fullName: '', phone: '',
                 userType: '', businessType: '', comments: ''
@@ -88,15 +90,21 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
         setStatus('submitting')
 
         try {
-            const payload = {
-                email: formData.email.trim().toLowerCase(),
-                country: formData.country || countryCode || null
-            }
-            const { error } = await supabase
+            const email = formData.email.trim().toLowerCase()
+            const country = formData.country || countryCode || null
+
+            // Upsert returns the row (new or existing) so we get the id for step 2.
+            const { data, error } = await supabase
                 .from('waitlist')
-                .upsert(payload, { onConflict: 'email' })
+                .upsert({ email, country }, { onConflict: 'email' })
+                .select()
+                .single()
+
             if (error) throw error
-            trackFormSubmit('waitlist_step1', payload)
+            if (!data?.id) throw new Error('Step 1 returned no row')
+
+            setRowId(data.id)
+            trackFormSubmit('waitlist_step1', { email, country })
             setStatus('idle')
             setStep(2)
         } catch (err) {
@@ -118,11 +126,15 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
             setStatus('error')
             return
         }
+        if (!rowId) {
+            setErrorMessage(t('waitlistModal.errorGeneric', 'Something went wrong. Try again.'))
+            setStatus('error')
+            return
+        }
         setErrorMessage('')
         setStatus('submitting')
 
         try {
-            const email = formData.email.trim().toLowerCase()
             const payload = {
                 country: formData.country || countryCode || null,
                 full_name: formData.fullName.trim() || null,
@@ -131,13 +143,19 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
                 business_type: formData.userType === 'business' ? formData.businessType : null,
                 comments: formData.comments.trim() || null
             }
-            // Row exists from step 1. Plain UPDATE avoids the ON CONFLICT RLS trip.
-            const { error } = await supabase
+            // Update by id (UUID). No string matching, no case issues, no whitespace.
+            const { data, error } = await supabase
                 .from('waitlist')
                 .update(payload)
-                .eq('email', email)
+                .eq('id', rowId)
+                .select()
+
             if (error) throw error
-            trackFormSubmit('waitlist_step2', { email, ...payload })
+            if (!data || data.length === 0) {
+                throw new Error('Update returned 0 rows for id ' + rowId)
+            }
+
+            trackFormSubmit('waitlist_step2', { email: formData.email, ...payload })
             setStatus('success')
         } catch (err) {
             console.error('Waitlist step 2 error:', err)
