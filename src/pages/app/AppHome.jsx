@@ -1,6 +1,3 @@
-// src/pages/app/AppHome.jsx
-// Composition root for app.locappoint.com home.
-
 import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 import Hero from './home/Hero'

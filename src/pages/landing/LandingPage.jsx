@@ -1,5 +1,3 @@
-// LandingPage - Phase 1 waitlist. HowItWorks (today) precedes AICapabilities (roadmap).
-
 import { useState, useEffect, useCallback } from 'react'
 import '../../styles/landing/index.css'
 

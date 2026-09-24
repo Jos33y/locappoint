@@ -83,7 +83,7 @@ const ClientLayout = () => {
                         <Menu size={24} />
                     </button>
                     <div className="client-breadcrumb">
-                        <Link to="/app">Home</Link>
+                        <Link to="/">Home</Link>
                         <span className="breadcrumb-separator">/</span>
                         <span>Dashboard</span>
                     </div>

@@ -1,8 +1,9 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { Analytics } from '@vercel/analytics/react'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import ScrollToTop from './components/common/ScrollToTop'
+import CanonicalSync from './components/common/CanonicalSync'
 
 import AppHome from './pages/app/AppHome'
 import Businesses from './pages/app/Businesses'
@@ -30,14 +31,19 @@ import ClientSearch from './pages/client/Search'
 import ClientAppointments from './pages/client/MyAppointments'
 import ClientProfile from './pages/client/Profile' 
 
-/* App subdomain: app.locappoint.com (or ?app in dev).
- * Routes are flat: /, /businesses, /portal, /client, /{slug}.
- * Anything unrecognized falls through to /. */
+const WAITLIST_URL = import.meta.env.DEV ? '/?waitlist' : 'https://waitlist.locappoint.com'
+
+// Redirect, not render: landing CSS would stay in the page and leak into the app.
+const WaitlistRedirect = () => {
+    useEffect(() => { window.location.replace(WAITLIST_URL) }, [])
+    return null
+}
 
 const BookingApp = () => (
     <AuthProvider>
         <BrowserRouter>
             <ScrollToTop />
+            <CanonicalSync />
             <Routes>
                 <Route path="/" element={<AppHome />} />
                 <Route path="/about" element={<Navigate to="/" replace />} />
@@ -50,6 +56,7 @@ const BookingApp = () => (
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/waitlist" element={<WaitlistRedirect />} />
 
                 <Route
                     path="/portal"
@@ -81,14 +88,12 @@ const BookingApp = () => (
                     <Route path="profile" element={<ClientProfile />} />
                 </Route>
 
-                {/* Single-segment public business slug. Defined last so explicit
-                    routes above win (portal, client, businesses, etc.). */}
+                {/* Last so explicit routes win over a matching slug. */}
                 <Route path="/:businessSlug" element={<BusinessPage />} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </BrowserRouter>
-        {import.meta.env.PROD && <Analytics />}
     </AuthProvider>
 )
 

@@ -184,7 +184,7 @@ export default function StatusApp() {
                                     <div className="detail__item detail__item--done">CSS migration from old purple palette to locked tokens, complete</div>
                                     <div className="detail__item detail__item--done">Admin dashboard: Waitlist, Partnership, Analytics tabs shipped</div>
                                     <div className="detail__item detail__item--done">Analytics infrastructure: sessions, events, country, device, browser, funnel</div>
-                                    <div className="detail__item detail__item--done">Subdomain routing: locappoint.com, app.locappoint.com, status.locappoint.com</div>
+                                    <div className="detail__item detail__item--done">Domain routing: locappoint.com serves the app, waitlist.locappoint.com archives the waitlist, status.locappoint.com</div>
                                     <div className="detail__item detail__item--done">Market research informing the rebuild (no-show data, competitor analysis)</div>
                                     <div className="detail__item detail__item--done">Waitlist capture: fixed a bug that was blocking some signups from saving</div>
                                     <div className="detail__item detail__item--done">Sign-up and password reset emails redesigned to match our brand</div>
@@ -391,12 +391,12 @@ export default function StatusApp() {
                 <section className="section reveal" id="surfaces" aria-labelledby="surfaces-title">
                     <div className="section__head">
                         <span className="section__eyebrow">07 / Live surfaces</span>
-                        <h2 className="section__title" id="surfaces-title">Three subdomains, one codebase</h2>
+                        <h2 className="section__title" id="surfaces-title">Three surfaces, one codebase</h2>
                         <p className="section__lede">Each surface serves a different audience but ships from the same build. Tap to open.</p>
                     </div>
 
                     <div className="surfaces">
-                        <a className="surface" href="https://locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="100">
+                        <a className="surface" href="https://waitlist.locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="100">
                             <div className="surface__head">
                                 <span className="surface__status surface__status--live">
                                     <span className="surface__status-dot" aria-hidden="true"></span>
@@ -404,8 +404,8 @@ export default function StatusApp() {
                                 </span>
                                 <span className="surface__pct"></span>
                             </div>
-                            <div className="surface__url">locappoint.com</div>
-                            <div className="surface__desc">The waitlist landing. Where every visitor starts. Phase 1 ships here.</div>
+                            <div className="surface__url">waitlist.locappoint.com</div>
+                            <div className="surface__desc">The Phase 1 waitlist, archived. Still collects signups.</div>
                             <div className="surface__bar" aria-hidden="true">
                                 <div className="surface__bar-fill"></div>
                             </div>
@@ -426,7 +426,7 @@ export default function StatusApp() {
                             </div>
                         </a>
 
-                        <a className="surface surface--building" href="https://app.locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="15">
+                        <a className="surface surface--building" href="https://locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="15">
                             <div className="surface__head">
                                 <span className="surface__status surface__status--building">
                                     <span className="surface__status-dot" aria-hidden="true"></span>
@@ -434,8 +434,8 @@ export default function StatusApp() {
                                 </span>
                                 <span className="surface__pct"></span>
                             </div>
-                            <div className="surface__url">app.locappoint.com</div>
-                            <div className="surface__desc">The booking platform itself. Phase 2 build. Routes online, end-to-end flow underway.</div>
+                            <div className="surface__url">locappoint.com</div>
+                            <div className="surface__desc">The booking platform itself, now on the main domain. Phase 2 build, end-to-end flow underway.</div>
                             <div className="surface__bar" aria-hidden="true">
                                 <div className="surface__bar-fill"></div>
                             </div>

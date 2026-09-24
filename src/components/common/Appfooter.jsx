@@ -1,7 +1,3 @@
-// src/components/common/Appfooter.jsx
-// Public footer for app.locappoint.com.
-// Dropped placeholder social hrefs - if we add socials, they go in with real URLs.
-
 import { Link } from 'react-router-dom'
 import '../../styles/app/footer.css'
 

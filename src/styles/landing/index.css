@@ -1,23 +1,12 @@
-/* index.css - Landing CSS orchestrator. Import order is intentional. */
-
-/* 1. Tokens. Must be first. */
 @import '../tokens.css';
-
-/* 2. Reset and base. */
 @import '../reset.css';
 @import '../base.css';
-
-/* 3. Buttons (used in hero CTAs, modal submits, inline CTA). */
 @import '../buttons.css';
 
-/* 4. Landing chrome. */
 @import './language-toggle.css';
 @import './header-footer.css';
-
-/* 5. Reveal behavior, shared by all sections. */
 @import './reveal.css';
 
-/* 6. Landing sections in render order. */
 @import './hero.css';
 @import './hero-dashboard.css';
 @import './stats.css';
@@ -28,16 +17,12 @@
 @import './audience.css';
 @import './client-value.css';
 @import './social-proof.css';
-@import './features.css';
-@import './case-studies.css';
 @import './founder-note.css';
 @import './faq.css';
-@import './geography.css';
 @import './waitlist-cta.css';
 
-/* 7. Modals and floating actions. */
 @import './modals.css';
 @import './floating-buttons.css';
 
-/* 8. Utilities. Must be last so atomic helpers win the cascade. */
+/* Last so atomic helpers win the cascade. */
 @import '../utilities.css';

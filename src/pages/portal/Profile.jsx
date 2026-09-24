@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { slugProblem } from '../../constants/reservedSlugs'
 import { Building2, MapPin, Phone, Mail, Globe, MessageCircle, Save, ArrowLeft } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/forms.css'
@@ -86,6 +87,11 @@ const PortalProfile = () => {
             setError('Business slug is required')
             return false
         }
+        const slugError = slugProblem(formData.slug)
+        if (slugError) {
+            setError(slugError)
+            return false
+        }
         if (!formData.category.trim()) {
             setError('Category is required')
             return false
@@ -145,6 +151,8 @@ const PortalProfile = () => {
             console.error('Error saving business:', error)
             if (error.code === '23505') {
                 setError('This business slug is already taken. Please choose another.')
+            } else if (error.code === '23514') {
+                setError('That business URL is not allowed. Choose another.')
             } else {
                 setError(error.message || 'Failed to save business profile')
             }

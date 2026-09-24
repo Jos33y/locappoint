@@ -87,7 +87,7 @@ const PortalLayout = () => {
                         <Menu size={24} />
                     </button>
                     <div className="portal-breadcrumb">
-                        <Link to="/app">Home</Link>
+                        <Link to="/">Home</Link>
                         <span className="breadcrumb-separator">/</span>
                         <span>Portal</span>
                     </div>

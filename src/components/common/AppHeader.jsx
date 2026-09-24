@@ -1,7 +1,3 @@
-// src/components/common/AppHeader.jsx
-// Public-facing header for app.locappoint.com.
-// Beta tag flips to live by changing one class.
-
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Menu, X } from 'lucide-react'
