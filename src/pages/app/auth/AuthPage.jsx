@@ -1,7 +1,3 @@
-// src/pages/app/auth/AuthPage.jsx
-// Sign in + sign up. Wires to Supabase via useAuth.
-// Preserves: signIn, signUp({full_name, phone, user_type}), signInWithGoogle.
-
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
@@ -94,13 +90,13 @@ const AuthPage = () => {
 
         try {
             if (activeTab === 'signin') {
-                const { data, error: signinErr } = await signIn(formData.email, formData.password)
+                const { error: signinErr } = await signIn(formData.email, formData.password)
                 if (signinErr) {
                     setError(signinErr.message || 'Sign in failed. Check your credentials.')
                     return
                 }
-                const redirectPath = data.user?.user_metadata?.user_type === 'business' ? '/portal' : '/client'
-                navigate(redirectPath)
+                const returnTo = navState.returnTo || navState.from?.pathname
+                navigate(returnTo && returnTo !== '/auth' ? returnTo : '/me', { replace: true })
             } else {
                 const { error: signupErr } = await signUp(formData.email, formData.password, {
                     full_name: formData.full_name,

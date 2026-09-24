@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
-const ProtectedRoute = ({ children, userType }) => {
+const ProtectedRoute = ({ children }) => {
   const { user, userProfile, profileStatus, loading, signOut } = useAuth()
   const location = useLocation()
 
@@ -25,10 +25,6 @@ const ProtectedRoute = ({ children, userType }) => {
         <button type="button" className="btn btn--outline btn--small" onClick={signOut}>Sign out</button>
       </div>
     )
-  }
-
-  if (userType && userProfile.user_type !== userType) {
-    return <Navigate to={userProfile.user_type === 'business' ? '/portal' : '/client'} replace />
   }
 
   return children

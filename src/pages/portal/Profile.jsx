@@ -8,7 +8,7 @@ import '../../styles/dashboard.css'
 import '../../styles/forms.css'
 
 const PortalProfile = () => {
-    const { userProfile } = useAuth()
+    const { userProfile, refreshProfile, setMode } = useAuth()
     const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -124,32 +124,35 @@ const PortalProfile = () => {
             }
 
             if (isEditing) {
-                // Update existing business
-                const { error } = await supabase
+                const { data: updated, error } = await supabase
                     .from('businesses')
                     .update(businessData)
-                    .eq('user_id', userProfile.id)
+                    .eq('id', formData.id)
+                    .select('id')
 
                 if (error) throw error
+                if (!updated || updated.length === 0) throw new Error('Update returned 0 rows for business ' + formData.id)
                 setSuccess('Business profile updated successfully!')
             } else {
-                // Create new business
                 const { error } = await supabase
                     .from('businesses')
                     .insert([businessData])
 
                 if (error) throw error
+                await refreshProfile()
+                setMode('business')
                 setSuccess('Business profile created successfully!')
                 setIsEditing(true)
-                
-                // Redirect to dashboard after 2 seconds
+
                 setTimeout(() => {
                     navigate('/portal')
                 }, 2000)
             }
         } catch (error) {
             console.error('Error saving business:', error)
-            if (error.code === '23505') {
+            if (error.code === '23505' && error.message?.includes('businesses_one_per_owner')) {
+                setError('This account already has a business.')
+            } else if (error.code === '23505') {
                 setError('This business slug is already taken. Please choose another.')
             } else if (error.code === '23514') {
                 setError('That business URL is not allowed. Choose another.')

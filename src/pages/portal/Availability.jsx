@@ -47,10 +47,11 @@ const PortalAvailability = () => {
                 .from('businesses')
                 .select('id')
                 .eq('user_id', userProfile.id)
-                .single()
+                .maybeSingle()
 
             if (businessError) throw businessError
             setBusiness(businessData)
+            if (!businessData) return
 
             // Get availability
             const { data: availabilityData, error: availabilityError } = await supabase

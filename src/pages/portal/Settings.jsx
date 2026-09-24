@@ -21,7 +21,7 @@ import '../../styles/forms.css'
 import '../../styles/portal/settings.css'
 
 const PortalSettings = () => {
-    const { userProfile, signOut } = useAuth()
+    const { userProfile, signOut, hasBusiness } = useAuth()
     const navigate = useNavigate()
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
@@ -286,8 +286,8 @@ const PortalSettings = () => {
                             <div className="info-item">
                                 <SettingsIcon size={16} className="info-icon" />
                                 <div className="info-details">
-                                    <label>Account Type</label>
-                                    <p className="capitalize">{userProfile?.user_type || 'Not set'}</p>
+                                    <label>Account</label>
+                                    <p>{hasBusiness ? 'Books appointments and runs a business' : 'Books appointments'}</p>
                                 </div>
                             </div>
                             <div className="info-item">

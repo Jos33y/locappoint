@@ -31,6 +31,7 @@ const ESSENTIAL_APP = [
     { name: 'sb-[project]-auth-token', type: 'Local storage', purpose: 'Keeps you signed in', kept: 'Until you sign out' },
     { name: 'pendingBooking', type: 'Session storage', purpose: 'Holds a booking you started while you sign in to finish it', kept: 'Until you close the tab' },
     { name: 'i18nextLng', type: 'Local storage', purpose: 'Remembers the language you chose', kept: 'Until you clear it' },
+    { name: 'locappoint_mode', type: 'Local storage', purpose: 'Opens the side you used last: Booking or My business', kept: 'Until you clear it' },
 ]
 
 const ESSENTIAL_WAITLIST = [

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { parseDateKey, todayKey } from '../../services/dates'
 import { Calendar, Clock, MapPin, Phone, Mail, X, AlertTriangle, CheckCircle } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/client/client.css'
@@ -58,7 +59,7 @@ const ClientAppointments = () => {
     }
 
     const filterAppointments = () => {
-        const today = new Date().toISOString().split('T')[0]
+        const today = todayKey()
         let filtered = []
 
         switch (activeFilter) {
@@ -116,7 +117,7 @@ const ClientAppointments = () => {
     }
 
     const formatDate = (dateString) => {
-        const date = new Date(dateString)
+        const date = parseDateKey(dateString)
         return date.toLocaleDateString('en-US', {
             weekday: 'short',
             year: 'numeric',
@@ -135,7 +136,7 @@ const ClientAppointments = () => {
     }
 
     const getFilterCounts = () => {
-        const today = new Date().toISOString().split('T')[0]
+        const today = todayKey()
         return {
             upcoming: appointments.filter(apt =>
                 apt.appointment_date >= today &&
@@ -231,10 +232,10 @@ const ClientAppointments = () => {
                         <div key={appointment.id} className="my-appointment-card">
                             <div className="appointment-date-badge">
                                 <div className="date-day">
-                                    {new Date(appointment.appointment_date).getDate()}
+                                    {parseDateKey(appointment.appointment_date).getDate()}
                                 </div>
                                 <div className="date-month">
-                                    {new Date(appointment.appointment_date).toLocaleDateString('en', {
+                                    {parseDateKey(appointment.appointment_date).toLocaleDateString('en', {
                                         month: 'short'
                                     })}
                                 </div>

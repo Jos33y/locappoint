@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { parseDateKey } from '../../services/dates'
 import {
     BarChart3,
     Clock,
@@ -41,10 +42,11 @@ const PortalDashboard = () => {
                 .from('businesses')
                 .select('*')
                 .eq('user_id', userProfile.id)
-                .single()
+                .maybeSingle()
 
             if (businessError) throw businessError
             setBusiness(businessData)
+            if (!businessData) return
 
             // Fetch appointments
             const { data: appointmentsData, error: appointmentsError } = await supabase
@@ -211,10 +213,10 @@ const PortalDashboard = () => {
                             <div key={appointment.id} className="appointment-card">
                                 <div className="appointment-date">
                                     <div className="date-day">
-                                        {new Date(appointment.appointment_date).getDate()}
+                                        {parseDateKey(appointment.appointment_date).getDate()}
                                     </div>
                                     <div className="date-month">
-                                        {new Date(appointment.appointment_date).toLocaleDateString('en', {
+                                        {parseDateKey(appointment.appointment_date).toLocaleDateString('en', {
                                             month: 'short',
                                         })}
                                     </div>

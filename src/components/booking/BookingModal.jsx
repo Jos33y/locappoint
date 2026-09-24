@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { toDateKey, parseDateKey, todayKey, toMinutes, fromMinutes } from '../../services/dates'
 import { X, Calendar, Clock, User, Mail, Phone, MessageSquare, CheckCircle } from 'lucide-react'
 import '../../styles/client/client.css'
 
@@ -30,9 +31,8 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
         if (pendingBooking && user) {
             try {
                 const booking = JSON.parse(pendingBooking)
-                if (booking.serviceId === service.id) {
-                    // Restore date and time
-                    const date = new Date(booking.date)
+                const date = parseDateKey(booking.date)
+                if (booking.serviceId === service.id && date) {
                     setSelectedDate(date)
                     setSelectedTime(booking.time)
                     setStep(2) // Go to time selection step (will show selected time)
@@ -61,7 +61,6 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
         try {
             const dayOfWeek = selectedDate.getDay()
 
-            // Get business availability for this day
             const { data: availability, error: availError } = await supabase
                 .from('availability')
                 .select('*')
@@ -77,18 +76,14 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
                 return
             }
 
-            // Get existing appointments for this date
-            const { data: appointments, error: aptError } = await supabase
-                .from('appointments')
-                .select('appointment_time, service_id')
-                .eq('business_id', business.id)
-                .eq('appointment_date', selectedDate.toISOString().split('T')[0])
-                .in('status', ['pending', 'confirmed'])
+            const { data: busy, error: busyError } = await supabase.rpc('get_busy_slots', {
+                p_business_id: business.id,
+                p_date: toDateKey(selectedDate),
+            })
 
-            if (aptError) throw aptError
+            if (busyError) throw busyError
 
-            // Generate time slots
-            const slots = generateTimeSlots(availability, appointments || [], service.duration_minutes)
+            const slots = generateTimeSlots(availability, busy || [], service.duration_minutes)
             setAvailableSlots(slots)
 
         } catch (error) {
@@ -99,48 +94,26 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
         }
     }
 
-    const generateTimeSlots = (availability, appointments, serviceDuration) => {
+    const generateTimeSlots = (availability, busy, serviceDuration) => {
         const slots = []
+        const busyRanges = busy.map((b) => [toMinutes(b.start_time), toMinutes(b.end_time)])
+        const now = new Date()
+        const earliest = toDateKey(selectedDate) === todayKey() ? now.getHours() * 60 + now.getMinutes() : -1
 
-        availability.forEach(window => {
-            let currentTime = parseTime(window.start_time)
-            const endTime = parseTime(window.end_time)
+        availability.forEach((window) => {
+            const endTime = toMinutes(window.end_time)
 
-            while (currentTime < endTime) {
-                // Check if service fits in remaining window
-                const slotEnd = addMinutes(currentTime, serviceDuration)
-                if (slotEnd <= endTime) {
-                    const timeString = formatTime(currentTime)
-                    const isBooked = appointments.some(apt => apt.appointment_time === timeString)
-
-                    if (!isBooked) {
-                        slots.push({
-                            time: timeString,
-                            display: timeString,
-                            available: true
-                        })
-                    }
+            for (let start = toMinutes(window.start_time); start + serviceDuration <= endTime; start += 30) {
+                const end = start + serviceDuration
+                const overlaps = busyRanges.some(([busyStart, busyEnd]) => start < busyEnd && end > busyStart)
+                if (start > earliest && !overlaps) {
+                    const time = fromMinutes(start)
+                    slots.push({ time, display: time, available: true })
                 }
-                currentTime = addMinutes(currentTime, 30) // 30-min intervals
             }
         })
 
         return slots.sort((a, b) => a.time.localeCompare(b.time))
-    }
-
-    const parseTime = (timeString) => {
-        const [hours, minutes] = timeString.split(':').map(Number)
-        return hours * 60 + minutes
-    }
-
-    const formatTime = (minutes) => {
-        const hours = Math.floor(minutes / 60)
-        const mins = minutes % 60
-        return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:00`
-    }
-
-    const addMinutes = (time, minutes) => {
-        return time + minutes
     }
 
     const handleDateSelect = (date) => {
@@ -158,7 +131,7 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
             const bookingState = {
                 businessSlug: business.slug,
                 serviceId: service.id,
-                date: selectedDate.toISOString(),
+                date: toDateKey(selectedDate),
                 time: time
             }
             sessionStorage.setItem('pendingBooking', JSON.stringify(bookingState))
@@ -204,27 +177,20 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
 
         setLoading(true)
         try {
-            const appointmentData = {
-                business_id: business.id,
-                client_id: user?.id || null,
-                service_id: service.id,
-                appointment_date: selectedDate.toISOString().split('T')[0],
-                appointment_time: selectedTime,
-                client_name: formData.name,
-                client_email: formData.email,
-                client_phone: formData.phone,
-                notes: formData.notes,
-                status: 'pending'
-            }
-
-            const { error } = await supabase
-                .from('appointments')
-                .insert([appointmentData])
-                .select()
-                .single()
+            const { error } = await supabase.rpc('book_appointment', {
+                p_business_id: business.id,
+                p_service_id: service.id,
+                p_date: toDateKey(selectedDate),
+                p_time: selectedTime,
+                p_client_name: formData.name,
+                p_client_email: formData.email,
+                p_client_phone: formData.phone,
+                p_notes: formData.notes,
+            })
 
             if (error) throw error
 
+            sessionStorage.removeItem('pendingBooking')
             setSuccess(true)
             setTimeout(() => {
                 onSuccess()
@@ -232,7 +198,13 @@ const BookingModal = ({ business, service, onClose, onSuccess }) => {
 
         } catch (error) {
             console.error('Error creating appointment:', error)
-            alert('Failed to create appointment. Please try again.')
+            const known = ['23P01', '22023', 'P0002', '28000'].includes(error?.code)
+            alert(known ? error.message : 'Could not complete the booking. Please try again.')
+            if (error?.code === '23P01' || error?.code === '22023') {
+                setSelectedTime(null)
+                setStep(2)
+                fetchAvailableSlots()
+            }
         } finally {
             setLoading(false)
         }

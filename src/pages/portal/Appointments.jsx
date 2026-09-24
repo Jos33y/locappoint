@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { parseDateKey } from '../../services/dates'
 import { Calendar, Clock, Mail, Phone, User, CheckCircle, XCircle, MoreVertical, Filter } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/forms.css'
@@ -38,10 +39,11 @@ const PortalAppointments = () => {
                 .from('businesses')
                 .select('id')
                 .eq('user_id', userProfile.id)
-                .single()
+                .maybeSingle()
 
             if (businessError) throw businessError
             setBusiness(businessData)
+            if (!businessData) return
 
             // Get appointments with service details
             const { data: appointmentsData, error: appointmentsError } = await supabase
@@ -98,7 +100,7 @@ const PortalAppointments = () => {
     }
 
     const formatDate = (dateString) => {
-        const date = new Date(dateString)
+        const date = parseDateKey(dateString)
         return date.toLocaleDateString('en-US', {
             weekday: 'short',
             year: 'numeric',
@@ -223,10 +225,10 @@ const PortalAppointments = () => {
                         <div key={appointment.id} className="appointment-item">
                             <div className="appointment-date-badge">
                                 <div className="date-day">
-                                    {new Date(appointment.appointment_date).getDate()}
+                                    {parseDateKey(appointment.appointment_date).getDate()}
                                 </div>
                                 <div className="date-month">
-                                    {new Date(appointment.appointment_date).toLocaleDateString('en', {
+                                    {parseDateKey(appointment.appointment_date).toLocaleDateString('en', {
                                         month: 'short',
                                     })}
                                 </div>

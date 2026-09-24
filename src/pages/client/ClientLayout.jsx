@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import {
@@ -6,14 +7,18 @@ import {
     Calendar,
     User,
     LogOut,
-    Menu
+    Menu,
+    ArrowLeftRight,
+    Store
 } from 'lucide-react'
 import '../../styles/client/client.css'
 
 const ClientLayout = () => {
-    const { user, userProfile, signOut } = useAuth()
+    const { user, userProfile, signOut, setMode, hasBusiness } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
+
+    useEffect(() => { setMode('client') }, [setMode])
 
     const handleSignOut = () => {
         signOut()
@@ -69,6 +74,17 @@ const ClientLayout = () => {
                             <p className="user-email">{user?.email}</p>
                         </div>
                     </div>
+                    {hasBusiness ? (
+                        <Link to="/portal" className="btn-signout">
+                            <ArrowLeftRight size={16} />
+                            <span>Switch to My business</span>
+                        </Link>
+                    ) : (
+                        <Link to="/portal/profile" className="btn-signout">
+                            <Store size={16} />
+                            <span>Start a business</span>
+                        </Link>
+                    )}
                     <button onClick={handleSignOut} className="btn-signout">
                         <LogOut size={16} />
                         <span>Sign Out</span>

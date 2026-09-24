@@ -23,8 +23,7 @@ const AppHeader = () => {
     const handleGetStarted = () => {
         closeMenu()
         if (user && userProfile) {
-            const path = userProfile.user_type === 'business' ? '/portal' : '/client'
-            navigate(path)
+            navigate('/me')
         } else {
             navigate('/auth', { state: { tab: 'signup', from: location.pathname } })
         }
@@ -37,10 +36,7 @@ const AppHeader = () => {
 
     const handleDashboard = () => {
         closeMenu()
-        if (userProfile) {
-            const path = userProfile.user_type === 'business' ? '/portal' : '/client'
-            navigate(path)
-        }
+        if (userProfile) navigate('/me')
     }
 
     return (

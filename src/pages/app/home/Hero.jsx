@@ -13,7 +13,7 @@ const Hero = () => {
 
     const handlePrimary = () => {
         if (user && userProfile) {
-            const path = userProfile.user_type === 'business' ? '/portal' : '/client'
+            const path = '/me'
             navigate(path)
             return
         }

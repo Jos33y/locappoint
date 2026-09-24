@@ -164,7 +164,7 @@ export const initSession = async () => {
 
     const existingData = sessionStorage.getItem(SESSION_DATA_KEY)
     if (existingData) {
-        await updateSession({ last_seen_at: new Date().toISOString() })
+        await updateSession({})
         return sessionId
     }
 
@@ -197,9 +197,7 @@ export const initSession = async () => {
     }
 
     try {
-        const { error } = await supabase
-            .from('analytics_sessions')
-            .insert([sessionData])
+        const { error } = await supabase.rpc('analytics_session_start', { p_data: sessionData })
 
         if (error) {
             if (!error.message?.includes('duplicate')) {
@@ -225,41 +223,9 @@ export const updateSession = async (updates) => {
     const sessionId = getSessionId()
 
     try {
-        await supabase
-            .from('analytics_sessions')
-            .update({
-                ...updates,
-                last_seen_at: new Date().toISOString()
-            })
-            .eq('session_id', sessionId)
+        await supabase.rpc('analytics_session_update', { p_session_id: sessionId, p_updates: updates })
     } catch (error) {
         console.error('Session update error:', error)
-    }
-}
-
-export const trackPageView = async () => {
-    if (!isTracking()) {
-        devLog('trackPageView skipped')
-        return
-    }
-
-    const sessionId = getSessionId()
-
-    try {
-        const { data } = await supabase
-            .from('analytics_sessions')
-            .select('page_views')
-            .eq('session_id', sessionId)
-            .single()
-
-        const newPageViews = (data?.page_views || 0) + 1
-
-        await updateSession({
-            page_views: newPageViews,
-            is_bounce: newPageViews <= 1
-        })
-    } catch (error) {
-        console.error('Page view tracking error:', error)
     }
 }
 
@@ -393,7 +359,7 @@ export const startTimeTracking = () => {
     if (unloadBound) return
     unloadBound = true
 
-    // Unload: fetch keepalive + PATCH (sendBeacon only supports POST, PostgREST update needs PATCH).
+    // Unload: plain fetch with keepalive, supabase-js requests are cancelled when the page closes.
     window.addEventListener('beforeunload', () => {
         if (!isTracking()) return
         const elapsed = Math.floor((Date.now() - startTime) / 1000)
@@ -402,11 +368,11 @@ export const startTimeTracking = () => {
 
         if (!supabaseUrl || !anonKey) return
 
-        const url = `${supabaseUrl}/rest/v1/analytics_sessions?session_id=eq.${getSessionId()}`
+        const url = `${supabaseUrl}/rest/v1/rpc/analytics_session_update`
 
         try {
             fetch(url, {
-                method: 'PATCH',
+                method: 'POST',
                 headers: {
                     'apikey': anonKey,
                     'Authorization': `Bearer ${anonKey}`,
@@ -414,8 +380,8 @@ export const startTimeTracking = () => {
                     'Prefer': 'return=minimal'
                 },
                 body: JSON.stringify({
-                    total_time_seconds: elapsed,
-                    last_seen_at: new Date().toISOString()
+                    p_session_id: getSessionId(),
+                    p_updates: { total_time_seconds: elapsed },
                 }),
                 keepalive: true
             }).catch(() => {})
@@ -505,7 +471,6 @@ export default {
     getSessionId,
     initSession,
     updateSession,
-    trackPageView,
     trackEvent,
     trackSectionView,
     trackButtonClick,

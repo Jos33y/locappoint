@@ -79,14 +79,11 @@ const PublicBusinessPage = () => {
     }
 
     const handleBackButton = () => {
-        // Check where user came from
         if (location.state?.from) {
             navigate(location.state.from)
-        } else if (userProfile?.user_type === 'client') {
-            // Logged in client - go to client search
+        } else if (userProfile) {
             navigate('/client/search')
         } else {
-            // Default - go to public businesses page
             navigate('/businesses')
         }
     }

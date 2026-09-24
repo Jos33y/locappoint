@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import ScrollToTop from './components/common/ScrollToTop'
 import CanonicalSync from './components/common/CanonicalSync'
+import HomeRedirect from './components/common/HomeRedirect'
 
 import AppHome from './pages/app/AppHome'
 import Businesses from './pages/app/Businesses'
@@ -65,6 +66,7 @@ const BookingApp = () => (
                 <Route path="/legal/ranking" element={<Ranking />} />
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/me" element={<HomeRedirect />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/waitlist" element={<WaitlistRedirect />} />
@@ -72,7 +74,7 @@ const BookingApp = () => (
                 <Route
                     path="/portal"
                     element={
-                        <ProtectedRoute userType="business">
+                        <ProtectedRoute>
                             <PortalLayout />
                         </ProtectedRoute>
                     }
@@ -88,7 +90,7 @@ const BookingApp = () => (
                 <Route
                     path="/client"
                     element={
-                        <ProtectedRoute userType="client">
+                        <ProtectedRoute>
                             <ClientLayout />
                         </ProtectedRoute>
                     }

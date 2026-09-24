@@ -35,10 +35,11 @@ const PortalServices = () => {
                 .from('businesses')
                 .select('id')
                 .eq('user_id', userProfile.id)
-                .single()
+                .maybeSingle()
 
             if (businessError) throw businessError
             setBusiness(businessData)
+            if (!businessData) return
 
             // Get services
             const { data: servicesData, error: servicesError } = await supabase

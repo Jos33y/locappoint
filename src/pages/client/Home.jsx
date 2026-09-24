@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { parseDateKey, todayKey } from '../../services/dates'
 import { Search, Calendar, MapPin, Clock, ArrowRight } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/client/client.css'
@@ -21,7 +22,7 @@ const ClientHome = () => {
 
     const fetchUpcomingAppointments = async () => {
         try {
-            const today = new Date().toISOString().split('T')[0]
+            const today = todayKey()
 
             const { data, error } = await supabase
                 .from('appointments')
@@ -64,7 +65,7 @@ const ClientHome = () => {
     }
 
     const formatDate = (dateString) => {
-        const date = new Date(dateString)
+        const date = parseDateKey(dateString)
         return date.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -171,10 +172,10 @@ const ClientHome = () => {
                             <div key={appointment.id} className="upcoming-appointment-card">
                                 <div className="appointment-date-badge">
                                     <div className="date-day">
-                                        {new Date(appointment.appointment_date).getDate()}
+                                        {parseDateKey(appointment.appointment_date).getDate()}
                                     </div>
                                     <div className="date-month">
-                                        {new Date(appointment.appointment_date).toLocaleDateString('en', {
+                                        {parseDateKey(appointment.appointment_date).toLocaleDateString('en', {
                                             month: 'short'
                                         })}
                                     </div>
