@@ -1,61 +1,59 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../config/supabase' 
 import { AuthContext } from '../context_definition/AuthContextDefinition'
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null)
     const [userProfile, setUserProfile] = useState(null)
-    const [profileStatus, setProfileStatus] = useState('idle')
     const [loading, setLoading] = useState(true)
-    const profileFor = useRef(null)
-
-    const fetchUserProfile = async (userId) => {
-        setProfileStatus('loading')
-        const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', userId)
-            .maybeSingle()
-
-        if (error) console.error('Error fetching user profile:', error)
-        setUserProfile(data ?? null)
-        setProfileStatus(data ? 'ready' : 'missing')
-        setLoading(false)
-    }
-
-    const refreshProfile = () => {
-        if (user) return fetchUserProfile(user.id)
-    }
 
     useEffect(() => {
-        const applySession = (session) => {
-            const nextUser = session?.user ?? null
-            setUser(nextUser)
-            if (!nextUser) {
-                profileFor.current = null
-                setUserProfile(null)
-                setProfileStatus('idle')
+        // Check active sessions and sets the user
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null)
+            if (session?.user) {
+                fetchUserProfile(session.user.id)
+            } else {
                 setLoading(false)
-                return
             }
-            if (profileFor.current === nextUser.id) return
-            profileFor.current = nextUser.id
-            setProfileStatus('loading')
-            // Deferred: supabase-js can deadlock when queried inside onAuthStateChange.
-            setTimeout(() => fetchUserProfile(nextUser.id), 0)
-        }
+        })
 
-        supabase.auth.getSession().then(({ data: { session } }) => applySession(session))
-
+        // Listen for auth changes
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => applySession(session))
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null)
+            if (session?.user) {
+                fetchUserProfile(session.user.id)
+            } else {
+                setUserProfile(null)
+                setLoading(false)
+            }
+        })
 
         return () => subscription.unsubscribe()
     }, [])
 
+    const fetchUserProfile = async (userId) => {
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', userId)
+                .single()
+
+            if (error) throw error
+            setUserProfile(data)
+        } catch (error) {
+            console.error('Error fetching user profile:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const signUp = async (email, password, userData) => {
         try {
+            // Sign up with Supabase Auth - store user data in metadata
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email,
                 password,
@@ -65,12 +63,13 @@ export const AuthProvider = ({ children }) => {
                         phone: userData.phone,
                         user_type: userData.user_type,
                     },
-                    emailRedirectTo: `${window.location.origin}/auth?verified=true`
+                    emailRedirectTo: `${window.location.origin}/auth?verified=true` // Redirect after verification
                 }
             })
 
             if (authError) throw authError
 
+            // No need to manually insert into users table - trigger handles it!
             return { data: authData, error: null }
         } catch (error) {
             return { data: null, error }
@@ -127,10 +126,8 @@ export const AuthProvider = ({ children }) => {
         try {
             const { error } = await supabase.auth.signOut()
             if (error) throw error
-            profileFor.current = null
             setUser(null)
             setUserProfile(null)
-            setProfileStatus('idle')
             return { error: null }
         } catch (error) {
             return { error }
@@ -153,8 +150,6 @@ export const AuthProvider = ({ children }) => {
     const value = {
         user,
         userProfile,
-        profileStatus,
-        refreshProfile,
         loading,
         signUp,
         signIn,

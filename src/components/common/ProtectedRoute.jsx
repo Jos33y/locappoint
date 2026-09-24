@@ -1,11 +1,11 @@
- import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
 const ProtectedRoute = ({ children, userType }) => {
-  const { user, userProfile, loading } = useAuth()
+  const { user, userProfile, profileStatus, loading, signOut } = useAuth()
   const location = useLocation()
 
-  if (loading) {
+  if (loading || profileStatus === 'loading') {
     return (
       <div className="loading-container">
         <div className="spinner"></div>
@@ -15,15 +15,20 @@ const ProtectedRoute = ({ children, userType }) => {
   }
 
   if (!user) {
-    // Redirect to auth page but save the location they were trying to go to
     return <Navigate to="/auth" state={{ from: location }} replace />
   }
 
-  // Check if user type matches (business or client)
-  if (userType && userProfile?.user_type !== userType) {
-    // Redirect to appropriate dashboard
-    const redirectTo = userProfile?.user_type === 'business' ? '/portal' : '/client'
-    return <Navigate to={redirectTo} replace />
+  if (!userProfile) {
+    return (
+      <div className="loading-container">
+        <p>We could not load your account. Sign out and sign in again, or contact hello@locappoint.com.</p>
+        <button type="button" className="btn btn--outline btn--small" onClick={signOut}>Sign out</button>
+      </div>
+    )
+  }
+
+  if (userType && userProfile.user_type !== userType) {
+    return <Navigate to={userProfile.user_type === 'business' ? '/portal' : '/client'} replace />
   }
 
   return children

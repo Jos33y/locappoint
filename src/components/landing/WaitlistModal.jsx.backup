@@ -1,3 +1,5 @@
+// WaitlistModal - Two-step email-first capture, old visual language.
+
 import { useState, useEffect } from 'react'
 import {
     X, Sparkles, User, Mail, Phone, Globe, Users, Briefcase, MessageSquare,
@@ -16,7 +18,6 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
     const [step, setStep] = useState(1)
     const [isClosing, setIsClosing] = useState(false)
     const [rowId, setRowId] = useState(null)
-    const [editToken, setEditToken] = useState(null)
 
     const [formData, setFormData] = useState({
         email: '', country: '', fullName: '', phone: '',
@@ -68,7 +69,6 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
             setStatus('idle')
             setErrorMessage('')
             setRowId(null)
-            setEditToken(null)
             setFormData({
                 email: '', country: '', fullName: '', phone: '',
                 userType: '', businessType: '', comments: ''
@@ -93,15 +93,17 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
             const email = formData.email.trim().toLowerCase()
             const country = formData.country || countryCode || null
 
+            // Upsert returns the row (new or existing) so we get the id for step 2.
             const { data, error } = await supabase
-                .rpc('waitlist_join', { p_email: email, p_country: country })
+                .from('waitlist')
+                .upsert({ email, country }, { onConflict: 'email' })
+                .select()
                 .single()
 
             if (error) throw error
             if (!data?.id) throw new Error('Step 1 returned no row')
 
             setRowId(data.id)
-            setEditToken(data.edit_token)
             trackFormSubmit('waitlist_step1', { email, country })
             setStatus('idle')
             setStep(2)
@@ -141,19 +143,17 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
                 business_type: formData.userType === 'business' ? formData.businessType : null,
                 comments: formData.comments.trim() || null
             }
-            const { data: saved, error } = await supabase.rpc('waitlist_complete', {
-                p_id: rowId,
-                p_token: editToken,
-                p_country: payload.country,
-                p_full_name: payload.full_name,
-                p_phone: payload.phone,
-                p_user_type: payload.user_type,
-                p_business_type: payload.business_type,
-                p_comments: payload.comments,
-            })
+            // Update by id (UUID). No string matching, no case issues, no whitespace.
+            const { data, error } = await supabase
+                .from('waitlist')
+                .update(payload)
+                .eq('id', rowId)
+                .select()
 
             if (error) throw error
-            if (!saved) throw new Error('Step 2 did not match row ' + rowId)
+            if (!data || data.length === 0) {
+                throw new Error('Update returned 0 rows for id ' + rowId)
+            }
 
             trackFormSubmit('waitlist_step2', { email: formData.email, ...payload })
             setStatus('success')
