@@ -1,15 +1,20 @@
+// analytics.js - Tracking service for sessions, events, conversions.
+// Tracking is enabled in production. For local verification set
+// VITE_ANALYTICS_FORCE=true in .env.local then restart the dev server.
+
 import { supabaseAnon as supabase } from '../config/supabaseAnon'
-import { hasAnalyticsConsent, onConsentChange } from './consent'
+
+// ============ ENVIRONMENT ============
 
 const isProduction = import.meta.env.PROD
-// VITE_ANALYTICS_FORCE=true in .env.local turns tracking on in dev.
-const trackingAllowed = isProduction || import.meta.env.VITE_ANALYTICS_FORCE === 'true'
-const isTracking = () => trackingAllowed && hasAnalyticsConsent()
-const pendingStart = new Set()
+const forceTracking = import.meta.env.VITE_ANALYTICS_FORCE === 'true'
+const trackingEnabled = isProduction || forceTracking
 
 const devLog = (...args) => {
     if (!isProduction) console.log('[Analytics]', ...args)
 }
+
+// ============ SESSION MANAGEMENT ============
 
 const SESSION_KEY = 'locappoint_session_id'
 const SESSION_DATA_KEY = 'locappoint_session_data'
@@ -25,6 +30,8 @@ export const getSessionId = () => {
     }
     return sessionId
 }
+
+// ============ DEVICE DETECTION ============
 
 const getDeviceType = () => {
     const ua = navigator.userAgent
@@ -73,6 +80,8 @@ const getOSInfo = () => {
     return { os, version }
 }
 
+// ============ UTM & REFERRER ============
+
 const getUTMParams = () => {
     const params = new URLSearchParams(window.location.search)
     return {
@@ -98,6 +107,8 @@ const getReferrerInfo = () => {
         return { referrer, referrer_domain: null }
     }
 }
+
+// ============ GEO ============
 
 let geoData = null
 let geoFetching = false
@@ -153,14 +164,15 @@ const fetchGeoData = async () => {
     return geoData
 }
 
-export const initSession = async () => {
-    if (!isTracking()) {
-        pendingStart.add('session')
-        devLog('initSession deferred until consent')
-        return null
-    }
+// ============ SESSION INITIALIZATION ============
 
+export const initSession = async () => {
     const sessionId = getSessionId()
+
+    if (!trackingEnabled) {
+        devLog('initSession skipped. Set VITE_ANALYTICS_FORCE=true in .env.local to enable in dev.')
+        return sessionId
+    }
 
     const existingData = sessionStorage.getItem(SESSION_DATA_KEY)
     if (existingData) {
@@ -216,8 +228,10 @@ export const initSession = async () => {
     return sessionId
 }
 
+// ============ SESSION UPDATES ============
+
 export const updateSession = async (updates) => {
-    if (!isTracking()) {
+    if (!trackingEnabled) {
         devLog('updateSession skipped', updates)
         return
     }
@@ -238,7 +252,7 @@ export const updateSession = async (updates) => {
 }
 
 export const trackPageView = async () => {
-    if (!isTracking()) {
+    if (!trackingEnabled) {
         devLog('trackPageView skipped')
         return
     }
@@ -263,10 +277,14 @@ export const trackPageView = async () => {
     }
 }
 
+// ============ EVENT TRACKING ============
+
+// Events that signal real engagement (vs passive page/section views).
+// Firing any of these flips is_bounce to false.
 const INTERACTION_EVENT_TYPES = ['click', 'modal_open', 'form_submit']
 
 export const trackEvent = async (eventType, eventName, eventCategory = null, eventValue = null, metadata = null) => {
-    if (!isTracking()) {
+    if (!trackingEnabled) {
         devLog('trackEvent skipped', { eventType, eventName, eventCategory, eventValue })
         return
     }
@@ -294,6 +312,7 @@ export const trackEvent = async (eventType, eventName, eventCategory = null, eve
             return
         }
 
+        // Real interaction implies not a bounce.
         if (INTERACTION_EVENT_TYPES.includes(eventType)) {
             await updateSession({ is_bounce: false })
         }
@@ -301,6 +320,8 @@ export const trackEvent = async (eventType, eventName, eventCategory = null, eve
         console.error('Event tracking error:', error)
     }
 }
+
+// ============ SPECIFIC TRACKERS ============
 
 export const trackSectionView = (sectionId) => {
     trackEvent('section_view', sectionId, 'engagement', sectionId)
@@ -324,8 +345,10 @@ export const trackModalClose = (modalName) => {
     trackEvent('modal_close', modalName, 'engagement', modalName)
 }
 
+// Recognize waitlist_step1, waitlist_step2, waitlist as waitlist conversions.
+// Same prefix logic for partnership.
 export const trackFormSubmit = async (formName, formData = {}) => {
-    if (!isTracking()) {
+    if (!trackingEnabled) {
         devLog('trackFormSubmit skipped', { formName })
         return
     }
@@ -349,7 +372,7 @@ export const trackFormSubmit = async (formName, formData = {}) => {
 
 export const trackWhatsAppClick = async () => {
     await trackEvent('click', 'whatsapp_channel', 'conversion', 'whatsapp')
-    if (!isTracking()) return
+    if (!trackingEnabled) return
     await updateSession({ whatsapp_clicked: true, is_bounce: false })
 }
 
@@ -372,14 +395,14 @@ export const trackScrollDepth = (percentage) => {
     trackEvent('scroll', `scroll_${percentage}`, 'engagement', `${percentage}%`, { depth: percentage })
 }
 
+// ============ TIME TRACKING ============
+
 let startTime = Date.now()
 let totalTimeInterval = null
-let unloadBound = false
 
 export const startTimeTracking = () => {
-    if (!isTracking()) {
-        pendingStart.add('time')
-        devLog('startTimeTracking deferred until consent')
+    if (!trackingEnabled) {
+        devLog('startTimeTracking skipped')
         return
     }
 
@@ -390,12 +413,8 @@ export const startTimeTracking = () => {
         await updateSession({ total_time_seconds: elapsed })
     }, 30000)
 
-    if (unloadBound) return
-    unloadBound = true
-
     // Unload: fetch keepalive + PATCH (sendBeacon only supports POST, PostgREST update needs PATCH).
     window.addEventListener('beforeunload', () => {
-        if (!isTracking()) return
         const elapsed = Math.floor((Date.now() - startTime) / 1000)
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
         const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -432,6 +451,8 @@ export const stopTimeTracking = () => {
     }
 }
 
+// ============ INTERSECTION OBSERVER ============
+
 const observedSections = new Set()
 
 export const observeSections = (sectionIds) => {
@@ -456,6 +477,8 @@ export const observeSections = (sectionIds) => {
 
     return () => observer.disconnect()
 }
+
+// ============ SCROLL DEPTH ============
 
 let maxScrollDepth = 0
 const scrollMilestones = [25, 50, 75, 100]
@@ -486,20 +509,7 @@ export const initScrollTracking = () => {
     })
 }
 
-onConsentChange((granted) => {
-    if (granted) {
-        if (pendingStart.delete('session')) initSession()
-        if (pendingStart.delete('time')) startTimeTracking()
-        return
-    }
-    stopTimeTracking()
-    try {
-        sessionStorage.removeItem(SESSION_KEY)
-        sessionStorage.removeItem(SESSION_DATA_KEY)
-    } catch { /* noop */ }
-})
-
-export const isAnalyticsEnabled = () => isTracking()
+export const isAnalyticsEnabled = () => trackingEnabled
 
 export default {
     getSessionId,

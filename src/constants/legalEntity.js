@@ -1,0 +1,62 @@
+export const LEGAL_UPDATED = '24 September 2026'
+
+export const PENDING = 'Published before public launch'
+
+export const LEGAL_ENTITY = {
+    tradingName: 'Locappoint',
+    legalName: null,
+    registeredAddress: null,
+    registry: null,
+    registrationNumber: null,
+    taxId: null,
+    city: 'Lisbon, Portugal',
+    email: 'hello@locappoint.com',
+    languages: 'English and Portuguese',
+}
+
+export const orPending = (value) => value ?? PENDING
+
+export const SUBPROCESSORS = [
+    {
+        name: 'Supabase',
+        purpose: 'Database, authentication and file storage for the platform',
+        data: 'Account, business profile and booking data',
+        location: 'European Union (Ireland)',
+        status: 'Active',
+    },
+    {
+        name: 'Hosting provider (Coolify server)',
+        purpose: 'Serves the website and records server access logs',
+        data: 'IP address, request logs',
+        location: null,
+        status: 'Active',
+    },
+    {
+        name: 'Email delivery',
+        purpose: 'Sign-up confirmation, password reset and booking emails',
+        data: 'Name, email address, email content',
+        location: null,
+        status: 'Active',
+    },
+    {
+        name: 'ipapi.co (Kloudend, Inc.)',
+        purpose: 'Approximate location for waitlist site analytics, only after consent',
+        data: 'IP address',
+        location: 'United States',
+        status: 'Active, consent only',
+    },
+    {
+        name: 'country.is',
+        purpose: 'Fallback for the location lookup above, only after consent',
+        data: 'IP address',
+        location: 'Not stated by provider',
+        status: 'Active, consent only',
+    },
+    {
+        name: 'Meta Platforms (WhatsApp Business API)',
+        purpose: 'Booking confirmations and reminders on WhatsApp',
+        data: 'Phone number, name, booking details',
+        location: 'European Union and United States',
+        status: 'Planned, not yet active',
+    },
+]

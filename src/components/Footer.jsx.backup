@@ -1,5 +1,6 @@
+// Footer - Three columns per Phase 1 spec. Brand + cities, links, initiative + social.
+
 import { Heart } from 'lucide-react'
-import { openConsentPreferences } from '../services/consent'
 import { useT } from '../hooks/useT'
 import LogoIcon from './LogoIcon'
 
@@ -93,7 +94,6 @@ const Footer = ({ onPartnershipClick }) => {
                             </button>
                             <a href="/terms" className="footer__link">{t('footer.terms', 'Terms')}</a>
                             <a href="/privacy" className="footer__link">{t('footer.privacy', 'Privacy')}</a>
-                            <button type="button" className="footer__link" onClick={openConsentPreferences}>{t('footer.cookieSettings', 'Cookie settings')}</button>
                             <a href="mailto:hello@locappoint.com" className="footer__link">{t('footer.email', 'hello@locappoint.com')}</a>
                         </nav>
                     </div>

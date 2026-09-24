@@ -1,3 +1,9 @@
+// src/pages/app/Businesses.jsx
+// Browse - Cohort 1 marketplace.
+// Cover = banner image OR StreetGridCover placeholder (per-business variation).
+// Logo = avatar beside business name (image OR initials fallback).
+// Open slots remain informational; SME recruitment lives in the closing CTA.
+
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Calendar } from 'lucide-react'
@@ -83,7 +89,6 @@ const Businesses = () => {
                 const { data, error } = await supabase
                     .from('businesses')
                     .select('*')
-                    .eq('is_active', true)
                     .order('created_at', { ascending: true })
                     .limit(COHORT_SIZE)
 

@@ -59,8 +59,6 @@ const AppFooter = () => {
                         <ul className="loca-app-footer__list">
                             <li><Link to="/privacy">Privacy</Link></li>
                             <li><Link to="/terms">Terms</Link></li>
-                            <li><Link to="/legal/cookies">Cookies</Link></li>
-                            <li><Link to="/legal/notice">Legal notice</Link></li>
                         </ul>
                     </div>
 
