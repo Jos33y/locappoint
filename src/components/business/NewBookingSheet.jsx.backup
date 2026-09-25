@@ -1,0 +1,186 @@
+import { useEffect, useState } from 'react'
+import Sheet from './Sheet'
+import { useWorkspace } from './WorkspaceContext'
+import { addBooking, friendlyError, getSlots, shortTime, zonedNow } from '../../services/business'
+
+const NewBookingSheet = ({ open, prefill, onClose }) => {
+    const { business, bookableMembers, activeServices, me, isOwner, refreshBookings, notify } = useWorkspace()
+    const [form, setForm] = useState(null)
+    const [slots, setSlots] = useState([])
+    const [slotsLoading, setSlotsLoading] = useState(false)
+    const [otherTime, setOtherTime] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const [error, setError] = useState('')
+
+    useEffect(() => {
+        if (!open) return
+        setForm({
+            serviceId: activeServices[0]?.id || '',
+            staffId: prefill?.staffId || (isOwner ? bookableMembers[0]?.id : me?.id) || '',
+            date: prefill?.date || zonedNow(business.timezone).dateKey,
+            time: prefill?.time || '',
+            name: '',
+            phone: '',
+            email: '',
+            notes: '',
+        })
+        setOtherTime(Boolean(prefill?.time))
+        setError('')
+    }, [open, prefill, activeServices, bookableMembers, business.timezone, isOwner, me])
+
+    useEffect(() => {
+        if (!open || !form?.serviceId || !form?.staffId || !form?.date) return undefined
+        let cancelled = false
+        setSlotsLoading(true)
+        getSlots({ businessId: business.id, serviceId: form.serviceId, date: form.date, staffId: form.staffId })
+            .then((rows) => { if (!cancelled) setSlots(rows) })
+            .catch(() => { if (!cancelled) setSlots([]) })
+            .finally(() => { if (!cancelled) setSlotsLoading(false) })
+        return () => { cancelled = true }
+    }, [open, business.id, form?.serviceId, form?.staffId, form?.date])
+
+    if (!form) return null
+
+    const update = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }))
+
+    const submit = async (event) => {
+        event.preventDefault()
+        if (!form.time) {
+            setError('Pick a time.')
+            return
+        }
+        setSaving(true)
+        setError('')
+        try {
+            await addBooking({
+                businessId: business.id,
+                serviceId: form.serviceId,
+                staffId: form.staffId,
+                date: form.date,
+                time: form.time.length === 5 ? `${form.time}:00` : form.time,
+                name: form.name,
+                phone: form.phone,
+                email: form.email,
+                notes: form.notes,
+            })
+            refreshBookings()
+            notify('Booking added')
+            onClose()
+        } catch (err) {
+            setError(friendlyError(err))
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    if (activeServices.length === 0) {
+        return (
+            <Sheet open={open} onClose={onClose} title="New booking">
+                <p className="biz-empty">Add a service first, then you can book it.</p>
+            </Sheet>
+        )
+    }
+
+    return (
+        <Sheet
+            open={open}
+            onClose={onClose}
+            title="New booking"
+            footer={
+                <button type="submit" form="biz-new-booking" className="btn btn--primary btn--lg btn--full" disabled={saving}>
+                    {saving ? 'Adding…' : 'Add booking'}
+                </button>
+            }
+        >
+            <form id="biz-new-booking" className="biz-form" onSubmit={submit}>
+                <label className="biz-field">
+                    <span className="biz-field__label">Service</span>
+                    <select className="biz-input" value={form.serviceId} onChange={update('serviceId')} required>
+                        {activeServices.map((service) => (
+                            <option key={service.id} value={service.id}>
+                                {service.service_name} ({service.duration_minutes} min)
+                            </option>
+                        ))}
+                    </select>
+                </label>
+
+                {isOwner && bookableMembers.length > 1 && (
+                    <label className="biz-field">
+                        <span className="biz-field__label">With</span>
+                        <select className="biz-input" value={form.staffId} onChange={update('staffId')} required>
+                            {bookableMembers.map((member) => (
+                                <option key={member.id} value={member.id}>{member.display_name}</option>
+                            ))}
+                        </select>
+                    </label>
+                )}
+
+                <label className="biz-field">
+                    <span className="biz-field__label">Date</span>
+                    <input className="biz-input" type="date" value={form.date} onChange={update('date')} required />
+                </label>
+
+                <fieldset className="biz-field">
+                    <legend className="biz-field__label">Time</legend>
+                    {otherTime ? (
+                        <input className="biz-input" type="time" step="300" value={form.time.slice(0, 5)} onChange={update('time')} required />
+                    ) : slotsLoading ? (
+                        <p className="biz-hint">Finding free times…</p>
+                    ) : slots.length === 0 ? (
+                        <p className="biz-hint">No free times in opening hours that day.</p>
+                    ) : (
+                        <div className="biz-slots" role="radiogroup" aria-label="Free times">
+                            {slots.map((slot) => (
+                                <button
+                                    key={slot.slot_time}
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={form.time === slot.slot_time}
+                                    className={`biz-slot${form.time === slot.slot_time ? ' is-selected' : ''}`}
+                                    onClick={() => setForm((current) => ({ ...current, time: slot.slot_time }))}
+                                >
+                                    {shortTime(slot.slot_time)}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        className="biz-textbtn"
+                        onClick={() => {
+                            setOtherTime((value) => !value)
+                            setForm((current) => ({ ...current, time: '' }))
+                        }}
+                    >
+                        {otherTime ? 'Show free times' : 'Another time, outside opening hours'}
+                    </button>
+                </fieldset>
+
+                <label className="biz-field">
+                    <span className="biz-field__label">Client name</span>
+                    <input className="biz-input" value={form.name} onChange={update('name')} autoComplete="off" required maxLength={120} />
+                </label>
+
+                <div className="biz-field-row">
+                    <label className="biz-field">
+                        <span className="biz-field__label">Phone <span className="biz-optional">optional</span></span>
+                        <input className="biz-input" type="tel" inputMode="tel" value={form.phone} onChange={update('phone')} autoComplete="off" />
+                    </label>
+                    <label className="biz-field">
+                        <span className="biz-field__label">Email <span className="biz-optional">optional</span></span>
+                        <input className="biz-input" type="email" value={form.email} onChange={update('email')} autoComplete="off" />
+                    </label>
+                </div>
+
+                <label className="biz-field">
+                    <span className="biz-field__label">Notes <span className="biz-optional">optional</span></span>
+                    <textarea className="biz-input biz-input--area" value={form.notes} onChange={update('notes')} maxLength={1000} rows={2} />
+                </label>
+
+                {error && <p className="biz-error" role="alert">{error}</p>}
+            </form>
+        </Sheet>
+    )
+}
+
+export default NewBookingSheet

@@ -1,0 +1,120 @@
+:root {
+    --lc-canvas: #08090C;
+    --lc-well: #050608;
+    --lc-card: #10131A;
+    --lc-raised: #171B25;
+    --lc-raised-hover: #1D2230;
+    --lc-overlay: #1B202B;
+    --lc-line: rgba(244, 246, 251, 0.07);
+    --lc-line-strong: rgba(244, 246, 251, 0.12);
+    --lc-highlight: rgba(255, 255, 255, 0.05);
+
+    --lc-shadow-raised: inset 0 1px 0 var(--lc-highlight), 0 1px 2px rgba(3, 8, 24, 0.5), 0 8px 24px -12px rgba(3, 8, 24, 0.8);
+    --lc-shadow-overlay: inset 0 1px 0 var(--lc-highlight), 0 24px 64px -16px rgba(3, 8, 24, 0.9);
+    --lc-shadow-accent: 0 8px 24px -8px rgba(45, 127, 240, 0.55);
+
+    --lc-glass: rgba(8, 9, 12, 0.72);
+    --lc-glass-blur: saturate(160%) blur(18px);
+
+    --lc-ink-1: #F4F6FB;
+    --lc-ink-2: #B8C0D0;
+    --lc-ink-3: #8892A4;
+    --lc-ink-4: #5A6272;
+
+    --lc-success: #4CC38A;
+    --lc-success-tint: rgba(43, 140, 90, 0.16);
+    --lc-warning: #F0B254;
+    --lc-warning-tint: rgba(232, 154, 62, 0.16);
+    --lc-danger: #F07A6E;
+    --lc-danger-tint: rgba(180, 62, 51, 0.2);
+    --lc-info: #5BA0FF;
+    --lc-info-tint: rgba(45, 127, 240, 0.16);
+
+    --lc-data-1: #2D7FF0;
+    --lc-data-2: #E89A3E;
+    --lc-data-3: #3FB68B;
+    --lc-data-4: #E0607E;
+    --lc-data-5: #6BA5F5;
+    --lc-data-6: #C9A66B;
+
+    --lc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --lc-fast: 120ms;
+    --lc-base: 280ms;
+    --lc-slow: 900ms;
+
+    --lc-r-sm: 8px;
+    --lc-r-md: 12px;
+    --lc-r-lg: 16px;
+    --lc-r-xl: 24px;
+}
+
+.lc-skel {
+    display: block;
+    border-radius: var(--lc-r-sm);
+    background: var(--lc-raised);
+    animation: lc-pulse 1.4s var(--lc-ease) infinite;
+}
+
+@keyframes lc-pulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+}
+
+.lc-loader {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+}
+
+.lc-loader__ring {
+    position: absolute;
+    inset: 0;
+    animation: lc-spin 1.6s linear infinite;
+}
+
+.lc-loader__track {
+    fill: none;
+    stroke: var(--lc-line-strong);
+    stroke-width: 2.5;
+}
+
+.lc-loader__arc {
+    fill: none;
+    stroke: url(#lc-ring-gradient);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 60 176;
+}
+
+.lc-loader img {
+    width: 32px;
+    height: 32px;
+}
+
+@keyframes lc-spin {
+    to { transform: rotate(360deg); }
+}
+
+.lc-ring__track {
+    fill: none;
+    stroke: var(--lc-line-strong);
+}
+
+.lc-ring__value {
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke-dashoffset var(--lc-slow) var(--lc-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lc-skel,
+    .lc-loader__ring {
+        animation: none;
+    }
+
+    .lc-ring__value {
+        transition: none;
+    }
+}

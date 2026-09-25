@@ -1,0 +1,77 @@
+import { useEffect, useId, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { X } from 'lucide-react'
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
+
+const Sheet = ({ open, onClose, title, children, footer }) => {
+    const titleId = useId()
+    const panelRef = useRef(null)
+    const closeRef = useRef(onClose)
+    closeRef.current = onClose
+
+    useEffect(() => {
+        if (!open) return undefined
+        const returnTo = document.activeElement
+        const previousOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+
+        const onKey = (event) => {
+            if (event.key === 'Escape') {
+                closeRef.current()
+                return
+            }
+            if (event.key !== 'Tab' || !panelRef.current) return
+            const items = [...panelRef.current.querySelectorAll(FOCUSABLE)]
+            if (items.length === 0) return
+            const first = items[0]
+            const last = items[items.length - 1]
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault()
+                last.focus()
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault()
+                first.focus()
+            }
+        }
+
+        document.addEventListener('keydown', onKey)
+        requestAnimationFrame(() => panelRef.current?.focus())
+
+        return () => {
+            document.body.style.overflow = previousOverflow
+            document.removeEventListener('keydown', onKey)
+            returnTo?.focus?.()
+        }
+    }, [open])
+
+    if (!open) return null
+
+    return createPortal(
+        <div
+            className="biz-sheet"
+            onMouseDown={(event) => { if (event.target === event.currentTarget) closeRef.current() }}
+        >
+            <section
+                ref={panelRef}
+                className="biz-sheet__panel"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                tabIndex={-1}
+            >
+                <header className="biz-sheet__head">
+                    <h2 id={titleId} className="biz-sheet__title">{title}</h2>
+                    <button type="button" className="biz-icon-btn" aria-label="Close" onClick={() => closeRef.current()}>
+                        <X size={20} />
+                    </button>
+                </header>
+                <div className="biz-sheet__body">{children}</div>
+                {footer && <footer className="biz-sheet__foot">{footer}</footer>}
+            </section>
+        </div>,
+        document.body
+    )
+}
+
+export default Sheet

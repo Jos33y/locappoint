@@ -1,0 +1,98 @@
+import { Bell, CalendarDays, ChartColumn, Clock, MessagesSquare, Scissors, Store, Sun, Users, UsersRound } from 'lucide-react'
+
+export const NAV_GROUPS = [
+    {
+        label: 'Run the day',
+        items: [
+            { to: '/portal', label: 'Today', icon: Sun, end: true, tab: true },
+            { to: '/portal/calendar', label: 'Calendar', icon: CalendarDays, tab: true },
+            { to: '/portal/assistant', label: 'Assistant', icon: MessagesSquare, tab: true, planned: 'assistant' },
+            { to: '/portal/clients', label: 'Clients', icon: Users, tab: true, planned: 'clients' },
+        ],
+    },
+    {
+        label: 'Set up',
+        items: [
+            { to: '/portal/services', label: 'Services', icon: Scissors },
+            { to: '/portal/team', label: 'Team', icon: UsersRound, planned: 'team' },
+            { to: '/portal/hours', label: 'Hours', icon: Clock },
+            { to: '/portal/page', label: 'Business page', icon: Store },
+        ],
+    },
+    {
+        label: 'Grow',
+        items: [
+            { to: '/portal/insights', label: 'Insights', icon: ChartColumn, planned: 'insights' },
+            { to: '/portal/notifications', label: 'Notifications', icon: Bell, planned: 'notifications' },
+        ],
+    },
+]
+
+export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items)
+
+export const PLANNED = {
+    assistant: {
+        title: 'Assistant',
+        promise: 'Run your day in a sentence. Ask what is next, book a caller, block an hour, and it is done.',
+        points: [
+            'Ask "What is my day?" or "Who is next?" and get the answer in a line',
+            'Book, confirm, move and cancel by chat, always with a confirm step first',
+            'See every conversation the WhatsApp assistant has with your clients',
+            'Decide what it may answer, and when it hands the chat over to you',
+        ],
+        preview: 'chat',
+    },
+    clients: {
+        title: 'Clients',
+        promise: 'Everyone who books you, in one place, with the history that matters.',
+        points: [
+            'Everyone who booked online, by phone or walked in, searchable',
+            'Visits, last visit and total spent on every client',
+            'Reliability at a glance: kept, cancelled and no-show counts',
+            'Private notes, and book again in one tap',
+        ],
+        preview: 'list',
+    },
+    team: {
+        title: 'Team',
+        promise: 'Add the people who take bookings, each with their own calendar.',
+        points: [
+            'Invite by email or phone; they join with their own account',
+            'Owner and staff roles: staff see their own day, you see everyone',
+            'Each person has their own hours and the services they do',
+            'Clients pick a person, or anyone who is free',
+        ],
+        preview: 'list',
+    },
+    insights: {
+        title: 'Insights',
+        promise: 'See what your time is worth, week by week.',
+        points: [
+            'Money this week against last, earned and still to come',
+            'Lost to no-shows, and saved by reminders',
+            'Your busiest days and hours, and your most booked services',
+            'A weekly recap, ready to share on WhatsApp or Instagram',
+        ],
+        preview: 'chart',
+    },
+    notifications: {
+        title: 'Notifications',
+        promise: 'Everything that changed, the moment it changes.',
+        points: [
+            'New bookings, cancellations and moves, as they happen',
+            'An unread count on the bell, so nothing slips',
+            'Email and WhatsApp alerts with your reminders',
+        ],
+        preview: 'list',
+    },
+}
+
+export const titleFor = (pathname) => {
+    const match = [...NAV_ITEMS]
+        .sort((a, b) => b.to.length - a.to.length)
+        .find((item) => (item.end ? pathname === item.to : pathname.startsWith(item.to)))
+    if (match) return match.label
+    if (pathname.startsWith('/portal/settings')) return 'Settings'
+    if (pathname.startsWith('/portal/ui')) return 'Primitives'
+    return 'Today'
+}
