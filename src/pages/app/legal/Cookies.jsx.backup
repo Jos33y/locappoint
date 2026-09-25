@@ -32,7 +32,6 @@ const ESSENTIAL_APP = [
     { name: 'pendingBooking', type: 'Session storage', purpose: 'Holds a booking you started while you sign in to finish it', kept: 'Until you close the tab' },
     { name: 'i18nextLng', type: 'Local storage', purpose: 'Remembers the language you chose', kept: 'Until you clear it' },
     { name: 'locappoint_mode', type: 'Local storage', purpose: 'Opens the side you used last: Booking or My business', kept: 'Until you clear it' },
-    { name: 'locappoint_tour_done', type: 'Local storage', purpose: 'Remembers that you have seen the dashboard tour', kept: 'Until you clear it' },
 ]
 
 const ESSENTIAL_WAITLIST = [

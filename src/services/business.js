@@ -199,17 +199,23 @@ export const durationLabel = (minutes) => {
     return m ? `${h} h ${m} min` : `${h} h`
 }
 
-export const pageStrength = ({ business, services, hours }) => {
-    const steps = [
-        { done: true, label: 'Business details' },
-        { done: Boolean(business.description?.trim()), label: 'Add a description', to: '/portal/page' },
-        { done: Boolean(business.address?.trim()), label: 'Add your address', to: '/portal/page' },
-        { done: Boolean(business.whatsapp?.trim()), label: 'Add your WhatsApp', to: '/portal/page' },
-        { done: Boolean(business.logo_url), label: 'Add a logo', to: '/portal/page' },
-        { done: Boolean(business.banner_url), label: 'Add a cover photo', to: '/portal/page' },
-        { done: services.some((s) => s.is_active), label: 'Add a service', to: '/portal/services' },
-        { done: hours.some((h) => !h.staff_id), label: 'Set your opening hours', to: '/portal/hours' },
-    ]
+export const pageSteps = ({ business, services, hours }) => [
+    { done: true, label: 'Business details', hint: 'Name, category and city' },
+    { done: Boolean(business.description?.trim()), label: 'Add a description', to: '/portal/page', hint: 'Two lines on what makes you worth the visit' },
+    { done: Boolean(business.address?.trim()), label: 'Add your address', to: '/portal/page', hint: 'So clients can find you' },
+    { done: Boolean(business.whatsapp?.trim()), label: 'Add your WhatsApp', to: '/portal/page', hint: 'Clients can message you before they book' },
+    { done: Boolean(business.logo_url), label: 'Add a logo', soon: true, hint: 'Arrives with the business page update' },
+    { done: Boolean(business.banner_url), label: 'Add a cover photo', soon: true, hint: 'Arrives with the business page update' },
+    { done: services.some((s) => s.is_active), label: 'Add a service', to: '/portal/services', hint: 'Name, price and how long it takes' },
+    { done: hours.some((h) => !h.staff_id), label: 'Set your opening hours', to: '/portal/hours', hint: 'When clients can book you' },
+]
+
+export const pageStrength = (workspace) => {
+    const steps = pageSteps(workspace)
     const done = steps.filter((step) => step.done).length
-    return { value: done / steps.length, percent: Math.round((done / steps.length) * 100), next: steps.find((step) => !step.done) }
+    return {
+        value: done / steps.length,
+        percent: Math.round((done / steps.length) * 100),
+        next: steps.find((step) => !step.done && !step.soon),
+    }
 }

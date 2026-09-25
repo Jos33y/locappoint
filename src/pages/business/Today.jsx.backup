@@ -12,6 +12,7 @@ import {
     loadBookings,
     minutesToLabel,
     setBookingStatus,
+    windowsFor,
     zonedNow,
 } from '../../services/business'
 import { parseDateKey } from '../../services/dates'
@@ -60,6 +61,10 @@ const Today = () => {
     const hasService = activeServices.length > 0
     const hasHours = hours.some((h) => !h.staff_id)
     const setupDone = hasService && hasHours && business.is_active
+
+    const todayWindows = windowsFor(hours, staff?.id, parseDateKey(now.dateKey).getDay())
+    const closedNow = todayWindows.length === 0 || now.minutes >= todayWindows[todayWindows.length - 1][1]
+    const opensAt = todayWindows.length ? minutesToLabel(todayWindows[0][0]) : null
 
     const date = parseDateKey(now.dateKey)
     const weekday = date.toLocaleDateString('en-GB', { weekday: 'long' })
@@ -128,11 +133,21 @@ const Today = () => {
                     <StaffFilter members={isOwner ? bookableMembers : []} value={staffFilter} onChange={setStaffFilter} />
                     {error && <p className="biz-error" role="alert">{error}</p>}
                     {loading ? (
-                        <div className="biz-state"><span className="spinner" /> Loading today</div>
+                        <div className="biz-agenda-skel" aria-hidden="true">
+                            {[0, 1, 2].map((i) => <span key={i} className="lc-skel" style={{ height: 76 }} />)}
+                        </div>
                     ) : (
                         <>
-                            {counted.length === 0 && (
-                                <p className="biz-empty">No bookings yet today. The free times below are ready to book.</p>
+                            {counted.length === 0 && closedNow && (
+                                <div className="biz-closed">
+                                    <strong>{todayWindows.length === 0 ? 'Closed today' : 'Closed for the day'}</strong>
+                                    <span>No bookings today. Share your link so tomorrow fills up.</span>
+                                </div>
+                            )}
+                            {counted.length === 0 && !closedNow && (
+                                <p className="biz-empty">
+                                    Nothing booked yet{opensAt && now.minutes < todayWindows[0][0] ? `. You open at ${opensAt}` : ''}. Your free time is below, ready to book.
+                                </p>
                             )}
                             <Agenda
                                 dateKey={now.dateKey}

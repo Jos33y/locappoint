@@ -27,6 +27,7 @@ import BusinessShell from './components/business/BusinessShell'
 import Today from './pages/business/Today'
 import Calendar from './pages/business/Calendar'
 import Planned from './pages/business/Planned'
+import UiGallery from './pages/business/UiGallery'
 import PortalProfile from './pages/portal/Profile'
 import PortalServices from './pages/portal/Services'
 import PortalAvailability from './pages/portal/Availability'
@@ -91,6 +92,7 @@ const BookingApp = () => (
                     <Route path="team" element={<Planned section="team" />} />
                     <Route path="insights" element={<Planned section="insights" />} />
                     <Route path="notifications" element={<Planned section="notifications" />} />
+                    <Route path="ui" element={<UiGallery />} />
                     <Route path="appointments" element={<Navigate to="/portal/calendar" replace />} />
                     <Route path="availability" element={<Navigate to="/portal/hours" replace />} />
                     <Route path="profile" element={<Navigate to="/portal/page" replace />} />

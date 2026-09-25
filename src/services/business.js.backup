@@ -61,7 +61,7 @@ export const formatMoney = (value) => money.format(Number(value) || 0)
 export const loadWorkspace = async (businessId) => {
     const [business, members, services, hours] = await Promise.all([
         supabase.from('businesses')
-            .select('id, business_name, slug, timezone, is_active, city, phone')
+            .select('id, business_name, slug, timezone, is_active, city, phone, whatsapp, description, address, logo_url, banner_url')
             .eq('id', businessId)
             .single(),
         supabase.from('business_members')
@@ -197,4 +197,19 @@ export const durationLabel = (minutes) => {
     const m = minutes % 60
     if (!h) return `${m} min`
     return m ? `${h} h ${m} min` : `${h} h`
+}
+
+export const pageStrength = ({ business, services, hours }) => {
+    const steps = [
+        { done: true, label: 'Business details' },
+        { done: Boolean(business.description?.trim()), label: 'Add a description', to: '/portal/page' },
+        { done: Boolean(business.address?.trim()), label: 'Add your address', to: '/portal/page' },
+        { done: Boolean(business.whatsapp?.trim()), label: 'Add your WhatsApp', to: '/portal/page' },
+        { done: Boolean(business.logo_url), label: 'Add a logo', to: '/portal/page' },
+        { done: Boolean(business.banner_url), label: 'Add a cover photo', to: '/portal/page' },
+        { done: services.some((s) => s.is_active), label: 'Add a service', to: '/portal/services' },
+        { done: hours.some((h) => !h.staff_id), label: 'Set your opening hours', to: '/portal/hours' },
+    ]
+    const done = steps.filter((step) => step.done).length
+    return { value: done / steps.length, percent: Math.round((done / steps.length) * 100), next: steps.find((step) => !step.done) }
 }

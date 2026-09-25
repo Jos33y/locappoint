@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react'
-import { PLANNED } from '../../components/business/nav'
+import { NAV_ITEMS, PLANNED } from '../../components/business/nav'
 import '../../styles/business/planned.css'
 
 const Preview = ({ kind }) => {
@@ -37,7 +37,8 @@ const Preview = ({ kind }) => {
 
 const Planned = ({ section }) => {
     const plan = PLANNED[section]
-    const Icon = plan.icon
+    const nav = NAV_ITEMS.find((item) => item.planned === section)
+    const Icon = nav?.icon
 
     return (
         <div className="biz-page lc-planned">

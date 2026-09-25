@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Sheet from './Sheet'
 import { useWorkspace } from './WorkspaceContext'
 import { addBooking, addDays, durationLabel, formatDay, formatMoney, friendlyError, getSlots, shortTime, zonedNow } from '../../services/business'
@@ -27,9 +27,19 @@ const NewBookingSheet = ({ open, prefill, onClose }) => {
     const [otherDate, setOtherDate] = useState(false)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState('')
+    const [dayNote, setDayNote] = useState('')
+    const autoJumped = useRef(false)
 
     const today = zonedNow(business.timezone).dateKey
     const strip = useMemo(() => Array.from({ length: STRIP_DAYS }, (_, i) => addDays(today, i)), [today])
+
+    const findNextFree = async (fromKey, serviceId, staffId) => {
+        for (const dateKey of strip.filter((d) => d > fromKey)) {
+            const rows = await getSlots({ businessId: business.id, serviceId, date: dateKey, staffId })
+            if (rows.length) return dateKey
+        }
+        return null
+    }
 
     useEffect(() => {
         if (!open) return
@@ -47,6 +57,8 @@ const NewBookingSheet = ({ open, prefill, onClose }) => {
         setOtherDate(!strip.includes(date))
         setOtherTime(false)
         setError('')
+        setDayNote('')
+        autoJumped.current = false
     }, [open, prefill, activeServices, bookableMembers, isOwner, me, today, strip])
 
     useEffect(() => {
@@ -57,6 +69,14 @@ const NewBookingSheet = ({ open, prefill, onClose }) => {
             .then((rows) => {
                 if (cancelled) return
                 setSlots(rows)
+                if (!rows.length && !prefill?.date && !autoJumped.current && form.date === today) {
+                    autoJumped.current = true
+                    findNextFree(today, form.serviceId, form.staffId).then((next) => {
+                        if (!next) return
+                        setForm((current) => ({ ...current, date: next, time: '' }))
+                        setDayNote(`Nothing free today, so here is ${formatDay(next, { weekday: 'long', day: 'numeric', month: 'long' })}, your next free day.`)
+                    })
+                }
                 setForm((current) => {
                     if (!current?.time) return current
                     const wanted = current.time.length === 5 ? `${current.time}:00` : current.time
@@ -73,6 +93,17 @@ const NewBookingSheet = ({ open, prefill, onClose }) => {
     if (!form) return null
 
     const set = (field, value) => setForm((current) => ({ ...current, [field]: value }))
+
+    const jumpToNextFree = async () => {
+        const next = await findNextFree(form.date, form.serviceId, form.staffId)
+        if (!next) {
+            setDayNote('No free times in the next two weeks. Use a time outside opening hours.')
+            return
+        }
+        setOtherDate(false)
+        setForm((current) => ({ ...current, date: next, time: '' }))
+        setDayNote(`Next free day: ${formatDay(next, { weekday: 'long', day: 'numeric', month: 'long' })}.`)
+    }
     const update = (field) => (event) => set(field, event.target.value)
     const service = activeServices.find((s) => s.id === form.serviceId)
 
@@ -192,7 +223,7 @@ const NewBookingSheet = ({ open, prefill, onClose }) => {
                                     role="radio"
                                     aria-checked={form.date === dateKey}
                                     className={`biz-day${form.date === dateKey ? ' is-selected' : ''}`}
-                                    onClick={() => setForm((current) => ({ ...current, date: dateKey, time: '' }))}
+                                    onClick={() => { setDayNote(''); setForm((current) => ({ ...current, date: dateKey, time: '' })) }}
                                 >
                                     <span className="biz-day__name">{dayLabel(dateKey, index)}</span>
                                     <span className="biz-day__num biz-num">{formatDay(dateKey, { day: 'numeric' })}</span>
@@ -203,6 +234,7 @@ const NewBookingSheet = ({ open, prefill, onClose }) => {
                     <button type="button" className="biz-textbtn" onClick={() => setOtherDate((v) => !v)}>
                         {otherDate ? 'Show the next two weeks' : 'Another date'}
                     </button>
+                    {dayNote && <p className="biz-note" role="status">{dayNote}</p>}
                 </fieldset>
 
                 <fieldset className="biz-field">
@@ -212,7 +244,10 @@ const NewBookingSheet = ({ open, prefill, onClose }) => {
                     ) : slotsLoading ? (
                         <p className="biz-hint">Finding free times</p>
                     ) : slots.length === 0 ? (
-                        <p className="biz-hint">No free times in opening hours on this day.</p>
+                        <p className="biz-hint">
+                            No free times in opening hours on this day.{' '}
+                            <button type="button" className="biz-textbtn biz-textbtn--inline" onClick={jumpToNextFree}>Find the next free day</button>
+                        </p>
                     ) : (
                         <div className="biz-slotgroups" role="radiogroup" aria-label="Free times">
                             {groupSlots(slots).map((group) => (
@@ -252,8 +287,8 @@ const NewBookingSheet = ({ open, prefill, onClose }) => {
                     <legend className="biz-field__label">Client</legend>
                     <input className="biz-input" aria-label="Client name" placeholder="Name" value={form.name} onChange={update('name')} autoComplete="off" required maxLength={120} />
                     <div className="biz-field-row">
-                        <input className="biz-input" aria-label="Phone, optional" placeholder="Phone (optional)" type="tel" inputMode="tel" value={form.phone} onChange={update('phone')} autoComplete="off" />
-                        <input className="biz-input" aria-label="Email, optional" placeholder="Email (optional)" type="email" value={form.email} onChange={update('email')} autoComplete="off" />
+                        <input className="biz-input" aria-label="Phone, optional" placeholder="Phone (optional)" type="tel" inputMode="tel" value={form.phone} onChange={update('phone')} autoComplete="client-phone" />
+                        <input className="biz-input" aria-label="Email, optional" placeholder="Email (optional)" type="email" value={form.email} onChange={update('email')} autoComplete="client-email" />
                     </div>
                     <textarea className="biz-input biz-input--area" aria-label="Notes, optional" placeholder="Notes (optional)" value={form.notes} onChange={update('notes')} maxLength={1000} rows={2} />
                 </fieldset>

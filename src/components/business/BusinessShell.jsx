@@ -1,21 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
-import { ArrowLeftRight, Bell, ChevronRight, LogOut, Menu, Plus, Search, Settings, Share2 } from 'lucide-react'
+import { ArrowLeftRight, Bell, ChevronRight, CirclePlay, Clock, LogOut, Menu, Plus, Search, Settings, Share2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { loadWorkspace, pageStrength } from '../../services/business'
 import { WorkspaceContext } from './WorkspaceContext'
-import { NAV_GROUPS, NAV_ITEMS, titleFor } from './nav'
+import { NAV_FOOT, NAV_GROUPS, NAV_ITEMS } from './nav'
 import { BrandLoader, Mark, Ring, Wordmark, initials } from './Brand'
 import Sheet from './Sheet'
 import NewBookingSheet from './NewBookingSheet'
 import BookingDetailSheet from './BookingDetailSheet'
 import ShareLink from './ShareLink'
+import Tour from './Tour'
+import CommandPalette from './CommandPalette'
 import '../../styles/business/shell.css'
 
 const NavItem = ({ item, onClick, compact = false }) => {
     const Icon = item.icon
     return (
-        <NavLink to={item.to} end={item.end} className="biz-navlink" onClick={onClick}>
+        <NavLink to={item.to} end={item.end} className="biz-navlink" onClick={onClick} data-tour={item.tour}>
             <Icon size={compact ? 20 : 18} aria-hidden="true" />
             <span className="biz-navlink__label">{item.label}</span>
             {item.planned && <span className="biz-soon">Soon</span>}
@@ -32,6 +34,59 @@ const ShellSkeleton = () => (
     </div>
 )
 
+const TOUR_KEY = 'locappoint_tour_done'
+
+const tourSeen = () => {
+    try { return localStorage.getItem(TOUR_KEY) === '1' } catch { return true }
+}
+
+const StartRow = ({ strength }) => (
+    <NavLink to="/portal/start" className="biz-navlink biz-startrow" data-tour="start">
+        <Ring value={strength.value} size={18} stroke={2.5} label={`Setup ${strength.percent}% done`} />
+        <span className="biz-navlink__label">{strength.percent === 100 ? 'All set up' : 'Getting started'}</span>
+        <span className="biz-startrow__pct biz-num">{strength.percent}%</span>
+    </NavLink>
+)
+
+const StartCard = ({ strength, onClick }) => (
+    <Link to="/portal/start" className="biz-strength" onClick={onClick}>
+        <Ring value={strength.value} size={34} stroke={3.5} label={`Setup ${strength.percent}% done`} />
+        <span className="biz-strength__text">
+            <strong>{strength.percent === 100 ? 'All set up' : 'Getting started'} <span className="biz-num">{strength.percent}%</span></strong>
+            <small>{strength.next ? `Next: ${strength.next.label.toLowerCase()}` : 'Replay the tour any time'}</small>
+        </span>
+    </Link>
+)
+
+const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
+
+const TopClock = ({ timeZone = 'Europe/Lisbon' }) => {
+    const [now, setNow] = useState(() => new Date())
+    useEffect(() => {
+        const timer = setInterval(() => setNow(new Date()), 30000)
+        return () => clearInterval(timer)
+    }, [])
+    const time = new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now)
+    const day = new Intl.DateTimeFormat('en-GB', { timeZone, weekday: 'long' }).format(now)
+    const city = timeZone.split('/').pop().replace(/_/g, ' ')
+    return (
+        <span className="biz-clock">
+            <Clock size={15} aria-hidden="true" />
+            <span>{day}</span>
+            <span className="biz-clock__time biz-num">{time}</span>
+            <span className="biz-clock__zone">{city} time</span>
+        </span>
+    )
+}
+
+const ambientTone = (timeZone = 'Europe/Lisbon') => {
+    const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', hourCycle: 'h23' }).format(new Date()))
+    if (hour >= 5 && hour < 11) return 'morning'
+    if (hour >= 11 && hour < 16) return 'day'
+    if (hour >= 16 && hour < 21) return 'evening'
+    return 'night'
+}
+
 const BusinessShell = () => {
     const { user, userProfile, business: ownedBusiness, signOut, setMode } = useAuth()
     const location = useLocation()
@@ -42,6 +97,8 @@ const BusinessShell = () => {
     const [openBookingRow, setOpenBookingRow] = useState(null)
     const [moreOpen, setMoreOpen] = useState(false)
     const [shareOpen, setShareOpen] = useState(false)
+    const [tourOpen, setTourOpen] = useState(false)
+    const [cmdOpen, setCmdOpen] = useState(false)
     const [toast, setToast] = useState(null)
     const toastTimer = useRef(null)
 
@@ -71,6 +128,20 @@ const BusinessShell = () => {
     const openNewBooking = useCallback((prefill = {}) => setNewBooking(prefill), [])
     const closeNewBooking = useCallback(() => setNewBooking(null), [])
     const openBooking = useCallback((booking) => setOpenBookingRow(booking), [])
+    const openTour = useCallback(() => {
+        setMoreOpen(false)
+        setTourOpen(true)
+    }, [])
+    const closeTour = useCallback(() => {
+        setTourOpen(false)
+        try { localStorage.setItem(TOUR_KEY, '1') } catch { /* noop */ }
+    }, [])
+
+    useEffect(() => {
+        if (!workspace || tourSeen()) return undefined
+        const timer = setTimeout(() => setTourOpen(true), 900)
+        return () => clearTimeout(timer)
+    }, [workspace])
     const closeBooking = useCallback(() => setOpenBookingRow(null), [])
 
     const value = useMemo(() => {
@@ -88,9 +159,28 @@ const BusinessShell = () => {
             refreshBookings,
             openNewBooking,
             openBooking,
+            openTour,
             notify,
         }
-    }, [workspace, user?.id, reloadWorkspace, bookingsVersion, refreshBookings, openNewBooking, openBooking, notify])
+    }, [workspace, user?.id, reloadWorkspace, bookingsVersion, refreshBookings, openNewBooking, openBooking, openTour, notify])
+
+    const paletteActions = useMemo(() => [
+        { label: 'New booking', icon: Plus, run: () => openNewBooking(), keywords: ['add', 'book', 'walk-in', 'phone call'] },
+        { label: 'Share your booking link', icon: Share2, run: () => setShareOpen(true), keywords: ['link', 'whatsapp', 'copy'] },
+        { label: 'Replay the tour', icon: CirclePlay, run: openTour, keywords: ['help', 'guide', 'how'] },
+        { label: 'Switch to Booking', icon: ArrowLeftRight, to: '/client', keywords: ['client', 'book as a client'] },
+    ], [openNewBooking, openTour])
+
+    useEffect(() => {
+        const onKey = (event) => {
+            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+                event.preventDefault()
+                setCmdOpen((open) => !open)
+            }
+        }
+        document.addEventListener('keydown', onKey)
+        return () => document.removeEventListener('keydown', onKey)
+    }, [])
 
     if (!ownedBusiness) {
         if (location.pathname !== '/portal/page') return <Navigate to="/portal/page" replace />
@@ -106,7 +196,6 @@ const BusinessShell = () => {
     }
 
     const business = value?.business || ownedBusiness
-    const title = titleFor(location.pathname)
     const tabs = NAV_ITEMS.filter((item) => item.tab)
     const moreActive = !tabs.some((item) => (item.end ? location.pathname === item.to : location.pathname.startsWith(item.to)))
     const strength = value?.strength
@@ -141,15 +230,8 @@ const BusinessShell = () => {
                 </nav>
 
                 <div className="biz-sidebar__foot">
-                    {strength && strength.percent < 100 && (
-                        <Link to={strength.next?.to || '/portal/page'} className="biz-strength">
-                            <Ring value={strength.value} size={34} stroke={3.5} label={`Page strength ${strength.percent}%`} />
-                            <span className="biz-strength__text">
-                                <strong>Page strength <span className="biz-num">{strength.percent}%</span></strong>
-                                <small>{strength.next?.label}</small>
-                            </span>
-                        </Link>
-                    )}
+                    {strength && <StartRow strength={strength} />}
+                    {NAV_FOOT.filter((item) => item.to !== '/portal/start').map((item) => <NavItem key={item.to} item={item} />)}
                     <Link to="/client" className="biz-navlink">
                         <ArrowLeftRight size={18} aria-hidden="true" />
                         <span className="biz-navlink__label">Switch to Booking</span>
@@ -170,17 +252,18 @@ const BusinessShell = () => {
                 </div>
             </aside>
 
-            <div className="biz-main">
+            <div className={`biz-main biz-main--${ambientTone(value?.business?.timezone)}`}>
+                <div className="biz-ambient" aria-hidden="true" />
                 <header className="biz-topbar">
                     <span className="biz-topbar__brand">
                         <Mark size={26} />
                         <span className="biz-topbar__name">{business.business_name}</span>
                     </span>
-                    <span className="biz-topbar__title">{title}</span>
-                    <button type="button" className="biz-search" onClick={() => notify('Search arrives with Clients')}>
+                    <span className="biz-topbar__title"><TopClock timeZone={value?.business?.timezone} /></span>
+                    <button type="button" className="biz-search" onClick={() => setCmdOpen(true)} aria-keyshortcuts={IS_MAC ? 'Meta+K' : 'Control+K'}>
                         <Search size={16} aria-hidden="true" />
-                        <span>Search clients and bookings</span>
-                        <kbd>Ctrl K</kbd>
+                        <span>Search or jump to</span>
+                        <kbd>{IS_MAC ? '⌘K' : 'Ctrl K'}</kbd>
                     </button>
                     <div className="biz-topbar__actions">
                         <NavLink to="/portal/notifications" className="biz-iconbtn" aria-label="Notifications">
@@ -189,7 +272,7 @@ const BusinessShell = () => {
                         <button type="button" className="biz-iconbtn biz-topbar__share" onClick={() => setShareOpen(true)} aria-label="Share your booking link">
                             <Share2 size={18} aria-hidden="true" />
                         </button>
-                        <button type="button" className="btn btn--primary biz-topbar__new" onClick={() => openNewBooking()} disabled={!value}>
+                        <button type="button" className="btn btn--primary biz-topbar__new" onClick={() => openNewBooking()} disabled={!value} data-tour="new">
                             <Plus size={18} aria-hidden="true" /> New booking
                         </button>
                     </div>
@@ -216,35 +299,27 @@ const BusinessShell = () => {
                 {tabs.map((item) => {
                     const Icon = item.icon
                     return (
-                        <NavLink key={item.to} to={item.to} end={item.end} className="biz-tab">
+                        <NavLink key={item.to} to={item.to} end={item.end} className="biz-tab" data-tour={item.tour}>
                             <Icon size={22} aria-hidden="true" />
                             <span>{item.label}</span>
                         </NavLink>
                     )
                 })}
-                <button type="button" className={`biz-tab${moreActive ? ' active' : ''}`} onClick={() => setMoreOpen(true)} aria-haspopup="dialog">
+                <button type="button" className={`biz-tab${moreActive ? ' active' : ''}`} onClick={() => setMoreOpen(true)} aria-haspopup="dialog" data-tour="more">
                     <Menu size={22} aria-hidden="true" />
                     <span>More</span>
                 </button>
             </nav>
 
             {value && (
-                <button type="button" className="biz-fab" onClick={() => openNewBooking()} aria-label="New booking">
+                <button type="button" className="biz-fab" onClick={() => openNewBooking()} aria-label="New booking" data-tour="new">
                     <Plus size={26} aria-hidden="true" />
                 </button>
             )}
 
             <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} title="More">
                 <div className="biz-more">
-                    {strength && strength.percent < 100 && (
-                        <Link to={strength.next?.to || '/portal/page'} className="biz-strength" onClick={() => setMoreOpen(false)}>
-                            <Ring value={strength.value} size={40} stroke={4} label={`Page strength ${strength.percent}%`} />
-                            <span className="biz-strength__text">
-                                <strong>Page strength <span className="biz-num">{strength.percent}%</span></strong>
-                                <small>{strength.next?.label}</small>
-                            </span>
-                        </Link>
-                    )}
+                    {strength && <StartCard strength={strength} onClick={() => setMoreOpen(false)} />}
                     {NAV_GROUPS.map((group) => {
                         const items = group.items.filter((item) => !item.tab)
                         if (!items.length) return null
@@ -255,6 +330,14 @@ const BusinessShell = () => {
                             </div>
                         )
                     })}
+                    <div className="biz-navgroup">
+                        <p className="biz-navgroup__label">Help</p>
+                        {NAV_FOOT.map((item) => <NavItem key={item.to} item={item} compact onClick={() => setMoreOpen(false)} />)}
+                        <button type="button" className="biz-navlink" onClick={openTour}>
+                            <CirclePlay size={20} aria-hidden="true" />
+                            <span className="biz-navlink__label">Replay the tour</span>
+                        </button>
+                    </div>
                     <div className="biz-navgroup">
                         <p className="biz-navgroup__label">Account</p>
                         <NavLink to="/portal/settings" className="biz-navlink" onClick={() => setMoreOpen(false)}>
@@ -280,6 +363,8 @@ const BusinessShell = () => {
                     </Sheet>
                     <NewBookingSheet open={Boolean(newBooking)} prefill={newBooking} onClose={closeNewBooking} />
                     <BookingDetailSheet booking={openBookingRow} onClose={closeBooking} />
+                    <Tour open={tourOpen} onClose={closeTour} />
+                    <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} actions={paletteActions} />
                 </WorkspaceContext.Provider>
             )}
 

@@ -1,6 +1,7 @@
 :root {
     --lc-canvas: #08090C;
     --lc-well: #050608;
+    --lc-panel: #0E1118;
     --lc-card: #10131A;
     --lc-raised: #171B25;
     --lc-raised-hover: #1D2230;
@@ -11,7 +12,7 @@
 
     --lc-shadow-raised: inset 0 1px 0 var(--lc-highlight), 0 1px 2px rgba(3, 8, 24, 0.5), 0 8px 24px -12px rgba(3, 8, 24, 0.8);
     --lc-shadow-overlay: inset 0 1px 0 var(--lc-highlight), 0 24px 64px -16px rgba(3, 8, 24, 0.9);
-    --lc-shadow-accent: 0 8px 24px -8px rgba(45, 127, 240, 0.55);
+    --lc-shadow-accent: 0 4px 12px -6px rgba(45, 127, 240, 0.5);
 
     --lc-glass: rgba(8, 9, 12, 0.72);
     --lc-glass-blur: saturate(160%) blur(18px);
@@ -90,6 +91,7 @@
 .lc-loader__ring {
     position: absolute;
     inset: 0;
+    max-width: none;
     animation: lc-spin 1.6s linear infinite;
 }
 
@@ -116,6 +118,49 @@
     to { transform: rotate(360deg); }
 }
 
+.lc-apploader {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: grid;
+    place-items: center;
+    background: var(--lc-canvas);
+}
+
+.lc-apploader__stage {
+    position: relative;
+    width: 56px;
+    height: 56px;
+}
+
+.lc-apploader__stage .lc-mark {
+    width: 56px;
+    height: 56px;
+}
+
+.lc-apploader__ring {
+    position: absolute;
+    inset: -18px;
+    width: 92px;
+    height: 92px;
+    max-width: none;
+    animation: lc-spin 1.6s linear infinite;
+}
+
+.lc-apploader__track {
+    fill: none;
+    stroke: rgba(244, 246, 251, 0.1);
+    stroke-width: 2.5;
+}
+
+.lc-apploader__arc {
+    fill: none;
+    stroke: url(#lc-app-gradient);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 70 170;
+}
+
 .lc-ring__track {
     fill: none;
     stroke: var(--lc-line-strong);
@@ -127,9 +172,40 @@
     transition: stroke-dashoffset var(--lc-slow) var(--lc-ease);
 }
 
+html {
+    scrollbar-color: rgba(244, 246, 251, 0.14) transparent;
+    scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: rgba(244, 246, 251, 0.12);
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(244, 246, 251, 0.24);
+}
+
+::selection {
+    background: rgba(45, 127, 240, 0.38);
+    color: var(--lc-ink-1);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .lc-skel,
-    .lc-loader__ring {
+    .lc-loader__ring,
+    .lc-apploader__ring {
         animation: none;
     }
 

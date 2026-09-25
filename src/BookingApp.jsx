@@ -28,6 +28,9 @@ import Today from './pages/business/Today'
 import Calendar from './pages/business/Calendar'
 import Planned from './pages/business/Planned'
 import UiGallery from './pages/business/UiGallery'
+import GettingStarted from './pages/business/GettingStarted'
+import Help from './pages/business/Help'
+import Channels from './pages/business/Channels'
 import PortalProfile from './pages/portal/Profile'
 import PortalServices from './pages/portal/Services'
 import PortalAvailability from './pages/portal/Availability'
@@ -93,6 +96,11 @@ const BookingApp = () => (
                     <Route path="insights" element={<Planned section="insights" />} />
                     <Route path="notifications" element={<Planned section="notifications" />} />
                     <Route path="ui" element={<UiGallery />} />
+                    <Route path="start" element={<GettingStarted />} />
+                    <Route path="help" element={<Help />} />
+                    <Route path="channels" element={<Channels />} />
+                    <Route path="reviews" element={<Planned section="reviews" />} />
+                    <Route path="invite" element={<Planned section="invite" />} />
                     <Route path="appointments" element={<Navigate to="/portal/calendar" replace />} />
                     <Route path="availability" element={<Navigate to="/portal/hours" replace />} />
                     <Route path="profile" element={<Navigate to="/portal/page" replace />} />

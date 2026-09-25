@@ -173,7 +173,7 @@
     text-decoration: none;
 }
 
-.ui-card--pad-sm { padding: var(--space-3); gap: var(--space-1); }
+.ui-card--pad-sm { padding: var(--space-3); }
 .ui-card--pad-md { padding: var(--space-5); }
 .ui-card--pad-lg { padding: var(--space-6); }
 

@@ -149,6 +149,7 @@ const Today = () => {
                                     Nothing booked yet{opensAt && now.minutes < todayWindows[0][0] ? `. You open at ${opensAt}` : ''}. Your free time is below, ready to book.
                                 </p>
                             )}
+                            {!(closedNow && counted.length === 0) && (
                             <Agenda
                                 dateKey={now.dateKey}
                                 bookings={visible}
@@ -161,6 +162,7 @@ const Today = () => {
                                 onOpen={openBooking}
                                 onConfirm={confirm}
                             />
+                            )}
                         </>
                     )}
                 </section>

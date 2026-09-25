@@ -1,11 +1,17 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
-import { AppLoader } from '../business/Brand'
 
 const HomeRedirect = () => {
     const { user, loading, profileStatus, homePath } = useAuth()
 
-    if (loading || profileStatus === 'loading') return <AppLoader />
+    if (loading || profileStatus === 'loading') {
+        return (
+            <div className="loading-container">
+                <div className="spinner"></div>
+                <p>Loading...</p>
+            </div>
+        )
+    }
 
     if (!user) return <Navigate to="/auth" replace />
 

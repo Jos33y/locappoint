@@ -26,3 +26,21 @@ export const BrandLoader = ({ label = 'Loading' }) => (
         <Mark size={32} />
     </div>
 )
+
+export const AppLoader = () => (
+    <div className="lc-apploader" role="status" aria-label="Loading">
+        <div className="lc-apploader__stage">
+            <svg className="lc-apploader__ring" viewBox="0 0 92 92" aria-hidden="true">
+                <defs>
+                    <linearGradient id="lc-app-gradient" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="var(--azure)" />
+                        <stop offset="100%" stopColor="var(--signal)" />
+                    </linearGradient>
+                </defs>
+                <circle className="lc-apploader__track" cx="46" cy="46" r="38" />
+                <circle className="lc-apploader__arc" cx="46" cy="46" r="38" />
+            </svg>
+            <Mark size={56} />
+        </div>
+    </div>
+)
