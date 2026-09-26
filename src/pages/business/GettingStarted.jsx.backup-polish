@@ -36,7 +36,7 @@ const GettingStarted = () => {
                     <p className="lc-start__lede">
                         {done === steps.length
                             ? 'Everything is in place. Share your link and let the bookings come in.'
-                            : 'A complete page gives clients everything they need to choose you. Each step takes about a minute.'}
+                            : 'Businesses with a complete page get booked more. Each step takes about a minute.'}
                     </p>
                     <div className="lc-start__actions">
                         <Button icon={CirclePlay} onClick={openTour}>Take the tour</Button>

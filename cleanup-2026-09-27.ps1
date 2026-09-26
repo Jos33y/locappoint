@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ""
-Write-Host "  Locappoint - Cleanup for 27 September (run after committing patch 19)" -ForegroundColor Cyan
+Write-Host "  Locappoint - Cleanup for 27 September (run after committing patch 20)" -ForegroundColor Cyan
 Write-Host ""
 
 if (-not (Test-Path 'package.json')) { Write-Host "  [ABORT] No package.json. Run from repo root." -ForegroundColor Red; exit 1 }
@@ -20,12 +20,11 @@ if ($dirty) {
 }
 
 $targets = @(
-    'src\pages\business\BusinessPage.jsx.backup-editor',
-    'src\styles\business\business-page.css.backup-editor',
-    'tests\harness\main.jsx.backup-editor',
-    'tests\suites\layout.mjs.backup-editor',
-    'tests\suites\business-page.mjs.backup-editor',
-    'page-editor.zip'
+    'src\pages\business\BusinessPage.jsx.backup-polish',
+    'src\styles\business\business-page.css.backup-polish',
+    'src\pages\business\GettingStarted.jsx.backup-polish',
+    'tests\suites\business-page.mjs.backup-polish',
+    'page-polish.zip'
 )
 
 $existing = @()

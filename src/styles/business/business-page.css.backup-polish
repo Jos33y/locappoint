@@ -674,32 +674,6 @@
     text-underline-offset: 3px;
 }
 
-.biz-bp__group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-    padding-top: var(--space-5);
-    border-top: 1px solid var(--lc-line);
-}
-
-.biz-bp__quietbtn {
-    align-self: center;
-    min-height: 32px;
-    padding: 0 var(--space-2);
-    border: 0;
-    background: none;
-    color: var(--lc-ink-3);
-    font-family: var(--lc-font-body);
-    font-size: var(--lc-t-label);
-    cursor: pointer;
-}
-
-.biz-bp__quietbtn:hover {
-    color: var(--lc-ink-2);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
 .biz-bp__pair {
     display: grid;
     gap: var(--space-4);
@@ -764,7 +738,6 @@
 .biz-bp__where:focus-visible,
 .biz-bp__step:focus-visible,
 .biz-bp__textbtn:focus-visible,
-.biz-bp__quietbtn:focus-visible,
 .biz-bp__url:focus-visible {
     outline: 2px solid var(--azure);
     outline-offset: 3px;
@@ -798,7 +771,6 @@
 @media (max-width: 767px), (pointer: coarse) {
     .biz-bp .ui-btn--sm,
     .biz-bp .biz-bp__textbtn,
-    .biz-bp .biz-bp__quietbtn,
     .biz-bp .biz-bp__where,
     .biz-bp__iconbtn,
     .biz-bp__menuitem,
