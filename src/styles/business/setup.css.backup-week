@@ -466,7 +466,7 @@
 }
 
 .lc-setup__stage {
-    --lc-phone-h: max(420px, min(760px, calc(100dvh - 150px)));
+    --lc-phone-h: max(620px, min(760px, calc(100dvh - 150px)));
     position: sticky;
     top: 0;
     z-index: 1;
@@ -820,6 +820,7 @@
 }
 
 .lc-setup__stage .ui-phone:not(.ui-phone--fit) {
+    flex: none;
     height: var(--lc-phone-h);
     min-height: 0;
 }
@@ -848,4 +849,9 @@
     color: var(--lc-ink-2);
     font-size: var(--lc-t-label);
     line-height: var(--lc-lh-snug);
+}
+
+.lc-setup:not(.lc-setup--solo) .lc-setup__stage {
+    justify-content: flex-start;
+    padding-top: max(var(--space-6), calc((100dvh - var(--lc-phone-h) - 64px) / 2));
 }

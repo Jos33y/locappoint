@@ -104,7 +104,11 @@ $targets = @(
     'src\\pages\\business\\Setup.jsx.backup-hours',
     'src\\components\\ui\\Picker.jsx.backup-hours',
     'src\\components\\ui\\index.js.backup-hours',
-    'compact-hours.zip'
+    'compact-hours.zip',
+    'src\\components\\business\\HoursEditor.jsx.backup-week',
+    'src\\styles\\business\\editors.css.backup-week',
+    'src\\styles\\business\\setup.css.backup-week',
+    'week-view.zip'
 )
 
 $existing = @()
