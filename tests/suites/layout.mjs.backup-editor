@@ -57,7 +57,7 @@ export default async ({ browser, url, check, only }) => {
           check(r.bp.url, `${tag} link spills out of its card`)
           if (touch) check(r.bp.small.length === 0, `${tag} small touch targets ${r.bp.small}`)
           if (r.bp.phone) check(r.bp.phone.top >= 0 && r.bp.phone.bottom <= r.vh, `${tag} preview phone clipped ${JSON.stringify(r.bp.phone)}`)
-          if (w >= 1272) check(r.bp.wide, `${tag} expected the rail beside the form`)
+          if (w >= 1272) check(r.bp.wide, `${tag} expected live preview beside the form`)
         }
         if (w >= 1024) {
           check(r.sideOn, `${tag} sidebar shown`)

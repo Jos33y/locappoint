@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { ArrowUpRight, Camera, Check, ChevronRight, Copy, ImagePlus, Plus, Trash2, TriangleAlert } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
+import { ArrowUpRight, Check, Copy, Eye, TriangleAlert } from 'lucide-react'
 import {
-    AffixInput, Button, Card, Field, Input, PhoneField, Picker, Ring, Sheet, Skeleton, Status, Switch, useCountUp,
+    AffixInput, Button, Card, Field, ImagePicker, Input, PhoneField, PhoneFrame, Picker, Sheet, Skeleton, Status, Switch, Textarea,
 } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { initials } from '../../components/business/Brand'
 import StreetGridCover from '../../components/business/StreetGridCover'
 import { AddressField } from '../../components/business/AddressField'
+import { PublicPageView } from '../../components/business/PublicPageView'
 import { COUNTRY_OPTIONS, nationalFormat, parsePhone } from '../../components/ui/PhoneField'
-import { CATEGORIES, POPULAR_CATEGORIES, categoryLabel } from '../../constants/categories'
+import { CATEGORIES, POPULAR_CATEGORIES } from '../../constants/categories'
 import { NG_CITIES, POPULAR_COUNTRIES, PT_MUNICIPALITIES, inLaunchArea, timezoneForPlace } from '../../constants/locations'
 import { slugProblem } from '../../constants/reservedSlugs'
 import { ABOUT_MAX, OTHER_CITY, aboutExample, cityOf, countryName, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
 import { useSlugStatus } from '../../hooks/useSlugStatus'
 import { loadSetup, setupError, updateBusiness } from '../../services/setup'
 import { MEDIA_SHAPES, prepareImage, removeBusinessImage, uploadBusinessImage } from '../../services/media'
-import { pageSteps } from '../../services/business'
+import { weekFromRows } from '../../services/hours'
 import { pageUrl, publicHost } from '../../services/links'
 import '../../styles/business/business-page.css'
 
@@ -120,249 +121,15 @@ const SaveState = ({ state, onRetry }) => {
     )
 }
 
-const PHOTO_TYPES = 'image/jpeg,image/png,image/webp,image/heic,image/heif'
-
-const Section = ({ id, title, description, done, todo, children }) => (
+const Section = ({ id, title, description, children }) => (
     <Card id={id} as="section" padding="lg" className="biz-bp__card" aria-labelledby={`${id}-title`}>
         <header className="biz-bp__cardhead">
-            <span className="biz-bp__cardtitle">
-                <h2 id={`${id}-title`} className="biz-bp__h2">{title}</h2>
-                {done
-                    ? <span className="biz-bp__done"><Check size={14} aria-hidden="true" />Complete</span>
-                    : todo && <span className="biz-bp__todo">{todo}</span>}
-            </span>
+            <h2 id={`${id}-title`} className="biz-bp__h2">{title}</h2>
             {description && <p className="biz-bp__desc">{description}</p>}
         </header>
         {children}
     </Card>
 )
-
-const PhotoMenu = ({ label, items, children, className }) => {
-    const [open, setOpen] = useState(false)
-    const rootRef = useRef(null)
-    const buttonRef = useRef(null)
-
-    useEffect(() => {
-        if (!open) return undefined
-        rootRef.current?.querySelector('[role="menuitem"]')?.focus()
-        const onPointer = (event) => { if (!rootRef.current?.contains(event.target)) setOpen(false) }
-        document.addEventListener('pointerdown', onPointer)
-        return () => document.removeEventListener('pointerdown', onPointer)
-    }, [open])
-
-    const onKey = (event) => {
-        const list = [...rootRef.current.querySelectorAll('[role="menuitem"]')]
-        const at = list.indexOf(document.activeElement)
-        if (event.key === 'Escape') { event.preventDefault(); setOpen(false); buttonRef.current?.focus() }
-        if (event.key === 'ArrowDown') { event.preventDefault(); list[(at + 1) % list.length]?.focus() }
-        if (event.key === 'ArrowUp') { event.preventDefault(); list[(at - 1 + list.length) % list.length]?.focus() }
-        if (event.key === 'Tab') setOpen(false)
-    }
-
-    return (
-        <span ref={rootRef} className={`biz-bp__menuwrap ${className || ''}`}>
-            <button
-                ref={buttonRef}
-                type="button"
-                className="biz-bp__menubtn"
-                aria-label={label}
-                aria-haspopup="menu"
-                aria-expanded={open}
-                onClick={() => setOpen((v) => !v)}
-            >
-                {children}
-            </button>
-            {open && (
-                <span className="biz-bp__menu" role="menu" aria-label={label} onKeyDown={onKey}>
-                    {items.map(({ text, icon: Icon, run }) => (
-                        <button key={text} type="button" role="menuitem" tabIndex={-1} className="biz-bp__menuitem" onClick={() => { setOpen(false); run() }}>
-                            <Icon size={16} aria-hidden="true" />
-                            <span>{text}</span>
-                        </button>
-                    ))}
-                </span>
-            )}
-        </span>
-    )
-}
-
-const useDrop = (onFile, disabled) => {
-    const [over, setOver] = useState(false)
-    return [over, {
-        onDragOver: (event) => { event.preventDefault(); if (!disabled) setOver(true) },
-        onDragLeave: () => setOver(false),
-        onDrop: (event) => {
-            event.preventDefault()
-            setOver(false)
-            const file = event.dataTransfer.files?.[0]
-            if (file && !disabled) onFile(file)
-        },
-    }]
-}
-
-const Busy = () => (
-    <span className="biz-bp__busy" role="status">
-        <span className="biz-bp__busydot" aria-hidden="true" />
-        Saving photo
-    </span>
-)
-
-const Hero = ({ business, form, problems, media, set, nameRef, aboutRef, logoInputRef, coverInputRef, onPick, onRemove, onJump }) => {
-    const [coverOver, coverDrop] = useDrop((file) => onPick('cover', file), media.cover.busy)
-    const [logoOver, logoDrop] = useDrop((file) => onPick('logo', file), media.logo.busy)
-    const city = cityOf(form)
-    const where = [categoryLabel(form.category, form.categoryDetail.trim()), [form.neighbourhood.trim(), city].filter(Boolean).join(', ')].filter(Boolean).join(' in ')
-    const left = ABOUT_MAX - form.description.length
-    const photoError = media.logo.error || media.cover.error
-
-    const logoFace = business.logo_url
-        ? <img src={business.logo_url} alt="" />
-        : <span className="biz-bp__initials">{initials(form.business_name)}</span>
-
-    return (
-        <section id="photos" className="biz-bp__hero" aria-label="Your page as clients see it">
-            <div className={`biz-bp__cover${coverOver ? ' is-over' : ''}${business.banner_url ? '' : ' is-empty'}`} {...coverDrop}>
-                {business.banner_url ? <img src={business.banner_url} alt="" /> : <StreetGridCover seed={business.slug} tint="azure" />}
-                {media.cover.busy && <Busy />}
-                {!media.cover.busy && (business.banner_url ? (
-                    <span className="biz-bp__coveractions">
-                        <Button variant="secondary" size="sm" icon={Camera} onClick={() => coverInputRef.current?.click()}>Change cover</Button>
-                        <button type="button" className="biz-bp__iconbtn" aria-label="Remove cover photo" title="Remove cover photo" onClick={() => onRemove('cover')}>
-                            <Trash2 size={16} aria-hidden="true" />
-                        </button>
-                    </span>
-                ) : (
-                    <span className="biz-bp__coveradd">
-                        <Button variant="secondary" icon={ImagePlus} onClick={() => coverInputRef.current?.click()}>Add a cover photo</Button>
-                        <span className="biz-bp__coverhint">Your chair, your shop front or your best work</span>
-                    </span>
-                ))}
-                <input ref={coverInputRef} className="ui-visually-hidden" type="file" accept={PHOTO_TYPES} tabIndex={-1} aria-label="Choose a cover photo" onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick('cover', f); e.target.value = '' }} />
-            </div>
-
-            <div className="biz-bp__identity">
-                <div className={`biz-bp__logo${logoOver ? ' is-over' : ''}${business.logo_url ? '' : ' is-empty'}`} {...logoDrop}>
-                    {business.logo_url ? (
-                        <PhotoMenu
-                            label="Logo options"
-                            className="biz-bp__logomenu"
-                            items={[
-                                { text: 'Replace logo', icon: Camera, run: () => logoInputRef.current?.click() },
-                                { text: 'Remove logo', icon: Trash2, run: () => onRemove('logo') },
-                            ]}
-                        >
-                            {logoFace}
-                            <span className="biz-bp__logobadge" aria-hidden="true"><Camera size={14} /></span>
-                        </PhotoMenu>
-                    ) : (
-                        <button type="button" className="biz-bp__menubtn" aria-label="Add a logo" onClick={() => logoInputRef.current?.click()}>
-                            {logoFace}
-                            <span className="biz-bp__logobadge" aria-hidden="true"><Plus size={14} /></span>
-                        </button>
-                    )}
-                    {media.logo.busy && <Busy />}
-                    <input ref={logoInputRef} className="ui-visually-hidden" type="file" accept={PHOTO_TYPES} tabIndex={-1} aria-label="Choose a logo" onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick('logo', f); e.target.value = '' }} />
-                </div>
-
-                <div id="about" className="biz-bp__words">
-                    <label className="ui-visually-hidden" htmlFor="biz-bp-name">Business name</label>
-                    <input
-                        id="biz-bp-name"
-                        ref={nameRef}
-                        className="biz-bp__name"
-                        value={form.business_name}
-                        onChange={(e) => set({ business_name: e.target.value })}
-                        maxLength={80}
-                        autoComplete="organization"
-                        placeholder="Your business name"
-                        aria-invalid={problems.business_name ? true : undefined}
-                        aria-describedby={problems.business_name ? 'biz-bp-name-error' : undefined}
-                    />
-                    {problems.business_name && <p id="biz-bp-name-error" className="biz-bp__fielderror" role="alert">{problems.business_name}</p>}
-                    <button type="button" className="biz-bp__where" onClick={() => onJump('location')}>{where}</button>
-
-                    <label className="ui-visually-hidden" htmlFor="biz-bp-about">About you</label>
-                    <textarea
-                        id="biz-bp-about"
-                        ref={aboutRef}
-                        className="biz-bp__about"
-                        rows={1}
-                        value={form.description}
-                        onChange={(e) => set({ description: e.target.value })}
-                        maxLength={ABOUT_MAX}
-                        placeholder="Add two lines about you"
-                        aria-describedby="biz-bp-about-hint"
-                    />
-                    <p id="biz-bp-about-hint" className={`biz-bp__abouthint${form.description.trim() && left >= ABOUT_MAX * 0.2 ? ' ui-visually-hidden' : ''}`}>
-                        {left < ABOUT_MAX * 0.2 ? `${left} characters left` : `Like: ${aboutExample(form.category, form.neighbourhood.trim() || city)}`}
-                    </p>
-                </div>
-            </div>
-            {photoError && <p className="biz-bp__error biz-bp__photoerror" role="alert">{photoError}</p>}
-        </section>
-    )
-}
-
-const Strength = ({ steps, onStep, onCopy, copied }) => {
-    const done = steps.filter((s) => s.done).length
-    const total = steps.length
-    const percent = Math.round((done / total) * 100)
-    const shown = Math.round(useCountUp(percent))
-    const next = Math.round(((done + 1) / total) * 100) - percent
-    const missing = steps.filter((s) => !s.done)
-    const complete = missing.length === 0
-
-    return (
-        <Card as="section" variant="raised" padding="lg" className={`biz-bp__strength${complete ? ' is-complete' : ''}`} aria-labelledby="biz-bp-strength-title">
-            <div className="biz-bp__strengthhead">
-                <Ring value={done / total} size={76} stroke={7} label={`Page ${percent}% complete`}>
-                    <span className="biz-bp__pct"><span className="biz-num">{shown}</span><small>%</small></span>
-                </Ring>
-                <div>
-                    <h2 id="biz-bp-strength-title" className="biz-bp__h2">{complete ? 'Your page is complete' : 'Page strength'}</h2>
-                    <p className="biz-bp__desc">
-                        {complete
-                            ? 'Clients see everything they need. Share it where they already find you.'
-                            : `${missing.length} ${missing.length === 1 ? 'step' : 'steps'} to a complete page. Complete pages get booked more.`}
-                    </p>
-                </div>
-            </div>
-            {complete ? (
-                <Button icon={copied ? Check : Copy} onClick={onCopy} full>{copied ? 'Link copied' : 'Copy your link'}</Button>
-            ) : (
-                <ul className="biz-bp__steps">
-                    {missing.map((step) => {
-                        const content = (
-                            <>
-                                <span className="biz-bp__stepicon" aria-hidden="true"><Plus size={14} /></span>
-                                <span className="biz-bp__steplabel">{step.label}</span>
-                                <span className="biz-bp__gain">+{next}%</span>
-                                <ChevronRight size={16} aria-hidden="true" className="biz-bp__stepgo" />
-                            </>
-                        )
-                        return (
-                            <li key={step.label}>
-                                {step.route
-                                    ? <Link to={step.route} className="biz-bp__step">{content}</Link>
-                                    : <button type="button" className="biz-bp__step" onClick={() => onStep(step.key)}>{content}</button>}
-                            </li>
-                        )
-                    })}
-                </ul>
-            )}
-        </Card>
-    )
-}
-
-const STEP_KEYS = {
-    'Add a description': { key: 'about' },
-    'Add your address': { key: 'address' },
-    'Add your WhatsApp': { key: 'whatsapp' },
-    'Add a logo': { key: 'logo' },
-    'Add a cover photo': { key: 'cover' },
-    'Add a service': { route: '/portal/services' },
-    'Set your opening hours': { route: '/portal/hours' },
-}
 
 const ChangeAddress = ({ open, business, onClose, onSaved }) => {
     const [slug, setSlug] = useState(business.slug)
@@ -453,9 +220,8 @@ const LoadingState = () => (
                 <Skeleton width={260} height={14} />
             </div>
         </header>
-        <Skeleton height={320} radius={24} />
-        <div className="biz-bp__main">
-            {[180, 240].map((h) => <Skeleton key={h} height={h} radius={16} />)}
+        <div className="biz-bp__form">
+            {[132, 240, 180].map((h) => <Skeleton key={h} height={h} radius={16} />)}
         </div>
     </div>
 )
@@ -470,7 +236,7 @@ const BusinessPage = () => {
     const [phase, setPhase] = useState('loading')
     const [business, setBusiness] = useState(null)
     const [services, setServices] = useState([])
-    const [hourRows, setHourRows] = useState([])
+    const [week, setWeek] = useState(null)
     const [form, setForm] = useState(null)
     const [saveState, setSaveState] = useState('idle')
     const [retry, setRetry] = useState(0)
@@ -478,11 +244,9 @@ const BusinessPage = () => {
     const [bookingBusy, setBookingBusy] = useState(false)
     const [bookingError, setBookingError] = useState('')
     const [slugOpen, setSlugOpen] = useState(false)
+    const [previewOpen, setPreviewOpen] = useState(false)
     const [copied, setCopied] = useState(false)
-    const nameRef = useRef(null)
     const aboutRef = useRef(null)
-    const logoInputRef = useRef(null)
-    const coverInputRef = useRef(null)
     const inFlight = useRef(false)
 
     const load = useCallback(async () => {
@@ -491,7 +255,7 @@ const BusinessPage = () => {
             const data = await loadSetup(shellBusiness.id)
             setBusiness(data.business)
             setServices(data.services)
-            setHourRows(data.hours)
+            setWeek(weekFromRows(data.hours))
             setForm(formFromBusiness(data.business))
             setPhase('ready')
         } catch (err) {
@@ -567,7 +331,7 @@ const BusinessPage = () => {
         if (!el) return
         el.style.height = 'auto'
         el.style.height = `${el.scrollHeight + 2}px`
-    }, [form?.description, phase, width])
+    }, [form?.description, phase])
 
     const set = (patch) => setForm((f) => ({ ...f, ...patch }))
 
@@ -594,7 +358,6 @@ const BusinessPage = () => {
             await removeBusinessImage(business.id, business[column])
             synced(await updateBusiness(business.id, { [column]: null }))
             setMedia((m) => ({ ...m, [shape]: { busy: false, error: '' } }))
-            notify(shape === 'logo' ? 'Logo removed' : 'Cover photo removed')
         } catch (err) {
             console.error('Photo remove failed:', err)
             setMedia((m) => ({ ...m, [shape]: { busy: false, error: 'We could not remove that photo. Try again.' } }))
@@ -631,31 +394,7 @@ const BusinessPage = () => {
         }
     }
 
-    const jump = (id, focus) => {
-        const target = document.getElementById(id)
-        target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        if (focus) setTimeout(() => focus()?.focus({ preventScroll: true }), 350)
-    }
-
-    const doStep = (key) => {
-        if (key === 'logo') logoInputRef.current?.click()
-        if (key === 'cover') coverInputRef.current?.click()
-        if (key === 'about') {
-            aboutRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            aboutRef.current?.focus({ preventScroll: true })
-        }
-        if (key === 'address') jump('location', () => document.querySelector('#location .biz-bp__address input'))
-        if (key === 'whatsapp') {
-            set({ whatsappOn: true, whatsappSame: true })
-            jump('contact')
-        }
-    }
-
-    const steps = useMemo(() => {
-        if (!form || !business) return []
-        return pageSteps({ business: { ...business, ...valuesFromForm(form) }, services, hours: hourRows })
-            .map((step) => ({ ...step, ...STEP_KEYS[step.label] }))
-    }, [form, business, services, hourRows])
+    const draft = useMemo(() => (form && business ? { ...business, ...valuesFromForm(form) } : null), [form, business])
 
     if (phase === 'loading') return <LoadingState />
     if (phase === 'failed') {
@@ -671,53 +410,40 @@ const BusinessPage = () => {
 
     const link = pageUrl(business.slug)
     const city = cityOf(form)
+    const area = form.neighbourhood.trim() || city
     const live = business.is_active !== false
-    const hasAddress = Boolean(form.address.trim())
-    const hasWhatsapp = form.whatsappOn && !problems.whatsapp
+    const preview = <PublicPageView business={draft} services={services} week={week} preview />
 
     return (
         <div ref={rootRef} className={`biz-page biz-bp${wide ? ' is-wide' : ''}`}>
-            <header className="biz-page__head biz-bp__head">
-                <div>
-                    <h1 className="biz-page__title">Business page</h1>
-                    <p className="biz-page__sub">Everything clients see before they book. Tap anything to change it.</p>
-                </div>
-                <div className="biz-bp__headside">
-                    <SaveState state={saveState} onRetry={() => setRetry((n) => n + 1)} />
-                    <Button variant="secondary" size="sm" iconRight={ArrowUpRight} href={link} target="_blank" rel="noopener noreferrer">View live page</Button>
-                </div>
-            </header>
+            <div className="biz-bp__grid">
+                <header className="biz-page__head biz-bp__head">
+                    <div>
+                        <h1 className="biz-page__title">Business page</h1>
+                        <p className="biz-page__sub">Everything clients see before they book.</p>
+                    </div>
+                    <div className="biz-bp__headside">
+                        <SaveState state={saveState} onRetry={() => setRetry((n) => n + 1)} />
+                        {!wide && <Button variant="secondary" size="sm" icon={Eye} onClick={() => setPreviewOpen(true)}>Preview</Button>}
+                    </div>
+                </header>
 
-
-            <div className="biz-bp__body">
-                <Hero
-                    business={business}
-                    form={form}
-                    problems={problems}
-                    media={media}
-                    set={set}
-                    nameRef={nameRef}
-                    aboutRef={aboutRef}
-                    logoInputRef={logoInputRef}
-                    coverInputRef={coverInputRef}
-                    onPick={pickImage}
-                    onRemove={removeImage}
-                    onJump={(id) => jump(id)}
-                />
-
-                <aside className="biz-bp__rail" aria-label="Page strength, link and bookings">
-                    <Strength steps={steps} onStep={doStep} onCopy={copy} copied={copied} />
-
-                    <Card as="section" padding="lg" className="biz-bp__link" aria-label="Your link and bookings">
-                        <div className="biz-bp__linkhead">
-                            <Status tone={live ? 'success' : 'warning'} size="sm">{live ? 'Live' : 'Paused'}</Status>
-                            <button type="button" className="biz-bp__textbtn" onClick={() => setSlugOpen(true)}>Change address</button>
+                <div className="biz-bp__form">
+                    <Card as="section" variant="raised" padding="lg" className="biz-bp__link" aria-label="Your link and bookings">
+                        <div className="biz-bp__linkrow">
+                            <span className="biz-bp__linkmain">
+                                <Status tone={live ? 'success' : 'warning'} size="sm">{live ? 'Live' : 'Paused'}</Status>
+                                <a className="biz-bp__url" href={link} target="_blank" rel="noopener noreferrer" aria-label={`Open your page, ${link}`}>
+                                    <span className="biz-bp__host">{publicHost()}/</span>
+                                    <span className="biz-bp__slug">{business.slug}</span>
+                                    <ArrowUpRight size={18} aria-hidden="true" className="biz-bp__open" />
+                                </a>
+                            </span>
+                            <span className="biz-bp__linkactions">
+                                <Button variant="secondary" size="sm" icon={copied ? Check : Copy} onClick={copy}>{copied ? 'Copied' : 'Copy link'}</Button>
+                                <Button variant="quiet" size="sm" onClick={() => setSlugOpen(true)}>Change</Button>
+                            </span>
                         </div>
-                        <a className="biz-bp__url" href={link} target="_blank" rel="noopener noreferrer" aria-label={`Open your page, ${link}`}>
-                            <span className="biz-bp__host">{publicHost()}/</span>
-                            <span className="biz-bp__slug">{business.slug}<ArrowUpRight size={16} aria-hidden="true" className="biz-bp__open" /></span>
-                        </a>
-                        <Button variant="secondary" size="sm" icon={copied ? Check : Copy} onClick={copy} full>{copied ? 'Copied' : 'Copy link'}</Button>
                         <div className="biz-bp__rule" />
                         <Switch
                             checked={live}
@@ -728,11 +454,62 @@ const BusinessPage = () => {
                         />
                         {bookingError && <p className="biz-bp__error" role="alert">{bookingError}</p>}
                     </Card>
-                </aside>
 
-                <div className="biz-bp__main">
-                    <Section id="details" title="Type of business" done={Boolean(form.category) && !problems.categoryDetail}>
-                        <Field label="What you do" error={problems.category}>
+                    <Section id="photos" title="Photos" description="The first thing clients look at. Photos save as soon as you choose them.">
+                        <div className="biz-bp__media">
+                            <ImagePicker
+                                shape="logo"
+                                label="Logo"
+                                hint="Square works best."
+                                value={business.logo_url}
+                                fallback={<span className="biz-bp__monogram">{initials(form.business_name)}</span>}
+                                busy={media.logo.busy}
+                                error={media.logo.error}
+                                onPick={(file) => pickImage('logo', file)}
+                                onRemove={() => removeImage('logo')}
+                            />
+                            <ImagePicker
+                                shape="cover"
+                                label="Cover photo"
+                                hint="Your chair, your shop front or your best work. Wide photos work best."
+                                value={business.banner_url}
+                                fallback={<StreetGridCover seed={business.slug} tint="azure" />}
+                                busy={media.cover.busy}
+                                error={media.cover.error}
+                                onPick={(file) => pickImage('cover', file)}
+                                onRemove={() => removeImage('cover')}
+                            />
+                        </div>
+                    </Section>
+
+                    <Section id="about" title="About you" description="Two lines on what makes you worth the visit.">
+                        <Field
+                            label="Description"
+                            optional
+                            hint={form.description.length > ABOUT_MAX * 0.8 ? `${ABOUT_MAX - form.description.length} characters left` : 'Shown under your name'}
+                        >
+                            <Textarea
+                                ref={aboutRef}
+                                className="ui-input ui-input--area biz-bp__about"
+                                rows={2}
+                                value={form.description}
+                                onChange={(e) => set({ description: e.target.value })}
+                                maxLength={ABOUT_MAX}
+                                placeholder={aboutExample(form.category, area)}
+                            />
+                        </Field>
+                    </Section>
+
+                    <Section id="details" title="Your business">
+                        <Field label="Business name" error={problems.business_name}>
+                            <Input
+                                value={form.business_name}
+                                onChange={(e) => set({ business_name: e.target.value })}
+                                maxLength={80}
+                                autoComplete="organization"
+                            />
+                        </Field>
+                        <Field label="Type of business" error={problems.category}>
                             <Picker
                                 value={form.category}
                                 onChange={(category) => set({ category })}
@@ -745,13 +522,13 @@ const BusinessPage = () => {
                             />
                         </Field>
                         {form.category === 'other' && (
-                            <Field label="In your words" error={problems.categoryDetail} hint="Shown on your page, like Surf school">
+                            <Field label="What kind of business?" error={problems.categoryDetail} hint="Shown on your page, like Surf school">
                                 <Input value={form.categoryDetail} onChange={(e) => set({ categoryDetail: e.target.value })} maxLength={60} autoComplete="off" />
                             </Field>
                         )}
                     </Section>
 
-                    <Section id="location" title="Location" description="Where clients find you." done={hasAddress && !problems.city} todo={!hasAddress ? 'Address missing' : undefined}>
+                    <Section id="location" title="Location" description="Where clients find you. An address adds a Directions button.">
                         <div className="biz-bp__pair">
                             <Field label="Country">
                                 <Picker
@@ -800,20 +577,18 @@ const BusinessPage = () => {
                         <Field label="Neighbourhood" optional hint="Like Anjos or Baixa">
                             <Input value={form.neighbourhood} onChange={(e) => set({ neighbourhood: e.target.value })} maxLength={60} autoComplete="off" />
                         </Field>
-                        <div className="biz-bp__address">
-                            <Field label="Address" optional hint={hasAddress ? 'Clients get a Directions button' : 'Adds a Directions button to your page'}>
-                                <AddressField
-                                    value={form.address}
-                                    onChange={(address) => set({ address })}
-                                    country={form.country}
-                                    city={city}
-                                    placeholder={form.country === 'PT' ? 'Rua dos Anjos 42' : 'Street and number'}
-                                />
-                            </Field>
-                        </div>
+                        <Field label="Address" optional hint={form.address.trim() ? 'Clients get a Directions button' : 'Adds a Directions button to your page'}>
+                            <AddressField
+                                value={form.address}
+                                onChange={(address) => set({ address })}
+                                country={form.country}
+                                city={city}
+                                placeholder={form.country === 'PT' ? 'Rua dos Anjos 42' : 'Street and number'}
+                            />
+                        </Field>
                     </Section>
 
-                    <Section id="contact" title="Contact" description="How clients reach you before and after they book." done={hasWhatsapp && !problems.phone} todo={!form.whatsappOn ? 'WhatsApp off' : undefined}>
+                    <Section id="contact" title="Contact" description="How clients reach you before and after they book.">
                         <Field label="Business phone" error={problems.phone} hint="Shown on your page with a Call button">
                             <PhoneField
                                 value={form.phone}
@@ -862,9 +637,23 @@ const BusinessPage = () => {
                         )}
                     </Section>
                 </div>
+
+                {wide && (
+                    <aside className="biz-bp__preview" aria-label="Live preview of your page">
+                        <p className="biz-bp__previewlabel">
+                            <span className="biz-bp__pulse" aria-hidden="true" />
+                            Live preview
+                        </p>
+                        <PhoneFrame label="Your page on a phone">{preview}</PhoneFrame>
+                    </aside>
+                )}
             </div>
 
             <ChangeAddress open={slugOpen} business={business} onClose={() => setSlugOpen(false)} onSaved={changeSlug} />
+
+            <Sheet open={previewOpen && !wide} onClose={() => setPreviewOpen(false)} title="Your page" wide>
+                <div className="biz-bp__sheetpreview">{preview}</div>
+            </Sheet>
         </div>
     )
 }

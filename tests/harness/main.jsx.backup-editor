@@ -37,7 +37,6 @@ const params = new URLSearchParams(window.location.search)
 const start = params.get('path') || '/portal'
 if (params.get('logo') === '1') DATA.businesses[0].logo_url = '/brand/loca-app-icon.svg'
 if (params.get('setup') === '1') DATA.businesses[0].launched_at = null
-if (params.get('empty') === '1') Object.assign(DATA.businesses[0], { banner_url: null, logo_url: null, description: null, address: null, whatsapp: null })
 try { if (params.get('tour') !== '1') localStorage.setItem('locappoint_tour_done', '1'); else localStorage.removeItem('locappoint_tour_done') } catch { /* noop */ }
 
 const Where = () => { const l = useLocation(); window.__path = l.pathname; return <span id="__path" hidden>{l.pathname}</span> }
