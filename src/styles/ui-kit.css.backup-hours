@@ -752,20 +752,3 @@
 }
 
 .ui-phone-field input.ui-input::placeholder { color: var(--lc-ink-4); }
-
-
-.ui-picker-trigger--sm {
-    min-height: 40px;
-    padding: 0 var(--space-3);
-    font-size: 15px;
-}
-
-.ui-phone-field input.ui-input:-webkit-autofill,
-.ui-phone-field input.ui-input:-webkit-autofill:hover,
-.ui-phone-field input.ui-input:-webkit-autofill:focus {
-    -webkit-text-fill-color: var(--lc-ink-1);
-    -webkit-box-shadow: inset 0 0 0 1px var(--lc-line-strong), inset 0 0 0 100px var(--lc-well);
-    box-shadow: inset 0 0 0 1px var(--lc-line-strong), inset 0 0 0 100px var(--lc-well);
-    caret-color: var(--lc-ink-1);
-    transition: background-color 9999s;
-}

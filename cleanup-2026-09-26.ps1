@@ -96,7 +96,15 @@ $targets = @(
     'src\\pages\\app\\PublicBusinessPage.jsx.backup-location',
     'src\\components\\ui\\index.js.backup-location',
     'package.json.backup-location',
-    'location-phone.zip'
+    'location-phone.zip',
+    'src\\components\\business\\HoursEditor.jsx.backup-hours',
+    'src\\styles\\business\\editors.css.backup-hours',
+    'src\\styles\\ui-kit.css.backup-hours',
+    'src\\styles\\business\\setup.css.backup-hours',
+    'src\\pages\\business\\Setup.jsx.backup-hours',
+    'src\\components\\ui\\Picker.jsx.backup-hours',
+    'src\\components\\ui\\index.js.backup-hours',
+    'compact-hours.zip'
 )
 
 $existing = @()

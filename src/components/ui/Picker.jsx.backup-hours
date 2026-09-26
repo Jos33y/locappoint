@@ -10,7 +10,7 @@ const prefersSheet = () =>
     (window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 767px)').matches)
 
 export const Picker = ({
-    id, value, onChange, options, placeholder = 'Choose one', title, popular = [], searchable = false, compact = false, size,
+    id, value, onChange, options, placeholder = 'Choose one', title, popular = [], searchable = false, compact = false,
     searchPlaceholder = 'Search', emptyText = 'Nothing matches', 'aria-invalid': invalid, 'aria-describedby': describedBy,
 }) => {
     const autoId = useId()
@@ -180,7 +180,7 @@ export const Picker = ({
                 ref={triggerRef}
                 id={id}
                 type="button"
-                className={`ui-picker-trigger${selected ? '' : ' is-placeholder'}${invalid ? ' is-invalid' : ''}${compact ? ' ui-picker-trigger--compact' : ''}${size === 'sm' ? ' ui-picker-trigger--sm' : ''}`}
+                className={`ui-picker-trigger${selected ? '' : ' is-placeholder'}${invalid ? ' is-invalid' : ''}${compact ? ' ui-picker-trigger--compact' : ''}`}
                 aria-label={compact && selected ? `${title}: ${selected.label}` : undefined}
                 aria-haspopup="listbox"
                 aria-expanded={open}

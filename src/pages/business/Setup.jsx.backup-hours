@@ -620,7 +620,7 @@ const Setup = () => {
                                             <Input value={details.cityOther} onChange={(e) => setDetail({ cityOther: e.target.value })} maxLength={80} autoComplete="address-level2" />
                                         </Field>
                                     )}
-                                    <Field label="Neighbourhood" optional hint="Like Anjos or Baixa">
+                                    <Field label="Neighbourhood" optional hint="Like Anjos or Baixa. Helps clients nearby find you.">
                                         <Input value={details.neighbourhood} onChange={(e) => setDetail({ neighbourhood: e.target.value })} maxLength={60} autoComplete="off" />
                                     </Field>
                                 </div>
