@@ -858,10 +858,81 @@
 }
 
 
+.biz-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: flex-end;
+    background: rgba(5, 6, 8, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: lc-fade var(--lc-base) var(--lc-ease);
+}
+
 @keyframes lc-fade {
     from { opacity: 0; }
 }
 
+.biz-sheet__panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: 92dvh;
+    background: var(--lc-overlay);
+    box-shadow: var(--lc-shadow-overlay);
+    border-radius: var(--lc-r-xl) var(--lc-r-xl) 0 0;
+    animation: lc-sheet-up var(--lc-base) var(--lc-ease);
+}
+
+.biz-sheet__panel::before {
+    content: '';
+    align-self: center;
+    width: 40px;
+    height: 4px;
+    margin-top: var(--space-2);
+    border-radius: var(--radius-full);
+    background: var(--lc-line-strong);
+}
+
+.biz-sheet__panel:focus {
+    outline: none;
+}
+
+.biz-sheet__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5) var(--space-2);
+}
+
+.biz-sheet__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-tight);
+}
+
+.biz-sheet__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-2) var(--space-5) var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.biz-sheet__foot {
+    padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--lc-line);
+}
+
+@keyframes lc-sheet-up {
+    from { transform: translateY(32px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
 
 
 .biz-facts {
@@ -992,6 +1063,30 @@
 @media (min-width: 640px) {
     .biz-field-row {
         grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (min-width: 768px) {
+    .biz-sheet {
+        align-items: stretch;
+        justify-content: flex-end;
+        padding: var(--space-3);
+    }
+
+    .biz-sheet__panel {
+        width: 460px;
+        max-height: none;
+        border-radius: var(--lc-r-xl);
+        animation-name: lc-sheet-in;
+    }
+
+    .biz-sheet__panel::before {
+        display: none;
+    }
+
+    @keyframes lc-sheet-in {
+        from { transform: translateX(32px); opacity: 0; }
+        to { transform: none; opacity: 1; }
     }
 }
 
@@ -1348,6 +1443,8 @@
 
 @media (prefers-reduced-motion: reduce) {
     .biz-page,
+    .biz-sheet,
+    .biz-sheet__panel,
     .biz-toast__msg {
         animation: none;
     }

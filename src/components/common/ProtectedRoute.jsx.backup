@@ -15,7 +15,7 @@ const ProtectedRoute = ({ children }) => {
   if (!userProfile) {
     return (
       <div className="loading-container">
-        <p>We could not load your account. Sign out and sign in again, or contact support@locappoint.com.</p>
+        <p>We could not load your account. Sign out and sign in again, or contact hello@locappoint.com.</p>
         <button type="button" className="btn btn--outline btn--small" onClick={signOut}>Sign out</button>
       </div>
     )

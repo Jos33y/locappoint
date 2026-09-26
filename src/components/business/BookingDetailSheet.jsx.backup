@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Mail, MessageCircle, Phone } from 'lucide-react'
-import { Sheet } from '../ui'
+import Sheet from './Sheet'
 import { useWorkspace } from './WorkspaceContext'
 import {
     STATUS_LABEL,

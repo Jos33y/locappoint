@@ -6,7 +6,7 @@ import { loadWorkspace, pageStrength } from '../../services/business'
 import { WorkspaceContext } from './WorkspaceContext'
 import { NAV_FOOT, NAV_GROUPS, NAV_ITEMS } from './nav'
 import { BrandLoader, Mark, Ring, Wordmark, initials } from './Brand'
-import { Sheet } from '../ui'
+import Sheet from './Sheet'
 import NewBookingSheet from './NewBookingSheet'
 import BookingDetailSheet from './BookingDetailSheet'
 import ShareLink from './ShareLink'
@@ -105,7 +105,7 @@ const BusinessShell = () => {
     useEffect(() => { setMode('business') }, [setMode])
 
     const reloadWorkspace = useCallback(async () => {
-        if (!ownedBusiness?.id || !ownedBusiness.launched_at) return
+        if (!ownedBusiness?.id) return
         try {
             setLoadError('')
             setWorkspace(await loadWorkspace(ownedBusiness.id))
@@ -113,7 +113,7 @@ const BusinessShell = () => {
             console.error('Workspace load failed:', err)
             setLoadError('We could not load your business. Check your connection, then reload the page.')
         }
-    }, [ownedBusiness?.id, ownedBusiness?.launched_at])
+    }, [ownedBusiness?.id])
 
     useEffect(() => { reloadWorkspace() }, [reloadWorkspace])
     useEffect(() => () => clearTimeout(toastTimer.current), [])
@@ -182,9 +182,17 @@ const BusinessShell = () => {
         return () => document.removeEventListener('keydown', onKey)
     }, [])
 
-    if (!ownedBusiness?.launched_at) {
-        if (location.pathname !== '/portal/setup') return <Navigate to="/portal/setup" replace />
-        return <Outlet />
+    if (!ownedBusiness) {
+        if (location.pathname !== '/portal/page') return <Navigate to="/portal/page" replace />
+        return (
+            <div className="biz-bare">
+                <header className="biz-topbar">
+                    <span className="biz-topbar__brand"><Mark size={26} /><Wordmark /></span>
+                    <Link to="/client" className="biz-textbtn">Back to Booking</Link>
+                </header>
+                <main className="biz-content"><Outlet /></main>
+            </div>
+        )
     }
 
     const business = value?.business || ownedBusiness

@@ -73,7 +73,6 @@ export const loadWorkspace = async (businessId) => {
         supabase.from('services')
             .select('id, service_name, duration_minutes, price, is_active')
             .eq('business_id', businessId)
-            .order('sort_order')
             .order('service_name'),
         supabase.from('availability')
             .select('id, staff_id, day_of_week, start_time, end_time')

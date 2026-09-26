@@ -8,7 +8,7 @@ import HomeRedirect from './components/common/HomeRedirect'
 
 import AppHome from './pages/app/AppHome'
 import Businesses from './pages/app/Businesses'
-import PublicBusinessPage from './pages/app/PublicBusinessPage'
+import BusinessPage from './pages/app/BusinessPage'
 import Contact from './pages/app/Contact'
 import Partnership from './pages/app/Partnership'
 import Privacy from './pages/app/legal/Privacy'
@@ -31,7 +31,6 @@ import UiGallery from './pages/business/UiGallery'
 import GettingStarted from './pages/business/GettingStarted'
 import Help from './pages/business/Help'
 import Channels from './pages/business/Channels'
-import Setup from './pages/business/Setup'
 import PortalProfile from './pages/portal/Profile'
 import PortalServices from './pages/portal/Services'
 import PortalAvailability from './pages/portal/Availability'
@@ -100,7 +99,6 @@ const BookingApp = () => (
                     <Route path="start" element={<GettingStarted />} />
                     <Route path="help" element={<Help />} />
                     <Route path="channels" element={<Channels />} />
-                    <Route path="setup" element={<Setup />} />
                     <Route path="reviews" element={<Planned section="reviews" />} />
                     <Route path="invite" element={<Planned section="invite" />} />
                     <Route path="appointments" element={<Navigate to="/portal/calendar" replace />} />
@@ -124,7 +122,7 @@ const BookingApp = () => (
                 </Route>
 
                 {/* Last so explicit routes win over a matching slug. */}
-                <Route path="/:businessSlug" element={<PublicBusinessPage />} />
+                <Route path="/:businessSlug" element={<BusinessPage />} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

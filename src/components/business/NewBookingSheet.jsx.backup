@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Sheet } from '../ui'
+import Sheet from './Sheet'
 import { useWorkspace } from './WorkspaceContext'
 import { addBooking, addDays, durationLabel, formatDay, formatMoney, friendlyError, getSlots, shortTime, zonedNow } from '../../services/business'
 

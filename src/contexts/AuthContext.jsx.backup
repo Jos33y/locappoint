@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
         setProfileStatus('loading')
         const [{ data, error }, { data: owned, error: ownedError }] = await Promise.all([
             supabase.from('users').select('*').eq('id', userId).maybeSingle(),
-            supabase.from('businesses').select('id, business_name, slug, is_active, launched_at').eq('user_id', userId).maybeSingle(),
+            supabase.from('businesses').select('id, business_name, slug, is_active').eq('user_id', userId).maybeSingle(),
         ])
 
         if (error) console.error('Error fetching user profile:', error)

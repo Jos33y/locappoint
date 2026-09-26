@@ -120,6 +120,7 @@ const PortalProfile = () => {
             const businessData = {
                 ...formData,
                 user_id: userProfile.id,
+                is_active: true,
             }
 
             if (isEditing) {
