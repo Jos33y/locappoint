@@ -466,8 +466,8 @@
 }
 
 .lc-setup__stage {
-    --lc-phone-w: min(395px, calc(100% - 48px));
-    --lc-phone-h: 821px;
+    --lc-phone-h: min(820px, calc(100cqh - 96px), calc((100cqw - 48px) * 780 / 375));
+    container-type: size;
     position: sticky;
     top: 0;
     z-index: 1;
@@ -505,7 +505,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    width: min(395px, 100%);
+    width: max(280px, calc(var(--lc-phone-h) * 375 / 780));
     max-width: 100%;
     min-height: 30px;
     white-space: nowrap;
@@ -822,8 +822,7 @@
 
 .lc-setup__stage .ui-phone:not(.ui-phone--fit) {
     flex: none;
-    width: var(--lc-phone-w);
-    height: auto;
+    height: var(--lc-phone-h);
     min-height: 0;
 }
 
@@ -833,7 +832,11 @@
         padding-top: var(--space-6);
     }
 
-    .lc-setup__stage { gap: var(--space-3); }
+    .lc-setup__stage {
+        --lc-phone-h: min(820px, calc(100cqh - 72px), calc((100cqw - 32px) * 780 / 375));
+        gap: var(--space-2);
+        padding: var(--space-4);
+    }
 }
 
 @media (min-width: 660px) and (max-width: 1023px) {
@@ -851,9 +854,4 @@
     color: var(--lc-ink-2);
     font-size: var(--lc-t-label);
     line-height: var(--lc-lh-snug);
-}
-
-.lc-setup:not(.lc-setup--solo) .lc-setup__stage {
-    justify-content: flex-start;
-    padding-top: max(var(--space-6), calc((100dvh - var(--lc-phone-h) - 64px) / 2));
 }

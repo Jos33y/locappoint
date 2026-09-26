@@ -1,227 +1,219 @@
-import { useId, useRef, useState } from 'react'
-import { Copy, Plus, X } from 'lucide-react'
+import { useState } from 'react'
+import { Plus, X } from 'lucide-react'
 import { Button, IconButton } from '../ui'
 import { TimePicker } from '../ui/TimePicker'
-import { WEEK, clock, dayProblem, sameWindows } from '../../services/hours'
+import { clock, dayProblem } from '../../services/hours'
 import '../../styles/business/editors.css'
 
+const ORDER = [1, 2, 3, 4, 5, 6, 0]
+const LETTER = { 1: 'M', 2: 'T', 3: 'W', 4: 'T', 5: 'F', 6: 'S', 0: 'S' }
+const NAME = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 0: 'Sunday' }
 const LAST = 24 * 60 - 1
-const STEP = 15
-const snap = (m) => Math.round(m / STEP) * STEP
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 
-const withBreak = (windows) => {
-    const last = windows[windows.length - 1]
-    if (last.end - last.start >= 180) {
-        const cut = snap((last.start + last.end) / 2 - 30)
-        return [...windows.slice(0, -1), { start: last.start, end: cut }, { start: cut + 60, end: last.end }]
+const TEMPLATES = [
+    { key: 'tue-sat', title: 'Tuesday to Saturday', detail: '10:00 to 19:00, lunch 14:00', groups: [{ days: [2, 3, 4, 5, 6], open: 600, close: 1140, lunch: { start: 840, end: 900 } }] },
+    { key: 'weekdays', title: 'Weekdays and Saturday', detail: '9:00 to 18:00, Saturday to 14:00', groups: [{ days: [1, 2, 3, 4, 5], open: 540, close: 1080, lunch: { start: 780, end: 840 } }, { days: [6], open: 540, close: 840, lunch: null }] },
+    { key: 'mon-sat', title: 'Monday to Saturday', detail: '9:00 to 19:00, no break', groups: [{ days: [1, 2, 3, 4, 5, 6], open: 540, close: 1140, lunch: null }] },
+]
+
+const groupFromWindows = (days, windows) => ({
+    days,
+    open: windows[0].start,
+    close: windows[windows.length - 1].end,
+    lunch: windows.length > 1 ? { start: windows[0].end, end: windows[1].start } : null,
+})
+
+export const groupsFromWeek = (week) => {
+    const byShape = new Map()
+    for (const dow of ORDER) {
+        if (week[dow].length === 0) continue
+        const key = JSON.stringify(week[dow])
+        if (!byShape.has(key)) byShape.set(key, { days: [], windows: week[dow] })
+        byShape.get(key).days.push(dow)
     }
-    const start = Math.min(last.end + 60, LAST - 60)
-    return [...windows, { start, end: Math.min(start + 120, LAST) }]
+    const groups = [...byShape.values()].map(({ days, windows }) => groupFromWindows(days, windows))
+    return groups.length ? groups : [{ days: [], open: 540, close: 1080, lunch: null }]
 }
 
-const canExtend = (windows) => {
-    const last = windows[windows.length - 1]
-    return windows.length < 4 && (last.end - last.start >= 180 || last.end + 120 <= LAST)
+const windowsOf = (g) => (g.lunch ? [{ start: g.open, end: g.lunch.start }, { start: g.lunch.end, end: g.close }] : [{ start: g.open, end: g.close }])
+
+export const weekFromGroups = (groups) => {
+    const week = [[], [], [], [], [], [], []]
+    for (const g of groups) for (const dow of g.days) week[dow] = windowsOf(g)
+    return week
 }
 
-const rangeFor = (week) => {
-    const all = week.flat()
-    const lo = Math.min(360, ...all.map((w) => Math.floor(w.start / 60) * 60))
-    const hi = Math.max(1320, ...all.map((w) => Math.ceil(w.end / 60) * 60))
-    return { lo, hi: Math.min(hi, 1440) }
+export const groupProblem = (g) => {
+    if (g.days.length === 0) return 'Pick at least one day'
+    if (g.close <= g.open) return 'Closing time must be after opening time'
+    if (g.lunch) {
+        if (g.lunch.end <= g.lunch.start) return 'Lunch must end after it starts'
+        if (g.lunch.start <= g.open || g.lunch.end >= g.close) return 'Lunch must sit inside your opening hours'
+    }
+    return dayProblem(windowsOf(g))
 }
 
-const windowsText = (windows) => windows.map((w) => `${clock(w.start)} to ${clock(w.end)}`).join(', ')
+const sameGroups = (a, b) => JSON.stringify(weekFromGroups(a)) === JSON.stringify(weekFromGroups(b))
 
-const Handle = ({ edge, label, value, min, max, onChange, onDragStart }) => (
-    <span
-        role="slider"
-        tabIndex={0}
-        aria-label={label}
-        aria-valuemin={min}
-        aria-valuemax={max}
-        aria-valuenow={value}
-        aria-valuetext={clock(value)}
-        className={`biz-track__handle biz-track__handle--${edge}`}
-        onPointerDown={onDragStart}
-        onKeyDown={(e) => {
-            const by = { ArrowLeft: -STEP, ArrowDown: -STEP, ArrowRight: STEP, ArrowUp: STEP, PageDown: -60, PageUp: 60 }[e.key]
-            if (by) { e.preventDefault(); onChange(clamp(value + by, min, max)) }
-            if (e.key === 'Home') { e.preventDefault(); onChange(min) }
-            if (e.key === 'End') { e.preventDefault(); onChange(max) }
-        }}
-    />
+const dayRuns = (days) => {
+    const idx = [...days].map((d) => ORDER.indexOf(d)).sort((a, b) => a - b)
+    const runs = []
+    for (const i of idx) {
+        const last = runs[runs.length - 1]
+        if (last && i === last[1] + 1) last[1] = i
+        else runs.push([i, i])
+    }
+    const labels = runs.map(([a, b]) => {
+        if (a === b) return NAME[ORDER[a]]
+        if (b === a + 1) return `${NAME[ORDER[a]]} and ${NAME[ORDER[b]]}`
+        return `${NAME[ORDER[a]]} to ${NAME[ORDER[b]]}`
+    })
+    return labels.length > 1 ? `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}` : labels[0] || ''
+}
+
+export const weekSentence = (groups) => {
+    const real = groups.filter((g) => g.days.length > 0)
+    if (real.length === 0) return 'Closed all week.'
+    const parts = real.map((g) => `${dayRuns(g.days)}, ${clock(g.open)} to ${clock(g.close)}${g.lunch ? `, lunch ${clock(g.lunch.start)} to ${clock(g.lunch.end)}` : ''}`)
+    const open = new Set(real.flatMap((g) => g.days))
+    const closed = ORDER.filter((d) => !open.has(d))
+    return `${parts.join('. ')}.${closed.length ? ` Closed ${dayRuns(closed)}.` : ''}`
+}
+
+export const WeekGlyph = ({ days, lunchDays = [] }) => (
+    <span className="biz-glyph" aria-hidden="true">
+        {ORDER.map((d) => (
+            <span key={d} className={`${days.includes(d) ? 'is-open' : ''}${lunchDays.includes(d) ? ' has-lunch' : ''}`} />
+        ))}
+    </span>
 )
 
-const Track = ({ long, windows, range, onChange, onOpen }) => {
-    const ref = useRef(null)
-    const span = range.hi - range.lo
-    const pct = (m) => `${((clamp(m, range.lo, range.hi) - range.lo) / span) * 100}%`
-
-    const drag = (index, edge) => (event) => {
-        event.preventDefault()
-        const track = ref.current
-        if (!track) return
-        const rect = track.getBoundingClientRect()
-        const startX = event.clientX
-        const original = windows[index]
-        const prevEnd = index > 0 ? windows[index - 1].end : 0
-        const nextStart = index < windows.length - 1 ? windows[index + 1].start : LAST
-        event.currentTarget.setPointerCapture?.(event.pointerId)
-        const move = (e) => {
-            const delta = snap(((e.clientX - startX) / rect.width) * span)
-            let next = { ...original }
-            if (edge === 'start') next.start = clamp(original.start + delta, Math.max(prevEnd, 0), original.end - STEP)
-            else if (edge === 'end') next.end = clamp(original.end + delta, original.start + STEP, nextStart === LAST ? LAST : nextStart)
-            else {
-                const length = original.end - original.start
-                const start = clamp(original.start + delta, Math.max(prevEnd, 0), (nextStart === LAST ? LAST : nextStart) - length)
-                next = { start, end: start + length }
-            }
-            onChange(windows.map((w, i) => (i === index ? next : w)))
-        }
-        const up = () => {
-            window.removeEventListener('pointermove', move)
-            window.removeEventListener('pointerup', up)
-        }
-        window.addEventListener('pointermove', move)
-        window.addEventListener('pointerup', up)
-    }
+const GroupCard = ({ group, index, taken, removable, onChange, onRemove }) => {
+    const problem = groupProblem(group)
+    const set = (patch) => onChange({ ...group, ...patch })
+    const toggle = (d) => set({ days: group.days.includes(d) ? group.days.filter((x) => x !== d) : [...group.days, d] })
 
     return (
-        <div ref={ref} className="biz-track" role="group" aria-label={`${long} opening hours`}>
-            {windows.length === 0 && <span className="biz-track__closed">Closed</span>}
-            {windows.map((w, index) => {
-                const prevEnd = index > 0 ? windows[index - 1].end : 0
-                const nextStart = index < windows.length - 1 ? windows[index + 1].start : LAST
-                const set = (patch) => onChange(windows.map((x, i) => (i === index ? { ...x, ...patch } : x)))
-                return (
-                    <span key={index} className="biz-track__bar" style={{ left: pct(w.start), width: `calc(${pct(w.end)} - ${pct(w.start)})` }}>
-                        <span className="biz-track__body" onPointerDown={drag(index, 'move')} onDoubleClick={onOpen} />
-                        <Handle edge="start" label={`${long} opens`} value={w.start} min={prevEnd} max={w.end - STEP} onChange={(start) => set({ start })} onDragStart={drag(index, 'start')} />
-                        <Handle edge="end" label={`${long} closes`} value={w.end} min={w.start + STEP} max={nextStart} onChange={(end) => set({ end })} onDragStart={drag(index, 'end')} />
-                    </span>
-                )
-            })}
-        </div>
-    )
-}
+        <li className={`biz-sched__card${problem ? ' has-error' : ''}`}>
+            <div className="biz-sched__top">
+                <span className="biz-sched__days" role="group" aria-label={`Days in group ${index + 1}`}>
+                    {ORDER.map((d) => {
+                        const inOther = taken.includes(d)
+                        const on = group.days.includes(d)
+                        return (
+                            <button
+                                key={d}
+                                type="button"
+                                className={`biz-sched__day${on ? ' is-on' : ''}`}
+                                aria-pressed={on}
+                                aria-label={inOther ? `${NAME[d]}, set in another group` : NAME[d]}
+                                aria-disabled={inOther || undefined}
+                                onClick={() => { if (!inOther) toggle(d) }}
+                            >
+                                {LETTER[d]}
+                            </button>
+                        )
+                    })}
+                </span>
+                {removable && <IconButton icon={X} variant="quiet" size="sm" label={`Remove group ${index + 1}`} onClick={onRemove} />}
+            </div>
 
-const Day = ({ dow, long, windows, monday, range, editing, onEdit, setDay }) => {
-    const nameId = useId()
-    const open = windows.length > 0
-    const problem = open ? dayProblem(windows) : null
-    const showSame = dow !== 1 && open && monday.length > 0 && !sameWindows(windows, monday)
-    const setWindow = (index, patch) => setDay(windows.map((w, i) => (i === index ? { ...w, ...patch } : w)))
-    const splits = open && windows[windows.length - 1].end - windows[windows.length - 1].start >= 180
+            <div className="biz-sched__line">
+                <span className="biz-sched__label">Open</span>
+                <TimePicker value={group.open} label={`Group ${index + 1} opens`} max={LAST - 15} onChange={(open) => set({ open })} />
+                <span className="biz-sched__to">to</span>
+                <TimePicker value={group.close} label={`Group ${index + 1} closes`} min={15} onChange={(close) => set({ close })} />
+            </div>
 
-    return (
-        <li className={`biz-week__day${open ? ' is-open' : ''}${editing ? ' is-editing' : ''}${problem ? ' has-error' : ''}`}>
-            <span id={nameId} className="biz-week__name">{long}</span>
-            <Track long={long} windows={windows} range={range} onChange={setDay} onOpen={onEdit} />
-            {open ? (
-                <button type="button" className="biz-week__times" onClick={onEdit} aria-expanded={editing} aria-label={`Edit ${long} hours, ${windowsText(windows)}`}>
-                    {windows.map((w) => <span key={w.start}>{clock(w.start)} to {clock(w.end)}</span>)}
+            <div className="biz-sched__line">
+                <span className="biz-sched__label">Lunch</span>
+                {group.lunch ? (
+                    <>
+                        <TimePicker value={group.lunch.start} label={`Group ${index + 1} lunch starts`} onChange={(start) => set({ lunch: { ...group.lunch, start } })} />
+                        <span className="biz-sched__to">to</span>
+                        <TimePicker value={group.lunch.end} label={`Group ${index + 1} lunch ends`} onChange={(end) => set({ lunch: { ...group.lunch, end } })} />
+                    </>
+                ) : <span className="biz-sched__none">No break</span>}
+                <button
+                    type="button"
+                    role="switch"
+                    aria-checked={Boolean(group.lunch)}
+                    aria-label={`Lunch break for group ${index + 1}`}
+                    className={`ui-switch biz-sched__switch${group.lunch ? ' is-on' : ''}`}
+                    onClick={() => {
+                        if (group.lunch) return set({ lunch: null })
+                        const mid = Math.round(((group.open + group.close) / 2) / 60) * 60
+                        return set({ lunch: { start: Math.max(group.open + 60, mid - 60), end: Math.max(group.open + 120, mid) } })
+                    }}
+                >
+                    <span className="ui-switch__thumb" />
                 </button>
-            ) : <span className="biz-week__times" aria-hidden="true" />}
-            <button
-                type="button"
-                role="switch"
-                aria-checked={open}
-                aria-labelledby={nameId}
-                className={`ui-switch${open ? ' is-on' : ''}`}
-                onClick={() => setDay(open ? [] : (monday.length > 0 && dow !== 1 ? monday.map((w) => ({ ...w })) : [{ start: 540, end: 1080 }]))}
-            >
-                <span className="ui-switch__thumb" />
-            </button>
+            </div>
 
-            {problem && <p className="biz-week__error" role="alert">{problem}</p>}
-
-            {editing && open && (
-                <div className="biz-week__editor">
-                    {windows.map((w, index) => (
-                        <span key={index} className="biz-week__window">
-                            <TimePicker value={w.start} label={`${long} opens`} max={LAST - STEP} invalid={Boolean(problem)} onChange={(start) => setWindow(index, { start })} />
-                            <span className="biz-week__to" aria-hidden="true">to</span>
-                            <TimePicker value={w.end} label={`${long} closes`} min={STEP} invalid={Boolean(problem)} onChange={(end) => setWindow(index, { end })} />
-                            {windows.length > 1 && (
-                                <IconButton icon={X} variant="quiet" size="sm" label={`Remove ${long} hours ${index + 1}`} onClick={() => setDay(windows.filter((_, i) => i !== index))} />
-                            )}
-                        </span>
-                    ))}
-                    <span className="biz-week__actions">
-                        {canExtend(windows) && (
-                            <Button variant="quiet" size="sm" icon={Plus} onClick={() => setDay(withBreak(windows))}>
-                                {splits ? 'Add a break' : 'Add more hours'}
-                            </Button>
-                        )}
-                        {showSame && (
-                            <Button variant="quiet" size="sm" icon={Copy} onClick={() => setDay(monday.map((m) => ({ ...m })))}>
-                                Same as Monday
-                            </Button>
-                        )}
-                        <Button variant="secondary" size="sm" onClick={onEdit}>Done</Button>
-                    </span>
-                </div>
-            )}
+            {problem && <p className="biz-sched__error" role="alert">{problem}</p>}
         </li>
     )
 }
 
-const hoursLabel = (minutes) => {
-    const h = Math.round((minutes / 60) * 2) / 2
-    return `${h % 1 === 0 ? h : h.toFixed(1)} ${h === 1 ? 'hour' : 'hours'}`
-}
-
 export const HoursEditor = ({ week, onChange }) => {
-    const [editing, setEditing] = useState(null)
-    const monday = week[1]
-    const range = rangeFor(week)
-    const setDay = (dow) => (windows) => onChange(week.map((day, i) => (i === dow ? windows : day)))
-    const differsFromMonday = WEEK.filter(({ dow }) => dow !== 1 && week[dow].length > 0 && !sameWindows(week[dow], monday))
-    const openDays = week.filter((d) => d.length > 0).length
-    const minutes = week.flat().reduce((sum, w) => sum + Math.max(0, w.end - w.start), 0)
-    const ticks = []
-    for (let m = Math.ceil(range.lo / 180) * 180; m <= range.hi; m += 180) ticks.push(m)
+    const [groups, setGroups] = useState(() => groupsFromWeek(week))
+
+    const commit = (next) => {
+        setGroups(next)
+        onChange(weekFromGroups(next))
+    }
+
+    const used = groups.flatMap((g) => g.days)
+    const free = ORDER.filter((d) => !used.includes(d))
+    const active = TEMPLATES.find((t) => sameGroups(t.groups, groups))?.key
+    const lunchDays = groups.filter((g) => g.lunch).flatMap((g) => g.days)
 
     return (
-        <div className="biz-week">
-            <div className="biz-week__head">
-                <p className="biz-week__summary" aria-live="polite">
-                    <strong>{openDays === 0 ? 'Closed all week' : `Open ${openDays} ${openDays === 1 ? 'day' : 'days'}`}</strong>
-                    {openDays > 0 && <span>{hoursLabel(minutes)} a week</span>}
-                </p>
-                {monday.length > 0 && differsFromMonday.length > 1 && (
-                    <Button variant="quiet" size="sm" icon={Copy} onClick={() => onChange(week.map((day, dow) => (dow !== 1 && day.length > 0 ? monday.map((w) => ({ ...w })) : day)))}>
-                        Use Monday's hours every open day
-                    </Button>
-                )}
+        <div className="biz-sched">
+            <div className="biz-sched__templates" role="group" aria-label="Start from a common week">
+                {TEMPLATES.map((t) => (
+                    <button
+                        key={t.key}
+                        type="button"
+                        className={`biz-sched__template${active === t.key ? ' is-on' : ''}`}
+                        aria-pressed={active === t.key}
+                        onClick={() => commit(t.groups.map((g) => ({ ...g, days: [...g.days], lunch: g.lunch && { ...g.lunch } })))}
+                    >
+                        <WeekGlyph days={t.groups.flatMap((g) => g.days)} lunchDays={t.groups.filter((g) => g.lunch).flatMap((g) => g.days)} />
+                        <span className="biz-sched__ttitle">{t.title}</span>
+                        <span className="biz-sched__tdetail">{t.detail}</span>
+                    </button>
+                ))}
             </div>
-            <ul className="biz-week__days">
-                <li className="biz-week__axis" aria-hidden="true">
-                    <span />
-                    <span className="biz-week__scale">
-                        {ticks.map((m) => (
-                            <span key={m} style={{ left: `${((m - range.lo) / (range.hi - range.lo)) * 100}%` }}>{String(Math.floor(m / 60) % 24).padStart(2, '0')}</span>
-                        ))}
-                    </span>
-                </li>
-                {WEEK.map(({ dow, long }) => (
-                    <Day
-                        key={dow}
-                        dow={dow}
-                        long={long}
-                        windows={week[dow]}
-                        monday={monday}
-                        range={range}
-                        editing={editing === dow}
-                        onEdit={() => setEditing((e) => (e === dow ? null : dow))}
-                        setDay={setDay(dow)}
+
+            <ol className="biz-sched__cards">
+                {groups.map((g, i) => (
+                    <GroupCard
+                        key={i}
+                        group={g}
+                        index={i}
+                        taken={groups.flatMap((x, j) => (j === i ? [] : x.days))}
+                        removable={groups.length > 1}
+                        onChange={(next) => commit(groups.map((x, j) => (j === i ? next : x)))}
+                        onRemove={() => commit(groups.filter((_, j) => j !== i))}
                     />
                 ))}
-            </ul>
-            <p className="biz-week__hint">Drag the ends of a bar, or tap the times to set them exactly.</p>
+            </ol>
+
+            {free.length > 0 && (
+                <Button
+                    variant="quiet"
+                    icon={Plus}
+                    onClick={() => commit([...groups, { days: [free[0]], open: 600, close: 960, lunch: null }])}
+                >
+                    Different hours on other days
+                </Button>
+            )}
+
+            <div className="biz-sched__summary" aria-live="polite">
+                <WeekGlyph days={used} lunchDays={lunchDays} />
+                <p>{weekSentence(groups)}</p>
+            </div>
         </div>
     )
 }

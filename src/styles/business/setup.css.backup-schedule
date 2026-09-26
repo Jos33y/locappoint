@@ -466,7 +466,8 @@
 }
 
 .lc-setup__stage {
-    --lc-phone-h: max(620px, min(760px, calc(100dvh - 150px)));
+    --lc-phone-w: min(395px, calc(100% - 48px));
+    --lc-phone-h: 821px;
     position: sticky;
     top: 0;
     z-index: 1;
@@ -504,7 +505,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    width: max(300px, calc(var(--lc-phone-h) * 375 / 780));
+    width: min(395px, 100%);
     max-width: 100%;
     min-height: 30px;
     white-space: nowrap;
@@ -821,7 +822,8 @@
 
 .lc-setup__stage .ui-phone:not(.ui-phone--fit) {
     flex: none;
-    height: var(--lc-phone-h);
+    width: var(--lc-phone-w);
+    height: auto;
     min-height: 0;
 }
 
