@@ -55,7 +55,20 @@ $targets = @(
     'src\components\ui\PhoneFrame.jsx.backup-demo',
     'src\styles\ui-kit.css.backup-demo',
     'src\styles\ui.css.backup-demo',
-    'demo-refresh.zip'
+    'demo-refresh.zip',
+    'src\\styles\\business\\setup.css.backup-short',
+    'src\\components\\business\\PublicPageView.jsx.backup-short',
+    'src\\styles\\public-page.css.backup-short',
+    'short-screens.zip',
+    'src\\styles\\business\\setup.css.backup-tablet',
+    'src\\styles\\business\\editors.css.backup-tablet',
+    'tablets.zip',
+    'src\\components\\ui\\PhoneFrame.jsx.backup-preview',
+    'src\\styles\\ui-kit.css.backup-preview',
+    'src\\pages\\business\\Setup.jsx.backup-preview',
+    'src\\styles\\business\\setup.css.backup-preview',
+    'src\\constants\\reservedSlugs.js.backup-preview',
+    'true-preview.zip'
 )
 
 $existing = @()

@@ -235,7 +235,7 @@
     .biz-svc__open { transition: none; }
 }
 
-@media (max-width: 767px), (pointer: coarse) {
+@media (max-width: 767px) {
     .biz-svc .ui-btn--sm,
     .biz-hours .ui-btn--sm,
     .biz-svc .ui-chip {

@@ -62,10 +62,10 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
 
                 {(business.phone || whatsapp || business.address) && (
                     <div className="lc-pub__actions">
-                        {whatsapp && <Button variant="secondary" icon={MessageCircle} href={whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</Button>}
-                        {business.phone && <Button variant="secondary" icon={Phone} href={`tel:${business.phone.replace(/\s+/g, '')}`}>Call</Button>}
+                        {whatsapp && <Button variant="secondary" icon={MessageCircle} href={whatsapp} target="_blank" rel="noopener noreferrer"><span className="lc-pub__actlabel">WhatsApp</span></Button>}
+                        {business.phone && <Button variant="secondary" icon={Phone} href={`tel:${business.phone.replace(/\s+/g, '')}`}><span className="lc-pub__actlabel">Call</span></Button>}
                         {business.address?.trim() && (
-                            <Button variant="secondary" icon={Navigation} href={mapsLink(business.address, business.city)} target="_blank" rel="noopener noreferrer">Directions</Button>
+                            <Button variant="secondary" icon={Navigation} href={mapsLink(business.address, business.city)} target="_blank" rel="noopener noreferrer"><span className="lc-pub__actlabel">Directions</span></Button>
                         )}
                     </div>
                 )}

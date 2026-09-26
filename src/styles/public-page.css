@@ -327,6 +327,19 @@
     }
 }
 
+@container (max-width: 240px) {
+    .lc-pub__actions .ui-btn { min-height: 48px; }
+
+    .lc-pub__actlabel {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
 @container (min-width: 640px) {
     .lc-pub__actions {
         grid-template-columns: repeat(3, minmax(0, 150px));
