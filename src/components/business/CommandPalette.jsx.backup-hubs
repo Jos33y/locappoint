@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { Search } from 'lucide-react'
-import { PALETTE_PAGES } from './nav'
+import { Search, Settings } from 'lucide-react'
+import { NAV_FOOT, NAV_ITEMS } from './nav'
 import '../../styles/business/palette.css'
 
-const PAGES = PALETTE_PAGES
+const PAGES = [...NAV_ITEMS, ...NAV_FOOT, { to: '/portal/settings', label: 'Settings', icon: Settings }]
 
 const CommandPalette = ({ open, onClose, actions }) => {
     const navigate = useNavigate()

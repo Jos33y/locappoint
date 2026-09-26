@@ -1,4 +1,4 @@
-import { Bell, Bot, CalendarDays, ChartColumn, Clock, Gift, LifeBuoy, Radio, Rocket, Scissors, Settings, Sprout, Star, Store, Sun, Users, UsersRound } from 'lucide-react'
+import { Bell, Bot, CalendarDays, ChartColumn, Clock, Gift, LifeBuoy, Radio, Rocket, Scissors, Star, Store, Sun, Users, UsersRound } from 'lucide-react'
 
 export const NAV_GROUPS = [
     {
@@ -10,31 +10,22 @@ export const NAV_GROUPS = [
             { to: '/portal/clients', label: 'Clients', icon: Users, tab: true, planned: 'clients' },
         ],
     },
-]
-
-export const HUBS = [
     {
-        id: 'business',
-        label: 'Your business',
-        icon: Store,
-        tour: 'business',
-        pages: [
-            { to: '/portal/page', label: 'Page', name: 'Business page', icon: Store, keywords: ['profile', 'photos', 'logo', 'cover', 'address', 'description'] },
-            { to: '/portal/services', label: 'Services', name: 'Services', icon: Scissors, keywords: ['prices', 'menu', 'duration'] },
-            { to: '/portal/hours', label: 'Hours', name: 'Opening hours', icon: Clock, keywords: ['schedule', 'open', 'closed', 'lunch'] },
-            { to: '/portal/team', label: 'Team', name: 'Team', icon: UsersRound, planned: 'team', keywords: ['staff', 'barbers'] },
+        label: 'Set up',
+        items: [
+            { to: '/portal/services', label: 'Services', icon: Scissors, tour: 'services' },
+            { to: '/portal/team', label: 'Team', icon: UsersRound, planned: 'team' },
+            { to: '/portal/hours', label: 'Hours', icon: Clock },
+            { to: '/portal/page', label: 'Business page', icon: Store, tour: 'page' },
         ],
     },
     {
-        id: 'grow',
         label: 'Grow',
-        icon: Sprout,
-        tour: 'grow',
-        pages: [
-            { to: '/portal/channels', label: 'Channels', name: 'Channels', icon: Radio, keywords: ['link', 'whatsapp', 'google', 'qr'] },
-            { to: '/portal/insights', label: 'Insights', name: 'Insights', icon: ChartColumn, planned: 'insights', keywords: ['money', 'stats', 'reports'] },
-            { to: '/portal/reviews', label: 'Reviews', name: 'Reviews', icon: Star, planned: 'reviews', keywords: ['ratings'] },
-            { to: '/portal/invite', label: 'Invite', name: 'Invite a business', icon: Gift, planned: 'invite', keywords: ['referral', 'free month'] },
+        items: [
+            { to: '/portal/channels', label: 'Channels', icon: Radio, tour: 'channels' },
+            { to: '/portal/insights', label: 'Insights', icon: ChartColumn, planned: 'insights' },
+            { to: '/portal/reviews', label: 'Reviews', icon: Star, planned: 'reviews' },
+            { to: '/portal/invite', label: 'Invite a business', icon: Gift, planned: 'invite' },
         ],
     },
 ]
@@ -45,14 +36,6 @@ export const NAV_FOOT = [
 ]
 
 export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items)
-
-const matches = (item, pathname) => (item.end ? pathname === item.to : pathname === item.to || pathname.startsWith(`${item.to}/`))
-
-export const hubFor = (pathname) => HUBS.find((hub) => hub.pages.some((page) => matches(page, pathname))) || null
-
-export const HUB_PAGES = HUBS.flatMap((hub) => hub.pages.map((page) => ({ ...page, label: page.name, hub: hub.label })))
-
-export const PALETTE_PAGES = [...NAV_ITEMS, ...HUB_PAGES, ...NAV_FOOT, { to: '/portal/settings', label: 'Settings', icon: Settings }]
 
 export const PLANNED = {
     assistant: {
@@ -141,12 +124,15 @@ export const PLANNED = {
 }
 
 const EXTRA_TITLES = [
+    ['/portal/settings', 'Settings'],
     ['/portal/notifications', 'Notifications'],
     ['/portal/ui', 'Primitives'],
 ]
 
 export const titleFor = (pathname) => {
-    const match = PALETTE_PAGES.find((item) => matches(item, pathname))
+    const match = [...NAV_ITEMS, ...NAV_FOOT]
+        .sort((a, b) => b.to.length - a.to.length)
+        .find((item) => (item.end ? pathname === item.to : pathname.startsWith(item.to)))
     if (match) return match.label
     const extra = EXTRA_TITLES.find(([path]) => pathname.startsWith(path))
     return extra ? extra[1] : 'Today'
@@ -156,8 +142,9 @@ export const TOUR_STEPS = [
     { target: 'today', title: 'Today is your home', body: 'Your day at a glance: who is next, what needs confirming, and the free time you can still fill.' },
     { target: 'new', title: 'Add a booking in seconds', body: 'Phone call or walk-in? Tap here, pick a time, type a name. That is it.' },
     { target: 'calendar', title: 'Plan ahead', body: 'See any day or the whole week. Tap a booking to confirm, move or cancel it.' },
-    { target: 'more', title: 'Everything else lives here', body: 'Your page, services, hours, channels, help and settings. Your setup progress is at the top.' },
-    { target: 'business', title: 'Your business', body: 'Your page, services, hours and team, in one place. Clients book from what you set here.' },
-    { target: 'grow', title: 'Get booked in more places', body: 'Your link today; WhatsApp, Google Maps and AI assistants as they come online. Reviews and insights land here too.' },
-    { target: 'account', title: 'Help is under your name', body: 'Help, settings and switching to Booking live here. You can replay this tour from here any time.' },
+    { target: 'more', title: 'Everything else lives here', body: 'Services, hours, your page, channels and help. Your setup progress is at the top.' },
+    { target: 'services', title: 'What you offer', body: 'Your services, prices and how long each one takes. Clients book from this list.' },
+    { target: 'page', title: 'Your page', body: 'What clients see at your link. A description, photos and your address make it book more.' },
+    { target: 'channels', title: 'Everywhere you can be booked', body: 'Your link today; WhatsApp, Google Maps and AI assistants as they come online.' },
+    { target: 'help', title: 'We are here', body: 'Guides, WhatsApp support and tickets. You can replay this tour from Getting started any time.' },
 ]
