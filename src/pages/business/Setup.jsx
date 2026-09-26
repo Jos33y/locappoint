@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Copy, Download, ExternalLink, Eye, MessageCircle, Share2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import {
-    AffixInput, Button, Field, ImagePicker, Input, PhoneFrame, Picker, QrCode, Ring, Sheet, Status, Stepper, Switch, Textarea,
+    AffixInput, Button, Field, ImagePicker, Input, PhoneField, PhoneFrame, Picker, QrCode, Ring, Sheet, Status, Stepper, Switch, Textarea,
     downloadQr, useCountUp,
 } from '../../components/ui'
 import { Mark, Wordmark, AppLoader, initials } from '../../components/business/Brand'
@@ -12,7 +12,9 @@ import { ServiceEditor, serviceFromRow, servicesValid } from '../../components/b
 import { HoursEditor } from '../../components/business/HoursEditor'
 import { PublicPageView } from '../../components/business/PublicPageView'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
-import { CATEGORIES, CITIES, POPULAR_CATEGORIES, categoryKey, categoryLabel, suggestionsFor } from '../../constants/categories'
+import { CATEGORIES, POPULAR_CATEGORIES, categoryKey, categoryLabel, suggestionsFor } from '../../constants/categories'
+import { NG_CITIES, POPULAR_COUNTRIES, PT_MUNICIPALITIES, inLaunchArea } from '../../constants/locations'
+import { COUNTRY_OPTIONS, parsePhone } from '../../components/ui/PhoneField'
 import { SAMPLE_BUSINESS, SAMPLE_SERVICES } from '../../constants/sampleBusiness'
 import { slugProblem } from '../../constants/reservedSlugs'
 import { durationLabel, formatMoney, pageStrength } from '../../services/business'
@@ -32,25 +34,41 @@ const emptyDetails = {
     slugEdited: false,
     category: '',
     categoryDetail: '',
-    cityChoice: 'Lisbon',
+    country: 'PT',
+    city: 'Lisbon',
     cityOther: '',
+    neighbourhood: '',
     phone: '',
+    phoneValid: false,
+    phoneCountry: 'PT',
     whatsappSame: true,
 }
 
-const cityOf = (details) => (details.cityChoice === OTHER_CITY ? details.cityOther.trim() : details.cityChoice)
+const cityOf = (d) => {
+    if (d.country === 'PT') return d.city
+    if (d.country === 'NG' && d.city !== OTHER_CITY) return d.city
+    return d.cityOther.trim()
+}
+
+const countryName = (code) => COUNTRY_OPTIONS.find((c) => c.value === code)?.label || code
 
 const detailsFromBusiness = (b) => {
-    const known = CITIES.some((c) => c.value === b.city)
+    const country = b.country || 'PT'
+    const knownNg = NG_CITIES.some((c) => c.value === b.city)
+    const phone = parsePhone(b.phone, country)
     return {
         business_name: b.business_name,
         slug: b.slug,
         slugEdited: true,
         category: categoryKey(b.category),
         categoryDetail: b.category_detail || '',
-        cityChoice: known ? b.city : OTHER_CITY,
-        cityOther: known ? '' : b.city,
-        phone: b.phone,
+        country,
+        city: country === 'PT' ? b.city : country === 'NG' ? (knownNg ? b.city : OTHER_CITY) : '',
+        cityOther: country === 'PT' || knownNg ? '' : b.city,
+        neighbourhood: b.neighbourhood || '',
+        phone: phone.e164 || b.phone,
+        phoneValid: phone.valid,
+        phoneCountry: phone.country || country,
         whatsappSame: Boolean(b.whatsapp) && b.whatsapp === b.phone,
     }
 }
@@ -60,9 +78,9 @@ const detailProblems = (d, slugState) => {
     if (!d.business_name.trim()) p.business_name = 'Enter the name clients know you by'
     if (!d.category) p.category = 'Choose what kind of business you run'
     else if (d.category === 'other' && !d.categoryDetail.trim()) p.categoryDetail = 'Tell clients what you do, in a few words'
-    if (!cityOf(d)) p.city = 'Enter your city'
-    const digits = d.phone.replace(/[^\d]/g, '')
-    if (digits.length < 7 || digits.length > 15) p.phone = 'Enter a phone number with the country code, like +351'
+    if (!cityOf(d)) p.city = d.country === 'PT' ? 'Choose your municipality' : 'Enter your city'
+    if (!d.phone) p.phone = 'Enter the number clients can call'
+    else if (!d.phoneValid) p.phone = `That does not look like a ${countryName(d.phoneCountry)} number. Check the digits or the country code.`
     const local = slugProblem(d.slug)
     if (local) p.slug = local
     else if (slugState === 'taken') p.slug = 'That address is taken. Try adding your area.'
@@ -315,6 +333,8 @@ const Setup = () => {
         category: details.category,
         category_detail: details.category === 'other' ? details.categoryDetail.trim() : null,
         city: cityOf(details),
+        neighbourhood: details.neighbourhood,
+        country: details.country,
         phone: details.phone,
         whatsapp: details.whatsappSame ? details.phone : business?.whatsapp || null,
         description: extras.description,
@@ -544,12 +564,20 @@ const Setup = () => {
                                             emptyText="Nothing matches. Choose Something else at the end."
                                         />
                                     </Field>
-                                    <Field label="City" error={details.cityChoice !== OTHER_CITY ? problems.city : undefined}>
+                                    <Field label="Country">
                                         <Picker
-                                            value={details.cityChoice}
-                                            onChange={(cityChoice) => setDetail({ cityChoice })}
-                                            options={[...CITIES.map((c) => ({ value: c.value, label: c.value })), { value: OTHER_CITY, label: 'Somewhere else' }]}
-                                            title="City"
+                                            value={details.country}
+                                            onChange={(country) => setDetail({
+                                                country,
+                                                city: country === 'PT' ? 'Lisbon' : country === 'NG' ? 'Lagos' : '',
+                                                cityOther: '',
+                                                ...(details.phone ? {} : { phoneCountry: country }),
+                                            })}
+                                            options={COUNTRY_OPTIONS}
+                                            popular={POPULAR_COUNTRIES}
+                                            searchable
+                                            title="Country"
+                                            searchPlaceholder="Search country"
                                         />
                                     </Field>
                                 </div>
@@ -563,20 +591,53 @@ const Setup = () => {
                                         />
                                     </Field>
                                 )}
-                                {details.cityChoice === OTHER_CITY && (
-                                    <Field label="Which city?" error={problems.city}>
-                                        <Input value={details.cityOther} onChange={(e) => setDetail({ cityOther: e.target.value })} maxLength={80} autoComplete="address-level2" />
+
+                                <div className="lc-setup__pair">
+                                    {details.country === 'PT' && (
+                                        <Field label="Municipality" error={problems.city}>
+                                            <Picker
+                                                value={details.city}
+                                                onChange={(city) => setDetail({ city })}
+                                                options={PT_MUNICIPALITIES}
+                                                searchable
+                                                title="Municipality"
+                                                searchPlaceholder="Search, like Cascais or Porto"
+                                            />
+                                        </Field>
+                                    )}
+                                    {details.country === 'NG' && (
+                                        <Field label="City" error={details.city !== OTHER_CITY ? problems.city : undefined}>
+                                            <Picker
+                                                value={details.city}
+                                                onChange={(city) => setDetail({ city })}
+                                                options={[...NG_CITIES, { value: OTHER_CITY, label: 'Somewhere else' }]}
+                                                title="City"
+                                            />
+                                        </Field>
+                                    )}
+                                    {(details.country !== 'PT' && (details.country !== 'NG' || details.city === OTHER_CITY)) && (
+                                        <Field label={details.country === 'NG' ? 'Which city?' : 'City'} error={problems.city}>
+                                            <Input value={details.cityOther} onChange={(e) => setDetail({ cityOther: e.target.value })} maxLength={80} autoComplete="address-level2" />
+                                        </Field>
+                                    )}
+                                    <Field label="Neighbourhood" optional hint="Like Anjos or Baixa. Helps clients nearby find you.">
+                                        <Input value={details.neighbourhood} onChange={(e) => setDetail({ neighbourhood: e.target.value })} maxLength={60} autoComplete="off" />
                                     </Field>
+                                </div>
+                                {cityOf(details) && !inLaunchArea(details.country, cityOf(details)) && (
+                                    <p className="lc-setup__note" role="note">
+                                        We are opening in Greater Lisbon first. Your page works anywhere, and we will be in touch as we grow into {cityOf(details)}.
+                                    </p>
                                 )}
 
                                 <Field label="Business phone" error={problems.phone} hint="Shown on your page so clients can call you">
-                                    <Input
-                                        type="tel"
-                                        inputMode="tel"
+                                    <PhoneField
                                         value={details.phone}
-                                        onChange={(e) => setDetail({ phone: e.target.value })}
-                                        placeholder={cityOf(details) === 'Lagos' ? '+234 801 234 5678' : '+351 912 345 678'}
-                                        autoComplete="tel"
+                                        country={details.phoneCountry}
+                                        popular={POPULAR_COUNTRIES}
+                                        onCountryChange={(phoneCountry) => setDetail({ phoneCountry })}
+                                        onChange={({ e164, valid }) => setDetail({ phone: e164, phoneValid: valid })}
+                                        placeholder={details.phoneCountry === 'NG' ? '801 234 5678' : details.phoneCountry === 'PT' ? '912 345 678' : ''}
                                     />
                                 </Field>
                                 <Switch

@@ -119,12 +119,3 @@ export const categoryTint = (value) => {
 }
 
 export const suggestionsFor = (value) => CATEGORIES.find((c) => c.value === value)?.services || []
-
-export const CITIES = [
-    { value: 'Lisbon', timezone: 'Europe/Lisbon' },
-    { value: 'Porto', timezone: 'Europe/Lisbon' },
-    { value: 'Lagos', timezone: 'Africa/Lagos' },
-]
-
-export const timezoneFor = (city) =>
-    CITIES.find((c) => c.value.toLowerCase() === (city || '').trim().toLowerCase())?.timezone || 'Europe/Lisbon'

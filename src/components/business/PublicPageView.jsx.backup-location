@@ -4,6 +4,7 @@ import StreetGridCover from './StreetGridCover'
 import { Mark, Wordmark, initials } from './Brand'
 import { durationLabel, formatMoney, whatsappLink, zonedNow } from '../../services/business'
 import { parseDateKey } from '../../services/dates'
+import { categoryLabel } from '../../constants/categories'
 import { WEEK, clock } from '../../services/hours'
 import '../../styles/public-page.css'
 
@@ -50,7 +51,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                 </span>
                 <h1 className="lc-pub__name">{name}</h1>
                 <p className="lc-pub__where">
-                    {[business.category, business.city].filter(Boolean).join(' in ')}
+                    {[categoryLabel(business.category, business.category_detail), business.city].filter(Boolean).join(' in ')}
                 </p>
                 {status && (
                     <p className="lc-pub__status">
@@ -73,8 +74,14 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
 
             <section className="lc-pub__section" aria-labelledby="lc-pub-services">
                 <h2 id="lc-pub-services" className="lc-pub__h2">Book a service</h2>
-                {visible.length === 0 ? (
-                    <p className="lc-pub__empty">{preview ? 'Your services appear here as you add them.' : 'No services to book yet.'}</p>
+                {visible.length === 0 && preview ? (
+                    <div className="lc-pub__ghost">
+                        <span className="lc-pub__ghostrow" aria-hidden="true"><i /><i /></span>
+                        <span className="lc-pub__ghostrow" aria-hidden="true"><i /><i /></span>
+                        <p>Your services appear here as you add them.</p>
+                    </div>
+                ) : visible.length === 0 ? (
+                    <p className="lc-pub__empty">No services to book yet.</p>
                 ) : (
                     <ul className="lc-pub__services">
                         {visible.map((service) => (

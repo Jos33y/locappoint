@@ -92,15 +92,30 @@ export const POPULAR_CATEGORIES = ['barbershop', 'hair_salon', 'nails', 'massage
 
 const LEGACY = {
     Barbershop: 'barbershop', Salon: 'hair_salon', Beauty: 'beauty_salon', Nails: 'nails', Spa: 'spa',
-    Fitness: 'gym', Clinic: 'medical_clinic', Tutoring: 'tutoring', 'Pet care': 'pet_grooming', Other: 'other',
+    Fitness: 'gym', Gym: 'gym', Clinic: 'medical_clinic', Dental: 'dentist', Tutoring: 'tutoring',
+    'Pet care': 'pet_grooming', Restaurant: 'other', Cafe: 'other', Other: 'other',
 }
 
 export const categoryKey = (value) => (CATEGORIES.some((c) => c.value === value) ? value : LEGACY[value] || (value ? 'other' : ''))
 
 export const categoryLabel = (value, detail) => {
     if (!value) return ''
-    if (value === 'other' || value === 'Other') return detail?.trim() || ''
-    return CATEGORIES.find((c) => c.value === value)?.label || value
+    const key = CATEGORIES.some((c) => c.value === value) ? value : LEGACY[value]
+    if (key === 'other') return detail?.trim() || ''
+    return CATEGORIES.find((c) => c.value === key)?.label || value
+}
+
+export const CATEGORY_SECTIONS = [...CATEGORY_GROUPS, 'Anything else'].map((group) => ({
+    group,
+    items: CATEGORIES.filter((c) => c.group === group),
+}))
+
+const KEY_TINTS = { barbershop: 'signal', tattoo: 'ink', yoga: 'success', pilates: 'success' }
+const GROUP_TINTS = { Wellness: 'success', Health: 'success', Fitness: 'signal' }
+
+export const categoryTint = (value) => {
+    const key = categoryKey(value)
+    return KEY_TINTS[key] || GROUP_TINTS[CATEGORIES.find((c) => c.value === key)?.group] || 'azure'
 }
 
 export const suggestionsFor = (value) => CATEGORIES.find((c) => c.value === value)?.services || []

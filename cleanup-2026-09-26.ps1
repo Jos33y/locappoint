@@ -85,7 +85,18 @@ $targets = @(
     'src\\pages\\client\\Home.jsx.backup-typelists',
     'src\\pages\\portal\\Profile.jsx.backup-typelists',
     'type-lists.zip',
-    'collect-categories-2026-09-26.ps1'
+    'collect-categories-2026-09-26.ps1',
+    'src\\pages\\business\\Setup.jsx.backup-location',
+    'src\\styles\\business\\setup.css.backup-location',
+    'src\\styles\\ui-kit.css.backup-location',
+    'src\\components\\ui\\Picker.jsx.backup-location',
+    'src\\constants\\categories.js.backup-location',
+    'src\\services\\setup.js.backup-location',
+    'src\\components\\business\\PublicPageView.jsx.backup-location',
+    'src\\pages\\app\\PublicBusinessPage.jsx.backup-location',
+    'src\\components\\ui\\index.js.backup-location',
+    'package.json.backup-location',
+    'location-phone.zip'
 )
 
 $existing = @()

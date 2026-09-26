@@ -1,10 +1,10 @@
 import { supabase } from '../config/supabase'
 import { slugProblem } from '../constants/reservedSlugs'
-import { timezoneFor } from '../constants/categories'
+import { timezoneForPlace } from '../constants/locations'
 import { rowsFromWeek } from './hours'
 
 export const BUSINESS_FIELDS =
-    'id, business_name, slug, category, category_detail, city, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at'
+    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at'
 
 export const slugFrom = (name) =>
     (name || '')
@@ -47,9 +47,11 @@ const detailsPayload = (details) => ({
     category: details.category,
     category_detail: details.category === 'other' ? details.categoryDetail.trim() : null,
     city: details.city.trim(),
-    timezone: timezoneFor(details.city),
-    phone: details.phone.trim(),
-    whatsapp: details.whatsappSame ? details.phone.trim() : null,
+    neighbourhood: details.neighbourhood?.trim() || null,
+    country: details.country,
+    timezone: timezoneForPlace(details.country, details.city.trim()),
+    phone: details.phone,
+    whatsapp: details.whatsappSame ? details.phone : null,
 })
 
 export const createDraft = async (userId, details) => {

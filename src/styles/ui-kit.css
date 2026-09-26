@@ -667,3 +667,88 @@
     z-index: 1;
     box-shadow: inset 0 0 0 1px var(--lc-line), 0 8px 12px var(--lc-overlay);
 }
+
+.ui-picker-option { justify-content: flex-start; }
+.ui-picker-optlabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ui-picker-meta {
+    flex: none;
+    color: var(--lc-ink-3);
+    font-family: var(--lc-font-mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ui-picker-trigger { justify-content: flex-start; }
+.ui-picker-trigger .ui-picker-value { flex: 1; }
+
+.ui-picker-trigger--compact {
+    width: auto;
+    gap: var(--space-2);
+    padding: 0 var(--space-3);
+}
+
+.ui-picker-trigger--compact .ui-picker-value {
+    flex: none;
+    font-family: var(--lc-font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.ui-flag {
+    display: inline-block;
+    flex: none;
+    width: 21px;
+    height: 14px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: var(--lc-line-strong);
+    box-shadow: 0 0 0 1px var(--lc-line);
+}
+
+.ui-flag svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+}
+
+
+.ui-phone-field {
+    display: flex;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.ui-phone-field .ui-picker-wrap { flex: none; }
+
+.ui-phone-field__input {
+    flex: 1;
+    min-width: 0;
+}
+
+.ui-phone-field__input .ui-input {
+    font-family: var(--lc-font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+.ui-phone-field input.ui-input {
+    padding: 0 var(--space-4);
+    border: 0;
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    color: var(--lc-ink-1);
+}
+
+.ui-phone-field input.ui-input:hover { background: var(--lc-canvas); }
+
+.ui-phone-field input.ui-input:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 1.5px var(--azure), 0 0 0 4px var(--lc-info-tint);
+}
+
+.ui-field.has-error .ui-phone-field input.ui-input {
+    box-shadow: inset 0 0 0 1.5px var(--lc-danger), 0 0 0 4px var(--lc-danger-tint);
+}
+
+.ui-phone-field input.ui-input::placeholder { color: var(--lc-ink-4); }

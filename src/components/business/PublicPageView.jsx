@@ -51,7 +51,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                 </span>
                 <h1 className="lc-pub__name">{name}</h1>
                 <p className="lc-pub__where">
-                    {[categoryLabel(business.category, business.category_detail), business.city].filter(Boolean).join(' in ')}
+                    {[categoryLabel(business.category, business.category_detail), [business.neighbourhood?.trim(), business.city].filter(Boolean).join(', ')].filter(Boolean).join(' in ')}
                 </p>
                 {status && (
                     <p className="lc-pub__status">

@@ -839,3 +839,13 @@
         padding-right: calc((100% - 620px) / 2 + var(--space-5));
     }
 }
+
+.lc-setup__note {
+    margin: calc(var(--space-2) * -1) 0 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-info-tint);
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
