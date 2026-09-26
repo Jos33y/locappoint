@@ -248,6 +248,25 @@
 
 .ui-phone__scroll::-webkit-scrollbar { display: none; }
 
+.ui-phone--fit {
+    width: 296px;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: auto;
+    border-radius: 44px;
+}
+
+.ui-phone--fit .ui-phone__screen {
+    height: auto;
+    border-radius: 34px;
+}
+
+.ui-phone--fit .ui-phone__scroll {
+    height: auto;
+    overflow: visible;
+}
+
 
 .ui-picker {
     display: flex;

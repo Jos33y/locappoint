@@ -16,13 +16,3 @@ export const SAMPLE_SERVICES = [
     { key: 'e3', service_name: 'Barba com toalha quente', duration_minutes: 30, price: '12', is_active: true },
     { key: 'e4', service_name: 'Corte e barba', duration_minutes: 60, price: '26', is_active: true },
 ]
-
-export const SAMPLE_WEEK = [
-    [],
-    [],
-    [{ start: 600, end: 840 }, { start: 900, end: 1200 }],
-    [{ start: 600, end: 840 }, { start: 900, end: 1200 }],
-    [{ start: 600, end: 840 }, { start: 900, end: 1200 }],
-    [{ start: 600, end: 840 }, { start: 900, end: 1200 }],
-    [{ start: 600, end: 1080 }],
-]

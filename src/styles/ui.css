@@ -85,9 +85,11 @@
     color: var(--lc-ink-2);
 }
 
-.ui-btn--quiet:hover {
-    background: var(--lc-card);
-    color: var(--lc-ink-1);
+@media (hover: hover) {
+    .ui-btn--quiet:hover {
+        background: var(--lc-card);
+        color: var(--lc-ink-1);
+    }
 }
 
 .ui-btn--destructive {

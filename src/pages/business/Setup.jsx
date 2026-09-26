@@ -13,9 +13,9 @@ import { HoursEditor } from '../../components/business/HoursEditor'
 import { PublicPageView } from '../../components/business/PublicPageView'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
 import { CATEGORIES, CITIES, suggestionsFor } from '../../constants/categories'
-import { SAMPLE_BUSINESS, SAMPLE_SERVICES, SAMPLE_WEEK } from '../../constants/sampleBusiness'
+import { SAMPLE_BUSINESS, SAMPLE_SERVICES } from '../../constants/sampleBusiness'
 import { slugProblem } from '../../constants/reservedSlugs'
-import { pageStrength } from '../../services/business'
+import { durationLabel, formatMoney, pageStrength } from '../../services/business'
 import { defaultWeek, hasOpenDay, rowsFromWeek, weekFromRows, weekProblems } from '../../services/hours'
 import { MEDIA_SHAPES, prepareImage, removeBusinessImage, uploadBusinessImage } from '../../services/media'
 import {
@@ -64,14 +64,6 @@ const detailProblems = (d, slugState) => {
     if (local) p.slug = local
     else if (slugState === 'taken') p.slug = 'That address is taken. Try adding your area.'
     return p
-}
-
-const toneOf = () => {
-    const hour = new Date().getHours()
-    if (hour >= 5 && hour < 11) return 'morning'
-    if (hour >= 11 && hour < 16) return 'day'
-    if (hour >= 16 && hour < 21) return 'evening'
-    return 'night'
 }
 
 const useSlugStatus = (slug, ownSlug) => {
@@ -131,6 +123,52 @@ const Welcome = ({ onStart, onLater }) => (
         </div>
         <p className="lc-setup__fine">Your progress saves at every step. Nothing goes live until you say so.</p>
     </section>
+)
+
+const DEMO_SLOTS = ['10:30', '11:15', '14:45', '16:00']
+const DEMO_PICKED = '14:45'
+
+const DemoShowcase = () => (
+    <figure className="lc-demo" aria-label="Demo of a booking page on Locappoint">
+        <figcaption className="lc-demo__tag">Demo</figcaption>
+        <div className="lc-demo__stage" aria-hidden="true">
+            <PhoneFrame fit label="Demo booking page">
+                <div className="lc-demo__page">
+                    <div className="lc-demo__cover"><StreetGridCover seed={SAMPLE_BUSINESS.slug} tint="azure" /></div>
+                    <div className="lc-demo__id">
+                        <span className="lc-demo__logo">{initials(SAMPLE_BUSINESS.business_name)}</span>
+                        <strong className="lc-demo__name">{SAMPLE_BUSINESS.business_name}</strong>
+                        <span className="lc-demo__meta">{SAMPLE_BUSINESS.category} in {SAMPLE_BUSINESS.city}</span>
+                    </div>
+                    <div className="lc-demo__block">
+                        <span className="lc-demo__label">Next free today</span>
+                        <span className="lc-demo__slots">
+                            {DEMO_SLOTS.map((t) => (
+                                <span key={t} className={`lc-demo__slot${t === DEMO_PICKED ? ' is-picked' : ''}`}>{t}</span>
+                            ))}
+                        </span>
+                    </div>
+                    <ul className="lc-demo__services">
+                        {SAMPLE_SERVICES.slice(0, 3).map((s) => (
+                            <li key={s.key}>
+                                <span className="lc-demo__svc">
+                                    <span className="lc-demo__svcname">{s.service_name}</span>
+                                    <span className="lc-demo__svcmeta">{durationLabel(s.duration_minutes)}</span>
+                                </span>
+                                <span className="lc-demo__price">{formatMoney(Number(s.price))}</span>
+                            </li>
+                        ))}
+                    </ul>
+                    <span className="lc-demo__cta">Book {DEMO_PICKED}</span>
+                </div>
+            </PhoneFrame>
+            <div className="lc-demo__ticket">
+                <Status tone="success" size="sm">Booked</Status>
+                <strong>{SAMPLE_SERVICES[0].service_name}</strong>
+                <span>Ana M., today at {DEMO_PICKED}</span>
+            </div>
+        </div>
+    </figure>
 )
 
 const LiveScreen = ({ business, strength, onDone, finishing }) => {
@@ -229,7 +267,6 @@ const Setup = () => {
     const [formError, setFormError] = useState('')
     const [previewOpen, setPreviewOpen] = useState(false)
     const [finishing, setFinishing] = useState(false)
-    const [tone] = useState(toneOf)
 
     const slugState = useSlugStatus(details.slug, business?.slug)
 
@@ -398,12 +435,11 @@ const Setup = () => {
     const problems = showErrors && phase === 0 ? detailProblems(details, slugState) : {}
     const slugInfo = SLUG_STATUS[slugState]
     const preview = <PublicPageView business={draftBusiness} services={services} week={week} preview />
-    const example = <PublicPageView business={SAMPLE_BUSINESS} services={SAMPLE_SERVICES} week={SAMPLE_WEEK} preview />
     const inSteps = typeof phase === 'number'
     const staged = inSteps || phase === 'welcome' || phase === 'live'
 
     return (
-        <div className={`lc-setup lc-setup--${tone}${staged ? '' : ' lc-setup--solo'}${inSteps ? ' lc-setup--steps' : ''}`}>
+        <div className={`lc-setup${staged ? '' : ' lc-setup--solo'}${inSteps ? ' lc-setup--steps' : ''}`}>
 
             <div className="lc-setup__work">
                 <header className="lc-setup__top">
@@ -421,10 +457,7 @@ const Setup = () => {
 
                 {phase === 'welcome' && <Welcome onStart={() => go(0)} onLater={() => navigate('/client')} />}
                 {phase === 'welcome' && !isDesktop && (
-                    <figure className="lc-setup__showcase" aria-label="An example booking page">
-                        <figcaption className="lc-setup__stagelabel">Example page</figcaption>
-                        <PhoneFrame label="Example booking page">{example}</PhoneFrame>
-                    </figure>
+                    <div className="lc-setup__showcase"><DemoShowcase /></div>
                 )}
 
                 {phase === 'failed' && (
@@ -619,9 +652,9 @@ const Setup = () => {
             </div>
 
             {isDesktop && staged && (
-                <aside className="lc-setup__stage" aria-label={phase === 'welcome' ? 'An example booking page' : 'Your page on a phone'}>
-                    <div className="lc-setup__stagehead">
-                        {phase === 'welcome' && <span className="lc-setup__stagelabel">Example page</span>}
+                <aside className="lc-setup__stage" aria-label={phase === 'welcome' ? 'Demo booking page' : 'Your page on a phone'}>
+                    <span className="lc-setup__grid" aria-hidden="true"><StreetGridCover seed="locappoint-lisboa" tint="azure" /></span>
+                    {phase !== 'welcome' && <div className="lc-setup__stagehead">
                         {inSteps && (
                             <>
                                 <span className="lc-setup__stagelabel"><span className="lc-setup__pulse" aria-hidden="true" />Live preview</span>
@@ -632,14 +665,10 @@ const Setup = () => {
                             </>
                         )}
                         {phase === 'live' && (
-                            <>
-                                <span className="lc-setup__stagelabel"><span className="lc-setup__pulse" aria-hidden="true" />Your page is live</span>
-                            </>
+                            <span className="lc-setup__stagelabel"><span className="lc-setup__pulse" aria-hidden="true" />Your page is live</span>
                         )}
-                    </div>
-                    <PhoneFrame label={phase === 'welcome' ? 'Example booking page' : 'Your page on a phone'}>
-                        {phase === 'welcome' ? example : preview}
-                    </PhoneFrame>
+                    </div>}
+                    {phase === 'welcome' ? <DemoShowcase /> : <PhoneFrame label="Your page on a phone">{preview}</PhoneFrame>}
                 </aside>
             )}
 

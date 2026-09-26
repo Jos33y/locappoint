@@ -242,12 +242,18 @@
 }
 
 .lc-pub__hoursrow dd {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
     margin: 0;
     color: var(--lc-ink-1);
     font-family: var(--lc-font-mono);
     font-variant-numeric: tabular-nums;
     text-align: right;
 }
+
+.lc-pub__hoursrow dd span { white-space: nowrap; }
 
 .lc-pub__hoursrow.is-today dt {
     color: var(--lc-ink-1);
@@ -304,6 +310,21 @@
 .lc-pub--preview {
     gap: var(--space-6);
     padding-bottom: var(--space-6);
+}
+
+@container (max-width: 320px) {
+    .lc-pub__actions .ui-btn {
+        min-height: 56px;
+        overflow: hidden;
+        font-size: var(--lc-t-micro);
+    }
+
+    .lc-pub__actions .ui-btn__content { gap: 4px; }
+
+    .lc-pub__hoursrow {
+        padding: var(--space-3);
+        font-size: 12px;
+    }
 }
 
 @container (min-width: 640px) {

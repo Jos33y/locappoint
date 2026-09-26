@@ -4,7 +4,7 @@ import StreetGridCover from './StreetGridCover'
 import { Mark, Wordmark, initials } from './Brand'
 import { durationLabel, formatMoney, whatsappLink, zonedNow } from '../../services/business'
 import { parseDateKey } from '../../services/dates'
-import { WEEK, clock, windowsLabel } from '../../services/hours'
+import { WEEK, clock } from '../../services/hours'
 import '../../styles/public-page.css'
 
 export const openStatus = (week, timeZone) => {
@@ -106,7 +106,11 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                         {WEEK.map(({ dow, long }) => (
                             <div key={dow} className={`lc-pub__hoursrow${dow === todayDow ? ' is-today' : ''}`}>
                                 <dt>{long}{dow === todayDow && <span className="lc-pub__today">Today</span>}</dt>
-                                <dd>{windowsLabel(week[dow])}</dd>
+                                <dd>
+                                    {week[dow].length === 0
+                                        ? 'Closed'
+                                        : week[dow].map((w) => <span key={w.start}>{clock(w.start)} to {clock(w.end)}</span>)}
+                                </dd>
                             </div>
                         ))}
                     </dl>
