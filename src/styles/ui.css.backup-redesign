@@ -65,7 +65,7 @@
 .ui-btn--full { width: 100%; }
 
 .ui-btn--primary {
-    background: var(--lc-azure-button);
+    background: var(--azure);
     box-shadow: var(--lc-shadow-accent), inset 0 1px 0 rgba(255, 255, 255, 0.18);
     color: var(--lc-on-accent);
 }
@@ -765,7 +765,7 @@
 }
 
 .ui-field__optional {
-    color: var(--lc-ink-3);
+    color: var(--lc-ink-4);
     font-weight: var(--font-weight-normal);
 }
 

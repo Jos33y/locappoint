@@ -8,10 +8,21 @@
     -webkit-font-smoothing: antialiased;
 }
 
-.lc-setup--morning { --lc-setup-light: rgba(45, 127, 240, 0.34); }
-.lc-setup--day { --lc-setup-light: rgba(107, 165, 245, 0.26); }
-.lc-setup--evening { --lc-setup-light: rgba(232, 154, 62, 0.28); }
-.lc-setup--night { --lc-setup-light: rgba(64, 104, 214, 0.32); }
+.lc-setup--morning { --lc-setup-light: rgba(45, 127, 240, 0.24); }
+.lc-setup--day { --lc-setup-light: rgba(107, 165, 245, 0.17); }
+.lc-setup--evening { --lc-setup-light: rgba(232, 154, 62, 0.21); }
+.lc-setup--night { --lc-setup-light: rgba(45, 76, 170, 0.22); }
+
+.lc-setup__ambient {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 0;
+    width: min(1100px, 100vw);
+    height: 520px;
+    pointer-events: none;
+    background: radial-gradient(55% 65% at 78% -8%, var(--lc-setup-light), transparent 72%);
+}
 
 .lc-setup__work {
     position: relative;
@@ -39,7 +50,7 @@
     -webkit-backdrop-filter: var(--lc-glass-blur);
 }
 
-.lc-setup:not(.lc-setup--steps) .lc-setup__top {
+.lc-setup--solo .lc-setup__top {
     grid-template-areas: 'brand spacer actions';
     border-bottom-color: transparent;
     background: none;
@@ -216,11 +227,7 @@
     line-height: var(--lc-lh-tight);
 }
 
-.lc-setup__lede--lg {
-    display: flex;
-    flex-direction: column;
-    font-size: 1.125rem;
-}
+.lc-setup__welcome .lc-setup__lede { font-size: 1.0625rem; }
 
 .lc-setup__promise {
     display: flex;
@@ -237,7 +244,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-4);
-    padding: var(--space-4) var(--space-5);
+    padding: var(--space-4);
 }
 
 .lc-setup__promise li + li { border-top: 1px solid var(--lc-line); }
@@ -256,61 +263,15 @@
     font-weight: var(--font-weight-semibold);
 }
 
-.lc-setup__promisenum {
+.lc-setup__promiseicon {
     display: grid;
     place-items: center;
     flex: none;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-full);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--lc-r-md);
     background: var(--lc-info-tint);
     color: var(--azure-link);
-    font-family: var(--lc-font-mono);
-    font-size: var(--lc-t-label);
-    font-weight: var(--font-weight-medium);
-}
-
-.lc-setup__then {
-    margin: calc(var(--space-3) * -1) 0 0;
-    padding-left: var(--space-5);
-    color: var(--lc-ink-3);
-    font-size: var(--lc-t-label);
-}
-
-.lc-setup__showcase {
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-4);
-    margin: 0 0 var(--space-12);
-    padding: var(--space-8) var(--space-5) 0;
-    border-top: 1px solid var(--lc-line);
-}
-
-.lc-setup__showcase::before {
-    content: '';
-    position: absolute;
-    top: 30%;
-    left: 50%;
-    z-index: 0;
-    width: 420px;
-    height: 420px;
-    border-radius: 50%;
-    pointer-events: none;
-    background: radial-gradient(closest-side, var(--lc-setup-light), transparent);
-    transform: translateX(-50%);
-}
-
-.lc-setup__showcase > * {
-    position: relative;
-    z-index: 1;
-}
-
-.lc-setup__showcase .ui-phone {
-    height: 520px;
-    min-height: 0;
 }
 
 .lc-setup__welcomeactions {
@@ -481,20 +442,13 @@
     }
 
     .lc-setup__welcome,
-    .lc-setup__live {
-        flex: 1;
-        justify-content: center;
-        padding: var(--space-10) var(--space-8);
-    }
+    .lc-setup__live { padding-top: 12vh; }
 }
 
 .lc-setup__stage {
-    --lc-phone-h: max(520px, min(760px, calc(100dvh - 180px)));
     position: sticky;
     top: 0;
     z-index: 1;
-    isolation: isolate;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -507,28 +461,12 @@
     background: var(--lc-panel);
 }
 
-.lc-setup__stage::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: -1;
-    width: 760px;
-    height: 760px;
-    border-radius: 50%;
-    pointer-events: none;
-    background: radial-gradient(closest-side, var(--lc-setup-light), transparent);
-    transform: translate(-50%, -50%);
-}
-
 .lc-setup__stagehead {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    width: calc(var(--lc-phone-h) * 375 / 780);
-    max-width: 100%;
-    min-height: 30px;
+    width: min(100%, 400px);
 }
 
 .lc-setup__stagelabel {

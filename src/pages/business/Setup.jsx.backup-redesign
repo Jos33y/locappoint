@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Check, Copy, Download, ExternalLink, Eye, MessageCircle, Share2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Clock, Copy, Download, ExternalLink, Eye, ListChecks, MessageCircle, Share2, Store } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import {
     AffixInput, Button, Field, ImagePicker, Input, PhoneFrame, QrCode, Ring, Select, Sheet, Status, Stepper, Switch, Textarea,
@@ -13,7 +13,6 @@ import { HoursEditor } from '../../components/business/HoursEditor'
 import { PublicPageView } from '../../components/business/PublicPageView'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
 import { CATEGORIES, CITIES, suggestionsFor } from '../../constants/categories'
-import { SAMPLE_BUSINESS, SAMPLE_SERVICES, SAMPLE_WEEK } from '../../constants/sampleBusiness'
 import { slugProblem } from '../../constants/reservedSlugs'
 import { pageStrength } from '../../services/business'
 import { defaultWeek, hasOpenDay, rowsFromWeek, weekFromRows, weekProblems } from '../../services/hours'
@@ -103,28 +102,16 @@ const SLUG_STATUS = {
     error: { tone: 'warning', word: 'Not checked', text: 'We will check it when you continue' },
 }
 
-const WELCOME_STEPS = [
-    ['Your business', 'Name, city and your own web address'],
-    ['What you offer', 'Services, prices and how long each takes'],
-    ['When you work', 'The hours clients can book you'],
-]
-
 const Welcome = ({ onStart, onLater }) => (
     <section className="lc-setup__welcome" aria-labelledby="lc-setup-welcome">
+        <Mark size={52} />
         <h1 id="lc-setup-welcome" className="lc-setup__hero">Let's get you booked.</h1>
-        <p className="lc-setup__lede lc-setup__lede--lg">
-            <span>Set up your booking page in a few minutes.</span>
-            <span>Free for your first 12 months.</span>
-        </p>
-        <ol className="lc-setup__promise">
-            {WELCOME_STEPS.map(([title, body], i) => (
-                <li key={title}>
-                    <span className="lc-setup__promisenum" aria-hidden="true">{i + 1}</span>
-                    <span><strong>{title}</strong>{body}</span>
-                </li>
-            ))}
-        </ol>
-        <p className="lc-setup__then">Then photos and a few words about you, if you like.</p>
+        <p className="lc-setup__lede">Set up your booking page in about ten minutes. Free for your first twelve months.</p>
+        <ul className="lc-setup__promise">
+            <li><span className="lc-setup__promiseicon"><Store size={18} aria-hidden="true" /></span><span><strong>Your business</strong>Name, city and your own web address</span></li>
+            <li><span className="lc-setup__promiseicon"><ListChecks size={18} aria-hidden="true" /></span><span><strong>What you offer</strong>Services, prices and how long each takes</span></li>
+            <li><span className="lc-setup__promiseicon"><Clock size={18} aria-hidden="true" /></span><span><strong>When you work</strong>The hours clients can book you</span></li>
+        </ul>
         <div className="lc-setup__welcomeactions">
             <Button size="lg" iconRight={ArrowRight} onClick={onStart}>Let's start</Button>
             <Button size="lg" variant="quiet" onClick={onLater}>Not now</Button>
@@ -204,7 +191,7 @@ const LiveScreen = ({ business, strength, onDone, finishing }) => {
                 </p>
             )}
 
-            <Button variant="secondary" size="lg" iconRight={ArrowRight} loading={finishing} onClick={onDone}>Go to Today</Button>
+            <Button size="lg" iconRight={ArrowRight} loading={finishing} onClick={onDone}>Go to Today</Button>
         </section>
     )
 }
@@ -398,34 +385,24 @@ const Setup = () => {
     const problems = showErrors && phase === 0 ? detailProblems(details, slugState) : {}
     const slugInfo = SLUG_STATUS[slugState]
     const preview = <PublicPageView business={draftBusiness} services={services} week={week} preview />
-    const example = <PublicPageView business={SAMPLE_BUSINESS} services={SAMPLE_SERVICES} week={SAMPLE_WEEK} preview />
-    const inSteps = typeof phase === 'number'
-    const staged = inSteps || phase === 'welcome' || phase === 'live'
 
     return (
-        <div className={`lc-setup lc-setup--${tone}${staged ? '' : ' lc-setup--solo'}${inSteps ? ' lc-setup--steps' : ''}`}>
+        <div className={`lc-setup lc-setup--${tone}${phase === 'welcome' || phase === 'live' || phase === 'failed' ? ' lc-setup--solo' : ''}`}>
+            <div className="lc-setup__ambient" aria-hidden="true" />
 
             <div className="lc-setup__work">
                 <header className="lc-setup__top">
                     <span className="lc-setup__brand"><Mark size={26} /><Wordmark /></span>
                     {typeof phase === 'number' && <div className="lc-setup__stepper"><Stepper steps={STEPS} current={phase} /></div>}
-                    {inSteps && (
-                        <span className="lc-setup__topactions">
-                            {!isDesktop && (
-                                <Button variant="secondary" size="sm" icon={Eye} onClick={() => setPreviewOpen(true)}>Preview</Button>
-                            )}
-                            <Button variant="quiet" size="sm" to="/client">Finish later</Button>
-                        </span>
-                    )}
+                    <span className="lc-setup__topactions">
+                        {typeof phase === 'number' && !isDesktop && (
+                            <Button variant="secondary" size="sm" icon={Eye} onClick={() => setPreviewOpen(true)}>Preview</Button>
+                        )}
+                        {phase !== 'live' && <Button variant="quiet" size="sm" to="/client">Finish later</Button>}
+                    </span>
                 </header>
 
                 {phase === 'welcome' && <Welcome onStart={() => go(0)} onLater={() => navigate('/client')} />}
-                {phase === 'welcome' && !isDesktop && (
-                    <figure className="lc-setup__showcase" aria-label="An example booking page">
-                        <figcaption className="lc-setup__stagelabel">Example page</figcaption>
-                        <PhoneFrame label="Example booking page">{example}</PhoneFrame>
-                    </figure>
-                )}
 
                 {phase === 'failed' && (
                     <section className="lc-setup__welcome">
@@ -618,28 +595,16 @@ const Setup = () => {
                 )}
             </div>
 
-            {isDesktop && staged && (
-                <aside className="lc-setup__stage" aria-label={phase === 'welcome' ? 'An example booking page' : 'Your page on a phone'}>
+            {isDesktop && typeof phase === 'number' && (
+                <aside className="lc-setup__stage" aria-label="Live preview of your page">
                     <div className="lc-setup__stagehead">
-                        {phase === 'welcome' && <span className="lc-setup__stagelabel">Example page</span>}
-                        {inSteps && (
-                            <>
-                                <span className="lc-setup__stagelabel"><span className="lc-setup__pulse" aria-hidden="true" />Live preview</span>
-                                <span className="lc-setup__strength">
-                                    <Ring value={strength.value} size={30} stroke={3.5} label={`Page ${strength.percent}% complete`} />
-                                    <span><strong className="lc-setup__num">{strength.percent}%</strong> page strength</span>
-                                </span>
-                            </>
-                        )}
-                        {phase === 'live' && (
-                            <>
-                                <span className="lc-setup__stagelabel"><span className="lc-setup__pulse" aria-hidden="true" />Your page is live</span>
-                            </>
-                        )}
+                        <span className="lc-setup__stagelabel"><span className="lc-setup__pulse" aria-hidden="true" />Live preview</span>
+                        <span className="lc-setup__strength">
+                            <Ring value={strength.value} size={30} stroke={3.5} label={`Page ${strength.percent}% complete`} />
+                            <span><strong className="lc-setup__num">{strength.percent}%</strong> page strength</span>
+                        </span>
                     </div>
-                    <PhoneFrame label={phase === 'welcome' ? 'Example booking page' : 'Your page on a phone'}>
-                        {phase === 'welcome' ? example : preview}
-                    </PhoneFrame>
+                    <PhoneFrame label="Your page on a phone">{preview}</PhoneFrame>
                 </aside>
             )}
 

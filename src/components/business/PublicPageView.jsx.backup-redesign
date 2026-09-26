@@ -12,14 +12,14 @@ export const openStatus = (week, timeZone) => {
     const { dateKey, minutes } = zonedNow(timeZone || 'Europe/Lisbon')
     const today = parseDateKey(dateKey).getDay()
     const current = week[today].find((w) => minutes >= w.start && minutes < w.end)
-    if (current) return { open: true, text: `Until ${clock(current.end)}` }
+    if (current) return { open: true, text: `Open now, until ${clock(current.end)}` }
     const later = week[today].find((w) => w.start > minutes)
     if (later) return { open: false, text: `Opens today at ${clock(later.start)}` }
     for (let i = 1; i <= 7; i++) {
         const dow = (today + i) % 7
         if (week[dow].length > 0) {
             const day = i === 1 ? 'tomorrow' : WEEK.find((d) => d.dow === dow).long
-            return { open: false, text: `Opens ${day} at ${clock(week[dow][0].start)}` }
+            return { open: false, text: `Closed now, opens ${day} at ${clock(week[dow][0].start)}` }
         }
     }
     return null
@@ -91,7 +91,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                                     <span className="lc-pub__price">
                                         {String(service.price ?? '').trim() === '' ? '' : formatMoney(Number(String(service.price).replace(',', '.')))}
                                     </span>
-                                    <Button variant="secondary" onClick={onBook ? () => onBook(service) : undefined}>Book</Button>
+                                    <Button onClick={onBook ? () => onBook(service) : undefined}>Book</Button>
                                 </span>
                             </li>
                         ))}
