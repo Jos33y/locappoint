@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ""
-Write-Host "  Locappoint - Cleanup for 26 September (run after committing the sidebar hubs patch)" -ForegroundColor Cyan
+Write-Host "  Locappoint - Cleanup for 26 September (run after committing patches 17 and 18)" -ForegroundColor Cyan
 Write-Host ""
 
 if (-not (Test-Path 'package.json')) { Write-Host "  [ABORT] No package.json. Run from repo root." -ForegroundColor Red; exit 1 }
@@ -24,12 +24,19 @@ $targets = @(
     'src\components\business\BusinessShell.jsx.backup-hubs',
     'src\components\business\CommandPalette.jsx.backup-hubs',
     'src\styles\business\shell.css.backup-hubs',
+    'src\pages\business\Setup.jsx.backup-page',
+    'src\pages\business\GettingStarted.jsx.backup-page',
+    'src\services\business.js.backup-page',
+    'src\BookingApp.jsx.backup-page',
+    'src\components\business\BusinessShell.jsx.backup-page',
+    'package.json.backup-page',
     'src\components\ui\ImagePicker.jsx.backup-yours',
     'src\pages\business\Setup.jsx.backup-yours',
     'src\styles\ui-kit.css.backup-yours',
     'src\styles\business\editors.css.backup-yours',
     'src\styles\business\setup.css.backup-yours',
     'sidebar-hubs.zip',
+    'business-page.zip',
     'collect-sidebar-2026-09-26.ps1',
     'collect-styles-2026-09-26.ps1'
 )
@@ -41,7 +48,7 @@ foreach ($t in $targets) {
 }
 
 Write-Host ""
-Write-Host "  Kept on purpose: *.mistake files (retired Sheet.jsx, BusinessPage.jsx, TimeField.jsx, schema-onboarding.sql)." -ForegroundColor Gray
+Write-Host "  Kept on purpose: *.mistake files (retired Sheet.jsx, BusinessPage.jsx, TimeField.jsx, Profile.jsx, schema-onboarding.sql)." -ForegroundColor Gray
 Write-Host "  They go only when you approve deleting them." -ForegroundColor Gray
 Write-Host ""
 

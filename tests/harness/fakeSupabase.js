@@ -1,0 +1,63 @@
+import cover from '../fixtures/cover.jpg'
+
+const today = new Date()
+const key = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Lisbon' }).format(today)
+
+export const DATA = {
+  businesses: [{ id: 'b1', user_id: 'u1', business_name: 'Femtos Barbearia', slug: 'femtos-barbearia', timezone: 'Europe/Lisbon', is_active: true, launched_at: '2026-09-25T10:00:00Z', city: 'Lisbon', country: 'PT', neighbourhood: 'Arroios', category: 'barbershop', category_detail: null, phone: '+351912345678', whatsapp: '+351912345678', description: 'Classic cuts and hot towel shaves in Arroios.', address: 'Rua Morais Soares 12', logo_url: null, banner_url: cover }],
+  business_members: [{ id: 'm1', user_id: 'u1', business_id: 'b1', role: 'owner', display_name: 'Miles Farra', status: 'active', is_bookable: true, sort_order: 0 }],
+  services: [
+    { id: 's1', business_id: 'b1', service_name: 'Haircut', duration_minutes: 30, price: 18, is_active: true, sort_order: 0 },
+    { id: 's2', business_id: 'b1', service_name: 'Beard trim', duration_minutes: 20, price: 12, is_active: true, sort_order: 1 },
+  ],
+  availability: [1, 2, 3, 4, 5, 6].map((d) => ({ id: `a${d}`, business_id: 'b1', staff_id: null, day_of_week: d, start_time: '09:00:00', end_time: '19:00:00' })),
+  appointments: [
+    { id: 'p1', business_id: 'b1', staff_id: 'm1', service_id: 's1', appointment_date: key, appointment_time: '10:00:00', duration_minutes: 30, status: 'confirmed', source: 'online', client_name: 'Jameson', client_phone: '', client_email: '', notes: '', services: { service_name: 'Haircut', price: 18 } },
+    { id: 'p2', business_id: 'b1', staff_id: 'm1', service_id: 's2', appointment_date: key, appointment_time: '15:00:00', duration_minutes: 20, status: 'pending', source: 'online', client_name: 'Rui', client_phone: '', client_email: '', notes: '', services: { service_name: 'Beard trim', price: 12 } },
+  ],
+  time_blocks: [],
+  profiles: [{ id: 'u1', full_name: 'Miles Farra', email: 'milesfarra@gmail.com' }],
+  support_tickets: [],
+}
+
+export const calls = []
+window.__calls = calls
+
+const builder = (table) => {
+  let rows = [...(DATA[table] || [])]
+  let mode = 'many'
+  let change = null
+  const api = {
+    select() { return api }, eq(k, v) { rows = rows.filter((r) => !(k in r) || r[k] === v); return api },
+    neq() { return api }, in() { return api }, gte() { return api }, lte() { return api }, lt() { return api }, gt() { return api },
+    is() { return api }, not() { return api }, or() { return api }, order() { return api }, limit() { return api }, range() { return api },
+    ilike() { return api }, contains() { return api }, filter() { return api }, match() { return api },
+    insert(v) { calls.push(['insert', table, v]); return api }, update(v) { calls.push(['update', table, v]); change = v; return api },
+    upsert(v) { calls.push(['upsert', table, v]); return api }, delete() { calls.push(['delete', table]); return api },
+    single() { mode = 'single'; return api }, maybeSingle() { mode = 'maybe'; return api },
+    then(resolve, reject) {
+      calls.push(['from', table])
+      if (window.__failNext) { window.__failNext = false; return Promise.resolve({ data: null, error: { code: window.__failCode || '500', message: window.__failMessage || 'fail' } }).then(resolve, reject) }
+      if (change) rows.forEach((r) => Object.assign(r, change))
+      rows = rows.map((r) => ({ ...r }))
+      const data = mode === 'many' ? rows : rows[0] || null
+      return Promise.resolve({ data, error: null, count: rows.length }).then(resolve, reject)
+    },
+  }
+  return api
+}
+
+export const supabase = {
+  from: builder,
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; return { data: null, error: null } },
+  storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
+  auth: {
+    getSession: async () => ({ data: { session: null } }),
+    getUser: async () => ({ data: { user: { id: 'u1', email: 'milesfarra@gmail.com' } } }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+    signOut: async () => ({ error: null }),
+  },
+  channel: () => { const c = { on: () => c, subscribe: () => c, unsubscribe() {} }; return c },
+  removeChannel() {},
+}
+export default supabase

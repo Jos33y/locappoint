@@ -70,7 +70,7 @@ const StartCard = ({ strength, onClick }) => (
         <Ring value={strength.value} size={34} stroke={3.5} label={`Setup ${strength.percent}% done`} />
         <span className="biz-strength__text">
             <strong>Getting started <span className="biz-num">{strength.percent}%</span></strong>
-            <small>{strength.next ? `Next: ${strength.next.label.toLowerCase()}` : 'The last step arrives soon'}</small>
+            <small>{strength.next ? `Next: ${strength.next.label.toLowerCase()}` : 'Finish your page'}</small>
         </span>
     </Link>
 )

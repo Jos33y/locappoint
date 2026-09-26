@@ -4,7 +4,7 @@ import { ArrowLeftRight, Bell, ChevronRight, CirclePlay, Clock, LogOut, Menu, Pl
 import { useAuth } from '../../hooks/useAuth'
 import { loadWorkspace, pageStrength } from '../../services/business'
 import { WorkspaceContext } from './WorkspaceContext'
-import { NAV_FOOT, NAV_GROUPS, NAV_ITEMS } from './nav'
+import { HUBS, NAV_FOOT, NAV_ITEMS, hubFor } from './nav'
 import { BrandLoader, Mark, Ring, Wordmark, initials } from './Brand'
 import { Sheet } from '../ui'
 import NewBookingSheet from './NewBookingSheet'
@@ -12,6 +12,8 @@ import BookingDetailSheet from './BookingDetailSheet'
 import ShareLink from './ShareLink'
 import Tour from './Tour'
 import CommandPalette from './CommandPalette'
+import HubNav from './HubNav'
+import AccountMenu from './AccountMenu'
 import '../../styles/business/shell.css'
 
 const NavItem = ({ item, onClick, compact = false }) => {
@@ -40,10 +42,25 @@ const tourSeen = () => {
     try { return localStorage.getItem(TOUR_KEY) === '1' } catch { return true }
 }
 
+const HubLink = ({ hub, active }) => {
+    const Icon = hub.icon
+    return (
+        <Link
+            to={hub.pages[0].to}
+            className={`biz-navlink${active ? ' active' : ''}`}
+            aria-current={active ? 'page' : undefined}
+            data-tour={hub.tour}
+        >
+            <Icon size={18} aria-hidden="true" />
+            <span className="biz-navlink__label">{hub.label}</span>
+        </Link>
+    )
+}
+
 const StartRow = ({ strength }) => (
     <NavLink to="/portal/start" className="biz-navlink biz-startrow" data-tour="start">
         <Ring value={strength.value} size={18} stroke={2.5} label={`Setup ${strength.percent}% done`} />
-        <span className="biz-navlink__label">{strength.percent === 100 ? 'All set up' : 'Getting started'}</span>
+        <span className="biz-navlink__label">Getting started</span>
         <span className="biz-startrow__pct biz-num">{strength.percent}%</span>
     </NavLink>
 )
@@ -52,8 +69,8 @@ const StartCard = ({ strength, onClick }) => (
     <Link to="/portal/start" className="biz-strength" onClick={onClick}>
         <Ring value={strength.value} size={34} stroke={3.5} label={`Setup ${strength.percent}% done`} />
         <span className="biz-strength__text">
-            <strong>{strength.percent === 100 ? 'All set up' : 'Getting started'} <span className="biz-num">{strength.percent}%</span></strong>
-            <small>{strength.next ? `Next: ${strength.next.label.toLowerCase()}` : 'Replay the tour any time'}</small>
+            <strong>Getting started <span className="biz-num">{strength.percent}%</span></strong>
+            <small>{strength.next ? `Next: ${strength.next.label.toLowerCase()}` : 'The last step arrives soon'}</small>
         </span>
     </Link>
 )
@@ -191,7 +208,8 @@ const BusinessShell = () => {
     const tabs = NAV_ITEMS.filter((item) => item.tab)
     const moreActive = !tabs.some((item) => (item.end ? location.pathname === item.to : location.pathname.startsWith(item.to)))
     const strength = value?.strength
-    const name = userProfile?.full_name || user?.email || ''
+    const setupOpen = Boolean(strength && strength.percent < 100)
+    const hub = hubFor(location.pathname)
 
     return (
         <div className="biz-shell">
@@ -212,35 +230,18 @@ const BusinessShell = () => {
                     <ChevronRight size={16} aria-hidden="true" className="biz-bizcard__chevron" />
                 </Link>
 
-                <nav className="biz-sidebar__nav">
-                    {NAV_GROUPS.map((group) => (
-                        <div key={group.label} className="biz-navgroup">
-                            <p className="biz-navgroup__label">{group.label}</p>
-                            {group.items.map((item) => <NavItem key={item.to} item={item} />)}
-                        </div>
-                    ))}
+                <nav className="biz-sidebar__nav" aria-label="Main">
+                    <div className="biz-navgroup">
+                        {NAV_ITEMS.map((item) => <NavItem key={item.to} item={item} />)}
+                    </div>
+                    <div className="biz-navgroup">
+                        {HUBS.map((item) => <HubLink key={item.id} hub={item} active={item === hub} />)}
+                    </div>
                 </nav>
 
                 <div className="biz-sidebar__foot">
-                    {strength && <StartRow strength={strength} />}
-                    {NAV_FOOT.filter((item) => item.to !== '/portal/start').map((item) => <NavItem key={item.to} item={item} />)}
-                    <Link to="/client" className="biz-navlink">
-                        <ArrowLeftRight size={18} aria-hidden="true" />
-                        <span className="biz-navlink__label">Switch to Booking</span>
-                    </Link>
-                    <div className="biz-account">
-                        <span className="biz-avatar">{initials(name)}</span>
-                        <span className="biz-account__text">
-                            <strong>{userProfile?.full_name}</strong>
-                            <small>{user?.email}</small>
-                        </span>
-                        <NavLink to="/portal/settings" className="biz-iconbtn biz-iconbtn--quiet" aria-label="Settings">
-                            <Settings size={16} aria-hidden="true" />
-                        </NavLink>
-                        <button type="button" className="biz-iconbtn biz-iconbtn--quiet" onClick={signOut} aria-label="Sign out">
-                            <LogOut size={16} aria-hidden="true" />
-                        </button>
-                    </div>
+                    {setupOpen && <StartRow strength={strength} />}
+                    <AccountMenu name={userProfile?.full_name || ''} email={user?.email || ''} onTour={openTour} onSignOut={signOut} />
                 </div>
             </aside>
 
@@ -279,6 +280,7 @@ const BusinessShell = () => {
                         </div>
                     ) : value ? (
                         <WorkspaceContext.Provider value={value}>
+                            {hub && <HubNav hub={hub} />}
                             <Outlet />
                         </WorkspaceContext.Provider>
                     ) : (
@@ -311,17 +313,15 @@ const BusinessShell = () => {
 
             <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} title="More">
                 <div className="biz-more">
-                    {strength && <StartCard strength={strength} onClick={() => setMoreOpen(false)} />}
-                    {NAV_GROUPS.map((group) => {
-                        const items = group.items.filter((item) => !item.tab)
-                        if (!items.length) return null
-                        return (
-                            <div key={group.label} className="biz-navgroup">
-                                <p className="biz-navgroup__label">{group.label}</p>
-                                {items.map((item) => <NavItem key={item.to} item={item} compact onClick={() => setMoreOpen(false)} />)}
-                            </div>
-                        )
-                    })}
+                    {setupOpen && <StartCard strength={strength} onClick={() => setMoreOpen(false)} />}
+                    {HUBS.map((group) => (
+                        <div key={group.id} className="biz-navgroup">
+                            <p className="biz-navgroup__label">{group.label}</p>
+                            {group.pages.map((page) => (
+                                <NavItem key={page.to} item={{ ...page, label: page.name }} compact onClick={() => setMoreOpen(false)} />
+                            ))}
+                        </div>
+                    ))}
                     <div className="biz-navgroup">
                         <p className="biz-navgroup__label">Help</p>
                         {NAV_FOOT.map((item) => <NavItem key={item.to} item={item} compact onClick={() => setMoreOpen(false)} />)}

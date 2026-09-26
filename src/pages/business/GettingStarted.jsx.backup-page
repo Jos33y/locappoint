@@ -14,7 +14,6 @@ const GUIDES = [
 const GettingStarted = () => {
     const { business, services, hours, openTour } = useWorkspace()
     const steps = pageSteps({ business, services, hours })
-    const ordered = [...steps.filter((s) => !s.done), ...steps.filter((s) => s.done)]
     const done = steps.filter((s) => s.done).length
     const value = done / steps.length
 
@@ -46,7 +45,7 @@ const GettingStarted = () => {
             </Card>
 
             <Card title="Your checklist" padding="sm">
-                {ordered.map((step) => (
+                {steps.map((step) => (
                     <ListRow
                         key={step.label}
                         leading={
@@ -58,7 +57,6 @@ const GettingStarted = () => {
                         subtitle={step.done ? 'Done' : step.hint}
                         to={step.done ? undefined : step.to}
                         chevron={Boolean(step.to) && !step.done}
-                        dense={step.done}
                     />
                 ))}
             </Card>

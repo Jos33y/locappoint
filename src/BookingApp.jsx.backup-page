@@ -32,7 +32,7 @@ import GettingStarted from './pages/business/GettingStarted'
 import Help from './pages/business/Help'
 import Channels from './pages/business/Channels'
 import Setup from './pages/business/Setup'
-import BusinessPage from './pages/business/BusinessPage'
+import PortalProfile from './pages/portal/Profile'
 import PortalServices from './pages/portal/Services'
 import PortalAvailability from './pages/portal/Availability'
 import PortalSettings from './pages/portal/Settings'
@@ -89,7 +89,7 @@ const BookingApp = () => (
                     <Route path="calendar" element={<Calendar />} />
                     <Route path="services" element={<PortalServices />} />
                     <Route path="hours" element={<PortalAvailability />} />
-                    <Route path="page" element={<BusinessPage />} />
+                    <Route path="page" element={<PortalProfile />} />
                     <Route path="settings" element={<PortalSettings />} />
                     <Route path="assistant" element={<Planned section="assistant" />} />
                     <Route path="clients" element={<Planned section="clients" />} />
