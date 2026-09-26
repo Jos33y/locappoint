@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { slugProblem } from '../../constants/reservedSlugs'
-import { CATEGORY_SECTIONS, categoryKey } from '../../constants/categories'
 import { Building2, MapPin, Phone, Mail, Globe, MessageCircle, Save, ArrowLeft } from 'lucide-react'
 import '../../styles/dashboard.css'
 import '../../styles/forms.css'
@@ -46,7 +45,7 @@ const PortalProfile = () => {
             if (error && error.code !== 'PGRST116') throw error
             
             if (data) {
-                setFormData({ ...data, category: categoryKey(data.category), category_detail: data.category_detail || '' })
+                setFormData(data)
                 setIsEditing(true)
             }
         } catch (error) {
@@ -97,10 +96,6 @@ const PortalProfile = () => {
             setError('Category is required')
             return false
         }
-        if (formData.category === 'other' && !(formData.category_detail || '').trim()) {
-            setError('Tell clients what kind of business you are')
-            return false
-        }
         if (!formData.city.trim()) {
             setError('City is required')
             return false
@@ -124,7 +119,6 @@ const PortalProfile = () => {
         try {
             const businessData = {
                 ...formData,
-                category_detail: formData.category === 'other' ? (formData.category_detail || '').trim() : null,
                 user_id: userProfile.id,
             }
 
@@ -267,27 +261,19 @@ const PortalProfile = () => {
                             onChange={handleInputChange}
                             required
                         >
-                            <option value="">Select a type</option>
-                            {CATEGORY_SECTIONS.map(({ group, items }) => (
-                                <optgroup key={group} label={group}>
-                                    {items.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                                </optgroup>
-                            ))}
+                            <option value="">Select a category</option>
+                            <option value="Salon">Salon</option>
+                            <option value="Barbershop">Barbershop</option>
+                            <option value="Spa">Spa</option>
+                            <option value="Clinic">Clinic</option>
+                            <option value="Dental">Dental</option>
+                            <option value="Fitness">Fitness</option>
+                            <option value="Beauty">Beauty</option>
+                            <option value="Restaurant">Restaurant</option>
+                            <option value="Cafe">Cafe</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
-                    {formData.category === 'other' && (
-                        <div className="form-group">
-                            <label htmlFor="category_detail">What kind of business? *</label>
-                            <input
-                                id="category_detail"
-                                name="category_detail"
-                                value={formData.category_detail || ''}
-                                onChange={handleInputChange}
-                                maxLength={60}
-                                placeholder="Surf school"
-                            />
-                        </div>
-                    )}
                 </div>
 
                 {/* Location */}

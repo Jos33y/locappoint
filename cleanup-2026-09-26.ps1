@@ -78,7 +78,14 @@ $targets = @(
     'src\\constants\\sampleBusiness.js.backup-types',
     'src\\pages\\app\\PublicBusinessPage.jsx.backup-types',
     'src\\components\\ui\\index.js.backup-types',
-    'business-types.zip'
+    'business-types.zip',
+    'src\\constants\\categories.js.backup-typelists',
+    'src\\pages\\app\\Businesses.jsx.backup-typelists',
+    'src\\pages\\client\\Search.jsx.backup-typelists',
+    'src\\pages\\client\\Home.jsx.backup-typelists',
+    'src\\pages\\portal\\Profile.jsx.backup-typelists',
+    'type-lists.zip',
+    'collect-categories-2026-09-26.ps1'
 )
 
 $existing = @()

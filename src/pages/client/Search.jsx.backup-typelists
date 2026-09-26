@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
 import { Search as SearchIcon, MapPin, Filter, X } from 'lucide-react'
-import { CATEGORIES, CATEGORY_SECTIONS, categoryKey, categoryLabel } from '../../constants/categories'
 import '../../styles/dashboard.css'
 import '../../styles/client/client.css'
 
@@ -14,7 +13,7 @@ const ClientSearch = () => {
 
     // Search and filter states
     const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
-    const [selectedCategory, setSelectedCategory] = useState(categoryKey(searchParams.get('category') || ''))
+    const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '')
     const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || '')
 
     useEffect(() => {
@@ -35,7 +34,6 @@ const ClientSearch = () => {
                     slug,
                     description,
                     category,
-                    category_detail,
                     city,
                     location,
                     is_active
@@ -61,15 +59,14 @@ const ClientSearch = () => {
             filtered = filtered.filter(business =>
                 business.business_name.toLowerCase().includes(query) ||
                 business.description?.toLowerCase().includes(query) ||
-                categoryLabel(business.category, business.category_detail).toLowerCase().includes(query) ||
-                (CATEGORIES.find((c) => c.value === categoryKey(business.category))?.keywords || '').includes(query)
+                business.category?.toLowerCase().includes(query)
             )
         }
 
         // Category filter
         if (selectedCategory) {
             filtered = filtered.filter(business =>
-                categoryKey(business.category) === selectedCategory
+                business.category === selectedCategory
             )
         }
 
@@ -149,12 +146,15 @@ const ClientSearch = () => {
                         onChange={(e) => setSelectedCategory(e.target.value)}
                         className="input"
                     >
-                        <option value="">All types</option>
-                        {CATEGORY_SECTIONS.map(({ group, items }) => (
-                            <optgroup key={group} label={group}>
-                                {items.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                            </optgroup>
-                        ))}
+                        <option value="">All Categories</option>
+                        <option value="Salon">Salon</option>
+                        <option value="Spa">Spa</option>
+                        <option value="Barbershop">Barbershop</option>
+                        <option value="Dental">Dental</option>
+                        <option value="Clinic">Clinic</option>
+                        <option value="Gym">Gym</option>
+                        <option value="Restaurant">Restaurant</option>
+                        <option value="Other">Other</option>
                     </select>
                 </div>
 
@@ -237,7 +237,7 @@ const ClientSearch = () => {
 
                                 {business.category && (
                                     <span className="business-card-category">
-                                        {categoryLabel(business.category, business.category_detail)}
+                                        {business.category}
                                     </span>
                                 )}
 

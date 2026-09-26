@@ -4,7 +4,6 @@ import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { parseDateKey, todayKey } from '../../services/dates'
 import { Search, Calendar, MapPin, Clock, ArrowRight } from 'lucide-react'
-import { CATEGORY_SECTIONS } from '../../constants/categories'
 import '../../styles/dashboard.css'
 import '../../styles/client/client.css'
 
@@ -117,12 +116,15 @@ const ClientHome = () => {
                             onChange={(e) => setSearchCategory(e.target.value)}
                             className="input"
                         >
-                            <option value="">All types</option>
-                            {CATEGORY_SECTIONS.map(({ group, items }) => (
-                                <optgroup key={group} label={group}>
-                                    {items.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                                </optgroup>
-                            ))}
+                            <option value="">All Categories</option>
+                            <option value="Salon">Salon</option>
+                            <option value="Spa">Spa</option>
+                            <option value="Barbershop">Barbershop</option>
+                            <option value="Dental">Dental</option>
+                            <option value="Clinic">Clinic</option>
+                            <option value="Gym">Gym</option>
+                            <option value="Restaurant">Restaurant</option>
+                            <option value="Other">Other</option>
                         </select>
                         <select
                             value={searchCity}

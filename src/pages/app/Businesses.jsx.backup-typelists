@@ -5,7 +5,6 @@ import { supabase } from '../../config/supabase'
 import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 import StreetGridCover from '../../components/business/StreetGridCover'
-import { categoryLabel, categoryTint } from '../../constants/categories'
 import '../../styles/app/home.css'
 import '../../styles/app/businesses.css'
 
@@ -19,6 +18,39 @@ const fieldOf = (biz, ...keys) => {
         if (biz[k] != null && biz[k] !== '') return biz[k]
     }
     return ''
+}
+
+
+// Category -> tint family. Drives StreetGridCover accent + avatar border.
+const CATEGORY_TINTS = {
+    // Hair / salons -> azure
+    salon: 'azure', 'hair salon': 'azure', hair: 'azure',
+    cabeleireiro: 'azure', salao: 'azure', 'salão': 'azure',
+    // Barbershops -> signal
+    barbershop: 'signal', barber: 'signal',
+    barbearia: 'signal', barbeiro: 'signal',
+    // Spa / wellness -> success
+    spa: 'success', wellness: 'success', massage: 'success',
+    massagem: 'success', 'bem-estar': 'success',
+    // Nail / beauty -> azure
+    nail: 'azure', manicure: 'azure', beauty: 'azure',
+    estetica: 'azure', 'estética': 'azure',
+    // Fitness -> signal
+    fitness: 'signal', gym: 'signal', studio: 'signal',
+    ginasio: 'signal', 'ginásio': 'signal',
+    // Yoga / pilates -> success
+    yoga: 'success', pilates: 'success',
+    // Tattoo -> ink
+    tattoo: 'ink', tatuagem: 'ink',
+    // Medical -> success
+    clinic: 'success', clinica: 'success', 'clínica': 'success',
+    physio: 'success', fisioterapia: 'success',
+}
+
+
+const resolveTint = (category) => {
+    const key = (category || '').toString().toLowerCase().trim()
+    return CATEGORY_TINTS[key] || 'azure'
 }
 
 
@@ -154,12 +186,12 @@ const Businesses = () => {
 
                                 {businesses.map((biz) => {
                                     const name = fieldOf(biz, 'business_name', 'name') || 'Business'
-                                    const category = categoryLabel(biz.category, biz.category_detail)
+                                    const category = fieldOf(biz, 'category', 'business_type', 'type')
                                     const slug = fieldOf(biz, 'slug', 'id')
                                     const neighborhood = fieldOf(biz, 'location', 'neighborhood', 'area', 'district', 'city') || 'Lisbon'
                                     const banner = fieldOf(biz, 'banner_url', 'cover_image_url', 'image_url', 'photo_url', 'cover_url')
                                     const logo = fieldOf(biz, 'logo_url', 'logo')
-                                    const tint = categoryTint(biz.category)
+                                    const tint = resolveTint(category)
                                     const initials = getInitials(name)
 
                                     return (
