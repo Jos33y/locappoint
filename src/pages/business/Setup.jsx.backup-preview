@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Copy, Download, ExternalLink, Eye, MessageCircle, Share2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import {
-    AffixInput, Button, Field, ImagePicker, Input, PhoneFrame, Picker, QrCode, Ring, Sheet, Status, Stepper, Switch, Textarea,
+    AffixInput, Button, Field, ImagePicker, Input, PhoneFrame, QrCode, Ring, Select, Sheet, Status, Stepper, Switch, Textarea,
     downloadQr, useCountUp,
 } from '../../components/ui'
 import { Mark, Wordmark, AppLoader, initials } from '../../components/business/Brand'
@@ -12,7 +12,7 @@ import { ServiceEditor, serviceFromRow, servicesValid } from '../../components/b
 import { HoursEditor } from '../../components/business/HoursEditor'
 import { PublicPageView } from '../../components/business/PublicPageView'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
-import { CATEGORIES, CITIES, POPULAR_CATEGORIES, categoryKey, categoryLabel, suggestionsFor } from '../../constants/categories'
+import { CATEGORIES, CITIES, suggestionsFor } from '../../constants/categories'
 import { SAMPLE_BUSINESS, SAMPLE_SERVICES } from '../../constants/sampleBusiness'
 import { slugProblem } from '../../constants/reservedSlugs'
 import { durationLabel, formatMoney, pageStrength } from '../../services/business'
@@ -31,7 +31,6 @@ const emptyDetails = {
     slug: '',
     slugEdited: false,
     category: '',
-    categoryDetail: '',
     cityChoice: 'Lisbon',
     cityOther: '',
     phone: '',
@@ -46,8 +45,7 @@ const detailsFromBusiness = (b) => {
         business_name: b.business_name,
         slug: b.slug,
         slugEdited: true,
-        category: categoryKey(b.category),
-        categoryDetail: b.category_detail || '',
+        category: b.category,
         cityChoice: known ? b.city : OTHER_CITY,
         cityOther: known ? '' : b.city,
         phone: b.phone,
@@ -59,7 +57,6 @@ const detailProblems = (d, slugState) => {
     const p = {}
     if (!d.business_name.trim()) p.business_name = 'Enter the name clients know you by'
     if (!d.category) p.category = 'Choose what kind of business you run'
-    else if (d.category === 'other' && !d.categoryDetail.trim()) p.categoryDetail = 'Tell clients what you do, in a few words'
     if (!cityOf(d)) p.city = 'Enter your city'
     const digits = d.phone.replace(/[^\d]/g, '')
     if (digits.length < 7 || digits.length > 15) p.phone = 'Enter a phone number with the country code, like +351'
@@ -94,7 +91,7 @@ const useSlugStatus = (slug, ownSlug) => {
 const SLUG_STATUS = {
     checking: { tone: 'neutral', word: 'Checking', text: 'Looking it up' },
     available: { tone: 'success', word: 'Available', text: 'This address is yours if you continue' },
-    taken: { tone: 'danger', word: 'Taken', text: 'Try adding your area, like rossio-baixa' },
+    taken: { tone: 'danger', word: 'Taken', text: 'Try adding your area, like femtos-baixa' },
     error: { tone: 'warning', word: 'Not checked', text: 'We will check it when you continue' },
 }
 
@@ -141,7 +138,7 @@ const DemoShowcase = () => (
                     <div className="lc-demo__id">
                         <span className="lc-demo__logo">{initials(SAMPLE_BUSINESS.business_name)}</span>
                         <strong className="lc-demo__name">{SAMPLE_BUSINESS.business_name}</strong>
-                        <span className="lc-demo__meta">{categoryLabel(SAMPLE_BUSINESS.category)} in {SAMPLE_BUSINESS.city}</span>
+                        <span className="lc-demo__meta">{SAMPLE_BUSINESS.category} in {SAMPLE_BUSINESS.city}</span>
                     </div>
                     <div className="lc-demo__block">
                         <span className="lc-demo__label">Next free today</span>
@@ -313,7 +310,6 @@ const Setup = () => {
         business_name: details.business_name,
         slug: details.slug,
         category: details.category,
-        category_detail: details.category === 'other' ? details.categoryDetail.trim() : null,
         city: cityOf(details),
         phone: details.phone,
         whatsapp: details.whatsappSame ? details.phone : business?.whatsapp || null,
@@ -500,7 +496,7 @@ const Setup = () => {
                                     <Input
                                         value={details.business_name}
                                         onChange={(e) => setDetail({ business_name: e.target.value })}
-                                        placeholder="Barbearia do Rossio"
+                                        placeholder="Femtos Hair"
                                         maxLength={80}
                                         autoComplete="organization"
                                     />
@@ -516,7 +512,7 @@ const Setup = () => {
                                         mono
                                         value={details.slug}
                                         onChange={(e) => setDetail({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 60), slugEdited: true })}
-                                        placeholder="barbearia-do-rossio"
+                                        placeholder="femtos-hair"
                                         autoComplete="off"
                                         autoCapitalize="none"
                                         spellCheck={false}
@@ -533,36 +529,18 @@ const Setup = () => {
 
                                 <div className="lc-setup__pair">
                                     <Field label="Type of business" error={problems.category}>
-                                        <Picker
-                                            value={details.category}
-                                            onChange={(category) => setDetail({ category })}
-                                            options={CATEGORIES}
-                                            popular={POPULAR_CATEGORIES}
-                                            searchable
-                                            title="Type of business"
-                                            searchPlaceholder="Search, like barber or pilates"
-                                            emptyText="Nothing matches. Choose Something else at the end."
-                                        />
+                                        <Select value={details.category} onChange={(e) => setDetail({ category: e.target.value })}>
+                                            <option value="">Choose one</option>
+                                            {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.value}</option>)}
+                                        </Select>
                                     </Field>
                                     <Field label="City" error={details.cityChoice !== OTHER_CITY ? problems.city : undefined}>
-                                        <Picker
-                                            value={details.cityChoice}
-                                            onChange={(cityChoice) => setDetail({ cityChoice })}
-                                            options={[...CITIES.map((c) => ({ value: c.value, label: c.value })), { value: OTHER_CITY, label: 'Somewhere else' }]}
-                                            title="City"
-                                        />
+                                        <Select value={details.cityChoice} onChange={(e) => setDetail({ cityChoice: e.target.value })}>
+                                            {CITIES.map((c) => <option key={c.value} value={c.value}>{c.value}</option>)}
+                                            <option value={OTHER_CITY}>Somewhere else</option>
+                                        </Select>
                                     </Field>
                                 </div>
-                                {details.category === 'other' && (
-                                    <Field label="What kind of business?" error={problems.categoryDetail} hint="Shown on your page, like Surf school">
-                                        <Input
-                                            value={details.categoryDetail}
-                                            onChange={(e) => setDetail({ categoryDetail: e.target.value })}
-                                            maxLength={60}
-                                            autoComplete="off"
-                                        />
-                                    </Field>
-                                )}
                                 {details.cityChoice === OTHER_CITY && (
                                     <Field label="Which city?" error={problems.city}>
                                         <Input value={details.cityOther} onChange={(e) => setDetail({ cityOther: e.target.value })} maxLength={80} autoComplete="address-level2" />

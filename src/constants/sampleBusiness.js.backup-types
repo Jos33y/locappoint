@@ -1,7 +1,7 @@
 export const SAMPLE_BUSINESS = {
     business_name: 'Barbearia do Rossio',
     slug: 'barbearia-do-rossio',
-    category: 'barbershop',
+    category: 'Barbershop',
     city: 'Lisbon',
     timezone: 'Europe/Lisbon',
     phone: '+351 912 000 000',

@@ -63,6 +63,6 @@ export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
 export const slugProblem = (slug) => {
     if (slug.length < 3 || slug.length > 60) return 'Business URL must be 3 to 60 characters.'
     if (!SLUG_PATTERN.test(slug)) return 'Use lowercase letters, numbers and single hyphens only.'
-    if (RESERVED_SLUGS.has(slug)) return 'That address is reserved. Try adding your area, like rossio-baixa.'
+    if (RESERVED_SLUGS.has(slug)) return 'That URL is reserved. Try adding your area, like femtos-baixa.'
     return null
 }

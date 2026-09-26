@@ -11,7 +11,7 @@ import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { weekFromRows } from '../../services/hours'
 import '../../styles/public-page.css'
 
-const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url'
+const PUBLIC_FIELDS = 'id, business_name, slug, category, city, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url'
 
 const PageSkeleton = () => (
     <div className="lc-pubpage__skeleton" aria-hidden="true">

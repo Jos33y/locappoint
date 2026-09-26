@@ -4,7 +4,7 @@ import { timezoneFor } from '../constants/categories'
 import { rowsFromWeek } from './hours'
 
 export const BUSINESS_FIELDS =
-    'id, business_name, slug, category, category_detail, city, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at'
+    'id, business_name, slug, category, city, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at'
 
 export const slugFrom = (name) =>
     (name || '')
@@ -45,7 +45,6 @@ const detailsPayload = (details) => ({
     business_name: details.business_name.trim(),
     slug: details.slug,
     category: details.category,
-    category_detail: details.category === 'other' ? details.categoryDetail.trim() : null,
     city: details.city.trim(),
     timezone: timezoneFor(details.city),
     phone: details.phone.trim(),

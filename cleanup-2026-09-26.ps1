@@ -68,7 +68,17 @@ $targets = @(
     'src\\pages\\business\\Setup.jsx.backup-preview',
     'src\\styles\\business\\setup.css.backup-preview',
     'src\\constants\\reservedSlugs.js.backup-preview',
-    'true-preview.zip'
+    'true-preview.zip',
+    'src\\constants\\categories.js.backup-types',
+    'src\\services\\setup.js.backup-types',
+    'src\\styles\\ui-kit.css.backup-types',
+    'src\\pages\\business\\Setup.jsx.backup-types',
+    'src\\components\\business\\PublicPageView.jsx.backup-types',
+    'src\\styles\\public-page.css.backup-types',
+    'src\\constants\\sampleBusiness.js.backup-types',
+    'src\\pages\\app\\PublicBusinessPage.jsx.backup-types',
+    'src\\components\\ui\\index.js.backup-types',
+    'business-types.zip'
 )
 
 $existing = @()
