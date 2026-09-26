@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Copy, Download, Eye, ImagePlus, MessageCircle, Share2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Copy, Download, ExternalLink, Eye, MessageCircle, Share2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import {
     AffixInput, Button, Field, ImagePicker, Input, PhoneField, PhoneFrame, Picker, QrCode, Ring, Sheet, Status, Stepper, Switch, Textarea,
@@ -8,8 +8,6 @@ import {
 } from '../../components/ui'
 import { Mark, Wordmark, AppLoader, initials } from '../../components/business/Brand'
 import StreetGridCover from '../../components/business/StreetGridCover'
-import { AddressField } from '../../components/business/AddressField'
-import { pageUrl, publicHost } from '../../services/links'
 import { ServiceEditor, serviceFromRow, servicesValid } from '../../components/business/ServiceEditor'
 import { HoursEditor } from '../../components/business/HoursEditor'
 import { PublicPageView } from '../../components/business/PublicPageView'
@@ -51,32 +49,6 @@ const cityOf = (d) => {
     if (d.country === 'NG' && d.city !== OTHER_CITY) return d.city
     return d.cityOther.trim()
 }
-
-const ABOUT_EXAMPLES = {
-    barbershop: 'Skin fades and beard work in {area}. Walk-ins welcome when the chair is free.',
-    'Hair and beauty': 'Careful, unhurried appointments in {area}. Tell us what you want and we will get it right.',
-    Wellness: 'A quiet hour to reset, right here in {area}.',
-    Health: 'Appointments that start on time, with care that fits your week. Based in {area}.',
-    Fitness: 'Small groups and real coaching in {area}, for every level.',
-    Pets: 'Gentle, patient care for your pet in {area}.',
-    Lessons: 'One to one lessons in {area}, paced around you.',
-    'Home services': 'Reliable work across {area}, on time and tidy.',
-    'Cars and bikes': 'Honest work and clear prices in {area}.',
-    'Creative and digital': 'Thoughtful work for people and small businesses, from {area}.',
-    'Professional services': 'Clear advice in plain language, in {area} or online.',
-    'Repairs and tailoring': 'Quick, careful repairs in {area}.',
-    'Events and spaces': 'A space to meet, plan or celebrate in {area}.',
-}
-
-const aboutExample = (category, area) => {
-    const group = CATEGORIES.find((c) => c.value === category)?.group
-    const text = ABOUT_EXAMPLES[category] || ABOUT_EXAMPLES[group] || 'What you do, and what makes you worth the visit in {area}.'
-    return text.replace('{area}', area || 'your area')
-}
-
-const ABOUT_MAX = 300
-
-const andList = (items) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}` : items[0] || '')
 
 const countryName = (code) => COUNTRY_OPTIONS.find((c) => c.value === code)?.label || code
 
@@ -220,19 +192,11 @@ const DemoShowcase = () => (
     </figure>
 )
 
-const NUDGE = {
-    logo: { label: 'Add a logo', text: 'A logo makes your page unmistakably yours.' },
-    cover: { label: 'Add a cover photo', text: 'A photo of your space is the first thing clients look at.' },
-}
-
-const LiveScreen = ({ business, strength, onDone, finishing, media, onPickImage }) => {
-    const link = pageUrl(business.slug)
+const LiveScreen = ({ business, strength, onDone, finishing }) => {
+    const link = `${window.location.origin}/${business.slug}`
     const [copied, setCopied] = useState(false)
     const percent = useCountUp(strength.percent)
     const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
-    const nudge = !business.logo_url ? 'logo' : !business.banner_url ? 'cover' : null
-    const busy = nudge && media[nudge].busy
-    const error = nudge && media[nudge].error
 
     const copy = async () => {
         try {
@@ -249,22 +213,26 @@ const LiveScreen = ({ business, strength, onDone, finishing, media, onPickImage 
     }
 
     return (
-        <section className="lc-live" aria-labelledby="lc-setup-live">
-            <header className="lc-live__head">
-                <span className="lc-live__badge"><span className="lc-live__beacon" aria-hidden="true" />Live now</span>
-                <h1 id="lc-setup-live" className="lc-setup__hero">You're live.</h1>
-                <p className="lc-setup__lede">{business.business_name} is open for bookings. Share your page where clients already find you.</p>
-            </header>
+        <section className="lc-setup__live" aria-labelledby="lc-setup-live">
+            <div className="lc-setup__livehead">
+                <Ring value={strength.value} size={176} stroke={12} label={`Page ${strength.percent}% complete`}>
+                    <span className="lc-setup__livepct">{Math.round(percent)}<small>%</small></span>
+                    <span className="lc-setup__livecap">page strength</span>
+                </Ring>
+                <div className="lc-setup__livetext">
+                    <Status tone="success">Live</Status>
+                    <h1 id="lc-setup-live" className="lc-setup__hero">You're live.</h1>
+                    <p className="lc-setup__lede">Clients can book {business.business_name} from now on. Share your link where they already find you.</p>
+                </div>
+            </div>
 
-            <div className="lc-live__pass">
-                <span className="lc-live__map" aria-hidden="true"><StreetGridCover seed={business.slug} tint="azure" /></span>
-                <span className="lc-live__label">Your booking page</span>
-                <a className="lc-live__url" href={link} target="_blank" rel="noopener noreferrer" aria-label={`Open your page, ${link}`}>
-                    <span className="lc-live__host">{publicHost()}/</span>
-                    <span className="lc-live__slug">{business.slug}</span>
-                    <ArrowUpRight className="lc-live__open" size={22} aria-hidden="true" />
-                </a>
-                <div className="lc-live__actions">
+            <div className="lc-setup__linkcard">
+                <span className="lc-setup__linklabel">Your booking link</span>
+                <p className="lc-setup__link">
+                    <span className="lc-setup__host">{window.location.host}/</span>
+                    <span className="lc-setup__slug">{business.slug}</span>
+                </p>
+                <div className="lc-setup__linkactions">
                     <Button icon={copied ? Check : Copy} onClick={copy}>{copied ? 'Copied' : 'Copy link'}</Button>
                     <Button
                         variant="secondary"
@@ -273,51 +241,29 @@ const LiveScreen = ({ business, strength, onDone, finishing, media, onPickImage 
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        WhatsApp
+                        Send on WhatsApp
                     </Button>
                     {canShare && <Button variant="secondary" icon={Share2} onClick={share}>Share</Button>}
+                    <Button variant="quiet" icon={ExternalLink} href={link} target="_blank" rel="noopener noreferrer">Open my page</Button>
                 </div>
             </div>
 
-            <div className="lc-live__row">
-                <span className="lc-live__sticker">
-                    <QrCode value={link} label={`QR code for ${link}`} size={60} />
-                    <span className="lc-live__stickercap">Scan to book</span>
-                </span>
-                <span className="lc-live__rowtext">
+            <div className="lc-setup__qrcard">
+                <QrCode value={link} label={`QR code for ${link}`} size={132} />
+                <div className="lc-setup__qrtext">
                     <strong>Put it on the mirror</strong>
                     <span>Clients scan it and book the next visit before they leave.</span>
-                </span>
-                <Button variant="quiet" size="sm" icon={Download} onClick={() => downloadQr(link, `${business.slug}-booking-qr.png`)}>Download</Button>
+                    <Button variant="secondary" size="sm" icon={Download} onClick={() => downloadQr(link, `${business.slug}-booking-qr.png`)}>Download QR code</Button>
+                </div>
             </div>
 
-            {strength.percent < 100 && (
-                <div className="lc-live__row">
-                    <Ring value={strength.value} size={52} stroke={4} label={`Page ${strength.percent}% complete`}>
-                        <span className="lc-live__pct">{Math.round(percent)}<small>%</small></span>
-                    </Ring>
-                    <span className="lc-live__rowtext">
-                        <strong>{nudge ? 'Finish your page' : 'Almost complete'}</strong>
-                        <span>{error || (nudge ? NUDGE[nudge].text : `Add ${strength.missing.join(' and ').toLowerCase()} from your Business page.`)}</span>
-                    </span>
-                    {nudge && (
-                        <label className={`ui-btn ui-btn--secondary ui-btn--sm lc-live__upload${busy ? ' is-busy' : ''}`}>
-                            <span className="ui-btn__content"><ImagePlus size={16} aria-hidden="true" />{busy ? 'Saving' : NUDGE[nudge].label}</span>
-                            <input
-                                className="ui-visually-hidden"
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                                disabled={busy}
-                                onChange={(e) => { const f = e.target.files?.[0]; if (f) onPickImage(nudge, f); e.target.value = '' }}
-                            />
-                        </label>
-                    )}
-                </div>
+            {strength.next && (
+                <p className="lc-setup__nextstep">
+                    Still to add for a complete page: {strength.missing.join(', ').toLowerCase()}.
+                </p>
             )}
 
-            <div className="lc-live__done">
-                <Button variant="secondary" size="lg" iconRight={ArrowRight} loading={finishing} onClick={onDone}>Go to Today</Button>
-            </div>
+            <Button variant="secondary" size="lg" iconRight={ArrowRight} loading={finishing} onClick={onDone}>Go to Today</Button>
         </section>
     )
 }
@@ -336,7 +282,6 @@ const Setup = () => {
     const [week, setWeek] = useState(defaultWeek)
     const [hourRows, setHourRows] = useState([])
     const [extras, setExtras] = useState({ description: '', address: '' })
-    const aboutRef = useRef(null)
     const [media, setMedia] = useState({ logo: { busy: false, error: '' }, cover: { busy: false, error: '' } })
     const [showErrors, setShowErrors] = useState(false)
     const [saving, setSaving] = useState(false)
@@ -395,13 +340,6 @@ const Setup = () => {
         description: extras.description,
         address: extras.address,
     }), [business, details, extras])
-
-    useEffect(() => {
-        const el = aboutRef.current
-        if (!el) return
-        el.style.height = 'auto'
-        el.style.height = `${el.scrollHeight + 2}px`
-    }, [extras.description, phase])
 
     const strength = useMemo(() => {
         const s = pageStrength({ business: draftBusiness, services, hours: rowsFromWeek(week) })
@@ -539,11 +477,6 @@ const Setup = () => {
                             <Button variant="quiet" size="sm" to="/client">Finish later</Button>
                         </span>
                     )}
-                    {phase === 'live' && (
-                        <span className="lc-setup__topactions">
-                            <Button variant="secondary" size="sm" iconRight={ArrowRight} loading={finishing} onClick={finish}>Go to Today</Button>
-                        </span>
-                    )}
                 </header>
 
                 {phase === 'welcome' && <Welcome onStart={() => go(0)} onLater={() => navigate('/client')} />}
@@ -559,7 +492,7 @@ const Setup = () => {
                     </section>
                 )}
 
-                {phase === 'live' && <LiveScreen business={business} strength={strength} onDone={finish} finishing={finishing} media={media} onPickImage={pickImage} />}
+                {phase === 'live' && <LiveScreen business={business} strength={strength} onDone={finish} finishing={finishing} />}
 
                 {typeof phase === 'number' && (
                     <form
@@ -599,7 +532,7 @@ const Setup = () => {
                                     hint={slugInfo ? undefined : 'Letters, numbers and hyphens'}
                                 >
                                     <AffixInput
-                                        prefix={`${publicHost()}/`}
+                                        prefix={`${window.location.host}/`}
                                         mono
                                         value={details.slug}
                                         onChange={(e) => setDetail({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 60), slugEdited: true })}
@@ -738,7 +671,7 @@ const Setup = () => {
                                     <ImagePicker
                                         shape="logo"
                                         label="Logo"
-                                        hint="Square works best. Until then, your initials show."
+                                        hint="Square works best"
                                         value={business?.logo_url}
                                         fallback={<span className="lc-setup__monogram">{initials(details.business_name)}</span>}
                                         busy={media.logo.busy}
@@ -749,7 +682,7 @@ const Setup = () => {
                                     <ImagePicker
                                         shape="cover"
                                         label="Cover photo"
-                                        hint="Your chair, your shop front or your best work. Wide photos work best. Tap or drop a photo."
+                                        hint="Your chair, your shop front or your best work. Wide photos work best."
                                         value={business?.banner_url}
                                         fallback={<StreetGridCover seed={details.slug} tint="azure" />}
                                         busy={media.cover.busy}
@@ -758,48 +691,23 @@ const Setup = () => {
                                         onRemove={() => removeImage('cover')}
                                     />
                                 </div>
-                                <Field
-                                    label="About you"
-                                    optional
-                                    hint={extras.description.length > ABOUT_MAX * 0.8
-                                        ? `${ABOUT_MAX - extras.description.length} characters left`
-                                        : 'Two lines on what makes you worth the visit'}
-                                >
+                                <Field label="About you" optional hint="Two lines on what makes you worth the visit">
                                     <Textarea
-                                        ref={aboutRef}
-                                        className="ui-input ui-input--area lc-setup__about"
-                                        rows={2}
                                         value={extras.description}
                                         onChange={(e) => setExtras((x) => ({ ...x, description: e.target.value }))}
-                                        maxLength={ABOUT_MAX}
-                                        placeholder={aboutExample(details.category, details.neighbourhood?.trim() || cityOf(details))}
+                                        maxLength={500}
+                                        placeholder="Skin fades and beard work in the heart of Baixa. Walk-ins welcome when the chair is free."
                                     />
                                 </Field>
-                                <Field
-                                    label="Address"
-                                    optional
-                                    hint={extras.address.trim()
-                                        ? `Adds a Directions button. In ${[details.neighbourhood?.trim(), cityOf(details)].filter(Boolean).join(', ')}.`
-                                        : 'Adds a Directions button to your page'}
-                                >
-                                    <AddressField
+                                <Field label="Address" optional hint="Adds a Directions button to your page">
+                                    <Input
                                         value={extras.address}
-                                        onChange={(address) => setExtras((x) => ({ ...x, address }))}
-                                        country={details.country}
-                                        city={cityOf(details)}
-                                        placeholder={details.country === 'PT' ? 'Rua dos Anjos 42' : 'Street and number'}
+                                        onChange={(e) => setExtras((x) => ({ ...x, address: e.target.value }))}
+                                        maxLength={200}
+                                        autoComplete="street-address"
+                                        placeholder="Rua Augusta 120"
                                     />
                                 </Field>
-                                <div className="lc-setup__golive">
-                                    <p className="lc-setup__golivelink">
-                                        Your page goes live at <strong>{publicHost()}/{details.slug}</strong>
-                                    </p>
-                                    <p className="lc-setup__golivenote">
-                                        {strength.missing.length
-                                            ? `Still worth adding: ${andList(strength.missing.map((m) => m.replace(/^(A|An|Your) /, (w) => w.toLowerCase())))}.`
-                                            : 'Everything is in place.'}
-                                    </p>
-                                </div>
                             </div>
                         )}
 

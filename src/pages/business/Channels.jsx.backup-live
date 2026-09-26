@@ -2,11 +2,10 @@ import { Bot, Copy, Link2, MapPin, MessageCircle } from 'lucide-react'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { Button, Card, Stat, Status } from '../../components/ui'
 import '../../styles/business/support.css'
-import { pageUrl } from '../../services/links'
 
 const Channels = () => {
     const { business, notify } = useWorkspace()
-    const link = pageUrl(business.slug)
+    const link = `${window.location.origin}/${business.slug}`
 
     const copy = async () => {
         try {

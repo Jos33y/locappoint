@@ -888,3 +888,39 @@
     .ui-timegrid__hour,
     .ui-timegrid__min { transition: none; }
 }
+
+.ui-picker.is-empty .ui-picker__stage {
+    cursor: pointer;
+    transition: box-shadow var(--lc-fast) var(--lc-ease);
+}
+
+@media (hover: hover) {
+    .ui-picker.is-empty .ui-picker__stage:hover { box-shadow: inset 0 0 0 1.5px var(--lc-line-strong), 0 0 0 4px var(--lc-info-tint); }
+}
+
+.ui-picker--logo .ui-picker__fallback { opacity: 1; }
+
+.ui-picker.is-empty .ui-picker__add {
+    position: absolute;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    pointer-events: none;
+}
+
+.ui-picker--logo.is-empty .ui-picker__add {
+    right: 6px;
+    bottom: 6px;
+    width: 32px;
+    min-height: 32px;
+    padding: 0;
+    justify-content: center;
+    background: var(--lc-overlay);
+}
+
+.ui-picker.is-empty:focus-within .ui-picker__stage {
+    box-shadow: inset 0 0 0 1.5px var(--azure), 0 0 0 4px var(--lc-info-tint);
+}
+
+.ui-picker.is-empty:focus-within .ui-picker__add { outline: none; }

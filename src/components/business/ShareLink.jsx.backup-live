@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { Check, Copy, MessageCircle } from 'lucide-react'
-import { pageUrl, publicHost } from '../../services/links'
 
 const ShareLink = ({ business }) => {
     const [copied, setCopied] = useState(false)
-    const link = pageUrl(business.slug)
+    const link = `${window.location.origin}/${business.slug}`
 
     const copy = async () => {
         try {
@@ -20,7 +19,7 @@ const ShareLink = ({ business }) => {
         <div className="biz-share">
             <p className="biz-share__intro">Clients book you at</p>
             <p className="biz-share__link" title={link}>
-                <span className="biz-share__host">{publicHost()}/</span>
+                <span className="biz-share__host">{window.location.host}/</span>
                 <span className="biz-share__slug">{business.slug}</span>
             </p>
             <div className="biz-share__actions">

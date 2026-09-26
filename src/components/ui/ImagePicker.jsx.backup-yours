@@ -7,7 +7,6 @@ export const ImagePicker = ({ shape = 'cover', label, hint, value, fallback, onP
     const hintId = `${inputId}-hint`
     const inputRef = useRef(null)
     const [dragging, setDragging] = useState(false)
-    const addText = shape === 'logo' ? 'Add logo' : 'Add cover photo'
 
     const pick = (files) => {
         const file = files?.[0]
@@ -20,35 +19,30 @@ export const ImagePicker = ({ shape = 'cover', label, hint, value, fallback, onP
         if (!busy) pick(event.dataTransfer.files)
     }
 
-    const empty = !value && !busy
-    const Stage = empty ? 'label' : 'div'
-
     return (
-        <div className={`ui-picker ui-picker--${shape}${dragging ? ' is-dragging' : ''}${error ? ' has-error' : ''}${empty ? ' is-empty' : ''}`}>
+        <div className={`ui-picker ui-picker--${shape}${dragging ? ' is-dragging' : ''}${error ? ' has-error' : ''}`}>
             <span className="ui-picker__label">{label}</span>
-            <Stage
+            <div
                 className="ui-picker__stage"
-                htmlFor={empty ? inputId : undefined}
                 onDragOver={(event) => { event.preventDefault(); setDragging(true) }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={onDrop}
             >
-                {value ? <img className="ui-picker__img" src={value} alt="" /> : <span className="ui-picker__fallback" aria-hidden="true">{fallback}</span>}
+                {value ? <img className="ui-picker__img" src={value} alt="" /> : <span className="ui-picker__fallback">{fallback}</span>}
                 {busy && <span className="ui-picker__busy" role="status"><span className="ui-picker__spin" aria-hidden="true" />Saving photo</span>}
-                {empty && (
-                    <span className="ui-picker__add">
-                        <ImagePlus size={shape === 'logo' ? 16 : 18} aria-hidden="true" />
-                        <span className={shape === 'logo' ? 'ui-visually-hidden' : undefined}>{addText}</span>
-                    </span>
+                {!value && !busy && (
+                    <label htmlFor={inputId} className="ui-picker__add">
+                        <ImagePlus size={18} aria-hidden="true" />
+                        <span>{shape === 'logo' ? 'Add logo' : 'Add cover photo'}</span>
+                    </label>
                 )}
-            </Stage>
+            </div>
             <input
                 ref={inputRef}
                 id={inputId}
                 className="ui-visually-hidden"
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                aria-label={addText}
                 aria-describedby={hint ? hintId : undefined}
                 disabled={busy}
                 onChange={(event) => { pick(event.target.files); event.target.value = '' }}
