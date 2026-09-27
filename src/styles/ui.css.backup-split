@@ -1,7 +1,3 @@
-.lc-route-wait {
-    min-height: 60vh;
-}
-
 .ui-visually-hidden {
     position: absolute;
     width: 1px;

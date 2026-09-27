@@ -1,0 +1,8 @@
+.biz-clock { flex: none; }
+.biz-clock__face { fill: var(--lc-well); stroke: var(--lc-line-strong); stroke-width: 1; }
+.biz-clock__tick { stroke: var(--lc-ink-4); stroke-width: 1; stroke-linecap: round; }
+.biz-clock__tick.is-major { stroke: var(--lc-ink-2); stroke-width: 1.75; }
+.biz-clock__hour { stroke: var(--lc-ink-1); stroke-width: 2.75; stroke-linecap: round; }
+.biz-clock__minute { stroke: var(--lc-ink-1); stroke-width: 1.75; stroke-linecap: round; }
+.biz-clock__pin { fill: var(--signal); }
+.biz-clock.is-open .biz-clock__face { stroke: var(--lc-success); stroke-width: 1.5; }

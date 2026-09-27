@@ -55,99 +55,31 @@
 }
 
 
-.lc-help {
-    --lc-help-width: 880px;
+.lc-help__contact {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-4);
 }
 
-.lc-help > * {
-    width: 100%;
-    max-width: var(--lc-help-width);
-}
-
-.lc-help__desk {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-5);
-    padding: var(--space-5) var(--space-6);
-    border-radius: var(--lc-r-xl);
-    background: var(--lc-card);
-    box-shadow: inset 0 0 0 1px var(--lc-line);
-}
-
-.lc-help__desk.is-open {
-    box-shadow: inset 0 0 0 1px var(--lc-line), inset 3px 0 0 var(--lc-success);
-}
-
-.lc-help__deskstate {
-    display: flex;
+.lc-help__contact .ui-card {
+    flex-direction: row;
     align-items: center;
     gap: var(--space-4);
+}
+
+.lc-help__contact .ui-card > div {
+    flex: 1;
     min-width: 0;
-    flex: 1 1 320px;
 }
 
-.lc-help__deskname {
+.lc-help__contact h2 {
     margin: 0;
-    color: var(--lc-ink-1);
-    font-family: var(--lc-font-display);
-    font-size: 1.375rem;
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: -0.01em;
 }
 
-.lc-help__desk.is-open .lc-help__deskname { color: var(--lc-success); }
-
-.lc-help__deskline {
-    margin: 2px 0 0;
-    color: var(--lc-ink-2);
-    font-size: var(--lc-t-body);
-    line-height: var(--lc-lh-snug);
+.lc-help__icon {
+    flex: none;
+    color: var(--azure);
 }
-
-.lc-help__deskhours {
-    margin: var(--space-1) 0 0;
-    color: var(--lc-ink-4);
-    font-size: var(--lc-t-label);
-}
-
-.lc-help__deskactions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-}
-
-.lc-help__empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-5) var(--space-4) var(--space-6);
-    text-align: center;
-}
-
-.lc-help__empty h3 {
-    margin: var(--space-2) 0 0;
-    color: var(--lc-ink-1);
-    font-family: var(--lc-font-display);
-    font-size: var(--lc-t-heading);
-    font-weight: var(--font-weight-semibold);
-}
-
-.lc-help__empty p {
-    max-width: 30ch;
-    margin: 0;
-    color: var(--lc-ink-3);
-    font-size: var(--lc-t-label);
-    line-height: var(--lc-lh-snug);
-}
-
-.lc-stub__paper { fill: var(--lc-well); stroke: var(--lc-line-strong); stroke-width: 1.5; }
-.lc-stub__cut { stroke: var(--lc-line-strong); stroke-width: 1.5; stroke-dasharray: 3 4; }
-.lc-stub__line { fill: var(--lc-line-strong); }
-.lc-stub__line.is-strong { fill: var(--lc-ink-4); }
-.lc-stub__dot { fill: var(--signal); }
 
 .lc-help__text {
     margin: 2px 0 0;
@@ -186,35 +118,13 @@
 .lc-faq__q {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: var(--space-4);
-    min-height: 60px;
-    padding: var(--space-2) var(--space-5);
+    min-height: 52px;
+    padding: 0 var(--space-5);
     font-weight: var(--font-weight-medium);
     list-style: none;
     cursor: pointer;
-}
-
-.lc-faq__icon {
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 34px;
-    height: 34px;
-    border-radius: var(--lc-r-md);
-    background: var(--lc-raised);
-    box-shadow: inset 0 0 0 1px var(--lc-line);
-    color: var(--lc-info);
-}
-
-.lc-faq__item[open] .lc-faq__icon {
-    background: var(--lc-azure-button);
-    box-shadow: none;
-    color: var(--lc-on-accent);
-}
-
-.lc-faq__text {
-    flex: 1;
-    min-width: 0;
 }
 
 .lc-faq__q::-webkit-details-marker {
@@ -249,7 +159,7 @@
 .lc-faq__a {
     max-width: 68ch;
     margin: 0;
-    padding: 0 var(--space-5) var(--space-5) calc(var(--space-5) + 34px + var(--space-4));
+    padding: 0 var(--space-5) var(--space-5);
     color: var(--lc-ink-2);
     line-height: var(--lc-lh-body);
 }
@@ -354,32 +264,4 @@
     .lc-help__grid {
         grid-template-columns: 1.2fr 1fr;
     }
-}
-
-@media (max-width: 559px) {
-    .lc-help__desk {
-        padding: var(--space-5);
-    }
-
-    .lc-help__deskstate {
-        align-items: flex-start;
-    }
-
-    .lc-help__deskactions,
-    .lc-help__deskactions .ui-btn {
-        width: 100%;
-    }
-
-    .lc-faq__q {
-        padding: var(--space-2) var(--space-4);
-        gap: var(--space-3);
-    }
-
-    .lc-faq__a {
-        padding: 0 var(--space-4) var(--space-4);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .lc-faq__q::after { transition: none; }
 }

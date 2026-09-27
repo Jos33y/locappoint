@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
@@ -6,42 +6,50 @@ import ScrollToTop from './components/common/ScrollToTop'
 import CanonicalSync from './components/common/CanonicalSync'
 import HomeRedirect from './components/common/HomeRedirect'
 
-import AppHome from './pages/app/AppHome'
-import Businesses from './pages/app/Businesses'
-import PublicBusinessPage from './pages/app/PublicBusinessPage'
-import Contact from './pages/app/Contact'
-import Partnership from './pages/app/Partnership'
-import Privacy from './pages/app/legal/Privacy'
-import Terms from './pages/app/legal/Terms'
-import Cookies from './pages/app/legal/Cookies'
-import LegalNotice from './pages/app/legal/LegalNotice'
-import Dpa from './pages/app/legal/Dpa'
-import Subprocessors from './pages/app/legal/Subprocessors'
-import Ranking from './pages/app/legal/Ranking'
-import AdminPage from './pages/admin/AdminPage'
-import AuthPage from './pages/app/auth/AuthPage'
-import ForgotPassword from './pages/app/auth/ForgotPassword'
-import ResetPassword from './pages/app/auth/ResetPassword'
+// Every screen loads on demand, so a client opening a business link from WhatsApp
+// only downloads the public page, never the portal or the client area.
+const AppHome = lazy(() => import('./pages/app/AppHome'))
+const Businesses = lazy(() => import('./pages/app/Businesses'))
+const PublicBusinessPage = lazy(() => import('./pages/app/PublicBusinessPage'))
+const Contact = lazy(() => import('./pages/app/Contact'))
+const Partnership = lazy(() => import('./pages/app/Partnership'))
+const Privacy = lazy(() => import('./pages/app/legal/Privacy'))
+const Terms = lazy(() => import('./pages/app/legal/Terms'))
+const Cookies = lazy(() => import('./pages/app/legal/Cookies'))
+const LegalNotice = lazy(() => import('./pages/app/legal/LegalNotice'))
+const Dpa = lazy(() => import('./pages/app/legal/Dpa'))
+const Subprocessors = lazy(() => import('./pages/app/legal/Subprocessors'))
+const Ranking = lazy(() => import('./pages/app/legal/Ranking'))
+const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
+const AuthPage = lazy(() => import('./pages/app/auth/AuthPage'))
+const ForgotPassword = lazy(() => import('./pages/app/auth/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/app/auth/ResetPassword'))
 
-import BusinessShell from './components/business/BusinessShell'
-import Today from './pages/business/Today'
-import Calendar from './pages/business/Calendar'
-import Planned from './pages/business/Planned'
-import UiGallery from './pages/business/UiGallery'
-import GettingStarted from './pages/business/GettingStarted'
-import Help from './pages/business/Help'
-import Channels from './pages/business/Channels'
-import Setup from './pages/business/Setup'
-import BusinessPage from './pages/business/BusinessPage'
-import ServicesPage from './pages/business/ServicesPage'
-import HoursPage from './pages/business/HoursPage'
-import SettingsPage from './pages/business/SettingsPage'
+const BusinessShell = lazy(() => import('./components/business/BusinessShell'))
+const Today = lazy(() => import('./pages/business/Today'))
+const Calendar = lazy(() => import('./pages/business/Calendar'))
+const Planned = lazy(() => import('./pages/business/Planned'))
+const UiGallery = lazy(() => import('./pages/business/UiGallery'))
+const GettingStarted = lazy(() => import('./pages/business/GettingStarted'))
+const Help = lazy(() => import('./pages/business/Help'))
+const Channels = lazy(() => import('./pages/business/Channels'))
+const Setup = lazy(() => import('./pages/business/Setup'))
+const BusinessPage = lazy(() => import('./pages/business/BusinessPage'))
+const ServicesPage = lazy(() => import('./pages/business/ServicesPage'))
+const HoursPage = lazy(() => import('./pages/business/HoursPage'))
+const SettingsPage = lazy(() => import('./pages/business/SettingsPage'))
 
-import ClientLayout from './pages/client/ClientLayout'
-import ClientHome from './pages/client/Home'
-import ClientSearch from './pages/client/Search'
-import ClientAppointments from './pages/client/MyAppointments'
-import ClientProfile from './pages/client/Profile' 
+const ClientLayout = lazy(() => import('./pages/client/ClientLayout'))
+const ClientHome = lazy(() => import('./pages/client/Home'))
+const ClientSearch = lazy(() => import('./pages/client/Search'))
+const ClientAppointments = lazy(() => import('./pages/client/MyAppointments'))
+const ClientProfile = lazy(() => import('./pages/client/Profile'))
+
+// Quiet placeholder while a screen downloads: holds the space, no spinner flash.
+const Waiting = () => <div className="lc-route-wait" aria-busy="true" />
+
+// Inside the portal and client area the shell stays put; only the page area waits.
+const inShell = (element) => <Suspense fallback={<Waiting />}>{element}</Suspense>
 
 const WAITLIST_URL = import.meta.env.DEV ? '/?waitlist' : 'https://waitlist.locappoint.com'
 
@@ -56,78 +64,80 @@ const BookingApp = () => (
         <BrowserRouter>
             <ScrollToTop />
             <CanonicalSync />
-            <Routes>
-                <Route path="/" element={<AppHome />} />
-                <Route path="/about" element={<Navigate to="/" replace />} />
-                <Route path="/businesses" element={<Businesses />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/partnership" element={<Partnership />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/legal" element={<Navigate to="/legal/notice" replace />} />
-                <Route path="/legal/cookies" element={<Cookies />} />
-                <Route path="/legal/notice" element={<LegalNotice />} />
-                <Route path="/legal/dpa" element={<Dpa />} />
-                <Route path="/legal/subprocessors" element={<Subprocessors />} />
-                <Route path="/legal/ranking" element={<Ranking />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/me" element={<HomeRedirect />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/waitlist" element={<WaitlistRedirect />} />
+            <Suspense fallback={<Waiting />}>
+                <Routes>
+                    <Route path="/" element={<AppHome />} />
+                    <Route path="/about" element={<Navigate to="/" replace />} />
+                    <Route path="/businesses" element={<Businesses />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/partnership" element={<Partnership />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/legal" element={<Navigate to="/legal/notice" replace />} />
+                    <Route path="/legal/cookies" element={<Cookies />} />
+                    <Route path="/legal/notice" element={<LegalNotice />} />
+                    <Route path="/legal/dpa" element={<Dpa />} />
+                    <Route path="/legal/subprocessors" element={<Subprocessors />} />
+                    <Route path="/legal/ranking" element={<Ranking />} />
+                    <Route path="/admin" element={<AdminPage />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/me" element={<HomeRedirect />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/waitlist" element={<WaitlistRedirect />} />
 
-                <Route
-                    path="/portal"
-                    element={
-                        <ProtectedRoute>
-                            <BusinessShell />
-                        </ProtectedRoute>
-                    }
-                >
-                    <Route index element={<Today />} />
-                    <Route path="calendar" element={<Calendar />} />
-                    <Route path="services" element={<ServicesPage />} />
-                    <Route path="hours" element={<HoursPage />} />
-                    <Route path="page" element={<BusinessPage />} />
-                    <Route path="settings" element={<SettingsPage />} />
-                    <Route path="assistant" element={<Planned section="assistant" />} />
-                    <Route path="clients" element={<Planned section="clients" />} />
-                    <Route path="team" element={<Planned section="team" />} />
-                    <Route path="insights" element={<Planned section="insights" />} />
-                    <Route path="notifications" element={<Planned section="notifications" />} />
-                    <Route path="ui" element={<UiGallery />} />
-                    <Route path="start" element={<GettingStarted />} />
-                    <Route path="help" element={<Help />} />
-                    <Route path="channels" element={<Channels />} />
-                    <Route path="setup" element={<Setup />} />
-                    <Route path="reviews" element={<Planned section="reviews" />} />
-                    <Route path="invite" element={<Planned section="invite" />} />
-                    <Route path="appointments" element={<Navigate to="/portal/calendar" replace />} />
-                    <Route path="availability" element={<Navigate to="/portal/hours" replace />} />
-                    <Route path="profile" element={<Navigate to="/portal/page" replace />} />
-                    <Route path="*" element={<Navigate to="/portal" replace />} />
-                </Route>
+                    <Route
+                        path="/portal"
+                        element={
+                            <ProtectedRoute>
+                                <BusinessShell />
+                            </ProtectedRoute>
+                        }
+                    >
+                        <Route index element={inShell(<Today />)} />
+                        <Route path="calendar" element={inShell(<Calendar />)} />
+                        <Route path="services" element={inShell(<ServicesPage />)} />
+                        <Route path="hours" element={inShell(<HoursPage />)} />
+                        <Route path="page" element={inShell(<BusinessPage />)} />
+                        <Route path="settings" element={inShell(<SettingsPage />)} />
+                        <Route path="assistant" element={inShell(<Planned section="assistant" />)} />
+                        <Route path="clients" element={inShell(<Planned section="clients" />)} />
+                        <Route path="team" element={inShell(<Planned section="team" />)} />
+                        <Route path="insights" element={inShell(<Planned section="insights" />)} />
+                        <Route path="notifications" element={inShell(<Planned section="notifications" />)} />
+                        <Route path="ui" element={inShell(<UiGallery />)} />
+                        <Route path="start" element={inShell(<GettingStarted />)} />
+                        <Route path="help" element={inShell(<Help />)} />
+                        <Route path="channels" element={inShell(<Channels />)} />
+                        <Route path="setup" element={inShell(<Setup />)} />
+                        <Route path="reviews" element={inShell(<Planned section="reviews" />)} />
+                        <Route path="invite" element={inShell(<Planned section="invite" />)} />
+                        <Route path="appointments" element={<Navigate to="/portal/calendar" replace />} />
+                        <Route path="availability" element={<Navigate to="/portal/hours" replace />} />
+                        <Route path="profile" element={<Navigate to="/portal/page" replace />} />
+                        <Route path="*" element={<Navigate to="/portal" replace />} />
+                    </Route>
 
-                <Route
-                    path="/client"
-                    element={
-                        <ProtectedRoute>
-                            <ClientLayout />
-                        </ProtectedRoute>
-                    }
-                >
-                    <Route index element={<ClientHome />} />
-                    <Route path="search" element={<ClientSearch />} />
-                    <Route path="appointments" element={<ClientAppointments />} />
-                    <Route path="profile" element={<ClientProfile />} />
-                </Route>
+                    <Route
+                        path="/client"
+                        element={
+                            <ProtectedRoute>
+                                <ClientLayout />
+                            </ProtectedRoute>
+                        }
+                    >
+                        <Route index element={inShell(<ClientHome />)} />
+                        <Route path="search" element={inShell(<ClientSearch />)} />
+                        <Route path="appointments" element={inShell(<ClientAppointments />)} />
+                        <Route path="profile" element={inShell(<ClientProfile />)} />
+                    </Route>
 
-                {/* Last so explicit routes win over a matching slug. */}
-                <Route path="/:businessSlug" element={<PublicBusinessPage />} />
+                    {/* Last so explicit routes win over a matching slug. */}
+                    <Route path="/:businessSlug" element={<PublicBusinessPage />} />
 
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </Suspense>
         </BrowserRouter>
     </AuthProvider>
 )

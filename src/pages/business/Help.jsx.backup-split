@@ -1,39 +1,21 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { CalendarCheck, CirclePause, Clock, Euro, Mail, MessageCircle, PhoneCall, Send, Share2 } from 'lucide-react'
+import { Mail, MessageCircle, Send } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
-import { Button, Card, Field, Input, ListRow, Select, Skeleton, Status, Textarea } from '../../components/ui'
-import { ShopClock, useNow } from '../../components/business/ShopClock'
-import { openStatus } from '../../components/business/PublicPageView'
+import { Button, Card, EmptyState, Field, Input, ListRow, Select, Skeleton, Status, Textarea } from '../../components/ui'
 import { SUPPORT, TICKET_CATEGORIES, TICKET_STATUS } from '../../constants/support'
 import { listMyTickets, openTicket } from '../../services/support'
 import '../../styles/business/support.css'
 
 const ANSWERS = [
-    { id: 'phone-booking', icon: PhoneCall, q: 'How do I add a booking from a phone call?', a: 'Tap New booking (the + button on your phone). Pick the service, the day and a free time, type the client’s name, and add it. Phone and email are optional. If they want a time outside your hours, choose “A time outside opening hours”.' },
-    { id: 'confirm', icon: CalendarCheck, q: 'How do I confirm, move or cancel a booking?', a: 'Open Today or Calendar and tap the booking. Confirm, Completed, No-show and Cancel are right there. Move lets you pick a new free time. Bookings waiting for you also have a Confirm button on the row itself.' },
-    { id: 'share', icon: Share2, q: 'How do clients find and book me?', a: 'Share your link from the share button at the top, or from Channels. Clients open it, choose a service and a time, and the booking lands on your Today screen.' },
-    { id: 'hours', icon: Clock, q: 'How do I change my hours or take a day off?', a: 'Open Hours to change your weekly opening times. Closed dates for holidays and sick days arrive with the next Hours update; until then, write to us and we will block the day for you.' },
-    { id: 'pause', icon: CirclePause, q: 'Can I stop taking bookings for a while?', a: 'Yes. Open Business page and turn off taking bookings. Your page stays, but clients cannot book until you turn it back on.' },
-    { id: 'price', icon: Euro, q: 'What does Locappoint cost?', a: 'Your first twelve months are free. After that it is nineteen euros a month, flat, with no commission on your bookings.' },
+    { id: 'phone-booking', q: 'How do I add a booking from a phone call?', a: 'Tap New booking (the + button on your phone). Pick the service, the day and a free time, type the client’s name, and add it. Phone and email are optional. If they want a time outside your hours, choose “A time outside opening hours”.' },
+    { id: 'confirm', q: 'How do I confirm, move or cancel a booking?', a: 'Open Today or Calendar and tap the booking. Confirm, Completed, No-show and Cancel are right there. Move lets you pick a new free time. Bookings waiting for you also have a Confirm button on the row itself.' },
+    { id: 'share', q: 'How do clients find and book me?', a: 'Share your link from the share button at the top, or from Channels. Clients open it, choose a service and a time, and the booking lands on your Today screen.' },
+    { id: 'hours', q: 'How do I change my hours or take a day off?', a: 'Open Hours to change your weekly opening times. Closed dates for holidays and sick days arrive with the next Hours update; until then, ask Loca support and we will block the day for you.' },
+    { id: 'pause', q: 'Can I stop taking bookings for a while?', a: 'Yes. Open Business page and turn off taking bookings. Your page stays, but clients cannot book until you turn it back on.' },
+    { id: 'price', q: 'What does Locappoint cost?', a: 'Your first twelve months are free. After that it is nineteen euros a month, flat, with no commission on your bookings.' },
 ]
-
-const supportWeek = () => {
-    const { days, open, close } = SUPPORT.schedule
-    return Array.from({ length: 7 }, (_, dow) => (days.includes(dow) ? [{ start: open, end: close }] : []))
-}
-
-const TicketStub = () => (
-    <svg className="lc-stub" width="120" height="84" viewBox="0 0 120 84" aria-hidden="true">
-        <path className="lc-stub__paper" d="M14 10 H106 A6 6 0 0 1 112 16 V32 A10 10 0 0 0 112 52 V68 A6 6 0 0 1 106 74 H14 A6 6 0 0 1 8 68 V52 A10 10 0 0 0 8 32 V16 A6 6 0 0 1 14 10 Z" />
-        <line className="lc-stub__cut" x1="84" y1="16" x2="84" y2="68" />
-        <rect className="lc-stub__line is-strong" x="20" y="26" width="42" height="6" rx="3" />
-        <rect className="lc-stub__line" x="20" y="40" width="54" height="4" rx="2" />
-        <rect className="lc-stub__line" x="20" y="50" width="34" height="4" rx="2" />
-        <circle className="lc-stub__dot" cx="98" cy="42" r="5" />
-    </svg>
-)
 
 const Help = () => {
     const { user } = useAuth()
@@ -83,57 +65,53 @@ const Help = () => {
         }
     }
 
-    const now = useNow(SUPPORT.schedule.timeZone)
-    const status = useMemo(() => openStatus(supportWeek(), SUPPORT.schedule.timeZone), [now?.minutes])
-
     const whatsapp = SUPPORT.whatsapp
         ? `https://wa.me/${SUPPORT.whatsapp.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hi Locappoint, this is ${business.business_name}. `)}`
         : null
-
-    const mailto = `mailto:${SUPPORT.email}?subject=${encodeURIComponent(`Help for ${business.business_name}`)}`
 
     return (
         <div className="biz-page lc-help">
             <header className="biz-page__head">
                 <div>
                     <h1 className="biz-page__title">Help and support</h1>
-                    <p className="biz-page__sub">Quick answers first, and real people when you need them.</p>
+                    <p className="biz-page__sub">Real people, {SUPPORT.hours}.</p>
                 </div>
             </header>
 
-            <section className={`lc-help__desk${status?.open ? ' is-open' : ''}`} aria-labelledby="desk-title">
-                <div className="lc-help__deskstate">
-                    {now && <ShopClock minutes={now.minutes} open={Boolean(status?.open)} size={56} />}
+            <div className="lc-help__contact">
+                {whatsapp && (
+                    <Card variant="raised" padding="md">
+                        <MessageCircle size={22} className="lc-help__icon" aria-hidden="true" />
+                        <div>
+                            <h2 className="ui-heading">WhatsApp</h2>
+                            <p className="lc-help__text">The fastest way to reach us.</p>
+                        </div>
+                        <Button href={whatsapp} target="_blank" rel="noopener noreferrer" variant="secondary">Message us</Button>
+                    </Card>
+                )}
+                <Card variant="raised" padding="md">
+                    <Mail size={22} className="lc-help__icon" aria-hidden="true" />
                     <div>
-                        <h2 id="desk-title" className="lc-help__deskname">{status?.open ? 'We are online' : 'We are away'}</h2>
-                        <p className="lc-help__deskline">
-                            {status?.open ? `${status.text} Lisbon time. Tickets are answered within one working day.` : `${status?.text.replace(/^Opens/, 'Back')} Lisbon time. Leave a ticket and it is first in line.`}
-                        </p>
-                        <p className="lc-help__deskhours">{SUPPORT.hours}</p>
+                        <h2 className="ui-heading">Email</h2>
+                        <p className="lc-help__text">{SUPPORT.email}</p>
                     </div>
-                </div>
-                <div className="lc-help__deskactions">
-                    {whatsapp && <Button href={whatsapp} target="_blank" rel="noopener noreferrer" icon={MessageCircle}>WhatsApp us</Button>}
-                    <Button href={mailto} variant={whatsapp ? 'secondary' : 'primary'} icon={Mail}>Email {SUPPORT.email}</Button>
-                </div>
-            </section>
+                    <Button href={`mailto:${SUPPORT.email}?subject=${encodeURIComponent(`Help for ${business.business_name}`)}`} variant="secondary">Write to us</Button>
+                </Card>
+            </div>
 
             <section aria-labelledby="answers-title" className="lc-help__section">
                 <h2 id="answers-title" className="ui-heading">Quick answers</h2>
                 <div className="lc-faq">
-                    {ANSWERS.map(({ id, icon: Icon, q, a }) => (
+                    {ANSWERS.map((item) => (
                         <details
-                            key={id}
-                            id={id}
+                            key={item.id}
+                            id={item.id}
                             className="lc-faq__item"
-                            open={openId === id}
-                            onToggle={(event) => { if (event.currentTarget.open) setOpenId(id) }}
+                            open={openId === item.id}
+                            onToggle={(event) => { if (event.currentTarget.open) setOpenId(item.id) }}
                         >
-                            <summary className="lc-faq__q">
-                                <span className="lc-faq__icon" aria-hidden="true"><Icon size={17} /></span>
-                                <span className="lc-faq__text">{q}</span>
-                            </summary>
-                            <p className="lc-faq__a">{a}</p>
+                            <summary className="lc-faq__q">{item.q}</summary>
+                            <p className="lc-faq__a">{item.a}</p>
                         </details>
                     ))}
                 </div>
@@ -163,11 +141,7 @@ const Help = () => {
                     ) : ticketsError ? (
                         <p className="lc-help__text lc-help__pad">{ticketsError}</p>
                     ) : tickets.length === 0 ? (
-                        <div className="lc-help__empty">
-                            <TicketStub />
-                            <h3>No tickets yet</h3>
-                            <p>When you open one, it shows here with its status, and you get our reply by email.</p>
-                        </div>
+                        <EmptyState title="No tickets yet" body="When you open one, it appears here with its status." />
                     ) : (
                         tickets.map((t) => (
                             <ListRow
