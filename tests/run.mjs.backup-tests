@@ -10,14 +10,12 @@ import businessPage from './suites/business-page.mjs'
 import servicesHours from './suites/services-hours.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
-const [target = 'quick', filter] = process.argv.slice(2)
+const [target = 'all', only] = process.argv.slice(2)
 const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage], ['services and hours', servicesHours]] }
 SUITES.all = [...SUITES.flows, ...SUITES.layout]
-SUITES.quick = [...SUITES.flows, ['layout, 4 key screens', layout]]
-const only = target === 'quick' ? 'quick' : filter
 
 if (!SUITES[target]) {
-    console.log(`Unknown suite "${target}". Use quick, flows, layout or all.`)
+    console.log(`Unknown suite "${target}". Use layout, flows or all.`)
     process.exit(1)
 }
 
