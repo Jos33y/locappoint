@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ""
-Write-Host "  Locappoint - Cleanup for 27 September (run after committing patch 22)" -ForegroundColor Cyan
+Write-Host "  Locappoint - Cleanup for 27 September (run after committing patch 23)" -ForegroundColor Cyan
 Write-Host ""
 
 if (-not (Test-Path 'package.json')) { Write-Host "  [ABORT] No package.json. Run from repo root." -ForegroundColor Red; exit 1 }
@@ -20,11 +20,11 @@ if ($dirty) {
 }
 
 $targets = @(
-    'tests\suites\layout.mjs.backup-tests',
-    'tests\run.mjs.backup-tests',
-    'tests\README.md.backup-tests',
-    'package.json.backup-tests',
-    'faster-tests.zip'
+    'src\BookingApp.jsx.backup-settings',
+    'tests\harness\main.jsx.backup-settings',
+    'tests\harness\fakeSupabase.js.backup-settings',
+    'tests\run.mjs.backup-settings',
+    'settings.zip'
 )
 
 $existing = @()
@@ -34,7 +34,7 @@ foreach ($t in $targets) {
 }
 
 Write-Host ""
-Write-Host "  Kept on purpose: *.mistake files (retired Sheet.jsx, BusinessPage.jsx, TimeField.jsx, Profile.jsx, portal Services.jsx and Availability.jsx with their stylesheets, schema-onboarding.sql)." -ForegroundColor Gray
+Write-Host "  Kept on purpose: *.mistake files (retired Sheet.jsx, BusinessPage.jsx, TimeField.jsx, Profile.jsx, portal Services.jsx, Availability.jsx and Settings.jsx with their stylesheets, schema-onboarding.sql)." -ForegroundColor Gray
 Write-Host "  They go only when you approve deleting them." -ForegroundColor Gray
 Write-Host ""
 

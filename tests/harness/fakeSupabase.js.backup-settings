@@ -17,7 +17,6 @@ export const DATA = {
   ],
   time_blocks: [],
   profiles: [{ id: 'u1', full_name: 'Miles Farra', email: 'milesfarra@gmail.com' }],
-  users: [{ id: 'u1', full_name: 'Miles Farra', email: 'milesfarra@gmail.com' }],
   support_tickets: [],
 }
 
@@ -73,9 +72,7 @@ export const supabase = {
     getSession: async () => ({ data: { session: null } }),
     getUser: async () => ({ data: { user: { id: 'u1', email: 'milesfarra@gmail.com' } } }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
-    signOut: async (opts) => { calls.push(['signOut', opts]); return { error: null } },
-    signInWithPassword: async ({ password }) => { calls.push(['signIn']); return password === 'right-password' ? { data: {}, error: null } : { data: null, error: { message: 'Invalid login credentials' } } },
-    updateUser: async (v) => { calls.push(['updateUser', v]); return { data: {}, error: null } },
+    signOut: async () => ({ error: null }),
   },
   channel: () => { const c = { on: () => c, subscribe: () => c, unsubscribe() {} }; return c },
   removeChannel() {},

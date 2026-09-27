@@ -30,7 +30,7 @@ import BusinessPage from '@src/pages/business/BusinessPage'
 import Setup from '@src/pages/business/Setup'
 import ServicesPage from '@src/pages/business/ServicesPage'
 import HoursPage from '@src/pages/business/HoursPage'
-import SettingsPage from '@src/pages/business/SettingsPage'
+import PortalSettings from '@src/pages/portal/Settings'
 import { DATA } from './fakeSupabase'
 
 const params = new URLSearchParams(window.location.search)
@@ -69,7 +69,7 @@ const App = () => (
           
           <Route path="hours" element={<HoursPage />} />
           
-          <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings" element={<PortalSettings />} />
           <Route path="assistant" element={<Planned section="assistant" />} />
           <Route path="clients" element={<Planned section="clients" />} />
           <Route path="team" element={<Planned section="team" />} />

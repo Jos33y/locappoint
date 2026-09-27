@@ -35,7 +35,7 @@ import Setup from './pages/business/Setup'
 import BusinessPage from './pages/business/BusinessPage'
 import ServicesPage from './pages/business/ServicesPage'
 import HoursPage from './pages/business/HoursPage'
-import SettingsPage from './pages/business/SettingsPage'
+import PortalSettings from './pages/portal/Settings'
 
 import ClientLayout from './pages/client/ClientLayout'
 import ClientHome from './pages/client/Home'
@@ -90,7 +90,7 @@ const BookingApp = () => (
                     <Route path="services" element={<ServicesPage />} />
                     <Route path="hours" element={<HoursPage />} />
                     <Route path="page" element={<BusinessPage />} />
-                    <Route path="settings" element={<SettingsPage />} />
+                    <Route path="settings" element={<PortalSettings />} />
                     <Route path="assistant" element={<Planned section="assistant" />} />
                     <Route path="clients" element={<Planned section="clients" />} />
                     <Route path="team" element={<Planned section="team" />} />
