@@ -48,7 +48,7 @@ const Auth = ({ children }) => {
   const [mode, setMode] = useState('business')
   const value = useMemo(() => ({
     user: { id: 'u1', email: params.get('email') || 'milesfarra@gmail.com' },
-    userProfile: { id: 'u1', full_name: params.has('noname') ? '' : 'Miles Farra', created_at: '2026-03-14T10:00:00Z' },
+    userProfile: { id: 'u1', full_name: params.has('noname') ? '' : 'Miles Farra' },
     business: DATA.businesses[0],
     loading: false,
     mode, setMode,

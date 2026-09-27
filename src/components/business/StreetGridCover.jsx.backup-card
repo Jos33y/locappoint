@@ -25,7 +25,7 @@ const TINTS = {
 }
 
 
-const StreetGridCover = ({ seed = '', tint = 'azure', className = '', focus = false }) => {
+const StreetGridCover = ({ seed = '', tint = 'azure', className = '' }) => {
     const h = hashSeed(seed)
 
     // Derive variation parameters from hash bits
@@ -48,7 +48,7 @@ const StreetGridCover = ({ seed = '', tint = 'azure', className = '', focus = fa
 
     return (
         <svg
-            viewBox={focus ? `0 ${pinY - 40} 400 80` : '0 0 400 300'}
+            viewBox="0 0 400 300"
             preserveAspectRatio="xMidYMid slice"
             className={`street-grid ${className}`}
             aria-hidden="true">

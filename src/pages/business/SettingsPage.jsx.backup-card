@@ -6,7 +6,6 @@ import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { initials } from '../../components/business/Brand'
-import StreetGridCover from '../../components/business/StreetGridCover'
 import SaveState from '../../components/business/SaveState'
 import { useAutosave } from '../../components/business/useAutosave'
 import { SUPPORT } from '../../constants/support'
@@ -207,36 +206,25 @@ const SettingsPage = () => {
                     <h1 className="biz-page__title">Settings</h1>
                     <p className="biz-page__sub">Your account, sign-in and security.</p>
                 </div>
+                <SaveState state={autosave.state} onRetry={autosave.retry} blockedText="Enter your name to save it" />
             </header>
 
             <div className="biz-st__column">
-                <section className="ui-card ui-card--flat biz-st__card biz-st__idcard" aria-labelledby="profile-title">
-                    <div className="biz-st__band" aria-hidden="true">
-                        <StreetGridCover seed={user?.id || email} tint="azure" focus />
-                    </div>
-                    <div className="biz-st__id">
+                <Section id="profile" title="Your profile">
+                    <div className="biz-st__who">
                         <span className="biz-st__avatar" aria-hidden="true">{initials(trimmed || email)}</span>
-                        <div className="biz-st__idtext">
-                            <h2 id="profile-title" className="biz-st__idname">{trimmed || 'Your name'}</h2>
-                            <p className="biz-st__idmeta">
-                                <span>{email}</span>
-                                {since && <span className="biz-st__since">Member since {since}</span>}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="biz-st__idbody">
-                        <div className="biz-st__namefield">
+                        <div className="biz-st__whotext">
                             <Field label="Your name" error={name !== savedName ? nameProblem : undefined} hint="Your own name, not the business name">
                                 <input className="ui-input" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" />
                             </Field>
-                            <SaveState state={autosave.state} onRetry={autosave.retry} blockedText="Enter your name to save it" />
                         </div>
-                        <div className="biz-st__rule" />
-                        <Row title="Sign-in email" detail="Used to sign in and for booking emails. Changing it is done by our team.">
-                            <Button variant="secondary" size="sm" icon={Mail} href={`mailto:${SUPPORT.email}?subject=${encodeURIComponent('Change my sign-in email')}`}>Ask to change</Button>
-                        </Row>
                     </div>
-                </section>
+                    <div className="biz-st__rule" />
+                    <Row title="Sign-in email" detail={email}>
+                        <Button variant="quiet" size="sm" icon={Mail} href={`mailto:${SUPPORT.email}?subject=${encodeURIComponent('Change my sign-in email')}`}>Ask to change</Button>
+                    </Row>
+                    {since && <Row title="Member since" detail={since} />}
+                </Section>
 
                 <Section id="security" title="Sign-in and security">
                     <Row title="Password" detail="Change it any time. You stay signed in on this device.">
@@ -265,7 +253,7 @@ const SettingsPage = () => {
                     </Link>
                     <div className="biz-st__rule" />
                     <Row title="Close your account" detail="Tell us and we close it for you. If you run a business, we talk you through what happens to your page and bookings first.">
-                        <Button variant="secondary" size="sm" className="biz-st__danger" href={closeLink}>Ask us to close it</Button>
+                        <Button variant="quiet" size="sm" className="biz-st__danger" href={closeLink}>Ask us to close it</Button>
                     </Row>
                 </Section>
 
