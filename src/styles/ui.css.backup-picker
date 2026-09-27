@@ -849,13 +849,6 @@
     appearance: none;
 }
 
-/* Native option lists: pin their colours so Windows does not repaint them light on hover. */
-select option,
-select optgroup {
-    background-color: var(--lc-raised);
-    color: var(--lc-ink-1);
-}
-
 
 .ui-switchrow {
     display: flex;

@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { CalendarCheck, CirclePause, Clock, Euro, Mail, MessageCircle, PhoneCall, Send, Share2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
-import { Button, Card, Field, Input, ListRow, Picker, Skeleton, Status, Textarea } from '../../components/ui'
+import { Button, Card, Field, Input, ListRow, Select, Skeleton, Status, Textarea } from '../../components/ui'
 import { ShopClock, useNow } from '../../components/business/ShopClock'
 import { openStatus } from '../../components/business/PublicPageView'
 import { SUPPORT, TICKET_CATEGORIES, TICKET_STATUS } from '../../constants/support'
@@ -143,12 +143,9 @@ const Help = () => {
                 <Card title="Open a ticket" padding="lg">
                     <form className="lc-help__form" onSubmit={submit} noValidate>
                         <Field label="About">
-                            <Picker
-                                value={form.category}
-                                onChange={(category) => setForm((f) => ({ ...f, category }))}
-                                options={TICKET_CATEGORIES}
-                                title="What is it about?"
-                            />
+                            <Select value={form.category} onChange={update('category')}>
+                                {TICKET_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                            </Select>
                         </Field>
                         <Field label="Title" error={errors.subject}>
                             <Input value={form.subject} onChange={update('subject')} maxLength={140} placeholder="For example: a client cannot see Saturday" />
