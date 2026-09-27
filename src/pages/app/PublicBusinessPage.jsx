@@ -5,10 +5,11 @@ import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
-import BookingModal from '../../components/booking/BookingModal'
+import { BookingSheet } from '../../components/booking/BookingSheet'
 import { PublicPageView } from '../../components/business/PublicPageView'
 import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { weekFromRows } from '../../services/hours'
+import { readPending } from '../../services/booking'
 import '../../styles/public-page.css'
 
 const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url'
@@ -63,10 +64,11 @@ const PublicBusinessPage = () => {
     const { businessSlug } = useParams()
     const navigate = useNavigate()
     const location = useLocation()
-    const { userProfile } = useAuth()
+    const { user, userProfile } = useAuth()
     const [state, setState] = useState({ status: 'loading' })
     const [attempt, setAttempt] = useState(0)
     const [booking, setBooking] = useState(null)
+    const [resume, setResume] = useState(null)
 
     useEffect(() => {
         let cancelled = false
@@ -109,6 +111,16 @@ const PublicBusinessPage = () => {
     }, [businessSlug, attempt])
 
     useEffect(() => {
+        if (state.status !== 'ready' || !user) return
+        const pending = readPending(state.business.slug)
+        const service = pending && state.services.find((s) => s.id === pending.serviceId)
+        if (service) {
+            setResume(pending)
+            setBooking(service)
+        }
+    }, [state, user])
+
+    useEffect(() => {
         if (state.status !== 'ready') return undefined
         const previous = document.title
         document.title = `${state.business.business_name}, book online | Locappoint`
@@ -149,17 +161,18 @@ const PublicBusinessPage = () => {
                         business={state.business}
                         services={state.services}
                         week={state.week}
-                        onBook={(service) => setBooking(service)}
+                        onBook={(service) => { setResume(null); setBooking(service) }}
                     />
                 )}
             </main>
             <AppFooter />
             {booking && state.status === 'ready' && (
-                <BookingModal
+                <BookingSheet
                     business={state.business}
                     service={booking}
-                    onClose={() => setBooking(null)}
-                    onSuccess={() => setBooking(null)}
+                    week={state.week}
+                    resume={resume}
+                    onClose={() => { setBooking(null); setResume(null) }}
                 />
             )}
         </div>

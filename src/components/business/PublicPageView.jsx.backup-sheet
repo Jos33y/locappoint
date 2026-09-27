@@ -75,21 +75,19 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                 <div className="lc-pub__main">
                     {business.description?.trim() && <p className="lc-pub__about">{business.description.trim()}</p>}
                     <PublicMenu services={services} name={name} whatsapp={whatsapp} preview={preview} onBook={onBook} />
-                    {hasHours && <PublicHours week={week} todayDow={now?.dow} />}
                 </div>
 
                 <aside className="lc-pub__aside">
                     {hasHours && now && <PublicStatus week={week} timeZone={timeZone} now={now} />}
+                    {hasHours && <PublicHours week={week} todayDow={now?.dow} />}
                     {address && <PublicFind business={business} href={maps} map={Boolean(business.banner_url)} />}
                 </aside>
             </div>
 
-            {preview && (
-                <footer className="lc-pub__foot">
-                    <Mark size={18} />
-                    <span>Bookings by <Wordmark /></span>
-                </footer>
-            )}
+            <footer className="lc-pub__foot">
+                <Mark size={18} />
+                <span>Bookings by <Wordmark /></span>
+            </footer>
         </article>
     )
 }

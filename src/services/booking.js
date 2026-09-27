@@ -1,0 +1,78 @@
+import { supabase } from '../config/supabase'
+import { addDays, zonedNow } from './business'
+import { fromMinutes, parseDateKey, toMinutes } from './dates'
+
+const STEP = 30
+const PENDING = 'pendingBooking'
+const PENDING_TTL = 2 * 60 * 60 * 1000
+
+export const monthShort = (date) => date.toLocaleDateString('en-GB', { month: 'short' }).slice(0, 3)
+
+export const bookingDays = (timeZone, week, count = 28) => {
+    const { dateKey } = zonedNow(timeZone)
+    return Array.from({ length: count }, (_, i) => {
+        const key = addDays(dateKey, i)
+        const date = parseDateKey(key)
+        return { key, date, dow: date.getDay(), windows: week[date.getDay()] || [], today: i === 0 }
+    })
+}
+
+export const slotsFor = ({ windows, busy, duration, after = -1 }) => {
+    const taken = busy.map((b) => [toMinutes(b.start_time), toMinutes(b.end_time)])
+    return windows.map((w) => {
+        const slots = []
+        for (let start = w.start; start + duration <= w.end; start += STEP) {
+            const end = start + duration
+            if (start > after && !taken.some(([s, e]) => start < e && end > s)) slots.push(start)
+        }
+        return { ...w, slots }
+    })
+}
+
+export const hasTimeLeft = (day, duration, nowMinutes) =>
+    day.windows.some((w) => {
+        const first = day.today ? Math.max(w.start, nowMinutes + 1) : w.start
+        return first + duration <= w.end
+    })
+
+export const loadBusy = async (businessId, dateKey) => {
+    const { data, error } = await supabase.rpc('get_busy_slots', { p_business_id: businessId, p_date: dateKey })
+    if (error) throw error
+    return data || []
+}
+
+export const requestBooking = async ({ businessId, serviceId, dateKey, minutes, name, email, phone, notes }) => {
+    const { data, error } = await supabase.rpc('book_appointment', {
+        p_business_id: businessId,
+        p_service_id: serviceId,
+        p_date: dateKey,
+        p_time: fromMinutes(minutes),
+        p_client_name: name,
+        p_client_email: email,
+        p_client_phone: phone,
+        p_notes: notes,
+    })
+    if (error) throw error
+    return data
+}
+
+export const savePending = ({ slug, serviceId, dateKey, minutes }) => {
+    try {
+        sessionStorage.setItem(PENDING, JSON.stringify({ businessSlug: slug, serviceId, date: dateKey, time: fromMinutes(minutes), savedAt: Date.now() }))
+    } catch { /* storage blocked: the client picks the time again */ }
+}
+
+export const readPending = (slug) => {
+    try {
+        const saved = JSON.parse(sessionStorage.getItem(PENDING) || 'null')
+        if (!saved || saved.businessSlug !== slug || !parseDateKey(saved.date)) return null
+        if (saved.savedAt && Date.now() - saved.savedAt > PENDING_TTL) return null
+        return { serviceId: saved.serviceId, dateKey: saved.date, minutes: toMinutes(saved.time) }
+    } catch {
+        return null
+    }
+}
+
+export const clearPending = () => {
+    try { sessionStorage.removeItem(PENDING) } catch { /* nothing to clear */ }
+}
