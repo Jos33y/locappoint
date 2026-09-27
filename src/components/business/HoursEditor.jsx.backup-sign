@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Coffee, DoorClosed, Plus, X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { Button } from '../ui'
 import { TimePicker } from '../ui/TimePicker'
 import { clock, dayProblem } from '../../services/hours'
@@ -10,6 +10,7 @@ import '../../styles/business/editors.css'
 const ORDER = [1, 2, 3, 4, 5, 6, 0]
 const LETTER = { 1: 'M', 2: 'T', 3: 'W', 4: 'T', 5: 'F', 6: 'S', 0: 'S' }
 const NAME = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 0: 'Sunday' }
+const SHORT = { 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat', 0: 'Sun' }
 const LAST = 24 * 60 - 1
 
 const TEMPLATES = [
@@ -128,73 +129,23 @@ const axisOf = (week) => {
     return { lo: lo * 60, hi: hi * 60, ticks }
 }
 
-export const ShopClock = ({ minutes, open, size = 48 }) => {
-    const hour = ((minutes / 60) % 12) * 30
-    const minute = (minutes % 60) * 6
-    return (
-        <svg className={`biz-clock${open ? ' is-open' : ''}`} width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
-            <circle className="biz-clock__face" cx="24" cy="24" r="22" />
-            {Array.from({ length: 12 }, (_, i) => (
-                <line
-                    key={i}
-                    className={i % 3 === 0 ? 'biz-clock__tick is-major' : 'biz-clock__tick'}
-                    x1="24" y1={i % 3 === 0 ? 5 : 6} x2="24" y2="9"
-                    transform={`rotate(${i * 30} 24 24)`}
-                />
-            ))}
-            <line className="biz-clock__hour" x1="24" y1="24" x2="24" y2="14" transform={`rotate(${hour} 24 24)`} />
-            <line className="biz-clock__minute" x1="24" y1="24" x2="24" y2="9.5" transform={`rotate(${minute} 24 24)`} />
-            <circle className="biz-clock__pin" cx="24" cy="24" r="2.25" />
-        </svg>
-    )
+const dayText = (windows) => {
+    if (windows.length === 0) return 'Closed'
+    const range = `${clock(windows[0].start)} to ${clock(windows[windows.length - 1].end)}`
+    if (windows.length === 1) return range
+    const breaks = windows.slice(1).map((w, i) => `${clock(windows[i].end)} to ${clock(w.start)}`)
+    return `${range}, break ${breaks.join(' and ')}`
 }
 
-const DoorSign = () => (
-    <svg className="biz-sign" width="132" height="104" viewBox="0 0 132 104" aria-hidden="true">
-        <path className="biz-sign__string" d="M44 30 L66 8 L88 30" />
-        <circle className="biz-sign__nail" cx="66" cy="8" r="3" />
-        <rect className="biz-sign__board" x="16" y="30" width="100" height="66" rx="10" />
-        <rect className="biz-sign__line is-strong" x="30" y="44" width="36" height="6" rx="3" />
-        {[58, 70, 82].map((y) => (
-            <g key={y}>
-                <rect className="biz-sign__line" x="30" y={y} width="18" height="4" rx="2" />
-                <rect className="biz-sign__line" x="72" y={y} width="30" height="4" rx="2" />
-            </g>
-        ))}
-        <circle className="biz-sign__dot" cx="104" cy="47" r="4" />
-    </svg>
-)
-
-export const WeekView = ({ week, timeZone, status }) => {
+export const WeekView = ({ week, timeZone }) => {
     const now = useNow(timeZone)
     const axis = axisOf(week)
     const at = (m) => `${((Math.min(Math.max(m, axis.lo), axis.hi) - axis.lo) / (axis.hi - axis.lo)) * 100}%`
     const width = (w) => `${((Math.min(w.end, axis.hi) - Math.max(w.start, axis.lo)) / (axis.hi - axis.lo)) * 100}%`
-    const empty = !week.some((day) => openWindows(day).length > 0)
-
-    if (empty) {
-        return (
-            <section className="biz-wk biz-wk--empty">
-                <DoorSign />
-                <div className="biz-wk__emptytext">
-                    <h2 className="biz-wk__emptytitle">Your door sign is blank</h2>
-                    <p>Set the days and times you open. Clients can book any time inside them.</p>
-                </div>
-            </section>
-        )
-    }
 
     return (
-        <section className="biz-wk" aria-label="Your week">
-            {status && now && (
-                <header className="biz-wk__status">
-                    <ShopClock minutes={now.minutes} open={status.open} />
-                    <div>
-                        <p className={`biz-wk__state${status.open ? ' is-open' : ''}`}>{status.open ? 'Open now' : 'Closed now'}</p>
-                        <p className="biz-wk__next">{status.text}</p>
-                    </div>
-                </header>
-            )}
+        <section className="biz-wk" aria-labelledby="biz-wk-title">
+            <h2 id="biz-wk-title" className="ui-visually-hidden">Your week</h2>
             <div className="biz-wk__axis" aria-hidden="true">
                 <span className="biz-wk__scale">
                     {axis.ticks.map((h) => <span key={h} style={{ left: at(h * 60) }}>{String(h).padStart(2, '0')}</span>)}
@@ -205,34 +156,19 @@ export const WeekView = ({ week, timeZone, status }) => {
                     const windows = openWindows(week[d])
                     const today = now?.dow === d
                     const showNow = today && now.minutes >= axis.lo && now.minutes <= axis.hi
-                    const breaks = windows.slice(1).map((w, i) => ({ start: windows[i].end, end: w.start }))
                     return (
                         <li key={d} className={`biz-wk__row${today ? ' is-today' : ''}${windows.length ? '' : ' is-closed'}`}>
                             <span className="biz-wk__day">
-                                {NAME[d]}
-                                {today && <span className="biz-wk__today">Today</span>}
-                            </span>
-                            <span className="biz-wk__times">
-                                {windows.length ? (
-                                    <span className="biz-wk__range">
-                                        <b>{clock(windows[0].start)}</b>
-                                        <span className="biz-wk__to"> to </span>
-                                        <b>{clock(windows[windows.length - 1].end)}</b>
-                                    </span>
-                                ) : (
-                                    <span className="biz-wk__closed"><DoorClosed size={15} aria-hidden="true" />Closed</span>
-                                )}
-                                {breaks.map((g) => (
-                                    <span key={g.start} className="biz-wk__lunch">
-                                        <Coffee size={13} aria-hidden="true" />
-                                        {`Lunch ${clock(g.start)} to ${clock(g.end)}`}
-                                    </span>
-                                ))}
+                                <span aria-hidden="true">{SHORT[d]}</span>
+                                <span className="ui-visually-hidden">{`${NAME[d]}${today ? ', today' : ''}: ${dayText(windows)}`}</span>
                             </span>
                             <span className="biz-wk__track" aria-hidden="true">
                                 {axis.ticks.map((h) => <i key={h} className="biz-wk__grid" style={{ left: at(h * 60) }} />)}
                                 {windows.map((w) => <span key={w.start} className="biz-wk__bar" style={{ left: at(w.start), width: width(w) }} />)}
                                 {showNow && <span className="biz-wk__now" style={{ left: at(now.minutes) }} />}
+                            </span>
+                            <span className="biz-wk__hours" aria-hidden="true">
+                                {windows.length ? `${clock(windows[0].start)} to ${clock(windows[windows.length - 1].end)}` : 'Closed'}
                             </span>
                         </li>
                     )
@@ -319,7 +255,7 @@ const GroupCard = ({ group, index, taken, removable, weekEmpty, onChange, onRemo
     )
 }
 
-export const HoursEditor = ({ week, onChange, templates = true, timeZone, status, weekAt = 'top' }) => {
+export const HoursEditor = ({ week, onChange, templates = true, timeZone, weekAt = 'top' }) => {
     const [groups, setGroups] = useState(() => groupsFromWeek(week))
 
     const commit = (next) => {
@@ -333,8 +269,6 @@ export const HoursEditor = ({ week, onChange, templates = true, timeZone, status
 
     return (
         <div className="biz-sched">
-            {weekAt === 'top' && <WeekView week={weekFromGroups(groups)} timeZone={timeZone} status={status} />}
-
             {templates && (
                 <div className="biz-sched__templates" role="group" aria-label="Start from a common week">
                     {TEMPLATES.map((t) => (
@@ -352,6 +286,8 @@ export const HoursEditor = ({ week, onChange, templates = true, timeZone, status
                     ))}
                 </div>
             )}
+
+            {weekAt === 'top' && <WeekView week={weekFromGroups(groups)} timeZone={timeZone} />}
 
             <ol className="biz-sched__cards">
                 {groups.map((g, i) => (
@@ -378,7 +314,7 @@ export const HoursEditor = ({ week, onChange, templates = true, timeZone, status
                 </Button>
             )}
 
-            {weekAt === 'bottom' && <WeekView week={weekFromGroups(groups)} timeZone={timeZone} status={status} />}
+            {weekAt === 'bottom' && <WeekView week={weekFromGroups(groups)} timeZone={timeZone} />}
 
             <p className="ui-visually-hidden" aria-live="polite">{weekSentence(groups)}</p>
         </div>

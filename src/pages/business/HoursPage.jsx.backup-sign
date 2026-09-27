@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
-import { Button, Skeleton } from '../../components/ui'
+import { Button, Skeleton, Status } from '../../components/ui'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { HoursEditor } from '../../components/business/HoursEditor'
 import { openStatus } from '../../components/business/PublicPageView'
@@ -78,7 +78,7 @@ const HoursPage = () => {
         },
     })
 
-    const status = useMemo(() => (week && hasOpenDay(week) ? openStatus(week, timezone) : null), [week, timezone])
+    const status = useMemo(() => (week && valid ? openStatus(week, timezone) : null), [week, valid, timezone])
 
     if (phase === 'loading') return <LoadingState />
     if (phase === 'failed') {
@@ -97,7 +97,14 @@ const HoursPage = () => {
             <header className="biz-page__head biz-sh__head">
                 <div>
                     <h1 className="biz-page__title">Opening hours</h1>
-                    <p className="biz-page__sub">When clients can book you.</p>
+                    <p className="biz-page__sub biz-sh__now">
+                        {status ? (
+                            <>
+                                <Status tone={status.open ? 'success' : 'neutral'} size="sm">{status.open ? 'Open now' : 'Closed now'}</Status>
+                                <span>{status.text}</span>
+                            </>
+                        ) : 'When clients can book you.'}
+                    </p>
                 </div>
                 <div className="biz-sh__headside">
                     <SaveState state={autosave.state} onRetry={autosave.retry} blockedText={week && hasOpenDay(week) ? 'Fix the highlighted hours to save them' : 'Open at least one day to save your hours'} />
@@ -111,7 +118,7 @@ const HoursPage = () => {
                         Some days had more than one break. They are shown here with one lunch break, and saving keeps what you see.
                     </p>
                 )}
-                <HoursEditor week={week} onChange={setWeek} templates={startedEmpty} timeZone={timezone} status={status} />
+                <HoursEditor week={week} onChange={setWeek} templates={startedEmpty} timeZone={timezone} />
                 <p className="biz-sh__tip">Clients can book any time inside these hours. Changes do not move bookings already made.</p>
             </div>
         </div>
