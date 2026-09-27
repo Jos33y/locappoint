@@ -18,7 +18,7 @@ export default async ({ browser, url, check }) => {
     let p = await open('/portal/services')
     await wait(1200)
     check((await calls(p, 'services', 'update')).length === 0 && (await calls(p, 'services', 'insert')).length === 0, 'no save on open')
-    check(await text(p, '.biz-page__sub') === '2 services on your page, from €12.', `summary ${await text(p, '.biz-page__sub')}`)
+    check(await text(p, '.biz-page__sub') === '2 services on your page, from €12.00.', `summary ${await text(p, '.biz-page__sub')}`)
     check(await text(p, '.biz-save') === 'Changes save as you go', 'idle state')
 
     await clickText(p, '.biz-svc__open', 'Haircut')
@@ -30,7 +30,7 @@ export default async ({ browser, url, check }) => {
     let up = await calls(p, 'services', 'update')
     check(up.some((u) => u.price === 20 && u.service_name === 'Haircut'), `price saved ${JSON.stringify(up.slice(-2))}`)
     check(await text(p, '.biz-save') === 'All changes saved', 'saved state')
-    check(await text(p, '.biz-page__sub') === '2 services on your page, from €12.', 'summary still right')
+    check(await text(p, '.biz-page__sub') === '2 services on your page, from €12.00.', 'summary still right')
     await clickText(p, '.biz-svc__formactions button', 'Done')
 
     await clickText(p, '.biz-svc__suggest .ui-chip', 'Skin fade')
@@ -44,7 +44,7 @@ export default async ({ browser, url, check }) => {
     await wait(1500)
     const ins = await calls(p, 'services', 'insert')
     check(ins.length === 1 && ins[0].service_name === 'Skin fade' && ins[0].price === 22 && ins[0].duration_minutes === 45 && ins[0].business_id === 'b1', `insert ${JSON.stringify(ins)}`)
-    check(await text(p, '.biz-page__sub') === '3 services on your page, from €12.', 'summary counts three')
+    check(await text(p, '.biz-page__sub') === '3 services on your page, from €12.00.', 'summary counts three')
     await wait(1200)
     const before = (await calls(p, 'services', 'update')).length + (await calls(p, 'services', 'insert')).length
     await wait(1500)
@@ -52,8 +52,7 @@ export default async ({ browser, url, check }) => {
     await clickText(p, '.biz-svc__formactions button', 'Done')
     await wait(300)
 
-    await p.evaluate(() => document.querySelector('[aria-label^="Reorder Beard trim"]').focus())
-    await p.keyboard.press('ArrowUp')
+    await p.evaluate(() => document.querySelector('[aria-label="Move Beard trim up"]').click())
     await wait(1500)
     up = await calls(p, 'services', 'update')
     const last3 = up.slice(-3)
@@ -73,8 +72,8 @@ export default async ({ browser, url, check }) => {
     check(await p.evaluate(() => document.querySelector('.biz-svc__item.is-open [role=switch]').getAttribute('aria-checked')) === 'false', 'switch shows hidden')
     await clickText(p, '.biz-svc__formactions button', 'Done')
     await wait(300)
-    check(await p.evaluate(() => document.querySelector('.biz-svc__item.is-hidden .biz-svc__hidden')?.textContent === 'Hidden'), 'hidden label on the row')
-    check(await text(p, '.biz-page__sub') === '2 services on your page, from €20. 1 hidden.', `summary with hidden ${await text(p, '.biz-page__sub')}`)
+    check(await p.evaluate(() => document.body.textContent.includes('Hidden from your page')), 'hidden label on the row')
+    check(await text(p, '.biz-page__sub') === '2 services on your page, from €20.00. 1 hidden.', `summary with hidden ${await text(p, '.biz-page__sub')}`)
 
     await clickText(p, '.biz-svc__open', 'Skin fade')
     await wait(300)

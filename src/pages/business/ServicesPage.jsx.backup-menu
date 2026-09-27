@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowUpRight, EyeOff, Trash2, TriangleAlert } from 'lucide-react'
 import { Button, Sheet, Skeleton } from '../../components/ui'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
-import { ServiceEditor, menuPrice, serviceFromRow, serviceProblems } from '../../components/business/ServiceEditor'
+import { ServiceEditor, serviceFromRow, serviceProblems } from '../../components/business/ServiceEditor'
 import SaveState from '../../components/business/SaveState'
 import { useAutosave } from '../../components/business/useAutosave'
 import { suggestionsFor } from '../../constants/categories'
+import { formatMoney } from '../../services/business'
 import { loadSetup, saveServices, serviceBookingCount, serviceRow } from '../../services/setup'
 import { pageUrl } from '../../services/links'
 import '../../styles/business/services-hours.css'
@@ -20,7 +21,7 @@ const summary = (services) => {
     const live = services.filter((s) => isActive(s) && s.service_name.trim())
     if (live.length === 0) return 'Add what clients can book, with a price and how long it takes.'
     const prices = live.map((s) => Number(String(s.price).replace(',', '.'))).filter((n) => Number.isFinite(n))
-    const from = prices.length ? `, from ${menuPrice(Math.min(...prices))}` : ''
+    const from = prices.length ? `, from ${formatMoney(Math.min(...prices))}` : ''
     const hidden = services.length - live.length
     return `${plural(live.length, 'service')} on your page${from}.${hidden > 0 ? ` ${hidden} hidden.` : ''}`
 }
@@ -221,7 +222,7 @@ const ServicesPage = () => {
                     showVisibility
                     onRemove={requestRemove}
                 />
-                {services.length > 1 && <p className="biz-sh__tip">Clients see your services in this order. Drag the handle to move one.</p>}
+                {services.length > 1 && <p className="biz-sh__tip">Clients see your services in this order. Use the arrows to move one up or down.</p>}
             </div>
 
             <RemoveSheet ask={ask} onClose={() => setAsk(null)} onRemove={confirmRemove} onHide={confirmHide} />

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowDown, ArrowUp, Check, ChevronRight, Plus, Trash2 } from 'lucide-react'
-import { AffixInput, Button, Chip, ChipGroup, Field, IconButton, Input, Switch, Textarea } from '../ui'
-import { durationLabel, formatMoney } from '../../services/business'
+import { Check, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react'
+import { AffixInput, Button, Chip, ChipGroup, Field, Input, Switch, Textarea } from '../ui'
+import { durationLabel } from '../../services/business'
 import '../../styles/business/editors.css'
 
 const DURATIONS = [15, 30, 45, 60, 90, 120]
@@ -141,9 +141,64 @@ const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusFie
     )
 }
 
+const priceFormat = new Map()
+
+export const menuPrice = (value) => {
+    const amount = parsePrice(value)
+    const decimals = Number.isInteger(amount) ? 0 : 2
+    if (!priceFormat.has(decimals)) {
+        priceFormat.set(decimals, new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: decimals, maximumFractionDigits: decimals }))
+    }
+    return priceFormat.get(decimals).format(amount)
+}
+
+const SUGGEST_UNTIL = 3
+
+const useDragOrder = (onMove) => {
+    const listRef = useRef(null)
+    const [drag, setDrag] = useState(null)
+
+    const start = (event, index) => {
+        if (event.button !== undefined && event.button !== 0) return
+        const rows = [...listRef.current.children].map((el) => el.getBoundingClientRect())
+        event.currentTarget.setPointerCapture?.(event.pointerId)
+        setDrag({ index, target: index, startY: event.clientY, dy: 0, rows })
+    }
+
+    const move = (event) => {
+        if (!drag) return
+        const dy = event.clientY - drag.startY
+        const own = drag.rows[drag.index]
+        const centre = own.top + own.height / 2 + dy
+        let target = drag.rows.findIndex((r) => centre < r.top + r.height / 2)
+        if (target === -1) target = drag.rows.length - 1
+        else if (target > drag.index) target -= 1
+        setDrag({ ...drag, dy, target })
+    }
+
+    const end = () => {
+        if (!drag) return
+        if (drag.target !== drag.index) onMove(drag.index, drag.target)
+        setDrag(null)
+    }
+
+    const offset = (index) => {
+        if (!drag) return undefined
+        if (index === drag.index) return { transform: `translateY(${drag.dy}px)`, zIndex: 2 }
+        const height = drag.rows[drag.index].height
+        if (drag.index < drag.target && index > drag.index && index <= drag.target) return { transform: `translateY(${-height}px)` }
+        if (drag.index > drag.target && index < drag.index && index >= drag.target) return { transform: `translateY(${height}px)` }
+        return { transform: 'translateY(0)' }
+    }
+
+    return { listRef, drag, start, move, end, offset }
+}
+
 export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors = false, showVisibility = false, onRemove }) => {
     const [editing, setEditing] = useState(() => (services.length === 1 && !services[0].id ? services[0].key : null))
     const [focusField, setFocusField] = useState('name')
+    const handles = useRef(new Map())
+    const [refocus, setRefocus] = useState(null)
 
     const replace = (key, next) => onChange(services.map((s) => (s.key === key ? next : s)))
     const drop = (key) => {
@@ -154,10 +209,11 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
         if (onRemove) onRemove(services.find((s) => s.key === key), () => drop(key))
         else drop(key)
     }
-    const move = (index, by) => {
+    const moveTo = (from, to) => {
+        if (to < 0 || to >= services.length || from === to) return
         const next = [...services]
-        const [item] = next.splice(index, 1)
-        next.splice(index + by, 0, item)
+        const [item] = next.splice(from, 1)
+        next.splice(to, 0, item)
         onChange(next)
     }
     const add = (name, minutes) => {
@@ -167,74 +223,114 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
         setEditing(service.key)
     }
 
+    const order = useDragOrder(moveTo)
+
+    useEffect(() => {
+        if (!refocus) return
+        handles.current.get(refocus)?.focus()
+        setRefocus(null)
+    }, [refocus, services])
+
+    const onHandleKey = (event, index, key) => {
+        if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+        event.preventDefault()
+        moveTo(index, index + (event.key === 'ArrowUp' ? -1 : 1))
+        setRefocus(key)
+    }
+
     const taken = new Set(services.map((s) => s.service_name.trim().toLowerCase()))
-    const open = suggestions.filter(([name]) => !taken.has(name.toLowerCase()))
+    const open = services.length < SUGGEST_UNTIL ? suggestions.filter(([name]) => !taken.has(name.toLowerCase())) : []
+    const sortable = services.length > 1
 
     return (
         <div className="biz-svc">
-            {services.length > 0 && (
-                <ol className="biz-svc__list">
-                    {services.map((service, index) => {
-                        const invalid = showErrors && Object.keys(serviceProblems(service)).length > 0
-                        const isOpen = editing === service.key || invalid
-                        const name = service.service_name.trim() || 'New service'
-                        return (
-                            <li key={service.key} className={`biz-svc__item${isOpen ? ' is-open' : ''}${invalid ? ' has-error' : ''}${service.is_active === false ? ' is-hidden' : ''}`}>
-                                {isOpen ? (
-                                    <ServiceForm
-                                        service={service}
-                                        showErrors={showErrors}
-                                        showVisibility={showVisibility}
-                                        focusField={editing === service.key ? focusField : null}
-                                        onChange={(next) => replace(service.key, next)}
-                                        onDone={() => setEditing(null)}
-                                        onRemove={() => remove(service.key)}
-                                    />
-                                ) : (
-                                    <div className="biz-svc__summary">
-                                        <button type="button" className="biz-svc__open" onClick={() => { setFocusField('name'); setEditing(service.key) }}>
-                                            <span className="biz-svc__name">{name}</span>
-                                            <span className="biz-svc__meta">
-                                                {Number(service.duration_minutes) ? durationLabel(Number(service.duration_minutes)) : 'No duration'}
-                                                {service.is_active === false && <span className="biz-svc__hidden">Hidden from your page</span>}
-                                            </span>
-                                            <span className="biz-svc__price">
-                                                {String(service.price).trim() === '' ? 'No price' : formatMoney(parsePrice(service.price))}
-                                            </span>
-                                            <ChevronRight size={16} aria-hidden="true" className="biz-svc__chevron" />
-                                        </button>
-                                        {services.length > 1 && (
-                                            <span className="biz-svc__order">
-                                                <IconButton icon={ArrowUp} variant="quiet" size="sm" label={`Move ${name} up`} disabled={index === 0} onClick={() => move(index, -1)} />
-                                                <IconButton icon={ArrowDown} variant="quiet" size="sm" label={`Move ${name} down`} disabled={index === services.length - 1} onClick={() => move(index, 1)} />
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-                            </li>
-                        )
-                    })}
-                </ol>
-            )}
-
-            <div className="biz-svc__add">
-                <Button variant="secondary" icon={Plus} onClick={() => add('', 30)}>
-                    {services.length === 0 ? 'Add a service' : 'Add another service'}
-                </Button>
-                {open.length > 0 && (
-                    <div className="biz-svc__suggest">
-                        <span className="biz-svc__suggestlabel">Popular for you</span>
-                        <ChipGroup label="Suggested services">
-                            {open.map(([name, minutes]) => (
-                                <Chip key={name} onClick={() => add(name, minutes)}>
-                                    <Plus size={14} aria-hidden="true" />{name}
-                                    <span className="biz-svc__chipmeta">{durationLabel(minutes)}</span>
-                                </Chip>
-                            ))}
-                        </ChipGroup>
+            <div className={`biz-svc__menu${order.drag ? ' is-dragging' : ''}`}>
+                {services.length > 0 && (
+                    <div className="biz-svc__cols" aria-hidden="true">
+                        <span>Service</span>
+                        <span>Time</span>
+                        <span>Price</span>
                     </div>
                 )}
+                {services.length > 0 && (
+                    <ol className="biz-svc__list" ref={order.listRef}>
+                        {services.map((service, index) => {
+                            const invalid = showErrors && Object.keys(serviceProblems(service)).length > 0
+                            const isOpen = editing === service.key || invalid
+                            const name = service.service_name.trim() || 'New service'
+                            const hidden = service.is_active === false
+                            const minutes = Number(service.duration_minutes)
+                            const hasPrice = String(service.price).trim() !== '' && !Number.isNaN(parsePrice(service.price))
+                            const dragging = order.drag?.index === index
+                            return (
+                                <li
+                                    key={service.key}
+                                    className={`biz-svc__item${isOpen ? ' is-open' : ''}${invalid ? ' has-error' : ''}${hidden ? ' is-hidden' : ''}${dragging ? ' is-lifted' : ''}`}
+                                    style={order.offset(index)}
+                                >
+                                    {isOpen ? (
+                                        <ServiceForm
+                                            service={service}
+                                            showErrors={showErrors}
+                                            showVisibility={showVisibility}
+                                            focusField={editing === service.key ? focusField : null}
+                                            onChange={(next) => replace(service.key, next)}
+                                            onDone={() => setEditing(null)}
+                                            onRemove={() => remove(service.key)}
+                                        />
+                                    ) : (
+                                        <div className="biz-svc__summary">
+                                            {sortable && (
+                                                <button
+                                                    type="button"
+                                                    ref={(el) => { if (el) handles.current.set(service.key, el); else handles.current.delete(service.key) }}
+                                                    className="biz-svc__handle"
+                                                    aria-label={`Reorder ${name}. Use the up and down arrow keys.`}
+                                                    onPointerDown={(event) => order.start(event, index)}
+                                                    onPointerMove={order.move}
+                                                    onPointerUp={order.end}
+                                                    onPointerCancel={order.end}
+                                                    onKeyDown={(event) => onHandleKey(event, index, service.key)}
+                                                >
+                                                    <GripVertical size={18} aria-hidden="true" />
+                                                </button>
+                                            )}
+                                            <button type="button" className="biz-svc__open" onClick={() => { setFocusField('name'); setEditing(service.key) }}>
+                                                <span className="biz-svc__main">
+                                                    <span className="biz-svc__name">{name}</span>
+                                                    {hidden && <span className="biz-svc__hidden">Hidden</span>}
+                                                    {service.description?.trim() && <span className="biz-svc__desc">{service.description.trim()}</span>}
+                                                </span>
+                                                <span className="biz-svc__time">{minutes ? durationLabel(minutes) : 'No time'}</span>
+                                                <span className="biz-svc__price">{hasPrice ? menuPrice(service.price) : 'No price'}</span>
+                                                <ChevronRight size={16} aria-hidden="true" className="biz-svc__chevron" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </li>
+                            )
+                        })}
+                    </ol>
+                )}
+                <button type="button" className="biz-svc__addrow" onClick={() => add('', 30)}>
+                    <span className="biz-svc__addicon" aria-hidden="true"><Plus size={16} /></span>
+                    {services.length === 0 ? 'Add a service' : 'Add another service'}
+                </button>
             </div>
+
+            {open.length > 0 && (
+                <div className="biz-svc__suggest">
+                    <span className="biz-svc__suggestlabel">Popular for you</span>
+                    <ChipGroup label="Suggested services">
+                        {open.map(([name, minutes]) => (
+                            <Chip key={name} onClick={() => add(name, minutes)}>
+                                <Plus size={14} aria-hidden="true" />{name}
+                                <span className="biz-svc__chipmeta">{durationLabel(minutes)}</span>
+                            </Chip>
+                        ))}
+                    </ChipGroup>
+                </div>
+            )}
         </div>
     )
 }
