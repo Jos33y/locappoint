@@ -1,16 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { Button } from '../ui'
 import { TimePicker } from '../ui/TimePicker'
 import { clock, dayProblem } from '../../services/hours'
-import { zonedNow } from '../../services/business'
-import { parseDateKey } from '../../services/dates'
 import '../../styles/business/editors.css'
 
 const ORDER = [1, 2, 3, 4, 5, 6, 0]
 const LETTER = { 1: 'M', 2: 'T', 3: 'W', 4: 'T', 5: 'F', 6: 'S', 0: 'S' }
 const NAME = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 0: 'Sunday' }
-const SHORT = { 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat', 0: 'Sun' }
 const LAST = 24 * 60 - 1
 
 const TEMPLATES = [
@@ -91,96 +88,8 @@ export const WeekGlyph = ({ days, lunchDays = [] }) => (
     </span>
 )
 
-const readNow = (timeZone) => {
-    try {
-        const { dateKey, minutes } = zonedNow(timeZone)
-        const date = parseDateKey(dateKey)
-        return date ? { dow: date.getDay(), minutes } : null
-    } catch {
-        return null
-    }
-}
-
-const useNow = (timeZone) => {
-    const [now, setNow] = useState(() => (timeZone ? readNow(timeZone) : null))
-    useEffect(() => {
-        if (!timeZone) { setNow(null); return undefined }
-        setNow(readNow(timeZone))
-        const timer = setInterval(() => setNow(readNow(timeZone)), 60000)
-        return () => clearInterval(timer)
-    }, [timeZone])
-    return now
-}
-
-const openWindows = (windows) => windows.filter((w) => w.end > w.start)
-
-const axisOf = (week) => {
-    const all = week.flatMap(openWindows)
-    let lo = all.length ? Math.floor(Math.min(...all.map((w) => w.start)) / 60) : 9
-    let hi = all.length ? Math.ceil(Math.max(...all.map((w) => w.end)) / 60) : 18
-    while (hi - lo < 8) {
-        if (lo > 0) lo -= 1
-        if (hi - lo < 8 && hi < 24) hi += 1
-    }
-    const span = hi - lo
-    const step = span <= 9 ? 2 : span <= 15 ? 3 : 4
-    const ticks = []
-    for (let h = Math.ceil(lo / step) * step; h <= hi; h += step) ticks.push(h)
-    return { lo: lo * 60, hi: hi * 60, ticks }
-}
-
-const dayText = (windows) => {
-    if (windows.length === 0) return 'Closed'
-    const range = `${clock(windows[0].start)} to ${clock(windows[windows.length - 1].end)}`
-    if (windows.length === 1) return range
-    const breaks = windows.slice(1).map((w, i) => `${clock(windows[i].end)} to ${clock(w.start)}`)
-    return `${range}, break ${breaks.join(' and ')}`
-}
-
-export const WeekView = ({ week, timeZone }) => {
-    const now = useNow(timeZone)
-    const axis = axisOf(week)
-    const at = (m) => `${((Math.min(Math.max(m, axis.lo), axis.hi) - axis.lo) / (axis.hi - axis.lo)) * 100}%`
-    const width = (w) => `${((Math.min(w.end, axis.hi) - Math.max(w.start, axis.lo)) / (axis.hi - axis.lo)) * 100}%`
-
-    return (
-        <section className="biz-wk" aria-labelledby="biz-wk-title">
-            <h2 id="biz-wk-title" className="ui-visually-hidden">Your week</h2>
-            <div className="biz-wk__axis" aria-hidden="true">
-                <span className="biz-wk__scale">
-                    {axis.ticks.map((h) => <span key={h} style={{ left: at(h * 60) }}>{String(h).padStart(2, '0')}</span>)}
-                </span>
-            </div>
-            <ul className="biz-wk__rows">
-                {ORDER.map((d) => {
-                    const windows = openWindows(week[d])
-                    const today = now?.dow === d
-                    const showNow = today && now.minutes >= axis.lo && now.minutes <= axis.hi
-                    return (
-                        <li key={d} className={`biz-wk__row${today ? ' is-today' : ''}${windows.length ? '' : ' is-closed'}`}>
-                            <span className="biz-wk__day">
-                                <span aria-hidden="true">{SHORT[d]}</span>
-                                <span className="ui-visually-hidden">{`${NAME[d]}${today ? ', today' : ''}: ${dayText(windows)}`}</span>
-                            </span>
-                            <span className="biz-wk__track" aria-hidden="true">
-                                {axis.ticks.map((h) => <i key={h} className="biz-wk__grid" style={{ left: at(h * 60) }} />)}
-                                {windows.map((w) => <span key={w.start} className="biz-wk__bar" style={{ left: at(w.start), width: width(w) }} />)}
-                                {showNow && <span className="biz-wk__now" style={{ left: at(now.minutes) }} />}
-                            </span>
-                            <span className="biz-wk__hours" aria-hidden="true">
-                                {windows.length ? `${clock(windows[0].start)} to ${clock(windows[windows.length - 1].end)}` : 'Closed'}
-                            </span>
-                        </li>
-                    )
-                })}
-            </ul>
-        </section>
-    )
-}
-
-const GroupCard = ({ group, index, taken, removable, weekEmpty, onChange, onRemove }) => {
-    const starting = weekEmpty && group.days.length === 0
-    const problem = starting ? null : groupProblem(group)
+const GroupCard = ({ group, index, taken, removable, onChange, onRemove }) => {
+    const problem = groupProblem(group)
     const set = (patch) => onChange({ ...group, ...patch })
     const toggle = (d) => set({ days: group.days.includes(d) ? group.days.filter((x) => x !== d) : [...group.days, d] })
 
@@ -195,10 +104,9 @@ const GroupCard = ({ group, index, taken, removable, weekEmpty, onChange, onRemo
                             <button
                                 key={d}
                                 type="button"
-                                className={`biz-sched__day${on ? ' is-on' : ''}${inOther ? ' is-taken' : ''}`}
+                                className={`biz-sched__day${on ? ' is-on' : ''}`}
                                 aria-pressed={on}
-                                aria-label={inOther ? `${NAME[d]}, set below with other hours` : NAME[d]}
-                                title={inOther ? `${NAME[d]} has its own hours` : undefined}
+                                aria-label={inOther ? `${NAME[d]}, set in another group` : NAME[d]}
                                 aria-disabled={inOther || undefined}
                                 onClick={() => { if (!inOther) toggle(d) }}
                             >
@@ -217,34 +125,31 @@ const GroupCard = ({ group, index, taken, removable, weekEmpty, onChange, onRemo
             </div>
 
             <div className="biz-sched__line">
-                <span className="biz-sched__label biz-sched__label--switch">
-                    <span id={`biz-lunch-${index}`}>Lunch</span>
-                    <button
-                        type="button"
-                        role="switch"
-                        aria-checked={Boolean(group.lunch)}
-                        aria-labelledby={`biz-lunch-${index}`}
-                        className={`ui-switch biz-sched__switch${group.lunch ? ' is-on' : ''}`}
-                        onClick={() => {
-                            if (group.lunch) return set({ lunch: null })
-                            const mid = Math.round(((group.open + group.close) / 2) / 60) * 60
-                            return set({ lunch: { start: Math.max(group.open + 60, mid - 60), end: Math.max(group.open + 120, mid) } })
-                        }}
-                    >
-                        <span className="ui-switch__thumb" />
-                    </button>
-                </span>
+                <span className="biz-sched__label">Lunch</span>
                 {group.lunch ? (
                     <>
                         <TimePicker value={group.lunch.start} label={`Group ${index + 1} lunch starts`} onChange={(start) => set({ lunch: { ...group.lunch, start } })} />
                         <span className="biz-sched__to">to</span>
                         <TimePicker value={group.lunch.end} label={`Group ${index + 1} lunch ends`} onChange={(end) => set({ lunch: { ...group.lunch, end } })} />
                     </>
-                ) : <span className="biz-sched__none">No break. Clients can book straight through.</span>}
+                ) : <span className="biz-sched__none">No break</span>}
+                <button
+                    type="button"
+                    role="switch"
+                    aria-checked={Boolean(group.lunch)}
+                    aria-label={`Lunch break for group ${index + 1}`}
+                    className={`ui-switch biz-sched__switch${group.lunch ? ' is-on' : ''}`}
+                    onClick={() => {
+                        if (group.lunch) return set({ lunch: null })
+                        const mid = Math.round(((group.open + group.close) / 2) / 60) * 60
+                        return set({ lunch: { start: Math.max(group.open + 60, mid - 60), end: Math.max(group.open + 120, mid) } })
+                    }}
+                >
+                    <span className="ui-switch__thumb" />
+                </button>
             </div>
 
             {problem && <p className="biz-sched__error" role="alert">{problem}</p>}
-            {starting && <p className="biz-sched__hint">Pick the days you open.</p>}
 
             {removable && (
                 <div className="biz-sched__foot">
@@ -255,7 +160,7 @@ const GroupCard = ({ group, index, taken, removable, weekEmpty, onChange, onRemo
     )
 }
 
-export const HoursEditor = ({ week, onChange, templates = true, timeZone, weekAt = 'top' }) => {
+export const HoursEditor = ({ week, onChange }) => {
     const [groups, setGroups] = useState(() => groupsFromWeek(week))
 
     const commit = (next) => {
@@ -266,28 +171,25 @@ export const HoursEditor = ({ week, onChange, templates = true, timeZone, weekAt
     const used = groups.flatMap((g) => g.days)
     const free = ORDER.filter((d) => !used.includes(d))
     const active = TEMPLATES.find((t) => sameGroups(t.groups, groups))?.key
+    const lunchDays = groups.filter((g) => g.lunch).flatMap((g) => g.days)
 
     return (
         <div className="biz-sched">
-            {templates && (
-                <div className="biz-sched__templates" role="group" aria-label="Start from a common week">
-                    {TEMPLATES.map((t) => (
-                        <button
-                            key={t.key}
-                            type="button"
-                            className={`biz-sched__template${active === t.key ? ' is-on' : ''}`}
-                            aria-pressed={active === t.key}
-                            onClick={() => commit(t.groups.map((g) => ({ ...g, days: [...g.days], lunch: g.lunch && { ...g.lunch } })))}
-                        >
-                            <WeekGlyph days={t.groups.flatMap((g) => g.days)} lunchDays={t.groups.filter((g) => g.lunch).flatMap((g) => g.days)} />
-                            <span className="biz-sched__ttitle">{t.title}</span>
-                            <span className="biz-sched__tdetail">{t.detail}</span>
-                        </button>
-                    ))}
-                </div>
-            )}
-
-            {weekAt === 'top' && <WeekView week={weekFromGroups(groups)} timeZone={timeZone} />}
+            <div className="biz-sched__templates" role="group" aria-label="Start from a common week">
+                {TEMPLATES.map((t) => (
+                    <button
+                        key={t.key}
+                        type="button"
+                        className={`biz-sched__template${active === t.key ? ' is-on' : ''}`}
+                        aria-pressed={active === t.key}
+                        onClick={() => commit(t.groups.map((g) => ({ ...g, days: [...g.days], lunch: g.lunch && { ...g.lunch } })))}
+                    >
+                        <WeekGlyph days={t.groups.flatMap((g) => g.days)} lunchDays={t.groups.filter((g) => g.lunch).flatMap((g) => g.days)} />
+                        <span className="biz-sched__ttitle">{t.title}</span>
+                        <span className="biz-sched__tdetail">{t.detail}</span>
+                    </button>
+                ))}
+            </div>
 
             <ol className="biz-sched__cards">
                 {groups.map((g, i) => (
@@ -297,7 +199,6 @@ export const HoursEditor = ({ week, onChange, templates = true, timeZone, weekAt
                         index={i}
                         taken={groups.flatMap((x, j) => (j === i ? [] : x.days))}
                         removable={groups.length > 1}
-                        weekEmpty={used.length === 0}
                         onChange={(next) => commit(groups.map((x, j) => (j === i ? next : x)))}
                         onRemove={() => commit(groups.filter((_, j) => j !== i))}
                     />
@@ -314,9 +215,10 @@ export const HoursEditor = ({ week, onChange, templates = true, timeZone, weekAt
                 </Button>
             )}
 
-            {weekAt === 'bottom' && <WeekView week={weekFromGroups(groups)} timeZone={timeZone} />}
-
-            <p className="ui-visually-hidden" aria-live="polite">{weekSentence(groups)}</p>
+            <div className="biz-sched__summary" aria-live="polite">
+                <WeekGlyph days={used} lunchDays={lunchDays} />
+                <p>{weekSentence(groups)}</p>
+            </div>
         </div>
     )
 }

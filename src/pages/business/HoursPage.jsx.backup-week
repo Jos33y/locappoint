@@ -36,7 +36,6 @@ const HoursPage = () => {
     const [week, setWeek] = useState(null)
     const [savedKey, setSavedKey] = useState('')
     const [simplified, setSimplified] = useState(false)
-    const [startedEmpty, setStartedEmpty] = useState(false)
     const current = useRef({ week, rows })
     current.current = { week, rows }
 
@@ -50,7 +49,6 @@ const HoursPage = () => {
             setWeek(loaded)
             setSavedKey(snapshot(loaded))
             setSimplified(loaded.some((day) => day.length > 2))
-            setStartedEmpty(!hasOpenDay(loaded))
             setPhase('ready')
         } catch (err) {
             console.error('Hours load failed:', err)
@@ -107,7 +105,7 @@ const HoursPage = () => {
                     </p>
                 </div>
                 <div className="biz-sh__headside">
-                    <SaveState state={autosave.state} onRetry={autosave.retry} blockedText={week && hasOpenDay(week) ? 'Fix the highlighted hours to save them' : 'Open at least one day to save your hours'} />
+                    <SaveState state={autosave.state} onRetry={autosave.retry} blockedText="Fix the highlighted hours to save them" />
                     <Button variant="secondary" size="sm" iconRight={ArrowUpRight} href={pageUrl(shellBusiness.slug)} target="_blank" rel="noopener noreferrer">View live page</Button>
                 </div>
             </header>
@@ -118,7 +116,7 @@ const HoursPage = () => {
                         Some days had more than one break. They are shown here with one lunch break, and saving keeps what you see.
                     </p>
                 )}
-                <HoursEditor week={week} onChange={setWeek} templates={startedEmpty} timeZone={timezone} />
+                <HoursEditor week={week} onChange={setWeek} />
                 <p className="biz-sh__tip">Clients can book any time inside these hours. Changes do not move bookings already made.</p>
             </div>
         </div>

@@ -638,7 +638,7 @@ const Setup = () => {
 
                         {phase === 2 && (
                             <>
-                                <HoursEditor week={week} onChange={setWeek} weekAt="bottom" />
+                                <HoursEditor week={week} onChange={setWeek} />
                                 {showErrors && !hasOpenDay(week) && <p className="lc-setup__error" role="alert">Open at least one day so clients can book.</p>}
                             </>
                         )}
