@@ -18,7 +18,7 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
 
 const summary = (services) => {
     const live = services.filter((s) => isActive(s) && s.service_name.trim())
-    if (live.length === 0) return 'Nothing on your page yet.'
+    if (live.length === 0) return 'Add what clients can book, with a price and how long it takes.'
     const prices = live.map((s) => Number(String(s.price).replace(',', '.'))).filter((n) => Number.isFinite(n))
     const from = prices.length ? `, from ${menuPrice(Math.min(...prices))}` : ''
     const hidden = services.length - live.length

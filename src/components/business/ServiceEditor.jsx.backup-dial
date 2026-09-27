@@ -80,7 +80,6 @@ const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusFie
                                 selected={!otherOpen && Number(service.duration_minutes) === m}
                                 onClick={() => { setOtherOpen(false); set({ duration_minutes: m }) }}
                             >
-                                <DurationDial minutes={m} size={16} className="biz-dial--chip" />
                                 {durationLabel(m)}
                             </Chip>
                         ))}
@@ -152,52 +151,6 @@ export const menuPrice = (value) => {
     }
     return priceFormat.get(decimals).format(amount)
 }
-
-const sector = (fraction, r) => {
-    const angle = fraction * 2 * Math.PI
-    const x = 16 + r * Math.sin(angle)
-    const y = 16 - r * Math.cos(angle)
-    return `M16 16 L16 ${16 - r} A${r} ${r} 0 ${fraction > 0.5 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)} Z`
-}
-
-const arc = (fraction, r) => {
-    const angle = Math.min(fraction, 0.9999) * 2 * Math.PI
-    const x = 16 + r * Math.sin(angle)
-    const y = 16 - r * Math.cos(angle)
-    return `M16 ${16 - r} A${r} ${r} 0 ${fraction > 0.5 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)}`
-}
-
-export const DurationDial = ({ minutes, size = 32, className = '' }) => {
-    const m = Math.max(0, Number(minutes) || 0)
-    const first = Math.min(m, 60) / 60
-    const extra = Math.min(Math.max(m - 60, 0), 60) / 60
-    return (
-        <svg className={`biz-dial${m > 60 ? ' is-long' : ''} ${className}`.trim()} width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-            <circle className="biz-dial__face" cx="16" cy="16" r="12" />
-            {[0, 90, 180, 270].map((deg) => (
-                <line key={deg} className="biz-dial__tick" x1="16" y1="5.5" x2="16" y2="7.5" transform={`rotate(${deg} 16 16)`} />
-            ))}
-            {first >= 1 ? <circle className="biz-dial__fill" cx="16" cy="16" r="9" /> : first > 0 && <path className="biz-dial__fill" d={sector(first, 9)} />}
-            {extra > 0 && <path className="biz-dial__over" d={arc(extra, 14.75)} />}
-            <circle className="biz-dial__pin" cx="16" cy="16" r="1.5" />
-        </svg>
-    )
-}
-
-export const PriceBoard = () => (
-    <svg className="biz-board" width="140" height="108" viewBox="0 0 140 108" aria-hidden="true">
-        <rect className="biz-board__frame" x="10" y="8" width="120" height="92" rx="12" />
-        <rect className="biz-board__title" x="26" y="22" width="44" height="7" rx="3.5" />
-        {[42, 58, 74].map((y, i) => (
-            <g key={y}>
-                <rect className="biz-board__line" x="26" y={y} width={[40, 30, 36][i]} height="5" rx="2.5" />
-                <line className="biz-board__dots" x1={[70, 60, 66][i]} y1={y + 2.5} x2="96" y2={y + 2.5} />
-                <rect className="biz-board__price" x="100" y={y - 1} width="16" height="7" rx="3.5" />
-            </g>
-        ))}
-        <circle className="biz-board__tag" cx="118" cy="22" r="4" />
-    </svg>
-)
 
 const SUGGEST_UNTIL = 3
 
@@ -343,7 +296,6 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
                                                 </button>
                                             )}
                                             <button type="button" className="biz-svc__open" onClick={() => { setFocusField('name'); setEditing(service.key) }}>
-                                                <DurationDial minutes={minutes} className="biz-svc__dial" />
                                                 <span className="biz-svc__main">
                                                     <span className="biz-svc__name">{name}</span>
                                                     {hidden && <span className="biz-svc__hidden">Hidden</span>}
@@ -360,15 +312,6 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
                         })}
                     </ol>
                 )}
-                {services.length === 0 && (
-                    <div className="biz-svc__empty">
-                        <PriceBoard />
-                        <div>
-                            <h3 className="biz-svc__emptytitle">Your price board is empty</h3>
-                            <p>Add what clients can book, how long it takes and what it costs.</p>
-                        </div>
-                    </div>
-                )}
                 <button type="button" className="biz-svc__addrow" onClick={() => add('', 30)}>
                     <span className="biz-svc__addicon" aria-hidden="true"><Plus size={16} /></span>
                     {services.length === 0 ? 'Add a service' : 'Add another service'}
@@ -382,7 +325,7 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
                         {open.map(([name, minutes]) => (
                             <Chip key={name} onClick={() => add(name, minutes)}>
                                 <Plus size={14} aria-hidden="true" />{name}
-                                <span className="biz-svc__chipmeta"><DurationDial minutes={minutes} size={14} />{durationLabel(minutes)}</span>
+                                <span className="biz-svc__chipmeta">{durationLabel(minutes)}</span>
                             </Chip>
                         ))}
                     </ChipGroup>

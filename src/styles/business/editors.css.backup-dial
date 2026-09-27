@@ -15,15 +15,13 @@
 
 .biz-svc__cols {
     display: grid;
-    grid-template-columns: 34px minmax(0, 1fr) 84px 84px 20px;
+    grid-template-columns: minmax(0, 1fr) 84px 84px 20px;
     column-gap: var(--space-3);
     padding: var(--space-3) var(--space-4) var(--space-2) 60px;
     color: var(--lc-ink-3);
     font-size: 12px;
     font-weight: var(--font-weight-medium);
 }
-
-.biz-svc__cols::before { content: ''; }
 
 .biz-svc__cols span:nth-child(2),
 .biz-svc__cols span:nth-child(3) {
@@ -48,7 +46,7 @@
     content: '';
     position: absolute;
     top: 0;
-    left: 106px;
+    left: 60px;
     right: var(--space-4);
     height: 1px;
     background: var(--lc-line);
@@ -123,7 +121,7 @@
 
 .biz-svc__open {
     display: grid;
-    grid-template-columns: 34px minmax(0, 1fr) 84px 84px 20px;
+    grid-template-columns: minmax(0, 1fr) 84px 84px 20px;
     align-items: center;
     column-gap: var(--space-3);
     flex: 1;
@@ -199,10 +197,8 @@
 
 .biz-svc__price {
     color: var(--lc-ink-1);
-    font-family: var(--lc-font-display);
-    font-size: 1.1875rem;
+    font-size: var(--lc-t-body);
     font-weight: var(--font-weight-semibold);
-    letter-spacing: -0.01em;
 }
 
 .biz-svc__item.is-hidden .biz-svc__name,
@@ -258,84 +254,16 @@
     .biz-svc__cols { display: none; }
 
     .biz-svc__open {
-        grid-template-columns: 30px minmax(0, 1fr) auto 16px;
-        grid-template-areas: 'dial main price chev' 'dial time price chev';
+        grid-template-columns: minmax(0, 1fr) auto 16px;
+        grid-template-areas: 'main price chev' 'time price chev';
         row-gap: 2px;
     }
-
-    .biz-svc__dial { grid-area: dial; width: 30px; height: 30px; }
-    .biz-svc__item + .biz-svc__item::before { left: 96px; }
-    .biz-svc__price { font-size: 1.0625rem; }
 
     .biz-svc__main { grid-area: main; }
     .biz-svc__time { grid-area: time; text-align: left; }
     .biz-svc__price { grid-area: price; }
     .biz-svc__chevron { grid-area: chev; }
     .biz-svc__handle { width: 40px; }
-}
-
-.biz-dial { flex: none; overflow: visible; }
-.biz-dial__face { fill: var(--lc-raised); stroke: var(--lc-ink-4); stroke-width: 1.25; }
-.biz-dial__tick { stroke: var(--lc-ink-4); stroke-width: 1.25; stroke-linecap: round; }
-.biz-dial__fill { fill: var(--azure); }
-.biz-dial__over { fill: none; stroke: var(--signal); stroke-width: 2; stroke-linecap: round; }
-.biz-dial__pin { fill: var(--lc-ink-1); }
-.biz-svc__item.is-hidden .biz-dial__fill { fill: var(--lc-ink-4); }
-.biz-svc__item.is-hidden .biz-dial__over { stroke: var(--lc-ink-4); }
-.biz-dial--chip { margin-right: 2px; }
-.ui-chip.is-selected .biz-dial__face { fill: none; stroke: currentColor; stroke-opacity: 0.4; }
-.ui-chip.is-selected .biz-dial__pin { fill: currentColor; }
-.biz-dial--chip .biz-dial__tick,
-.biz-svc__chipmeta .biz-dial__tick { display: none; }
-
-.biz-svc__chipmeta {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.biz-svc__chipmeta .biz-dial { margin: 0; }
-
-.biz-svc__empty {
-    display: flex;
-    align-items: center;
-    gap: var(--space-5);
-    padding: var(--space-5) var(--space-5) var(--space-4);
-}
-
-.biz-svc__emptytitle {
-    margin: 0 0 var(--space-1);
-    color: var(--lc-ink-1);
-    font-family: var(--lc-font-display);
-    font-size: var(--lc-t-heading);
-    font-weight: var(--font-weight-semibold);
-}
-
-.biz-svc__empty p {
-    margin: 0;
-    color: var(--lc-ink-2);
-    font-size: var(--lc-t-label);
-    line-height: var(--lc-lh-snug);
-}
-
-.biz-svc__menu .biz-svc__empty + .biz-svc__addrow {
-    border-top: 1px solid var(--lc-line);
-    border-radius: 0 0 var(--lc-r-xl) var(--lc-r-xl);
-}
-
-.biz-board { flex: none; }
-.biz-board__frame { fill: var(--lc-well); stroke: var(--lc-line-strong); stroke-width: 1.5; }
-.biz-board__title { fill: var(--lc-ink-4); }
-.biz-board__line { fill: var(--lc-line-strong); }
-.biz-board__dots { stroke: var(--lc-line-strong); stroke-width: 1.5; stroke-dasharray: 0.5 4; stroke-linecap: round; }
-.biz-board__price { fill: var(--azure); opacity: 0.55; }
-.biz-board__tag { fill: var(--signal); }
-
-@media (max-width: 559px) {
-    .biz-svc__empty {
-        flex-direction: column;
-        text-align: center;
-    }
 }
 
 .biz-svc__form {

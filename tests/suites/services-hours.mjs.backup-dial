@@ -18,7 +18,6 @@ export default async ({ browser, url, check }) => {
     let p = await open('/portal/services')
     await wait(1200)
     check((await calls(p, 'services', 'update')).length === 0 && (await calls(p, 'services', 'insert')).length === 0, 'no save on open')
-    check(await p.evaluate(() => document.querySelectorAll('.biz-svc__item .biz-svc__dial').length) === 2, 'every service shows its duration dial')
     check(await text(p, '.biz-page__sub') === '2 services on your page, from €12.', `summary ${await text(p, '.biz-page__sub')}`)
     check(await text(p, '.biz-save') === 'Changes save as you go', 'idle state')
 
