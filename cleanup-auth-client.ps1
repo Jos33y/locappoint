@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ""
-Write-Host "  Locappoint - Cleanup: booking polish" -ForegroundColor Cyan
+Write-Host "  Locappoint - Cleanup: auth for clients" -ForegroundColor Cyan
 Write-Host ""
 
 $root = (Get-Location).Path
@@ -14,14 +14,18 @@ $dirty = git status --porcelain -- src 2>$null
 if ($dirty) { Write-Host "  [WARN] src has uncommitted changes. Commit the patch first." -ForegroundColor Yellow }
 
 $paths = @(
-    'src\components\booking\sheet\DayStrip.jsx.backup-polish',
-    'src\components\booking\BookingSheet.jsx.backup-polish',
-    'src\pages\app\PublicBusinessPage.jsx.backup-polish',
-    'src\styles\client\booking-sheet.css.backup-polish',
-    'src\styles\public-page.css.backup-polish',
-    'src\styles\ui-kit.css.backup-polish',
-    'src\styles\ui.css.backup-polish',
-    'booking-polish.zip',
+    'src\pages\app\auth\AuthPage.jsx.backup-auth',
+    'src\pages\app\auth\AuthShell.jsx.backup-auth',
+    'src\styles\auth\auth.css.backup-auth',
+    'src\components\booking\BookingSheet.jsx.backup-auth',
+    'src\pages\app\PublicBusinessPage.jsx.backup-auth',
+    'src\services\booking.js.backup-auth',
+    'src\contexts\AuthContext.jsx.backup-auth',
+    'src\styles\app\footer.css.backup-auth',
+    'src\styles\app\header.css.backup-auth',
+    'src\components\common\Appfooter.jsx.backup-auth',
+    'auth-client.zip',
+    'collect-auth.ps1',
     'payload'
 )
 

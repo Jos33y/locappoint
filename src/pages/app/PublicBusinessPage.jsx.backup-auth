@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, RotateCw } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, RotateCw } from 'lucide-react'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import AppHeader from '../../components/common/AppHeader'
@@ -64,7 +64,7 @@ const PublicBusinessPage = () => {
     const { businessSlug } = useParams()
     const navigate = useNavigate()
     const location = useLocation()
-    const { user, userProfile } = useAuth()
+    const { user, userProfile, business: ownBusiness } = useAuth()
     const [state, setState] = useState({ status: 'loading' })
     const [attempt, setAttempt] = useState(0)
     const [booking, setBooking] = useState(null)
@@ -111,14 +111,14 @@ const PublicBusinessPage = () => {
     }, [businessSlug, attempt])
 
     useEffect(() => {
-        if (state.status !== 'ready' || !user) return
+        if (state.status !== 'ready' || !user || (ownBusiness?.id && ownBusiness.id === state.business.id)) return
         const pending = readPending(state.business.slug)
         const service = pending && state.services.find((s) => s.id === pending.serviceId)
         if (service) {
             setResume(pending)
             setBooking(service)
         }
-    }, [state, user])
+    }, [state, user, ownBusiness])
 
     useEffect(() => {
         if (state.status !== 'ready') return undefined
@@ -126,6 +126,8 @@ const PublicBusinessPage = () => {
         document.title = `${state.business.business_name}, book online | Locappoint`
         return () => { document.title = previous }
     }, [state])
+
+    const owner = state.status === 'ready' && Boolean(ownBusiness?.id) && ownBusiness.id === state.business.id
 
     const back = () => {
         if (location.state?.from) navigate(location.state.from)
@@ -138,6 +140,12 @@ const PublicBusinessPage = () => {
             <main className="lc-pubpage__main">
                 <div className="lc-pubpage__bar">
                     <Button variant="quiet" size="sm" icon={ArrowLeft} onClick={back}>Back</Button>
+                    {owner && (
+                        <p className="lc-pubpage__owner">
+                            <span>Your live page, as clients see it</span>
+                            <Button variant="secondary" size="sm" iconRight={ArrowUpRight} to="/portal/page">Edit page</Button>
+                        </p>
+                    )}
                 </div>
                 {state.status === 'loading' && <PageSkeleton />}
                 {state.status === 'missing' && (
@@ -172,6 +180,7 @@ const PublicBusinessPage = () => {
                     service={booking}
                     week={state.week}
                     resume={resume}
+                    owner={owner}
                     onClose={() => { setBooking(null); setResume(null) }}
                 />
             )}

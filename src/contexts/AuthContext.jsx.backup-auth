@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }) => {
                         phone: userData.phone,
                         user_type: userData.user_type,
                     },
-                    emailRedirectTo: `${window.location.origin}/auth?verified=true${userData.next ? `&next=${encodeURIComponent(userData.next)}` : ''}`
+                    emailRedirectTo: `${window.location.origin}/auth?verified=true`
                 }
             })
 

@@ -9,7 +9,7 @@ import { BookingSheet } from '../../components/booking/BookingSheet'
 import { PublicPageView } from '../../components/business/PublicPageView'
 import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { weekFromRows } from '../../services/hours'
-import { readPending } from '../../services/booking'
+import { clearPending, readBookParam, readPending } from '../../services/booking'
 import '../../styles/public-page.css'
 
 const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url'
@@ -112,13 +112,16 @@ const PublicBusinessPage = () => {
 
     useEffect(() => {
         if (state.status !== 'ready' || !user || (ownBusiness?.id && ownBusiness.id === state.business.id)) return
-        const pending = readPending(state.business.slug)
+        const fromLink = readBookParam(location.search)
+        const pending = fromLink || readPending(state.business.slug)
         const service = pending && state.services.find((s) => s.id === pending.serviceId)
         if (service) {
             setResume(pending)
             setBooking(service)
+            clearPending()
         }
-    }, [state, user, ownBusiness])
+        if (fromLink) navigate(location.pathname, { replace: true, state: location.state })
+    }, [state, user, ownBusiness, location.search, location.pathname, location.state, navigate])
 
     useEffect(() => {
         if (state.status !== 'ready') return undefined

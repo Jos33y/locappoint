@@ -1,18 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
-import { User, Building2, AlertCircle, CheckCircle2, ArrowRight, MailCheck, CalendarCheck } from 'lucide-react'
+import { User, Building2, AlertCircle, CheckCircle2, ArrowRight, MailCheck } from 'lucide-react'
 import AuthShell from './AuthShell'
 import '../../../styles/auth/auth.css'
 
-// Off until Google and Apple sign-in are set up in Supabase.
-const OAUTH_READY = false
-const HOME_PATHS = ['/', '/?app']
-
-const safePath = (path) =>
-    typeof path === 'string' && path.startsWith('/') && !path.startsWith('//') && !path.startsWith('/auth') && !HOME_PATHS.includes(path) ? path : null
-
-const pathOf = (from) => (typeof from === 'string' ? from : from ? `${from.pathname || ''}${from.search || ''}` : null)
 
 const AuthPage = () => {
     const location = useLocation()
@@ -21,8 +13,6 @@ const AuthPage = () => {
     const navState = location.state || {}
     const searchParams = new URLSearchParams(location.search)
     const isVerified = searchParams.get('verified') === 'true'
-    const returnTo = safePath(navState.returnTo) || safePath(searchParams.get('next')) || safePath(pathOf(navState.from))
-    const booking = navState.booking || null
 
     const [activeTab, setActiveTab] = useState(isVerified ? 'signin' : (navState.tab || 'signin'))
     const [userType, setUserType] = useState(navState.userType || 'client')
@@ -105,21 +95,19 @@ const AuthPage = () => {
                     setError(signinErr.message || 'Sign in failed. Check your credentials.')
                     return
                 }
-                navigate(returnTo || '/me', { replace: true })
+                const returnTo = navState.returnTo || navState.from?.pathname
+                navigate(returnTo && returnTo !== '/auth' ? returnTo : '/me', { replace: true })
             } else {
                 const { error: signupErr } = await signUp(formData.email, formData.password, {
                     full_name: formData.full_name,
                     phone: formData.phone,
                     user_type: userType,
-                    next: returnTo,
                 })
                 if (signupErr) {
                     setError(signupErr.message || 'Sign up failed. Try again.')
                     return
                 }
-                setMessage(booking
-                    ? 'Account created. Open the link we emailed you and it brings you back to your booking.'
-                    : 'Account created. Check your inbox for the verification email.')
+                setMessage('Account created. Check your inbox for the verification email.')
                 setFormData({ email: '', password: '', full_name: '', phone: '', confirmPassword: '' })
 
                 setTimeout(() => {
@@ -169,44 +157,22 @@ const AuthPage = () => {
     const isApplePlatform = typeof navigator !== 'undefined' &&
         /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)
 
-    const signin = activeTab === 'signin'
-    const clientSide = Boolean(booking) || (!signin && userType === 'client')
-
-    const [headline, sub] = booking
-        ? (signin ? ['Sign in to finish your booking', 'We take you straight back to confirm it.'] : ['Create your account to book', 'It takes a minute. We take you straight back to confirm.'])
-        : signin
-            ? ['Sign in to Locappoint', 'Welcome back.']
-            : userType === 'business'
-                ? ['Be one of the first ten in Lisbon', 'Setup takes ten minutes.']
-                : ['Find local businesses you can book', 'It takes a minute.']
-
-    const [brandTitle, brandSub] = clientSide
-        ? ['Your next booking, without the phone calls.', 'See the real free times at local barbers, salons and clinics, and pick one.']
-        : signin
-            ? ['Pick up where you left off.', 'Your bookings, reminders and hours in one place.']
-            : ['Booking that fills your week, not your DMs.', 'Local businesses in Lisbon, Porto, and Lagos. Free for the first twelve months.']
+    const headline = activeTab === 'signin'
+        ? 'Sign in to your dashboard.'
+        : userType === 'business'
+            ? 'Be one of the first ten in Lisbon.'
+            : 'Find local businesses you can book.'
 
     return (
         <AuthShell
-            brandTitle={brandTitle}
-            brandSub={brandSub}
-            audience={clientSide ? 'client' : 'business'}
-            back={booking && returnTo ? { to: returnTo, label: `Back to ${booking.business}` } : null}>
-
-            {booking && (
-                <div className="auth-booking">
-                    <span className="auth-booking__icon" aria-hidden="true"><CalendarCheck size={18} strokeWidth={2} /></span>
-                    <div className="auth-booking__text">
-                        <p className="auth-booking__label">Finishing your booking</p>
-                        <p className="auth-booking__when">{booking.when}</p>
-                        <p className="auth-booking__what"><b>{booking.service}</b> at {booking.business}</p>
-                    </div>
-                </div>
-            )}
+            brandTitle={activeTab === 'signin' ? 'Pick up where you left off.' : 'Booking that fills your week, not your DMs.'}
+            brandSub={activeTab === 'signin' ? "Today's bookings, reminders, hours. Everything in one place." : 'Local businesses in Lisbon, Porto, and Lagos. Free for the first twelve months.'}>
 
             <div className="auth-head">
                 <h1 className="auth-head__title">{headline}</h1>
-                <p className="auth-head__sub">{sub}</p>
+                <p className="auth-head__sub">
+                    {activeTab === 'signin' ? 'Welcome back.' : 'Setup takes ten minutes.'}
+                </p>
             </div>
 
             <div className="auth-tabs" role="tablist">
@@ -243,7 +209,7 @@ const AuthPage = () => {
                 </div>
             )}
 
-            {activeTab === 'signup' && !booking && (
+            {activeTab === 'signup' && (
                 <div className="auth-toggle">
                     <span className="auth-toggle__label">I am a</span>
                     <div className="auth-toggle__options">
@@ -343,7 +309,7 @@ const AuthPage = () => {
                         name="password"
                         value={formData.password}
                         onChange={handleInputChange}
-                        placeholder={signin ? '' : 'At least 6 characters'}
+                        placeholder="At least 6 characters"
                         required
                         autoComplete={activeTab === 'signin' ? 'current-password' : 'new-password'}
                     />
@@ -375,39 +341,35 @@ const AuthPage = () => {
                 </button>
             </form>
 
-            {OAUTH_READY && (
-                <>
-                    <div className="auth-divider">
-                        <span>or</span>
-                    </div>
+            <div className="auth-divider">
+                <span>or</span>
+            </div>
 
-                    <div className="auth-oauth-stack">
-                        {isApplePlatform ? (
-                            <>
-                                <button type="button" onClick={handleAppleSignIn} className="auth-oauth auth-oauth--apple" disabled={loading}>
-                                    <AppleLogo />
-                                    <span>Continue with Apple</span>
-                                </button>
-                                <button type="button" onClick={handleGoogleSignIn} className="auth-oauth auth-oauth--google" disabled={loading}>
-                                    <GoogleG />
-                                    <span>Continue with Google</span>
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button type="button" onClick={handleGoogleSignIn} className="auth-oauth auth-oauth--google" disabled={loading}>
-                                    <GoogleG />
-                                    <span>Continue with Google</span>
-                                </button>
-                                <button type="button" onClick={handleAppleSignIn} className="auth-oauth auth-oauth--apple" disabled={loading}>
-                                    <AppleLogo />
-                                    <span>Continue with Apple</span>
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </>
-            )}
+            <div className="auth-oauth-stack">
+                {isApplePlatform ? (
+                    <>
+                        <button type="button" onClick={handleAppleSignIn} className="auth-oauth auth-oauth--apple" disabled={loading}>
+                            <AppleLogo />
+                            <span>Continue with Apple</span>
+                        </button>
+                        <button type="button" onClick={handleGoogleSignIn} className="auth-oauth auth-oauth--google" disabled={loading}>
+                            <GoogleG />
+                            <span>Continue with Google</span>
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <button type="button" onClick={handleGoogleSignIn} className="auth-oauth auth-oauth--google" disabled={loading}>
+                            <GoogleG />
+                            <span>Continue with Google</span>
+                        </button>
+                        <button type="button" onClick={handleAppleSignIn} className="auth-oauth auth-oauth--apple" disabled={loading}>
+                            <AppleLogo />
+                            <span>Continue with Apple</span>
+                        </button>
+                    </>
+                )}
+            </div>
 
             <p className="auth-switch">
                 {activeTab === 'signin' ? "Don't have an account?" : 'Already have an account?'}{' '}

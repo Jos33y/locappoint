@@ -85,8 +85,15 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, o
 
     const toAuth = (tab) => {
         savePending({ slug: business.slug, serviceId: service.id, dateKey: dayKey, minutes })
-        const back = `/${business.slug}`
-        navigate('/auth', { state: { tab, role: 'client', returnTo: back, from: back, message: 'Sign in to finish your booking' } })
+        const back = `/${business.slug}?book=${encodeURIComponent(`${service.id}.${dayKey}.${clock(minutes).replace(':', '')}`)}`
+        navigate('/auth', {
+            state: {
+                tab,
+                userType: 'client',
+                returnTo: back,
+                booking: { business: business.business_name, service: service.service_name.trim(), when: `${dayLabel(day)} at ${clock(minutes)}` },
+            },
+        })
     }
 
     const confirm = async () => {
