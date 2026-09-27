@@ -1,8 +1,13 @@
-import { Clock, MapPin, MessageCircle, Navigation, Phone } from 'lucide-react'
-import { Button, Status } from '../ui'
+import { MessageCircle, Navigation, Phone } from 'lucide-react'
+import { Button } from '../ui'
 import StreetGridCover from './StreetGridCover'
 import { Mark, Wordmark, initials } from './Brand'
-import { durationLabel, formatMoney, whatsappLink, zonedNow } from '../../services/business'
+import { useNow } from './ShopClock'
+import { PublicStatus } from './public/PublicStatus'
+import { PublicMenu } from './public/PublicMenu'
+import { PublicHours } from './public/PublicHours'
+import { PublicFind } from './public/PublicFind'
+import { whatsappLink, zonedNow } from '../../services/business'
 import { parseDateKey } from '../../services/dates'
 import { categoryLabel } from '../../constants/categories'
 import { WEEK, clock } from '../../services/hours'
@@ -31,11 +36,14 @@ const mapsLink = (address, city) =>
 
 export const PublicPageView = ({ business, services, week, preview = false, onBook }) => {
     const name = business.business_name?.trim() || 'Your business'
-    const status = openStatus(week, business.timezone)
+    const timeZone = business.timezone || 'Europe/Lisbon'
+    const now = useNow(timeZone)
     const whatsapp = whatsappLink(business.whatsapp, `Hi ${name}, `)
-    const visible = services.filter((s) => s.is_active !== false && s.service_name?.trim())
-    const todayDow = parseDateKey(zonedNow(business.timezone || 'Europe/Lisbon').dateKey).getDay()
-    const hasHours = week && week.some((day) => day.length > 0)
+    const phone = business.phone?.replace(/\s+/g, '')
+    const address = business.address?.trim()
+    const maps = address ? mapsLink(address, business.city) : null
+    const hasHours = Boolean(week && week.some((day) => day.length > 0))
+    const where = [categoryLabel(business.category, business.category_detail), [business.neighbourhood?.trim(), business.city].filter(Boolean).join(', ')].filter(Boolean).join(' in ')
 
     return (
         <article className={`lc-pub${preview ? ' lc-pub--preview' : ''}`} inert={preview || undefined}>
@@ -45,87 +53,36 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                     : <StreetGridCover seed={business.slug || name} tint="azure" />}
             </div>
 
-            <header className="lc-pub__head">
-                <span className="lc-pub__logo">
-                    {business.logo_url ? <img src={business.logo_url} alt="" /> : initials(name)}
-                </span>
-                <h1 className="lc-pub__name">{name}</h1>
-                <p className="lc-pub__where">
-                    {[categoryLabel(business.category, business.category_detail), [business.neighbourhood?.trim(), business.city].filter(Boolean).join(', ')].filter(Boolean).join(' in ')}
-                </p>
-                {status && (
-                    <p className="lc-pub__status">
-                        <Status tone={status.open ? 'success' : 'neutral'} size="sm">{status.open ? 'Open' : 'Closed'}</Status>
-                        <span>{status.text}</span>
-                    </p>
-                )}
-                {business.description?.trim() && <p className="lc-pub__about">{business.description.trim()}</p>}
+            <div className="lc-pub__body">
+                <header className="lc-pub__head">
+                    <span className="lc-pub__logo">
+                        {business.logo_url ? <img src={business.logo_url} alt="" /> : initials(name)}
+                    </span>
+                    <div className="lc-pub__id">
+                        <h1 className="lc-pub__name">{name}</h1>
+                        {where && <p className="lc-pub__where">{where}</p>}
+                    </div>
+                </header>
 
-                {(business.phone || whatsapp || business.address) && (
+                {(whatsapp || phone || maps) && (
                     <div className="lc-pub__actions">
-                        {whatsapp && <Button variant="secondary" icon={MessageCircle} href={whatsapp} target="_blank" rel="noopener noreferrer"><span className="lc-pub__actlabel">WhatsApp</span></Button>}
-                        {business.phone && <Button variant="secondary" icon={Phone} href={`tel:${business.phone.replace(/\s+/g, '')}`}><span className="lc-pub__actlabel">Call</span></Button>}
-                        {business.address?.trim() && (
-                            <Button variant="secondary" icon={Navigation} href={mapsLink(business.address, business.city)} target="_blank" rel="noopener noreferrer"><span className="lc-pub__actlabel">Directions</span></Button>
-                        )}
+                        {whatsapp && <Button variant="secondary" icon={MessageCircle} href={whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</Button>}
+                        {phone && <Button variant="secondary" icon={Phone} href={`tel:${phone}`}>Call</Button>}
+                        {maps && <Button variant="secondary" icon={Navigation} href={maps} target="_blank" rel="noopener noreferrer">Directions</Button>}
                     </div>
                 )}
-            </header>
 
-            <section className="lc-pub__section" aria-labelledby="lc-pub-services">
-                <h2 id="lc-pub-services" className="lc-pub__h2">Book a service</h2>
-                {visible.length === 0 && preview ? (
-                    <div className="lc-pub__ghost">
-                        <span className="lc-pub__ghostrow" aria-hidden="true"><i /><i /></span>
-                        <span className="lc-pub__ghostrow" aria-hidden="true"><i /><i /></span>
-                        <p>Your services appear here as you add them.</p>
-                    </div>
-                ) : visible.length === 0 ? (
-                    <p className="lc-pub__empty">No services to book yet.</p>
-                ) : (
-                    <ul className="lc-pub__services">
-                        {visible.map((service) => (
-                            <li key={service.id || service.key} className="lc-pub__service">
-                                <span className="lc-pub__svcmain">
-                                    <span className="lc-pub__svcname">{service.service_name.trim()}</span>
-                                    <span className="lc-pub__svcmeta">
-                                        <Clock size={13} aria-hidden="true" />
-                                        {Number(service.duration_minutes) ? durationLabel(Number(service.duration_minutes)) : ''}
-                                    </span>
-                                    {service.description?.trim() && <span className="lc-pub__svcdesc">{service.description.trim()}</span>}
-                                </span>
-                                <span className="lc-pub__svcside">
-                                    <span className="lc-pub__price">
-                                        {String(service.price ?? '').trim() === '' ? '' : formatMoney(Number(String(service.price).replace(',', '.')))}
-                                    </span>
-                                    <Button variant="secondary" onClick={onBook ? () => onBook(service) : undefined}>Book</Button>
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </section>
+                <div className="lc-pub__main">
+                    {business.description?.trim() && <p className="lc-pub__about">{business.description.trim()}</p>}
+                    <PublicMenu services={services} name={name} whatsapp={whatsapp} preview={preview} onBook={onBook} />
+                </div>
 
-            {hasHours && (
-                <section className="lc-pub__section" aria-labelledby="lc-pub-hours">
-                    <h2 id="lc-pub-hours" className="lc-pub__h2">Opening hours</h2>
-                    <dl className="lc-pub__hours">
-                        {WEEK.map(({ dow, long }) => (
-                            <div key={dow} className={`lc-pub__hoursrow${dow === todayDow ? ' is-today' : ''}`}>
-                                <dt>{long}{dow === todayDow && <span className="lc-pub__today">Today</span>}</dt>
-                                <dd>
-                                    {week[dow].length === 0
-                                        ? 'Closed'
-                                        : week[dow].map((w) => <span key={w.start}>{clock(w.start)} to {clock(w.end)}</span>)}
-                                </dd>
-                            </div>
-                        ))}
-                    </dl>
-                    {business.address?.trim() && (
-                        <p className="lc-pub__address"><MapPin size={15} aria-hidden="true" />{business.address.trim()}{business.city ? `, ${business.city}` : ''}</p>
-                    )}
-                </section>
-            )}
+                <aside className="lc-pub__aside">
+                    {hasHours && now && <PublicStatus week={week} timeZone={timeZone} now={now} />}
+                    {hasHours && <PublicHours week={week} todayDow={now?.dow} />}
+                    {address && <PublicFind business={business} href={maps} map={Boolean(business.banner_url)} />}
+                </aside>
+            </div>
 
             <footer className="lc-pub__foot">
                 <Mark size={18} />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, RotateCw } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import AppHeader from '../../components/common/AppHeader'
@@ -14,49 +14,13 @@ import '../../styles/public-page.css'
 const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url'
 
 const PageSkeleton = () => (
-    <div className="lc-pub lc-pub--skeleton" aria-hidden="true">
-        <div className="lc-pub__cover"><Skeleton height="100%" radius={0} /></div>
-        <div className="lc-pub__body">
-            <div className="lc-pub__head">
-                <span className="lc-pub__logo is-skeleton" />
-                <div className="lc-pub__id">
-                    <Skeleton width="min(320px, 70%)" height={30} />
-                    <Skeleton width="min(220px, 50%)" height={14} />
-                </div>
-            </div>
-            <div className="lc-pub__main">
-                <div className="lc-pub__card lc-pub__list">
-                    {[0, 1, 2].map((i) => (
-                        <span key={i} className="lc-pub__skelrow">
-                            <Skeleton circle height={36} />
-                            <Skeleton width="45%" height={16} />
-                            <Skeleton width={48} height={22} />
-                        </span>
-                    ))}
-                </div>
-            </div>
-            <div className="lc-pub__aside">
-                <div className="lc-pub__card lc-pub__status">
-                    <div className="lc-pub__statusrow">
-                        <Skeleton circle height={56} />
-                        <div className="lc-pub__statustext">
-                            <Skeleton width={96} height={14} />
-                            <Skeleton width={150} height={28} />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div className="lc-pubpage__skeleton" aria-hidden="true">
+        <Skeleton height={220} radius={24} />
+        <Skeleton width={88} height={88} radius={24} />
+        <Skeleton width="60%" height={32} />
+        <Skeleton width="40%" height={16} />
+        {[0, 1, 2].map((i) => <Skeleton key={i} height={76} radius={16} />)}
     </div>
-)
-
-const LostPin = () => (
-    <svg className="lc-pub__lost" width="148" height="112" viewBox="0 0 148 112" aria-hidden="true">
-        <rect className="lc-pub__lostframe" x="8" y="8" width="132" height="96" rx="14" />
-        <path className="lc-pub__loststreet" d="M8 38 L140 30 M8 78 L140 70 M46 8 L40 104 M104 8 L98 104" />
-        <path className="lc-pub__lostpin" d="M74 30 C65 30 59 36.5 59 44.5 C59 55 74 68 74 68 C74 68 89 55 89 44.5 C89 36.5 83 30 74 30 Z" />
-        <circle className="lc-pub__lostdot" cx="74" cy="84" r="3" />
-    </svg>
 )
 
 const PublicBusinessPage = () => {
@@ -65,7 +29,6 @@ const PublicBusinessPage = () => {
     const location = useLocation()
     const { userProfile } = useAuth()
     const [state, setState] = useState({ status: 'loading' })
-    const [attempt, setAttempt] = useState(0)
     const [booking, setBooking] = useState(null)
 
     useEffect(() => {
@@ -106,7 +69,7 @@ const PublicBusinessPage = () => {
         }
         load()
         return () => { cancelled = true }
-    }, [businessSlug, attempt])
+    }, [businessSlug])
 
     useEffect(() => {
         if (state.status !== 'ready') return undefined
@@ -128,20 +91,13 @@ const PublicBusinessPage = () => {
                     <Button variant="quiet" size="sm" icon={ArrowLeft} onClick={back}>Back</Button>
                 </div>
                 {state.status === 'loading' && <PageSkeleton />}
-                {state.status === 'missing' && (
+                {(state.status === 'missing' || state.status === 'error') && (
                     <EmptyState
-                        illustration={<LostPin />}
-                        title="This page is not live"
-                        body="The business may have paused bookings or changed its address."
+                        title={state.status === 'missing' ? 'This page is not live' : 'We could not load this page'}
+                        body={state.status === 'missing'
+                            ? 'The business may have paused bookings or changed its address.'
+                            : 'Check your connection and reload the page.'}
                         actions={<Button to="/businesses">Browse businesses</Button>}
-                    />
-                )}
-                {state.status === 'error' && (
-                    <EmptyState
-                        illustration={<LostPin />}
-                        title="We could not load this page"
-                        body="Check your connection and try again."
-                        actions={<Button icon={RotateCw} onClick={() => setAttempt((n) => n + 1)}>Try again</Button>}
                     />
                 )}
                 {state.status === 'ready' && (

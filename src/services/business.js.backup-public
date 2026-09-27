@@ -58,17 +58,6 @@ export const minutesToLabel = (total) =>
 const money = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' })
 export const formatMoney = (value) => money.format(Number(value) || 0)
 
-const menuFormats = new Map()
-
-export const menuPrice = (value) => {
-    const amount = Number(String(value).replace(',', '.').trim())
-    const decimals = Number.isInteger(amount) ? 0 : 2
-    if (!menuFormats.has(decimals)) {
-        menuFormats.set(decimals, new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: decimals, maximumFractionDigits: decimals }))
-    }
-    return menuFormats.get(decimals).format(amount)
-}
-
 export const loadWorkspace = async (businessId) => {
     const [business, members, services, hours] = await Promise.all([
         supabase.from('businesses')

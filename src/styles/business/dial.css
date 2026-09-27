@@ -1,0 +1,6 @@
+.biz-dial { flex: none; overflow: visible; }
+.biz-dial__face { fill: var(--lc-raised); stroke: var(--lc-ink-4); stroke-width: 1.25; }
+.biz-dial__tick { stroke: var(--lc-ink-4); stroke-width: 1.25; stroke-linecap: round; }
+.biz-dial__fill { fill: var(--azure); }
+.biz-dial__over { fill: none; stroke: var(--signal); stroke-width: 2; stroke-linecap: round; }
+.biz-dial__pin { fill: var(--lc-ink-1); }
