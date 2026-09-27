@@ -14,7 +14,6 @@ import { TimeGrid } from './sheet/TimeGrid'
 import { BookingTicket } from './sheet/BookingTicket'
 import { AccountGate } from './sheet/AccountGate'
 import { BookingDetails } from './sheet/BookingDetails'
-import { OwnerNote } from './sheet/OwnerNote'
 import '../../styles/client/booking-sheet.css'
 
 const TITLES = { time: 'Pick a time', review: 'Check and confirm', done: 'Booking requested' }
@@ -27,7 +26,7 @@ const dayShort = (day) => `${day.date.toLocaleDateString('en-GB', { weekday: 'sh
 const firstBookable = (days, duration, nowMinutes) =>
     days.find((d) => d.windows.length > 0 && hasTimeLeft(d, duration, nowMinutes))
 
-export const BookingSheet = ({ business, service, week, resume, owner = false, onClose }) => {
+export const BookingSheet = ({ business, service, week, resume, onClose }) => {
     const navigate = useNavigate()
     const { user, userProfile } = useAuth()
     const timeZone = business.timezone || 'Europe/Lisbon'
@@ -135,16 +134,18 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, o
         footer = (
             <div className="lc-bk-foot">
                 <p className="lc-bk-foot__sum">
-                    <span className="lc-bk-foot__day">{dayShort(day)}</span>
-                    {minutes === null
-                        ? <span className="lc-bk-foot__hint">No time picked yet</span>
-                        : <b>{clock(minutes)} to {clock(minutes + duration)}</b>}
+                    {minutes === null ? (
+                        <span className="lc-bk-foot__hint">Pick a time</span>
+                    ) : (
+                        <>
+                            <span className="lc-bk-foot__day">{dayShort(day)}</span>
+                            <b>{clock(minutes)} to {clock(minutes + duration)}</b>
+                        </>
+                    )}
                 </p>
                 <Button disabled={minutes === null} onClick={() => { setNotice(''); setStep('review') }}>Continue</Button>
             </div>
         )
-    } else if (step === 'review' && owner) {
-        footer = <Button full to="/portal/calendar">Open my calendar</Button>
     } else if (step === 'review') {
         footer = user ? (
             <Button full loading={sending} onClick={confirm}>Confirm booking</Button>
@@ -195,9 +196,7 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, o
                         <ArrowLeft size={16} aria-hidden="true" />Change time
                     </button>
                     <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} />
-                    {owner ? (
-                        <OwnerNote />
-                    ) : user ? (
+                    {user ? (
                         <BookingDetails
                             value={details}
                             errors={errors}

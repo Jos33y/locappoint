@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ""
-Write-Host "  Locappoint - Cleanup: public page" -ForegroundColor Cyan
+Write-Host "  Locappoint - Cleanup: booking polish" -ForegroundColor Cyan
 Write-Host ""
 
 $root = (Get-Location).Path
@@ -14,14 +14,14 @@ $dirty = git status --porcelain -- src 2>$null
 if ($dirty) { Write-Host "  [WARN] src has uncommitted changes. Commit the patch first." -ForegroundColor Yellow }
 
 $paths = @(
-    'src\components\business\PublicPageView.jsx.backup-public',
-    'src\pages\app\PublicBusinessPage.jsx.backup-public',
-    'src\styles\public-page.css.backup-public',
-    'src\services\business.js.backup-public',
-    'src\components\business\ServiceEditor.jsx.backup-public',
-    'src\styles\business\editors.css.backup-public',
-    'public-page.zip',
-    'collect-public-page.ps1',
+    'src\components\booking\sheet\DayStrip.jsx.backup-polish',
+    'src\components\booking\BookingSheet.jsx.backup-polish',
+    'src\pages\app\PublicBusinessPage.jsx.backup-polish',
+    'src\styles\client\booking-sheet.css.backup-polish',
+    'src\styles\public-page.css.backup-polish',
+    'src\styles\ui-kit.css.backup-polish',
+    'src\styles\ui.css.backup-polish',
+    'booking-polish.zip',
     'payload'
 )
 
@@ -30,14 +30,12 @@ foreach ($p in $paths) {
     if (Test-Path (Join-Path $root $p)) { Write-Host "  [PRESENT] $p"; $present += $p }
     else { Write-Host "  [ABSENT]  $p" -ForegroundColor DarkGray }
 }
-
 if (-not $present.Count) { Write-Host ""; Write-Host "  Nothing to clean." -ForegroundColor Green; exit 0 }
 
 Write-Host ""
 $answer = Read-Host "  Delete the present files? (y/n)"
 if ($answer -ne 'y') { Write-Host "  Cancelled." -ForegroundColor Yellow; exit 0 }
-
 foreach ($p in $present) { Remove-Item (Join-Path $root $p) -Recurse -Force }
 Write-Host ""
-Write-Host "  Cleaned. The cleanup script stays; delete it after you commit." -ForegroundColor Green
+Write-Host "  Cleaned. Delete this script after you commit." -ForegroundColor Green
 Write-Host ""

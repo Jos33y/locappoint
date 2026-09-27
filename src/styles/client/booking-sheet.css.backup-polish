@@ -49,47 +49,6 @@
     min-width: 0;
 }
 
-.lc-bk-days__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    margin: calc(var(--space-2) * -1) 0 calc(var(--space-1) * -1);
-}
-
-.lc-bk-days__nav { display: flex; gap: var(--space-1); }
-
-.lc-bk-days__arrow {
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-full);
-    background: none;
-    color: var(--lc-ink-2);
-    cursor: pointer;
-    transition: background var(--lc-fast) var(--lc-ease), color var(--lc-fast) var(--lc-ease);
-}
-
-.lc-bk-days__arrow:disabled { color: var(--lc-ink-4); opacity: 0.5; cursor: default; }
-
-.lc-bk-days__arrow:focus-visible {
-    outline: 2px solid var(--azure);
-    outline-offset: -2px;
-}
-
-@media (hover: hover) {
-    .lc-bk-days__arrow:not(:disabled):hover { background: var(--lc-raised); color: var(--lc-ink-1); }
-}
-
-@media (hover: none) {
-    .lc-bk-days__nav { display: none; }
-    .lc-bk-days__head { margin: 0; }
-}
-
 .lc-bk-days__month {
     margin: 0;
     color: var(--lc-ink-2);
