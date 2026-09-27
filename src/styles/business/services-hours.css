@@ -1,0 +1,79 @@
+.biz-sh__head {
+    flex-wrap: wrap;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 760px;
+}
+
+.biz-sh__headside {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.biz-sh__now {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.biz-sh__column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    width: 100%;
+    max-width: 760px;
+}
+
+.biz-sh__tip {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-sh__note {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-info-tint);
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-sh__sheetbody {
+    display: flex;
+    gap: var(--space-3);
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.biz-sh__sheetbody svg {
+    flex: none;
+    margin-top: 3px;
+    color: var(--lc-warning);
+}
+
+.biz-sh__sheetactions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+.biz-sh .ui-btn.biz-sh__danger,
+.biz-sh__sheetactions .ui-btn.biz-sh__danger {
+    color: var(--lc-danger);
+}
+
+@media (max-width: 767px), (pointer: coarse) {
+    .biz-sh .ui-btn--sm,
+    .biz-sh__sheetactions .ui-btn {
+        min-height: 44px;
+    }
+}

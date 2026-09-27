@@ -31,11 +31,6 @@ export default async ({ browser, url, check, only }) => {
             hub: hub && { l: box(hub).left, r: box(hub).right, w: box(hub).width },
             tabs, activeRows, path: window.__path,
             acctCurrent: q('.biz-account__btn')?.classList.contains('is-current'),
-            sh: q('.biz-sh') && {
-              small: [...document.querySelectorAll('.biz-sh button, .biz-sh a.ui-btn, .biz-sh [role=switch]')].filter((b) => !b.classList.contains('biz-sched__day')).filter((b) => { const hit = b.classList.contains('biz-sched__switch') && getComputedStyle(b, '::before').content !== 'none' ? 16 : 0; const h = (b.getAttribute('role') === 'switch' && b.closest('.ui-switchrow') ? b.closest('.ui-switchrow') : b).getBoundingClientRect().height + hit; return h > hit && h < 44 }).map((b) => `${b.textContent.trim() || b.getAttribute('aria-label') || b.className} ${Math.round(b.getBoundingClientRect().height)}`),
-              days: (() => { const rs = [...document.querySelectorAll('.biz-sched__day')].map((b) => b.getBoundingClientRect()); return { min: rs.length ? Math.min(...rs.map((r) => r.width)) : 999, rows: new Set(rs.map((r) => Math.round(r.top))).size } })(),
-              spill: [...document.querySelectorAll('.biz-sh__column > *, .biz-sched__card, .biz-svc__item')].filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => e.className),
-            },
             bp: q('.biz-bp') && {
               wide: q('.biz-bp').classList.contains('is-wide'),
               phone: q('.biz-bp__preview .ui-phone') && (() => { const b = q('.biz-bp__preview .ui-phone').getBoundingClientRect(); return { top: b.top, bottom: b.bottom, w: b.width } })(),
@@ -56,14 +51,6 @@ export default async ({ browser, url, check, only }) => {
             if (touch) check(t.h >= 44, `${tag} touch tab ${t.t} ${t.h}px`)
           }
           check(r.tabs.filter((t) => t.active).length === 1, `${tag} one active tab`)
-        }
-        if (r.sh) {
-          check(r.sh.spill.length === 0, `${tag} content spills ${r.sh.spill}`)
-          if (touch) check(r.sh.small.length === 0, `${tag} small touch targets ${r.sh.small}`)
-          if (r.sh.days.min !== 999) {
-            check(r.sh.days.rows === 1, `${tag} day buttons wrap`)
-            check(r.sh.days.min >= 32, `${tag} day buttons too small ${r.sh.days.min}`)
-          }
         }
         if (r.bp) {
           check(r.bp.cards.length === 0, `${tag} card overflow ${r.bp.cards}`)

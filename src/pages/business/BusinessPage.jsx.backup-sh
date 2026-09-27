@@ -323,7 +323,7 @@ const Strength = ({ steps, onStep, onCopy, copied }) => {
                     <p className="biz-bp__desc">
                         {complete
                             ? 'Clients see everything they need. Share it where they already find you.'
-                            : `${missing.length} ${missing.length === 1 ? 'step' : 'steps'} to a complete page. Complete pages get booked more.`}
+                            : `${missing.length} ${missing.length === 1 ? 'step' : 'steps'} to a complete page.`}
                     </p>
                 </div>
             </div>
@@ -680,7 +680,7 @@ const BusinessPage = () => {
             <header className="biz-page__head biz-bp__head">
                 <div>
                     <h1 className="biz-page__title">Business page</h1>
-                    <p className="biz-page__sub">Everything clients see before they book. Tap anything to change it.</p>
+                    <p className="biz-page__sub">Everything clients see before they book. Edit anything right here.</p>
                 </div>
                 <div className="biz-bp__headside">
                     <SaveState state={saveState} onRetry={() => setRetry((n) => n + 1)} />
@@ -711,13 +711,13 @@ const BusinessPage = () => {
                     <Card as="section" padding="lg" className="biz-bp__link" aria-label="Your link and bookings">
                         <div className="biz-bp__linkhead">
                             <Status tone={live ? 'success' : 'warning'} size="sm">{live ? 'Live' : 'Paused'}</Status>
-                            <button type="button" className="biz-bp__textbtn" onClick={() => setSlugOpen(true)}>Change address</button>
                         </div>
                         <a className="biz-bp__url" href={link} target="_blank" rel="noopener noreferrer" aria-label={`Open your page, ${link}`}>
                             <span className="biz-bp__host">{publicHost()}/</span>
                             <span className="biz-bp__slug">{business.slug}<ArrowUpRight size={16} aria-hidden="true" className="biz-bp__open" /></span>
                         </a>
                         <Button variant="secondary" size="sm" icon={copied ? Check : Copy} onClick={copy} full>{copied ? 'Copied' : 'Copy link'}</Button>
+                        <button type="button" className="biz-bp__quietbtn" onClick={() => setSlugOpen(true)}>Change address</button>
                         <div className="biz-bp__rule" />
                         <Switch
                             checked={live}
@@ -731,7 +731,13 @@ const BusinessPage = () => {
                 </aside>
 
                 <div className="biz-bp__main">
-                    <Section id="details" title="Type of business" done={Boolean(form.category) && !problems.categoryDetail}>
+                    <Section
+                        id="details"
+                        title="Details"
+                        description="What you do and where clients find you."
+                        done={Boolean(form.category) && !problems.categoryDetail && hasAddress && !problems.city}
+                        todo={!hasAddress ? 'Address missing' : undefined}
+                    >
                         <Field label="What you do" error={problems.category}>
                             <Picker
                                 value={form.category}
@@ -749,72 +755,71 @@ const BusinessPage = () => {
                                 <Input value={form.categoryDetail} onChange={(e) => set({ categoryDetail: e.target.value })} maxLength={60} autoComplete="off" />
                             </Field>
                         )}
-                    </Section>
-
-                    <Section id="location" title="Location" description="Where clients find you." done={hasAddress && !problems.city} todo={!hasAddress ? 'Address missing' : undefined}>
-                        <div className="biz-bp__pair">
-                            <Field label="Country">
-                                <Picker
-                                    value={form.country}
-                                    onChange={(country) => set({ country, city: country === 'PT' ? 'Lisbon' : country === 'NG' ? 'Lagos' : '', cityOther: '' })}
-                                    options={COUNTRY_OPTIONS}
-                                    popular={POPULAR_COUNTRIES}
-                                    searchable
-                                    title="Country"
-                                    searchPlaceholder="Search country"
-                                />
-                            </Field>
-                            {form.country === 'PT' && (
-                                <Field label="Municipality" error={problems.city}>
+                        <div id="location" className="biz-bp__group">
+                            <div className="biz-bp__pair">
+                                <Field label="Country">
                                     <Picker
-                                        value={form.city}
-                                        onChange={(value) => set({ city: value })}
-                                        options={PT_MUNICIPALITIES}
+                                        value={form.country}
+                                        onChange={(country) => set({ country, city: country === 'PT' ? 'Lisbon' : country === 'NG' ? 'Lagos' : '', cityOther: '' })}
+                                        options={COUNTRY_OPTIONS}
+                                        popular={POPULAR_COUNTRIES}
                                         searchable
-                                        title="Municipality"
-                                        searchPlaceholder="Search, like Cascais or Porto"
+                                        title="Country"
+                                        searchPlaceholder="Search country"
                                     />
                                 </Field>
+                                {form.country === 'PT' && (
+                                    <Field label="Municipality" error={problems.city}>
+                                        <Picker
+                                            value={form.city}
+                                            onChange={(value) => set({ city: value })}
+                                            options={PT_MUNICIPALITIES}
+                                            searchable
+                                            title="Municipality"
+                                            searchPlaceholder="Search, like Cascais or Porto"
+                                        />
+                                    </Field>
+                                )}
+                                {form.country === 'NG' && (
+                                    <Field label="City" error={form.city !== OTHER_CITY ? problems.city : undefined}>
+                                        <Picker
+                                            value={form.city}
+                                            onChange={(value) => set({ city: value })}
+                                            options={[...NG_CITIES, { value: OTHER_CITY, label: 'Somewhere else' }]}
+                                            title="City"
+                                        />
+                                    </Field>
+                                )}
+                                {form.country !== 'PT' && (form.country !== 'NG' || form.city === OTHER_CITY) && (
+                                    <Field label={form.country === 'NG' ? 'Which city?' : 'City'} error={problems.city}>
+                                        <Input value={form.cityOther} onChange={(e) => set({ cityOther: e.target.value })} maxLength={80} autoComplete="address-level2" />
+                                    </Field>
+                                )}
+                            </div>
+                            {city && !inLaunchArea(form.country, city) && (
+                                <p className="biz-bp__note" role="note">
+                                    We are opening in Greater Lisbon first. Your page works anywhere, and we will be in touch as we grow into {city}.
+                                </p>
                             )}
-                            {form.country === 'NG' && (
-                                <Field label="City" error={form.city !== OTHER_CITY ? problems.city : undefined}>
-                                    <Picker
-                                        value={form.city}
-                                        onChange={(value) => set({ city: value })}
-                                        options={[...NG_CITIES, { value: OTHER_CITY, label: 'Somewhere else' }]}
-                                        title="City"
-                                    />
-                                </Field>
-                            )}
-                            {form.country !== 'PT' && (form.country !== 'NG' || form.city === OTHER_CITY) && (
-                                <Field label={form.country === 'NG' ? 'Which city?' : 'City'} error={problems.city}>
-                                    <Input value={form.cityOther} onChange={(e) => set({ cityOther: e.target.value })} maxLength={80} autoComplete="address-level2" />
-                                </Field>
-                            )}
-                        </div>
-                        {city && !inLaunchArea(form.country, city) && (
-                            <p className="biz-bp__note" role="note">
-                                We are opening in Greater Lisbon first. Your page works anywhere, and we will be in touch as we grow into {city}.
-                            </p>
-                        )}
-                        <Field label="Neighbourhood" optional hint="Like Anjos or Baixa">
-                            <Input value={form.neighbourhood} onChange={(e) => set({ neighbourhood: e.target.value })} maxLength={60} autoComplete="off" />
-                        </Field>
-                        <div className="biz-bp__address">
-                            <Field label="Address" optional hint={hasAddress ? 'Clients get a Directions button' : 'Adds a Directions button to your page'}>
-                                <AddressField
-                                    value={form.address}
-                                    onChange={(address) => set({ address })}
-                                    country={form.country}
-                                    city={city}
-                                    placeholder={form.country === 'PT' ? 'Rua dos Anjos 42' : 'Street and number'}
-                                />
+                            <Field label="Neighbourhood" optional hint={form.neighbourhood.trim() ? undefined : 'Like Anjos or Baixa'}>
+                                <Input value={form.neighbourhood} onChange={(e) => set({ neighbourhood: e.target.value })} maxLength={60} autoComplete="off" />
                             </Field>
+                            <div className="biz-bp__address">
+                                <Field label="Address" optional hint={hasAddress ? undefined : 'Adds a Directions button to your page'}>
+                                    <AddressField
+                                        value={form.address}
+                                        onChange={(address) => set({ address })}
+                                        country={form.country}
+                                        city={city}
+                                        placeholder={form.country === 'PT' ? 'Rua dos Anjos 42' : 'Street and number'}
+                                    />
+                                </Field>
+                            </div>
                         </div>
                     </Section>
 
                     <Section id="contact" title="Contact" description="How clients reach you before and after they book." done={hasWhatsapp && !problems.phone} todo={!form.whatsappOn ? 'WhatsApp off' : undefined}>
-                        <Field label="Business phone" error={problems.phone} hint="Shown on your page with a Call button">
+                        <Field label="Business phone" error={problems.phone} hint={form.phone ? undefined : 'Shown on your page with a Call button'}>
                             <PhoneField
                                 value={form.phone}
                                 country={form.phoneCountry}

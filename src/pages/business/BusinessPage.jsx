@@ -15,6 +15,8 @@ import { NG_CITIES, POPULAR_COUNTRIES, PT_MUNICIPALITIES, inLaunchArea, timezone
 import { slugProblem } from '../../constants/reservedSlugs'
 import { ABOUT_MAX, OTHER_CITY, aboutExample, cityOf, countryName, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
 import { useSlugStatus } from '../../hooks/useSlugStatus'
+import SaveState from '../../components/business/SaveState'
+import { useAutosave } from '../../components/business/useAutosave'
 import { loadSetup, setupError, updateBusiness } from '../../services/setup'
 import { MEDIA_SHAPES, prepareImage, removeBusinessImage, uploadBusinessImage } from '../../services/media'
 import { pageSteps } from '../../services/business'
@@ -22,7 +24,6 @@ import { pageUrl, publicHost } from '../../services/links'
 import '../../styles/business/business-page.css'
 
 const WIDE = 880
-const SAVE_DELAY = 700
 
 const formFromBusiness = (b) => {
     const details = detailsFromBusiness(b)
@@ -98,26 +99,6 @@ const useWidth = () => {
         return () => observer.disconnect()
     }, [el])
     return [setEl, width]
-}
-
-const SaveState = ({ state, onRetry }) => {
-    const text = {
-        idle: 'Changes save as you go',
-        saving: 'Saving',
-        saved: 'All changes saved',
-        blocked: 'Fix the highlighted field to save it',
-        error: 'Not saved',
-    }[state]
-    return (
-        <p className={`biz-bp__save is-${state}`} aria-live="polite">
-            <span className="biz-bp__savemark" aria-hidden="true">
-                {state === 'saved' && <Check size={14} />}
-                {(state === 'blocked' || state === 'error') && <TriangleAlert size={14} />}
-            </span>
-            <span>{text}</span>
-            {state === 'error' && <button type="button" className="biz-bp__retry" onClick={onRetry}>Try again</button>}
-        </p>
-    )
 }
 
 const PHOTO_TYPES = 'image/jpeg,image/png,image/webp,image/heic,image/heif'
@@ -472,8 +453,6 @@ const BusinessPage = () => {
     const [services, setServices] = useState([])
     const [hourRows, setHourRows] = useState([])
     const [form, setForm] = useState(null)
-    const [saveState, setSaveState] = useState('idle')
-    const [retry, setRetry] = useState(0)
     const [media, setMedia] = useState({ logo: { busy: false, error: '' }, cover: { busy: false, error: '' } })
     const [bookingBusy, setBookingBusy] = useState(false)
     const [bookingError, setBookingError] = useState('')
@@ -483,7 +462,6 @@ const BusinessPage = () => {
     const aboutRef = useRef(null)
     const logoInputRef = useRef(null)
     const coverInputRef = useRef(null)
-    const inFlight = useRef(false)
 
     const load = useCallback(async () => {
         setPhase('loading')
@@ -505,10 +483,6 @@ const BusinessPage = () => {
     const problems = useMemo(() => (form ? formProblems(form) : {}), [form])
     const pending = useMemo(() => (form && business ? changes(form, business, problems) : { patch: {}, blocked: 0 }), [form, business, problems])
     const pendingKey = JSON.stringify(pending.patch)
-    const hasPending = pendingKey !== '{}'
-
-    const latest = useRef({})
-    latest.current = { patch: pending.patch, hasPending, id: business?.id, reloadWorkspace }
 
     const synced = useCallback((row, { profile = false } = {}) => {
         setBusiness(row)
@@ -516,45 +490,15 @@ const BusinessPage = () => {
         if (profile) refreshProfile?.()
     }, [reloadWorkspace, refreshProfile])
 
-    useEffect(() => {
-        if (!business || !hasPending || inFlight.current) return undefined
-        const timer = setTimeout(async () => {
-            inFlight.current = true
-            setSaveState('saving')
-            const patch = JSON.parse(pendingKey)
-            try {
-                const row = await updateBusiness(business.id, patch)
-                synced(row, { profile: 'business_name' in patch })
-                setSaveState('saved')
-            } catch (err) {
-                console.error('Business page save failed:', err)
-                setSaveState('error')
-            } finally {
-                inFlight.current = false
-            }
-        }, SAVE_DELAY)
-        return () => clearTimeout(timer)
-    }, [business, hasPending, pendingKey, retry, synced])
-
-    useEffect(() => {
-        if (hasPending) return
-        if (pending.blocked > 0) setSaveState('blocked')
-        else setSaveState((s) => (s === 'blocked' ? 'saved' : s))
-    }, [hasPending, pending.blocked])
-
-    useEffect(() => {
-        const onLeave = (event) => {
-            if (latest.current.hasPending || inFlight.current) event.preventDefault()
-        }
-        window.addEventListener('beforeunload', onLeave)
-        return () => {
-            window.removeEventListener('beforeunload', onLeave)
-            const last = latest.current
-            if (last.hasPending && last.id && !inFlight.current) {
-                updateBusiness(last.id, last.patch).then(() => last.reloadWorkspace()).catch((err) => console.error('Business page save failed:', err))
-            }
-        }
-    }, [])
+    const autosave = useAutosave({
+        pending: pendingKey === '{}' ? '' : pendingKey,
+        ready: Boolean(business),
+        blocked: pending.blocked > 0,
+        save: async (key) => {
+            const patch = JSON.parse(key)
+            synced(await updateBusiness(business.id, patch), { profile: 'business_name' in patch })
+        },
+    })
 
     useEffect(() => {
         if (phase !== 'ready' || !location.hash) return
@@ -683,7 +627,7 @@ const BusinessPage = () => {
                     <p className="biz-page__sub">Everything clients see before they book. Edit anything right here.</p>
                 </div>
                 <div className="biz-bp__headside">
-                    <SaveState state={saveState} onRetry={() => setRetry((n) => n + 1)} />
+                    <SaveState state={autosave.state} onRetry={autosave.retry} />
                     <Button variant="secondary" size="sm" iconRight={ArrowUpRight} href={link} target="_blank" rel="noopener noreferrer">View live page</Button>
                 </div>
             </header>

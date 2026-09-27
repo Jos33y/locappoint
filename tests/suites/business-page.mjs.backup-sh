@@ -33,7 +33,9 @@ export default async ({ browser, url, check, cover }) => {
     check(rail.top < rail.vh - 120, `page strength visible on first screen ${JSON.stringify(rail)}`)
     check(await p.evaluate(() => document.querySelector('.biz-bp__pct').textContent.replace(/\s/g, '')) === '88%', 'ring shows 88%')
     check(await p.evaluate(() => [...document.querySelectorAll('.biz-bp__step')].map((e) => e.textContent).join('|')) === 'Add a logo+12%', 'one step left, worth 12%')
-    check(await p.evaluate(() => [...document.querySelectorAll('.biz-bp__done')].length) === 3, 'three sections complete')
+    check(await p.evaluate(() => [...document.querySelectorAll('.biz-bp__done')].length) === 2, 'both sections complete')
+    check(await p.evaluate(() => { const r = document.querySelectorAll('.biz-bp__link > *'); return r[r.length - 1].textContent.includes('Taking bookings') && [...r].findIndex((e) => e.textContent === 'Change address') > [...r].findIndex((e) => e.textContent === 'Copy link') }), 'change address sits quietly under copy link')
+    check(await p.evaluate(() => !document.body.textContent.includes('Like Anjos or Baixa') && !document.body.textContent.includes('booked more')), 'filled hints and unproven claims gone')
     check(await p.evaluate(() => document.querySelector('.biz-bp__where').textContent) === 'Barbershop in Arroios, Lisbon', 'hero line')
 
     await typeInto(p, 'Description', 'Skin fades and hot towel shaves in Arroios.')
@@ -67,7 +69,7 @@ export default async ({ browser, url, check, cover }) => {
     await wait(600)
     check((await updates(p)).slice(-1)[0].is_active === true, 'resume saved')
 
-    await p.evaluate(() => document.querySelector('.biz-bp__link .biz-bp__textbtn').click())
+    await p.evaluate(() => document.querySelector('.biz-bp__link .biz-bp__quietbtn').click())
     await wait(400)
     check(await p.evaluate(() => Boolean(document.querySelector('.biz-bp__warn'))), 'address sheet warns')
     const slugInput = await p.$('.biz-bp__slugsheet input')

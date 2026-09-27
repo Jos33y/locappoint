@@ -82,27 +82,6 @@
     font-size: var(--lc-t-label);
 }
 
-.biz-svc__hidden {
-    display: inline-block;
-    margin-left: var(--space-2);
-    padding: 0 8px;
-    border-radius: var(--radius-full);
-    background: var(--lc-card);
-    box-shadow: inset 0 0 0 1px var(--lc-line);
-    color: var(--lc-ink-3);
-    font-size: 11px;
-}
-
-.biz-svc__item.is-hidden:not(.is-open) {
-    background: var(--lc-card);
-    box-shadow: inset 0 0 0 1px var(--lc-line);
-}
-
-.biz-svc__item.is-hidden:not(.is-open) .biz-svc__name,
-.biz-svc__item.is-hidden:not(.is-open) .biz-svc__price {
-    color: var(--lc-ink-3);
-}
-
 .biz-svc__price {
     grid-area: price;
     color: var(--lc-ink-1);
@@ -192,28 +171,9 @@
 
 .biz-sched__templates {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: var(--space-2);
     width: 100%;
-}
-
-@media (max-width: 559px) {
-    .biz-sched__templates {
-        grid-template-columns: 1fr;
-    }
-
-    .biz-sched__templates .biz-sched__template {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        grid-template-areas: 'glyph title' 'glyph detail';
-        align-items: center;
-        column-gap: var(--space-4);
-        row-gap: 2px;
-    }
-
-    .biz-sched__template .biz-glyph { grid-area: glyph; }
-    .biz-sched__template .biz-sched__ttitle { grid-area: title; }
-    .biz-sched__template .biz-sched__tdetail { grid-area: detail; }
 }
 
 .biz-sched__template {
@@ -308,12 +268,6 @@
     animation: biz-svc-in var(--lc-base) var(--lc-ease);
 }
 
-.biz-sched__foot {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: calc(var(--space-1) * -1);
-}
-
 .biz-sched__card.has-error { box-shadow: inset 0 0 0 1px rgba(240, 122, 110, 0.45); }
 
 .biz-sched__top {
@@ -324,8 +278,8 @@
 }
 
 .biz-sched__days {
-    display: grid;
-    grid-template-columns: repeat(7, 36px);
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
 }
 
@@ -443,26 +397,7 @@
         height: 44px;
     }
 
-    .biz-sched__switch::before {
-        content: '';
-        position: absolute;
-        inset: -8px;
-    }
-
-    .biz-sched__days {
-        width: 100%;
-        max-width: 332px;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 4px;
-    }
-
-    .biz-sched__day {
-        width: 100%;
-        max-width: 44px;
-        height: auto;
-        aspect-ratio: 1;
-        justify-self: center;
-    }
+    .biz-sched__day { width: 44px; height: 44px; }
 
     .biz-sched .ui-picker-trigger--sm {
         min-height: 44px;

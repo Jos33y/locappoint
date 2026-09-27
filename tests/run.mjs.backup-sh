@@ -7,11 +7,10 @@ import puppeteer from 'puppeteer-core'
 import layout from './suites/layout.mjs'
 import shell from './suites/shell.mjs'
 import businessPage from './suites/business-page.mjs'
-import servicesHours from './suites/services-hours.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const [target = 'all', only] = process.argv.slice(2)
-const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage], ['services and hours', servicesHours]] }
+const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage]] }
 SUITES.all = [...SUITES.flows, ...SUITES.layout]
 
 if (!SUITES[target]) {

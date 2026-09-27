@@ -23,42 +23,25 @@ export const DATA = {
 export const calls = []
 window.__calls = calls
 
-let seq = 0
-
 const builder = (table) => {
   let rows = [...(DATA[table] || [])]
   let mode = 'many'
-  let op = 'select'
   let change = null
-  let inserted = null
   const api = {
-    select() { return api },
-    eq(k, v) { rows = rows.filter((r) => !(k in r) || r[k] === v); return api },
-    in(k, vals) { rows = rows.filter((r) => vals.includes(r[k])); return api },
-    neq() { return api }, gte() { return api }, lte() { return api }, lt() { return api }, gt() { return api },
+    select() { return api }, eq(k, v) { rows = rows.filter((r) => !(k in r) || r[k] === v); return api },
+    neq() { return api }, in() { return api }, gte() { return api }, lte() { return api }, lt() { return api }, gt() { return api },
     is() { return api }, not() { return api }, or() { return api }, order() { return api }, limit() { return api }, range() { return api },
     ilike() { return api }, contains() { return api }, filter() { return api }, match() { return api },
-    insert(v) { op = 'insert'; inserted = (Array.isArray(v) ? v : [v]).map((r) => ({ id: `${table}-${++seq}`, ...r })); calls.push(['insert', table, v]); return api },
-    update(v) { op = 'update'; calls.push(['update', table, v]); change = v; return api },
-    upsert(v) { calls.push(['upsert', table, v]); return api },
-    delete() { op = 'delete'; calls.push(['delete', table]); return api },
+    insert(v) { calls.push(['insert', table, v]); return api }, update(v) { calls.push(['update', table, v]); change = v; return api },
+    upsert(v) { calls.push(['upsert', table, v]); return api }, delete() { calls.push(['delete', table]); return api },
     single() { mode = 'single'; return api }, maybeSingle() { mode = 'maybe'; return api },
     then(resolve, reject) {
       calls.push(['from', table])
-      if (window.__failNext && op !== 'select') { window.__failNext = false; return Promise.resolve({ data: null, error: { code: window.__failCode || '500', message: window.__failMessage || 'fail' } }).then(resolve, reject) }
-      if (op === 'insert') {
-        DATA[table] = [...(DATA[table] || []), ...inserted]
-        rows = inserted
-      }
-      if (op === 'update') rows.forEach((r) => Object.assign(r, change))
-      if (op === 'delete') {
-        const gone = new Set(rows.map((r) => r.id))
-        calls.push(['deleted', table, [...gone]])
-        DATA[table] = DATA[table].filter((r) => !gone.has(r.id))
-      }
-      const out = rows.map((r) => ({ ...r }))
-      const data = mode === 'many' ? out : out[0] || null
-      return Promise.resolve({ data, error: null, count: out.length }).then(resolve, reject)
+      if (window.__failNext) { window.__failNext = false; return Promise.resolve({ data: null, error: { code: window.__failCode || '500', message: window.__failMessage || 'fail' } }).then(resolve, reject) }
+      if (change) rows.forEach((r) => Object.assign(r, change))
+      rows = rows.map((r) => ({ ...r }))
+      const data = mode === 'many' ? rows : rows[0] || null
+      return Promise.resolve({ data, error: null, count: rows.length }).then(resolve, reject)
     },
   }
   return api

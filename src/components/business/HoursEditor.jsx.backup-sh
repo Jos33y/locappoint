@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import { Button } from '../ui'
+import { Button, IconButton } from '../ui'
 import { TimePicker } from '../ui/TimePicker'
 import { clock, dayProblem } from '../../services/hours'
 import '../../styles/business/editors.css'
@@ -115,6 +115,7 @@ const GroupCard = ({ group, index, taken, removable, onChange, onRemove }) => {
                         )
                     })}
                 </span>
+                {removable && <IconButton icon={X} variant="quiet" size="sm" label={`Remove group ${index + 1}`} onClick={onRemove} />}
             </div>
 
             <div className="biz-sched__line">
@@ -150,12 +151,6 @@ const GroupCard = ({ group, index, taken, removable, onChange, onRemove }) => {
             </div>
 
             {problem && <p className="biz-sched__error" role="alert">{problem}</p>}
-
-            {removable && (
-                <div className="biz-sched__foot">
-                    <Button variant="quiet" size="sm" icon={X} onClick={onRemove}>Remove these days</Button>
-                </div>
-            )}
         </li>
     )
 }

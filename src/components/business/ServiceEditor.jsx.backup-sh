@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowUp, Check, ChevronRight, Plus, Trash2 } from 'lucide-react'
-import { AffixInput, Button, Chip, ChipGroup, Field, IconButton, Input, Switch, Textarea } from '../ui'
+import { AffixInput, Button, Chip, ChipGroup, Field, IconButton, Input, Textarea } from '../ui'
 import { durationLabel, formatMoney } from '../../services/business'
 import '../../styles/business/editors.css'
 
@@ -45,7 +45,7 @@ export const serviceProblems = (service) => {
 export const servicesValid = (services) =>
     services.length > 0 && services.every((s) => Object.keys(serviceProblems(s)).length === 0)
 
-const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusField, showVisibility }) => {
+const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusField }) => {
     const nameRef = useRef(null)
     const priceRef = useRef(null)
     const custom = !DURATIONS.includes(Number(service.duration_minutes))
@@ -124,15 +124,6 @@ const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusFie
                 />
             </Field>
 
-            {showVisibility && (
-                <Switch
-                    checked={service.is_active !== false}
-                    onChange={(on) => set({ is_active: on })}
-                    label="Show on your page"
-                    description={service.is_active !== false ? 'Clients can book this service.' : 'Hidden. Clients cannot book it, and past bookings keep their details.'}
-                />
-            )}
-
             <div className="biz-svc__formactions">
                 <Button variant="quiet" size="sm" icon={Trash2} onClick={onRemove}>Remove</Button>
                 <Button variant="secondary" size="sm" icon={Check} onClick={onDone}>Done</Button>
@@ -141,18 +132,14 @@ const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusFie
     )
 }
 
-export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors = false, showVisibility = false, onRemove }) => {
+export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors = false }) => {
     const [editing, setEditing] = useState(() => (services.length === 1 && !services[0].id ? services[0].key : null))
     const [focusField, setFocusField] = useState('name')
 
     const replace = (key, next) => onChange(services.map((s) => (s.key === key ? next : s)))
-    const drop = (key) => {
+    const remove = (key) => {
         onChange(services.filter((s) => s.key !== key))
         if (editing === key) setEditing(null)
-    }
-    const remove = (key) => {
-        if (onRemove) onRemove(services.find((s) => s.key === key), () => drop(key))
-        else drop(key)
     }
     const move = (index, by) => {
         const next = [...services]
@@ -179,12 +166,11 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
                         const isOpen = editing === service.key || invalid
                         const name = service.service_name.trim() || 'New service'
                         return (
-                            <li key={service.key} className={`biz-svc__item${isOpen ? ' is-open' : ''}${invalid ? ' has-error' : ''}${service.is_active === false ? ' is-hidden' : ''}`}>
+                            <li key={service.key} className={`biz-svc__item${isOpen ? ' is-open' : ''}${invalid ? ' has-error' : ''}`}>
                                 {isOpen ? (
                                     <ServiceForm
                                         service={service}
                                         showErrors={showErrors}
-                                        showVisibility={showVisibility}
                                         focusField={editing === service.key ? focusField : null}
                                         onChange={(next) => replace(service.key, next)}
                                         onDone={() => setEditing(null)}
@@ -196,7 +182,6 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
                                             <span className="biz-svc__name">{name}</span>
                                             <span className="biz-svc__meta">
                                                 {Number(service.duration_minutes) ? durationLabel(Number(service.duration_minutes)) : 'No duration'}
-                                                {service.is_active === false && <span className="biz-svc__hidden">Hidden from your page</span>}
                                             </span>
                                             <span className="biz-svc__price">
                                                 {String(service.price).trim() === '' ? 'No price' : formatMoney(parsePrice(service.price))}

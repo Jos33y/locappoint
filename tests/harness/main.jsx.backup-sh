@@ -28,8 +28,8 @@ import Channels from '@src/pages/business/Channels'
 
 import BusinessPage from '@src/pages/business/BusinessPage'
 import Setup from '@src/pages/business/Setup'
-import ServicesPage from '@src/pages/business/ServicesPage'
-import HoursPage from '@src/pages/business/HoursPage'
+import PortalServices from '@src/pages/portal/Services'
+import PortalAvailability from '@src/pages/portal/Availability'
 import PortalSettings from '@src/pages/portal/Settings'
 import { DATA } from './fakeSupabase'
 
@@ -64,10 +64,10 @@ const App = () => (
         <Route path="/portal" element={<BusinessShell />}>
           <Route index element={<Today />} />
           <Route path="calendar" element={<Calendar />} />
-          <Route path="services" element={<ServicesPage />} />
+          <Route path="services" element={<PortalServices />} />
           <Route path="page" element={<BusinessPage />} />
           
-          <Route path="hours" element={<HoursPage />} />
+          <Route path="hours" element={<PortalAvailability />} />
           
           <Route path="settings" element={<PortalSettings />} />
           <Route path="assistant" element={<Planned section="assistant" />} />

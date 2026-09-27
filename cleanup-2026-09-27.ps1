@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ""
-Write-Host "  Locappoint - Cleanup for 27 September (run after committing patch 20)" -ForegroundColor Cyan
+Write-Host "  Locappoint - Cleanup for 27 September (run after committing patch 21)" -ForegroundColor Cyan
 Write-Host ""
 
 if (-not (Test-Path 'package.json')) { Write-Host "  [ABORT] No package.json. Run from repo root." -ForegroundColor Red; exit 1 }
@@ -20,11 +20,20 @@ if ($dirty) {
 }
 
 $targets = @(
-    'src\pages\business\BusinessPage.jsx.backup-polish',
-    'src\styles\business\business-page.css.backup-polish',
-    'src\pages\business\GettingStarted.jsx.backup-polish',
-    'tests\suites\business-page.mjs.backup-polish',
-    'page-polish.zip'
+    'src\pages\business\BusinessPage.jsx.backup-sh',
+    'src\styles\business\business-page.css.backup-sh',
+    'tests\run.mjs.backup-sh',
+    'tests\README.md.backup-sh',
+    'tests\harness\main.jsx.backup-sh',
+    'tests\harness\fakeSupabase.js.backup-sh',
+    'tests\suites\layout.mjs.backup-sh',
+    'tests\suites\business-page.mjs.backup-sh',
+    'src\components\business\ServiceEditor.jsx.backup-sh',
+    'src\components\business\HoursEditor.jsx.backup-sh',
+    'src\styles\business\editors.css.backup-sh',
+    'src\services\setup.js.backup-sh',
+    'src\BookingApp.jsx.backup-sh',
+    'services-hours.zip'
 )
 
 $existing = @()
@@ -34,7 +43,7 @@ foreach ($t in $targets) {
 }
 
 Write-Host ""
-Write-Host "  Kept on purpose: *.mistake files (retired Sheet.jsx, BusinessPage.jsx, TimeField.jsx, Profile.jsx, schema-onboarding.sql)." -ForegroundColor Gray
+Write-Host "  Kept on purpose: *.mistake files (retired Sheet.jsx, BusinessPage.jsx, TimeField.jsx, Profile.jsx, portal Services.jsx and Availability.jsx with their stylesheets, schema-onboarding.sql)." -ForegroundColor Gray
 Write-Host "  They go only when you approve deleting them." -ForegroundColor Gray
 Write-Host ""
 

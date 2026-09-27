@@ -1,0 +1,61 @@
+.biz-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+}
+
+.biz-save__mark {
+    display: inline-grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
+}
+
+.biz-save.is-idle .biz-save__mark {
+    display: none;
+}
+
+.biz-save.is-saving .biz-save__mark::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--azure);
+    animation: biz-save-pulse 1s var(--lc-ease) infinite alternate;
+}
+
+.biz-save.is-saved .biz-save__mark { color: var(--lc-success); }
+.biz-save.is-blocked { color: var(--lc-warning); white-space: normal; }
+.biz-save.is-error { color: var(--lc-danger); }
+
+@keyframes biz-save-pulse {
+    from { opacity: 0.35; }
+    to { opacity: 1; }
+}
+
+.biz-save__retry {
+    min-height: 32px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--lc-info);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.biz-save__retry:focus-visible {
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .biz-save.is-saving .biz-save__mark::before { animation: none; }
+}

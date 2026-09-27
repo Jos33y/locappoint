@@ -10,7 +10,7 @@ export default async ({ browser, url, check, cover }) => {
       return page
     }
     const updates = (p) => p.evaluate(() => window.__calls.filter((c) => c[0] === 'update' && c[1] === 'businesses').map((c) => c[2]))
-    const save = (p) => p.evaluate(() => document.querySelector('.biz-bp__save')?.textContent)
+    const save = (p) => p.evaluate(() => document.querySelector('.biz-save')?.textContent)
     const field = async (p, label) => p.evaluateHandle((label) => {
       if (label === 'Business name') return document.getElementById('biz-bp-name')
       if (label === 'Description') return document.getElementById('biz-bp-about')
@@ -142,7 +142,7 @@ export default async ({ browser, url, check, cover }) => {
     await typeInto(p, 'Neighbourhood', 'Anjos')
     await wait(1100)
     check(await save(p) === 'Not savedTry again', `error state ${await save(p)}`)
-    await p.evaluate(() => document.querySelector('.biz-bp__retry').click())
+    await p.evaluate(() => document.querySelector('.biz-save__retry').click())
     await wait(1100)
     check(await save(p) === 'All changes saved', 'retry saves')
     check((await updates(p)).slice(-1)[0].neighbourhood === 'Anjos', 'neighbourhood saved')

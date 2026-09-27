@@ -4,9 +4,9 @@ Frontend checks that run in a real Chrome against a stand-in Supabase. Nothing t
 
 | Command | What it checks | Time |
 |---------|----------------|------|
-| `npm run test:flows` | Clicks through the shell, hubs, account menu, search, tour, the Business page, Services and Hours, including autosave | about 2 minutes |
+| `npm run test:flows` | Clicks through the shell, hubs, account menu, search, tour and the Business page, including autosave | about 1 minute |
 | `npm run test:layout` | 13 screens from a 320px phone to 1920 x 1080, including the 13-inch at 1272 x 588: overflow, clipping, fit, touch sizes | about 4 minutes |
-| `npm test` | Both | about 6 minutes |
+| `npm test` | Both | about 5 minutes |
 
 One-time setup: `npm install -D puppeteer-core`. The runner uses the Chrome or Edge already on the computer. If it cannot find one, set `CHROME_PATH` to the full path of `chrome.exe`.
 
