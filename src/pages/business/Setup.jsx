@@ -22,7 +22,7 @@ import { durationLabel, formatMoney, pageStrength } from '../../services/busines
 import { defaultWeek, hasOpenDay, rowsFromWeek, weekFromRows, weekProblems } from '../../services/hours'
 import { MEDIA_SHAPES, prepareImage, removeBusinessImage, uploadBusinessImage } from '../../services/media'
 import {
-    createDraft, goLive, loadSetup, saveDetails, saveHours, saveServices, setupError, slugFrom, updateBusiness,
+    createDraft, findOwnBusiness, goLive, loadSetup, saveDetails, saveHours, saveServices, setupError, slugFrom, updateBusiness,
 } from '../../services/setup'
 import { ABOUT_MAX, OTHER_CITY, aboutExample, cityOf, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
 import { useSlugStatus } from '../../hooks/useSlugStatus'
@@ -239,7 +239,7 @@ const Setup = () => {
     const isDesktop = useIsDesktop()
     const headingRef = useRef(null)
 
-    const [phase, setPhase] = useState(owned ? 'loading' : 'welcome')
+    const [phase, setPhase] = useState(owned || user ? 'loading' : 'welcome')
     const [business, setBusiness] = useState(null)
     const [details, setDetails] = useState(emptyDetails)
     const [services, setServices] = useState([])
@@ -256,6 +256,20 @@ const Setup = () => {
     const [finishing, setFinishing] = useState(false)
 
     const slugState = useSlugStatus(details.slug, business?.slug)
+
+    const lookedUp = useRef(null)
+    useEffect(() => {
+        const id = user?.id
+        if (owned || !id || lookedUp.current === id) return
+        lookedUp.current = id
+        const toWelcome = () => setPhase((p) => (p === 'loading' ? 'welcome' : p))
+        findOwnBusiness(id)
+            .then((found) => (found ? refreshProfile?.() : toWelcome()))
+            .catch((err) => {
+                console.error('Setup lookup failed:', err)
+                toWelcome()
+            })
+    }, [owned, user?.id, refreshProfile])
 
     useEffect(() => {
         if (!owned || owned.launched_at) return undefined
@@ -357,6 +371,7 @@ const Setup = () => {
         run(async () => {
             const saved = business ? await saveDetails(business.id, payload) : await createDraft(user.id, payload)
             setBusiness(saved)
+            if (!business) refreshProfile?.()
             go(1)
         })
     }

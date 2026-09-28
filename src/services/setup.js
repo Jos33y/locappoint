@@ -54,6 +54,16 @@ const detailsPayload = (details) => ({
     whatsapp: details.whatsappSame ? details.phone : null,
 })
 
+export const findOwnBusiness = async (userId) => {
+    const { data, error } = await supabase
+        .from('businesses')
+        .select('id, launched_at')
+        .eq('user_id', userId)
+        .maybeSingle()
+    if (error) throw error
+    return data
+}
+
 export const createDraft = async (userId, details) => {
     const { data, error } = await supabase
         .from('businesses')
