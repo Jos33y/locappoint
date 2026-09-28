@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ""
-Write-Host "  Locappoint - Cleanup: booking settings" -ForegroundColor Cyan
+Write-Host "  Locappoint - Cleanup: account emails" -ForegroundColor Cyan
 Write-Host ""
 
 $root = (Get-Location).Path
@@ -14,10 +14,13 @@ $dirty = git status --porcelain -- src 2>$null
 if ($dirty) { Write-Host "  [WARN] src has uncommitted changes. Commit the patch first." -ForegroundColor Yellow }
 
 $paths = @(
-    'src\pages\business\BusinessPage.jsx.backup-settings',
-    'src\services\setup.js.backup-settings',
-    'src\styles\business\business-page.css.backup-settings',
+    'src\contexts\AuthContext.jsx.backup-emails',
+    'src\pages\app\auth\AuthPage.jsx.backup-emails',
+    'src\BookingApp.jsx.backup-emails',
+    'src\styles\auth\auth.css.backup-emails',
+    'account-emails.zip',
     'booking-settings.zip',
+    'booking-lifecycle.zip',
     'payload'
 )
 

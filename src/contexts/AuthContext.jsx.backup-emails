@@ -79,7 +79,6 @@ export const AuthProvider = ({ children }) => {
                         full_name: userData.full_name,
                         phone: userData.phone,
                         user_type: userData.user_type,
-                        next: userData.next || null,
                     },
                     emailRedirectTo: `${window.location.origin}/auth?verified=true${userData.next ? `&next=${encodeURIComponent(userData.next)}` : ''}`
                 }
@@ -154,16 +153,6 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
-    const resendConfirmation = async (email) => {
-        try {
-            const { error } = await supabase.auth.resend({ type: 'signup', email })
-            if (error) throw error
-            return { error: null }
-        } catch (error) {
-            return { error }
-        }
-    }
-
     const resetPassword = async (email) => {
         try {
             const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -197,7 +186,6 @@ export const AuthProvider = ({ children }) => {
         refreshProfile,
         loading,
         signUp,
-        resendConfirmation,
         signIn,
         signInWithGoogle,
         signInWithApple,

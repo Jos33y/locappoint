@@ -36,10 +36,8 @@ const AuthPage = () => {
     const [error, setError] = useState('')
     const [message, setMessage] = useState(isVerified ? 'Email verified. Sign in to continue.' : '')
     const [loading, setLoading] = useState(false)
-    const [unconfirmed, setUnconfirmed] = useState('')
-    const [resending, setResending] = useState(false)
 
-    const { signIn, signUp, signInWithGoogle, signInWithApple, resendConfirmation } = useAuth()
+    const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth()
 
     useEffect(() => {
         if (navState.tab) setActiveTab(navState.tab)
@@ -54,20 +52,6 @@ const AuthPage = () => {
         setActiveTab(tab)
         setError('')
         setMessage('')
-        setUnconfirmed('')
-    }
-
-    const resend = async () => {
-        setResending(true)
-        const { error: resendErr } = await resendConfirmation(unconfirmed)
-        setResending(false)
-        if (resendErr) {
-            setError(resendErr.message || 'We could not send a new link. Try again in a minute.')
-            return
-        }
-        setError('')
-        setUnconfirmed('')
-        setMessage(`New link sent to ${unconfirmed}. It can take a minute to arrive.`)
     }
 
     const handleInputChange = (e) => {
@@ -118,11 +102,6 @@ const AuthPage = () => {
             if (activeTab === 'signin') {
                 const { error: signinErr } = await signIn(formData.email, formData.password)
                 if (signinErr) {
-                    if (signinErr.code === 'email_not_confirmed' || /not confirmed/i.test(signinErr.message || '')) {
-                        setUnconfirmed(formData.email.trim())
-                        setError('Confirm your email first. Open the link we sent you, or get a new one below.')
-                        return
-                    }
                     setError(signinErr.message || 'Sign in failed. Check your credentials.')
                     return
                 }
@@ -255,12 +234,6 @@ const AuthPage = () => {
                     <AlertCircle size={14} strokeWidth={2.2} />
                     <span>{error}</span>
                 </div>
-            )}
-
-            {error && unconfirmed && (
-                <button type="button" className="auth-resend" onClick={resend} disabled={resending}>
-                    {resending ? 'Sending...' : `Send a new link to ${unconfirmed}`}
-                </button>
             )}
 
             {message && (
