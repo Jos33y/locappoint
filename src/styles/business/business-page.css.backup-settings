@@ -769,12 +769,3 @@
     .biz-bp__step,
     .biz-bp__menubtn { transition: none; }
 }
-
-
-.biz-bp__rules {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
-.biz-bp__rules .biz-bp__rule { margin: 0; }

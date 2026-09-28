@@ -4,7 +4,7 @@ import { timezoneForPlace } from '../constants/locations'
 import { rowsFromWeek } from './hours'
 
 export const BUSINESS_FIELDS =
-    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes'
+    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at'
 
 export const slugFrom = (name) =>
     (name || '')

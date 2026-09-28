@@ -23,25 +23,6 @@ import { pageSteps } from '../../services/business'
 import { pageUrl, publicHost } from '../../services/links'
 import '../../styles/business/business-page.css'
 
-const CUTOFFS = [
-    { value: 0, label: 'Up to the start time' },
-    { value: 60, label: 'Up to 1 hour before' },
-    { value: 120, label: 'Up to 2 hours before' },
-    { value: 180, label: 'Up to 3 hours before' },
-    { value: 360, label: 'Up to 6 hours before' },
-    { value: 720, label: 'Up to 12 hours before' },
-    { value: 1440, label: 'Up to 24 hours before' },
-    { value: 2880, label: 'Up to 48 hours before' },
-]
-
-const cutoffExample = (minutes) => {
-    if (!minutes) return 'A client booked for 15:00 can cancel or change it until 15:00.'
-    if (minutes >= 1440) return `A client booked for 15:00 on Friday can cancel or change it until 15:00 on ${minutes === 1440 ? 'Thursday' : 'Wednesday'}.`
-    const at = 15 * 60 - minutes
-    const clockText = `${String(Math.floor(at / 60)).padStart(2, '0')}:${String(at % 60).padStart(2, '0')}`
-    return `A client booked for 15:00 can cancel or change it until ${clockText}. After that, they message you.`
-}
-
 const WIDE = 880
 
 const formFromBusiness = (b) => {
@@ -475,8 +456,6 @@ const BusinessPage = () => {
     const [media, setMedia] = useState({ logo: { busy: false, error: '' }, cover: { busy: false, error: '' } })
     const [bookingBusy, setBookingBusy] = useState(false)
     const [bookingError, setBookingError] = useState('')
-    const [rulesBusy, setRulesBusy] = useState(false)
-    const [rulesError, setRulesError] = useState('')
     const [slugOpen, setSlugOpen] = useState(false)
     const [copied, setCopied] = useState(false)
     const nameRef = useRef(null)
@@ -577,20 +556,6 @@ const BusinessPage = () => {
             setBookingError(setupError(err).message)
         } finally {
             setBookingBusy(false)
-        }
-    }
-
-    const setRule = async (patch, done) => {
-        setRulesBusy(true)
-        setRulesError('')
-        try {
-            synced(await updateBusiness(business.id, patch))
-            notify(done)
-        } catch (err) {
-            console.error('Booking rule failed:', err)
-            setRulesError('We could not save that. Try again.')
-        } finally {
-            setRulesBusy(false)
         }
     }
 
@@ -844,30 +809,6 @@ const BusinessPage = () => {
                                 Use my business phone instead
                             </button>
                         )}
-                    </Section>
-
-                    <Section id="bookings" title="Bookings" description="How new bookings arrive, and how late clients can cancel or change them.">
-                        <div className="biz-bp__rules">
-                            <Switch
-                                checked={business.auto_confirm !== false}
-                                disabled={rulesBusy}
-                                onChange={(on) => setRule({ auto_confirm: on }, on ? 'Bookings confirm automatically' : 'You confirm each booking')}
-                                label="Confirm bookings automatically"
-                                description={business.auto_confirm !== false
-                                    ? 'New bookings are confirmed straight away. You can still cancel or move any of them.'
-                                    : 'Each new booking waits for you on Today and Calendar until you confirm or decline it.'}
-                            />
-                            <div className="biz-bp__rule" />
-                            <Field label="Clients can cancel or change" hint={cutoffExample(Number(business.cancel_cutoff_minutes) || 0)}>
-                                <Picker
-                                    value={Number(business.cancel_cutoff_minutes) || 0}
-                                    onChange={(value) => setRule({ cancel_cutoff_minutes: value }, 'Cancellation time saved')}
-                                    options={CUTOFFS}
-                                    title="Clients can cancel or change"
-                                />
-                            </Field>
-                            {rulesError && <p className="biz-bp__error" role="alert">{rulesError}</p>}
-                        </div>
                     </Section>
                 </div>
             </div>
