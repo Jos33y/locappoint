@@ -11,9 +11,7 @@
     "test": "node tests/run.mjs quick",
     "test:full": "node tests/run.mjs all",
     "test:flows": "node tests/run.mjs flows",
-    "test:layout": "node tests/run.mjs layout",
-    "test:emails": "node tests/run.mjs emails",
-    "deploy:notify": "npx supabase functions deploy notify --use-api"
+    "test:layout": "node tests/run.mjs layout"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",
