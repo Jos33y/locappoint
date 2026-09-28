@@ -1,288 +1,179 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Calendar } from 'lucide-react'
-import { supabase } from '../../config/supabase'
+import { ArrowRight, Plus, RotateCw } from 'lucide-react'
 import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 import StreetGridCover from '../../components/business/StreetGridCover'
-import { categoryLabel, categoryTint } from '../../constants/categories'
-import '../../styles/app/home.css'
+import { Button } from '../../components/ui'
+import { PlaceResult } from '../../components/client/find/PlaceResult'
+import { loadPlaces } from '../../services/booking'
+import '../../styles/client/find-page.css'
 import '../../styles/app/businesses.css'
 
-
 const COHORT_SIZE = 10
+const JOIN = { pathname: '/auth', state: { tab: 'signup', userType: 'business' } }
 
+const fold = (text) => (text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase()
+const inCity = (place, names) => names.includes(fold(place.city))
 
-// Defensive field access - tries common column-name variants.
-const fieldOf = (biz, ...keys) => {
-    for (const k of keys) {
-        if (biz[k] != null && biz[k] !== '') return biz[k]
-    }
-    return ''
-}
-
-
-// Initials from business name. Strips possessives + filler words.
-const getInitials = (name) => {
-    if (!name) return '?'
-    const cleaned = name.replace(/['']s\b/gi, '')
-    const filler = new Set(['the', 'a', 'an', 'of', 'and', '&', 'do', 'da', 'de'])
-    const parts = cleaned.trim().split(/\s+/).filter((w) => !filler.has(w.toLowerCase()))
-    if (parts.length === 0) return name.slice(0, 2).toUpperCase()
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-    return (parts[0][0] + parts[1][0]).toUpperCase()
-}
-
-
-const cities = [
-    { name: 'Lisbon', status: 'live', note: 'Cohort 1 open' },
-    { name: 'Porto', status: 'next', note: 'After Lisbon' },
-    { name: 'Lagos', status: 'soon', note: 'Q4 2026' },
+const CITIES = [
+    { name: 'Lisbon', match: ['lisbon', 'lisboa'], later: 'First up' },
+    { name: 'Porto', match: ['porto', 'oporto'], later: 'Next' },
+    { name: 'Lagos', match: ['lagos'], later: 'Later' },
 ]
 
+const placesText = (n) => (n === 1 ? '1 place' : `${n} places`)
+
+const CohortSlots = ({ filled }) => (
+    <svg className="lc-br-slots" viewBox={`0 0 ${COHORT_SIZE * 28 - 6} 30`} aria-hidden="true">
+        {Array.from({ length: COHORT_SIZE }, (_, i) => (
+            <rect
+                key={i}
+                className={i < filled ? 'is-filled' : i === filled ? 'is-next' : ''}
+                x={i * 28 + 0.75}
+                y="0.75"
+                width="20.5"
+                height="28.5"
+                rx="5"
+            />
+        ))}
+    </svg>
+)
+
+const JoinCard = ({ wide = false }) => (
+    <li className={`lc-br-join${wide ? ' is-wide' : ''}`}>
+        <Link to={JOIN.pathname} state={JOIN.state} className="lc-br-join__link">
+            <span className="lc-br-join__cover" aria-hidden="true">
+                <StreetGridCover seed="your-business" tint="azure" />
+                <span className="lc-br-join__logo"><Plus size={18} /></span>
+            </span>
+            <span className="lc-br-join__body">
+                <strong>{wide ? 'Be the first place people can book here' : 'Your business here'}</strong>
+                <span>Free for the first twelve months. Set up takes about ten minutes.</span>
+                <span className="lc-br-join__cta">Get your booking page <ArrowRight size={14} aria-hidden="true" /></span>
+            </span>
+        </Link>
+    </li>
+)
 
 const Businesses = () => {
-    const [businesses, setBusinesses] = useState([])
-    const [loading, setLoading] = useState(true)
+    const [state, setState] = useState({ status: 'loading', places: [] })
+    const [attempt, setAttempt] = useState(0)
 
     useEffect(() => {
-        const fetchBusinesses = async () => {
-            try {
-                const { data, error } = await supabase
-                    .from('businesses')
-                    .select('*')
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: true })
-                    .limit(COHORT_SIZE)
+        let cancelled = false
+        setState((s) => ({ ...s, status: 'loading' }))
+        loadPlaces()
+            .then((places) => { if (!cancelled) setState({ status: 'ready', places }) })
+            .catch((err) => {
+                console.error('Places failed:', err)
+                if (!cancelled) setState({ status: 'error', places: [] })
+            })
+        return () => { cancelled = true }
+    }, [attempt])
 
-                if (error) {
-                    console.error('Browse fetch error:', error)
-                    setBusinesses([])
-                } else {
-                    setBusinesses(data || [])
-                }
-            } catch (err) {
-                console.error('Browse fetch failed:', err)
-                setBusinesses([])
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchBusinesses()
-    }, [])
-
-    const filledCount = businesses.length
-    const openSlotCount = Math.max(0, COHORT_SIZE - filledCount)
+    const ready = state.status === 'ready'
+    const places = state.places
+    const counts = useMemo(() => CITIES.map((c) => places.filter((p) => inCity(p, c.match)).length), [places])
+    const lisbon = counts[0]
+    const cohortOpen = lisbon < COHORT_SIZE
 
     return (
-        <div className="browse-page">
+        <div className="lc-br">
             <AppHeader />
 
-            <main>
-
-                {/* Hero */}
-                <section className="loca-section loca-section--s0 browse__hero">
-                    <div className="browse__hero-radial" aria-hidden="true"></div>
-                    <div className="container">
-                        <div className="browse__hero-inner">
-                            <span className="loca-eyebrow">
-                                <span className="loca-eyebrow__dot" aria-hidden="true"></span>
-                                Browse · Cohort 1
-                            </span>
-                            <h1 className="browse__hero-title">
-                                The first Lisbon businesses <span className="loca-section__title-accent">on Locappoint.</span>
-                            </h1>
-                            <p className="browse__hero-lede">
-                                Cohort 1 is a curated group of ten Lisbon businesses taking bookings through Locappoint. As each one comes online, you can book them right here.
-                            </p>
-                            <div className="browse__hero-meta">
-                                <span className="browse__meta-stat">
-                                    <span className="browse__meta-num">{loading ? '·' : filledCount}</span>
-                                    <span className="browse__meta-label">Live</span>
-                                </span>
-                                <span className="browse__meta-sep"></span>
-                                <span className="browse__meta-stat">
-                                    <span className="browse__meta-num">{loading ? '·' : openSlotCount}</span>
-                                    <span className="browse__meta-label">Coming soon</span>
-                                </span>
-                                <span className="browse__meta-sep"></span>
-                                <span className="browse__meta-stat">
-                                    <span className="browse__meta-num">{COHORT_SIZE}</span>
-                                    <span className="browse__meta-label">Cohort target</span>
-                                </span>
-                            </div>
-                        </div>
+            <main className="lc-br__main">
+                <section className="lc-br-hero">
+                    <div className="lc-br-hero__text">
+                        <p className="lc-br-hero__kicker">Lisbon, first cohort</p>
+                        <h1 className="lc-br-hero__title">Book Lisbon's first businesses on Locappoint.</h1>
+                        <p className="lc-br-hero__lede">
+                            A first group of ten Lisbon businesses taking bookings through Locappoint. Pick a place, choose a time and send your request in under a minute.
+                        </p>
                     </div>
-                </section>
 
-                {/* City strip */}
-                <section className="loca-section loca-section--s1 browse__cities">
-                    <div className="container">
-                        <div className="browse__cities-row">
-                            {cities.map((city) => (
-                                <article key={city.name} className={`city-tile city-tile--${city.status}`}>
-                                    <div className="city-tile__head">
-                                        <span className={`city-tile__pill city-tile__pill--${city.status}`}>
-                                            <span className={`city-tile__dot city-tile__dot--${city.status}`}></span>
-                                            {city.status === 'live' ? 'Live' : city.status === 'next' ? 'Next' : 'Soon'}
-                                        </span>
-                                    </div>
-                                    <div className="city-tile__name">{city.name}</div>
-                                    <div className="city-tile__note">{city.note}</div>
-                                </article>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Cohort showcase */}
-                <section className="loca-section loca-section--s0 browse__showcase">
-                    <div className="container">
-                        <div className="browse__showcase-head">
-                            <span className="loca-eyebrow">Lisbon · Cohort 1</span>
-                            <h2 className="browse__showcase-title">
-                                {filledCount > 0
-                                    ? 'Taking bookings now.'
-                                    : 'Slots filling as we onboard.'}
-                            </h2>
-                        </div>
-
-                        {loading ? (
-                            <div className="browse__loading">Loading businesses...</div>
+                    <div className="lc-br-count" aria-live="polite">
+                        {ready ? (
+                            <>
+                                <p className="lc-br-count__figure">
+                                    <b>{lisbon}</b>
+                                    {cohortOpen && <span>of {COHORT_SIZE}</span>}
+                                </p>
+                                <p className="lc-br-count__label">
+                                    {cohortOpen
+                                        ? `${lisbon === 1 ? 'place' : 'places'} taking bookings in Lisbon`
+                                        : 'places taking bookings in Lisbon. The first cohort is full.'}
+                                </p>
+                                {cohortOpen && <CohortSlots filled={lisbon} />}
+                            </>
                         ) : (
-                            <div className="browse__grid">
-
-                                {businesses.map((biz) => {
-                                    const name = fieldOf(biz, 'business_name', 'name') || 'Business'
-                                    const category = categoryLabel(biz.category, biz.category_detail)
-                                    const slug = fieldOf(biz, 'slug', 'id')
-                                    const neighborhood = fieldOf(biz, 'location', 'neighborhood', 'area', 'district', 'city') || 'Lisbon'
-                                    const banner = fieldOf(biz, 'banner_url', 'cover_image_url', 'image_url', 'photo_url', 'cover_url')
-                                    const logo = fieldOf(biz, 'logo_url', 'logo')
-                                    const tint = categoryTint(biz.category)
-                                    const initials = getInitials(name)
-
-                                    return (
-                                        <Link
-                                            key={biz.id || slug}
-                                            to={`/${slug}`}
-                                            className="biz-card">
-
-                                            <div className="biz-card__cover">
-                                                {banner ? (
-                                                    <img
-                                                        src={banner}
-                                                        alt={name}
-                                                        className="biz-card__cover-img"
-                                                        loading="lazy"
-                                                    />
-                                                ) : (
-                                                    <StreetGridCover
-                                                        seed={biz.id || slug || name}
-                                                        tint={tint}
-                                                        className="biz-card__cover-svg"
-                                                    />
-                                                )}
-
-                                                <span className="biz-card__live-badge">
-                                                    <span className="biz-card__live-dot"></span>
-                                                    Live
-                                                </span>
-                                            </div>
-
-                                            <div className="biz-card__body">
-                                                <div className="biz-card__head">
-                                                    <div className={`biz-card__avatar biz-card__avatar--${tint}`}>
-                                                        {logo ? (
-                                                            <img src={logo} alt={name} loading="lazy" />
-                                                        ) : (
-                                                            <span>{initials}</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="biz-card__heading">
-                                                        <h3 className="biz-card__name">{name}</h3>
-                                                        <div className="biz-card__meta">
-                                                            {category && <span className="biz-card__cat">{category}</span>}
-                                                            {category && <span className="biz-card__sep">·</span>}
-                                                            <span className="biz-card__loc">{neighborhood}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="biz-card__cta">
-                                                    <span>View booking page</span>
-                                                    <ArrowRight size={14} strokeWidth={2} />
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    )
-                                })}
-
-                                {Array.from({ length: openSlotCount }).map((_, i) => {
-                                    const slotNumber = filledCount + i + 1
-                                    return (
-                                        <article key={`slot-${slotNumber}`} className="biz-card biz-card--open">
-                                            <div className="biz-card__cover biz-card__cover--open">
-                                                <div className="biz-card__cover-fallback biz-card__cover-fallback--open">
-                                                    <span className="biz-card__slot-num">{String(slotNumber).padStart(2, '0')}</span>
-                                                    <span className="biz-card__slot-of">of {COHORT_SIZE}</span>
-                                                </div>
-                                                <span className="biz-card__live-badge biz-card__live-badge--soon">
-                                                    <span className="biz-card__open-dot"></span>
-                                                    Coming soon
-                                                </span>
-                                            </div>
-
-                                            <div className="biz-card__body">
-                                                <div className="biz-card__head">
-                                                    <div className="biz-card__avatar biz-card__avatar--signal">
-                                                        <Calendar size={16} strokeWidth={1.8} />
-                                                    </div>
-                                                    <div className="biz-card__heading">
-                                                        <h3 className="biz-card__name biz-card__name--open">Onboarding now</h3>
-                                                        <div className="biz-card__meta">
-                                                            <span>Cohort slot</span>
-                                                            <span className="biz-card__sep">·</span>
-                                                            <span>Lisbon</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <p className="biz-card__open-note">
-                                                    Reserved for a Lisbon business currently completing setup.
-                                                </p>
-                                            </div>
-                                        </article>
-                                    )
-                                })}
-
-                            </div>
+                            <>
+                                <span className="lc-skel" style={{ width: 96, height: 44 }} />
+                                <span className="lc-skel" style={{ width: '70%', height: 12 }} />
+                                <span className="lc-skel" style={{ width: '100%', height: 30 }} />
+                            </>
                         )}
                     </div>
                 </section>
 
-                {/* CTA - SME recruitment */}
-                <section className="loca-section loca-section--s1 browse__cta">
-                    <div className="container">
-                        <div className="browse__cta-inner">
-                            <h2 className="browse__cta-title">
-                                Want to be on this page <span className="loca-section__title-accent">in cohort 1?</span>
-                            </h2>
-                            <p className="browse__cta-lede">
-                                {openSlotCount} slot{openSlotCount === 1 ? '' : 's'} remaining. Twelve months free, then nineteen euros a month flat. Set up takes ten minutes.
-                            </p>
-                            <div className="browse__cta-buttons">
-                                <Link to="/auth" className="loca-btn loca-btn--primary loca-btn--lg">
-                                    Get your booking page
-                                    <ArrowRight size={18} strokeWidth={2} />
-                                </Link>
-                                <Link to="/partnership" className="loca-btn loca-btn--ghost loca-btn--lg">
-                                    Apply as a partner
-                                </Link>
-                            </div>
-                        </div>
+                <ul className="lc-br-cities" aria-label="Cities">
+                    {CITIES.map((city, i) => {
+                        const n = counts[i]
+                        const live = ready && n > 0
+                        return (
+                            <li key={city.name} className={`lc-br-city${live ? ' is-live' : ''}`}>
+                                <strong>{city.name}</strong>
+                                <span><i aria-hidden="true" />{live ? placesText(n) : city.later}</span>
+                            </li>
+                        )
+                    })}
+                </ul>
+
+                <section className="lc-br-places" aria-labelledby="lc-br-places-title">
+                    <div className="lc-br-places__head">
+                        <h2 id="lc-br-places-title">{ready && places.length === 0 ? 'Opening soon' : 'Taking bookings now'}</h2>
+                        {ready && places.length > 0 && <p>{placesText(places.length)}</p>}
                     </div>
+
+                    {state.status === 'loading' && (
+                        <ul className="lc-cl-results" aria-hidden="true">
+                            {[0, 1, 2].map((i) => (
+                                <li key={i} className="lc-cl-result is-skeleton">
+                                    <span className="lc-skel" style={{ height: 96, borderRadius: 0 }} />
+                                    <span className="lc-cl-result__body">
+                                        <span className="lc-skel" style={{ width: '60%', height: 16 }} />
+                                        <span className="lc-skel" style={{ width: '40%', height: 12 }} />
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+
+                    {state.status === 'error' && (
+                        <div className="lc-br-error" role="alert">
+                            <p>We could not load the places. Check your connection and try again.</p>
+                            <Button variant="secondary" icon={RotateCw} onClick={() => setAttempt((n) => n + 1)}>Try again</Button>
+                        </div>
+                    )}
+
+                    {ready && (
+                        <ul className="lc-cl-results">
+                            {places.map((place) => <PlaceResult key={place.id} place={place} from="/businesses" />)}
+                            <JoinCard wide={places.length === 0} />
+                        </ul>
+                    )}
                 </section>
 
+                {!(ready && places.length === 0) && (
+                    <section className="lc-br-cta">
+                        <h2>Run a business in Lisbon?</h2>
+                        <p>Get your own booking page on Locappoint. Free for the first twelve months.</p>
+                        <div className="lc-br-cta__buttons">
+                            <Button to={JOIN.pathname} state={JOIN.state} iconRight={ArrowRight}>Get your booking page</Button>
+                            <Button to="/partnership" variant="secondary">Apply as a partner</Button>
+                        </div>
+                    </section>
+                )}
             </main>
 
             <AppFooter />

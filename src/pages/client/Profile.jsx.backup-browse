@@ -28,7 +28,6 @@ const ClientProfile = () => {
     const [name, setName] = useState(userProfile?.full_name || '')
     const [phone, setPhone] = useState({ e164: startPhone.e164 || '', valid: startPhone.valid, country: startPhone.country || 'PT' })
     const [saved, setSaved] = useState({ name: userProfile?.full_name || '', phone: startPhone.e164 || '' })
-    const [phoneTouched, setPhoneTouched] = useState(false)
     const [passwordOpen, setPasswordOpen] = useState(false)
     const [signOutOpen, setSignOutOpen] = useState(false)
     const [toast, setToast] = useState(null)
@@ -91,18 +90,16 @@ const ClientProfile = () => {
                             <Field label="Your name" error={trimmed !== saved.name ? nameProblem : undefined} hint="Shown to businesses on your bookings">
                                 <input className="ui-input" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" />
                             </Field>
-                            <div onBlur={() => setPhoneTouched(true)}>
-                                <Field label="Phone" error={phoneTouched ? phoneProblem : undefined} hint="Filled in for you when you book, so a business can reach you">
-                                    <PhoneField
-                                        value={phone.e164}
-                                        country={phone.country}
-                                        popular={['PT', 'NG', 'GB', 'BR']}
-                                        onCountryChange={(country) => setPhone((p) => ({ ...p, country }))}
-                                        onChange={({ e164, valid }) => setPhone((p) => ({ ...p, e164, valid }))}
-                                    />
-                                </Field>
-                            </div>
-                            <SaveState state={autosave.state} onRetry={autosave.retry} blockedText={nameProblem || phoneTouched ? 'Not saved yet' : 'Saves when the phone number is complete'} />
+                            <Field label="Phone" error={phoneProblem} hint="Filled in for you when you book, so a business can reach you">
+                                <PhoneField
+                                    value={phone.e164}
+                                    country={phone.country}
+                                    popular={['PT', 'NG', 'GB', 'BR']}
+                                    onCountryChange={(country) => setPhone((p) => ({ ...p, country }))}
+                                    onChange={({ e164, valid }) => setPhone((p) => ({ ...p, e164, valid }))}
+                                />
+                            </Field>
+                            <SaveState state={autosave.state} onRetry={autosave.retry} blockedText={nameProblem ? 'Enter your name to save it' : 'Finish the phone number to save it'} />
                         </div>
                         <div className="biz-st__rule" />
                         <Row title="Sign-in email" detail="Used to sign in and for booking emails. Changing it is done by our team.">

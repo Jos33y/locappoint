@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ""
-Write-Host "  Locappoint - Cleanup: client find" -ForegroundColor Cyan
+Write-Host "  Locappoint - Cleanup: browse places" -ForegroundColor Cyan
 Write-Host ""
 
 $root = (Get-Location).Path
@@ -14,9 +14,12 @@ $dirty = git status --porcelain -- src 2>$null
 if ($dirty) { Write-Host "  [WARN] src has uncommitted changes. Commit the patch first." -ForegroundColor Yellow }
 
 $paths = @(
-    'src\pages\client\Search.jsx.backup-find',
-    'src\services\booking.js.backup-find',
-    'client-find.zip',
+    'src\pages\app\Businesses.jsx.backup-browse',
+    'src\styles\app\businesses.css.backup-browse',
+    'src\components\client\find\PlaceResult.jsx.backup-browse',
+    'src\pages\client\Profile.jsx.backup-browse',
+    'src\styles\client\profile-page.css.backup-browse',
+    'browse-places.zip',
     'payload'
 )
 

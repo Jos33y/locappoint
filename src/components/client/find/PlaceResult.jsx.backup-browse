@@ -7,12 +7,12 @@ import { weekFromRows } from '../../../services/hours'
 import { categoryLabel } from '../../../constants/categories'
 import '../../../styles/client/find-page.css'
 
-export const PlaceResult = ({ place, from = '/client/search' }) => {
+export const PlaceResult = ({ place }) => {
     const status = openStatus(weekFromRows(place.hourRows), place.timezone)
     const where = [place.neighbourhood?.trim(), place.city].filter(Boolean).join(', ')
     return (
         <li className="lc-cl-result">
-            <Link to={`/${place.slug}`} state={{ from }} className="lc-cl-result__link">
+            <Link to={`/${place.slug}`} state={{ from: '/client/search' }} className="lc-cl-result__link">
                 <span className="lc-cl-result__cover" aria-hidden="true">
                     {place.banner_url ? <img src={place.banner_url} alt="" loading="lazy" /> : <StreetGridCover seed={place.slug} tint="azure" focus />}
                     <span className="lc-cl-result__logo">{place.logo_url ? <img src={place.logo_url} alt="" loading="lazy" /> : initials(place.business_name)}</span>
