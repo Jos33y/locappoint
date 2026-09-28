@@ -113,7 +113,7 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                     <dt>Service</dt>
                     <dd>
                         {booking.services?.service_name || 'Service removed'}
-                        {(booking.price ?? booking.services?.price) != null && <span className="biz-num biz-muted"> {formatMoney(booking.price ?? booking.services.price)}</span>}
+                        {booking.services && <span className="biz-num biz-muted"> {formatMoney(booking.services.price)}</span>}
                     </dd>
                 </div>
                 {staff && bookableMembers.length > 1 && (

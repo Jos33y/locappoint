@@ -8,14 +8,12 @@ import { CancelSheet } from '../../components/client/bookings/CancelSheet'
 import { EmptyTicket } from '../../components/client/bookings/EmptyTicket'
 import { BookingToast } from '../../components/client/bookings/BookingToast'
 import { useMyBookings } from '../../components/client/bookings/useMyBookings'
-import { BookingSheet } from '../../components/booking/BookingSheet'
-import { bookingPrice } from '../../services/booking'
 import '../../styles/client/client-bookings.css'
 
 const ClientAppointments = () => {
     const { user, userProfile } = useAuth()
     const email = userProfile?.email || user?.email || ''
-    const { state, groups, load, cancelling, busy, cancelError, toast, askCancel, keep, confirmCancel, moving, moveError, askMove, closeMove, moved } = useMyBookings(email)
+    const { state, groups, load, cancelling, busy, cancelError, toast, askCancel, keep, confirmCancel } = useMyBookings(email)
     const [view, setView] = useState('upcoming')
 
     const options = [
@@ -32,12 +30,6 @@ const ClientAppointments = () => {
                     <Segmented options={options} value={view} onChange={setView} label="Show" />
                 )}
             </header>
-
-            {moveError && (
-                <div className="lc-cl-bookings__error" role="alert">
-                    <p>{moveError}</p>
-                </div>
-            )}
 
             {state.status === 'loading' && (
                 <div className="lc-cl-bk is-lead" aria-hidden="true">
@@ -57,7 +49,7 @@ const ClientAppointments = () => {
                 groups.upcoming.length === 0 ? <EmptyTicket /> : (
                     <div className="lc-cl-bookings__list">
                         {groups.upcoming.map((b, i) => (
-                            <UpcomingBooking key={b.id} booking={b} lead={i === 0} onCancel={askCancel} onMove={askMove} />
+                            <UpcomingBooking key={b.id} booking={b} lead={i === 0} onCancel={askCancel} />
                         ))}
                     </div>
                 )
@@ -74,16 +66,6 @@ const ClientAppointments = () => {
             )}
 
             <CancelSheet booking={cancelling} busy={busy} error={cancelError} onKeep={keep} onConfirm={confirmCancel} />
-            {moving && (
-                <BookingSheet
-                    business={moving.booking.businesses}
-                    service={{ ...moving.booking.services, duration_minutes: moving.booking.duration_minutes || moving.booking.services.duration_minutes, price: bookingPrice(moving.booking) }}
-                    week={moving.week}
-                    move={moving.booking}
-                    onMoved={moved}
-                    onClose={closeMove}
-                />
-            )}
             <BookingToast message={toast} />
         </div>
     )

@@ -617,16 +617,3 @@
     .lc-bk-slot.is-ghost,
     .lc-bk-ticket__stamp { animation: none; }
 }
-
-.lc-bk-was {
-    margin: 0;
-    color: var(--lc-ink-2);
-    font-size: var(--lc-t-body);
-    line-height: var(--lc-lh-body);
-}
-
-.lc-bk-was b {
-    color: var(--lc-ink-1);
-    font-weight: var(--font-weight-semibold);
-    font-variant-numeric: tabular-nums;
-}

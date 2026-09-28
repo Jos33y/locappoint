@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { USER_ERRORS, cancelMyBooking, loadMyBookings, loadWeek } from '../../../services/booking'
+import { cancelMyBooking, loadMyBookings } from '../../../services/booking'
 import { todayKey } from '../../../services/dates'
 
 const ACTIVE = ['pending', 'confirmed']
@@ -10,8 +10,6 @@ export const useMyBookings = (email) => {
     const [busy, setBusy] = useState(false)
     const [cancelError, setCancelError] = useState('')
     const [toast, setToast] = useState(null)
-    const [moving, setMoving] = useState(null)
-    const [moveError, setMoveError] = useState('')
 
     const load = useCallback(async () => {
         setState((s) => ({ ...s, status: 'loading' }))
@@ -51,37 +49,16 @@ export const useMyBookings = (email) => {
         setCancelError('')
         try {
             await cancelMyBooking(cancelling.id)
-            setState((s) => ({ ...s, rows: s.rows.map((r) => (r.id === cancelling.id ? { ...r, status: 'cancelled', cancelled_by: 'client' } : r)) }))
+            setState((s) => ({ ...s, rows: s.rows.map((r) => (r.id === cancelling.id ? { ...r, status: 'cancelled' } : r)) }))
             setCancelling(null)
             setToast('Booking cancelled')
         } catch (err) {
             console.error('Cancel failed:', err)
-            setCancelError(USER_ERRORS.includes(err?.code) && err.message ? err.message : 'We could not cancel it. Try again, or message the business.')
+            setCancelError('We could not cancel it. Try again, or message the business.')
         } finally {
             setBusy(false)
         }
     }
 
-    const askMove = useCallback(async (row) => {
-        setMoveError('')
-        try {
-            setMoving({ booking: row, week: await loadWeek(row.businesses.id) })
-        } catch (err) {
-            console.error('Hours failed:', err)
-            setMoveError('We could not load the free times. Try again.')
-        }
-    }, [])
-
-    const closeMove = useCallback(() => setMoving(null), [])
-
-    const moved = useCallback(async () => {
-        try {
-            const rows = await loadMyBookings(email)
-            setState({ status: 'ready', rows })
-        } catch (err) {
-            console.error('Bookings failed:', err)
-        }
-    }, [email])
-
-    return { state, groups, load, cancelling, busy, cancelError, toast, askCancel, keep, confirmCancel, moving, moveError, askMove, closeMove, moved }
+    return { state, groups, load, cancelling, busy, cancelError, toast, askCancel, keep, confirmCancel }
 }

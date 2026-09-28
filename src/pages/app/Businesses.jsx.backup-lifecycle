@@ -7,7 +7,6 @@ import StreetGridCover from '../../components/business/StreetGridCover'
 import { Button } from '../../components/ui'
 import { PlaceResult } from '../../components/client/find/PlaceResult'
 import { loadPlaces } from '../../services/booking'
-import { useAuth } from '../../hooks/useAuth'
 import '../../styles/client/find-page.css'
 import '../../styles/app/businesses.css'
 
@@ -60,7 +59,6 @@ const JoinCard = ({ wide = false }) => (
 const Businesses = () => {
     const [state, setState] = useState({ status: 'loading', places: [] })
     const [attempt, setAttempt] = useState(0)
-    const { hasBusiness } = useAuth()
 
     useEffect(() => {
         let cancelled = false
@@ -161,12 +159,12 @@ const Businesses = () => {
                     {ready && (
                         <ul className="lc-cl-results">
                             {places.map((place) => <PlaceResult key={place.id} place={place} from="/businesses" />)}
-                            {!hasBusiness && <JoinCard wide={places.length === 0} />}
+                            <JoinCard wide={places.length === 0} />
                         </ul>
                     )}
                 </section>
 
-                {!hasBusiness && !(ready && places.length === 0) && (
+                {!(ready && places.length === 0) && (
                     <section className="lc-br-cta">
                         <h2>Run a business in Lisbon?</h2>
                         <p>Get your own booking page on Locappoint. Free for the first twelve months.</p>

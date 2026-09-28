@@ -6,10 +6,9 @@ import { DurationDial } from '../business/DurationDial'
 import { useNow } from '../business/ShopClock'
 import { useAuth } from '../../hooks/useAuth'
 import { durationLabel, menuPrice } from '../../services/business'
-import { USER_ERRORS, bookingDays, clearPending, hasTimeLeft, loadBusy, monthShort, requestBooking, rescheduleMyBooking, savePending, slotsFor } from '../../services/booking'
+import { bookingDays, clearPending, hasTimeLeft, loadBusy, monthShort, requestBooking, savePending, slotsFor } from '../../services/booking'
 import { parsePhone } from '../ui/PhoneField'
 import { clock } from '../../services/hours'
-import { parseDateKey, toMinutes } from '../../services/dates'
 import { DayStrip } from './sheet/DayStrip'
 import { TimeGrid } from './sheet/TimeGrid'
 import { BookingTicket } from './sheet/BookingTicket'
@@ -19,8 +18,7 @@ import { OwnerNote } from './sheet/OwnerNote'
 import '../../styles/client/booking-sheet.css'
 
 const TITLES = { time: 'Pick a time', review: 'Check and confirm', done: 'Booking requested' }
-const MOVE_TITLES = { time: 'Pick a new time', review: 'Check the new time', done: 'Booking moved' }
-const TAKEN = ['23P01']
+const TAKEN = ['23P01', '22023']
 
 const hasPrice = (price) => String(price ?? '').trim() !== '' && !Number.isNaN(Number(String(price).replace(',', '.')))
 const dayLabel = (day) => day.date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -29,7 +27,7 @@ const dayShort = (day) => `${day.date.toLocaleDateString('en-GB', { weekday: 'sh
 const firstBookable = (days, duration, nowMinutes) =>
     days.find((d) => d.windows.length > 0 && hasTimeLeft(d, duration, nowMinutes))
 
-export const BookingSheet = ({ business, service, week, resume, owner = false, move = null, onMoved, onClose }) => {
+export const BookingSheet = ({ business, service, week, resume, owner = false, onClose }) => {
     const navigate = useNavigate()
     const { user, userProfile } = useAuth()
     const timeZone = business.timezone || 'Europe/Lisbon'
@@ -38,13 +36,9 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     const duration = Number(service.duration_minutes) || 30
     const days = useMemo(() => bookingDays(timeZone, week), [timeZone, week])
     const held = resume && days.some((d) => d.key === resume.dateKey && d.windows.length > 0) ? resume : null
-    const was = move ? { dateKey: move.appointment_date, minutes: toMinutes(move.appointment_time) } : null
-    const auto = business.auto_confirm === true
 
     const [step, setStep] = useState(held ? 'review' : 'time')
-    const [dayKey, setDayKey] = useState(() => held?.dateKey
-        || (was && days.some((d) => d.key === was.dateKey) ? was.dateKey : null)
-        || firstBookable(days, duration, nowMinutes)?.key || days[0].key)
+    const [dayKey, setDayKey] = useState(() => held?.dateKey || firstBookable(days, duration, nowMinutes)?.key || days[0].key)
     const [minutes, setMinutes] = useState(held?.minutes ?? null)
     const [busy, setBusy] = useState({})
     const [notice, setNotice] = useState('')
@@ -61,17 +55,13 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     const fetchDay = useCallback(async (key) => {
         setBusy((b) => ({ ...b, [key]: { state: 'loading' } }))
         try {
-            let rows = await loadBusy(business.id, key)
-            if (was && key === was.dateKey) {
-                const own = rows.findIndex((r) => toMinutes(r.start_time) === was.minutes)
-                if (own >= 0) rows = rows.filter((_, i) => i !== own)
-            }
+            const rows = await loadBusy(business.id, key)
             setBusy((b) => ({ ...b, [key]: { state: 'ready', rows } }))
         } catch (err) {
             console.error('Busy times failed:', err)
             setBusy((b) => ({ ...b, [key]: { state: 'error' } }))
         }
-    }, [business.id, was?.dateKey, was?.minutes])
+    }, [business.id])
 
     useEffect(() => {
         if (!busy[dayKey]) fetchDay(dayKey)
@@ -128,41 +118,19 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
             clearPending()
             setStep('done')
         } catch (err) {
-            failed(err, 'We could not send the booking. Try again.')
+            console.error('Booking failed:', err)
+            if (TAKEN.includes(err?.code)) {
+                setMinutes(null)
+                setStep('time')
+                setNotice('That time was just taken. Pick another one.')
+                fetchDay(dayKey)
+            } else {
+                setNotice(['P0002', '28000', '42501'].includes(err?.code) && err.message ? err.message : 'We could not send the booking. Try again.')
+            }
         } finally {
             setSending(false)
         }
     }
-
-    const failed = (err, fallback) => {
-        console.error('Booking failed:', err)
-        if (TAKEN.includes(err?.code)) {
-            setMinutes(null)
-            setStep('time')
-            setNotice('That time was just taken. Pick another one.')
-            fetchDay(dayKey)
-        } else {
-            setNotice(USER_ERRORS.includes(err?.code) && err.message ? err.message : fallback)
-        }
-    }
-
-    const moveIt = async () => {
-        setSending(true)
-        setNotice('')
-        try {
-            await rescheduleMyBooking({ id: move.id, dateKey: dayKey, minutes })
-            setStep('done')
-            onMoved?.()
-        } catch (err) {
-            failed(err, 'We could not move the booking. Try again.')
-        } finally {
-            setSending(false)
-        }
-    }
-
-    const unchanged = was && dayKey === was.dateKey && minutes === was.minutes
-    const titles = move ? MOVE_TITLES : TITLES
-    const stamp = auto ? 'Confirmed' : 'Requested'
 
     const close = () => {
         if (step === 'done') clearPending()
@@ -179,11 +147,9 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
                         ? <span className="lc-bk-foot__hint">No time picked yet</span>
                         : <b>{clock(minutes)} to {clock(minutes + duration)}</b>}
                 </p>
-                <Button disabled={minutes === null || unchanged} onClick={() => { setNotice(''); setStep('review') }}>Continue</Button>
+                <Button disabled={minutes === null} onClick={() => { setNotice(''); setStep('review') }}>Continue</Button>
             </div>
         )
-    } else if (step === 'review' && move) {
-        footer = <Button full loading={sending} onClick={moveIt}>Move booking</Button>
     } else if (step === 'review' && owner) {
         footer = <Button full to="/portal/calendar">Open my calendar</Button>
     } else if (step === 'review') {
@@ -198,14 +164,14 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     } else {
         footer = (
             <div className="lc-bk-foot lc-bk-foot--gate">
-                {!move && <Button variant="secondary" to="/client/appointments">My bookings</Button>}
+                <Button variant="secondary" to="/client/appointments">My bookings</Button>
                 <Button onClick={close}>Done</Button>
             </div>
         )
     }
 
     return (
-        <Sheet open onClose={close} title={step === 'done' && !move && auto ? 'Booking confirmed' : titles[step]} footer={footer} wide>
+        <Sheet open onClose={close} title={TITLES[step]} footer={footer} wide>
             {step === 'time' && (
                 <>
                     <div className="lc-bk-service">
@@ -236,12 +202,7 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
                         <ArrowLeft size={16} aria-hidden="true" />Change time
                     </button>
                     <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} />
-                    {was ? (
-                        <p className="lc-bk-was">
-                            Instead of <b>{dayLabel({ date: parseDateKey(was.dateKey) })} at {clock(was.minutes)}</b>.
-                            {auto ? ' It stays confirmed.' : ` ${business.business_name} will confirm the new time.`}
-                        </p>
-                    ) : owner ? (
+                    {owner ? (
                         <OwnerNote />
                     ) : user ? (
                         <BookingDetails
@@ -259,11 +220,9 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
 
             {step === 'done' && minutes !== null && (
                 <>
-                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={auto ? 'success' : 'signal'} />
+                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp="Requested" />
                     <p className="lc-bk-done">
-                        {move
-                            ? (auto ? 'Your booking is moved to the new time.' : `${business.business_name} will confirm the new time.`)
-                            : (auto ? `You are booked in at ${business.business_name}. You can find it in My bookings.` : `${business.business_name} has your request and will confirm it. You can find it in My bookings.`)}
+                        {business.business_name} has your request and will confirm it. You can find it in My bookings.
                     </p>
                 </>
             )}

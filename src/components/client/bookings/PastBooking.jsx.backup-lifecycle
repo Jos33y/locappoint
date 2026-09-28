@@ -5,9 +5,6 @@ import { monthShort } from '../../../services/booking'
 import '../../../styles/client/client-bookings.css'
 
 const LABEL = { cancelled: 'Cancelled', no_show: 'Missed', completed: 'Done', pending: 'Not confirmed', confirmed: 'Done' }
-const CANCELLED = { client: 'You cancelled', business: 'Cancelled by the business' }
-
-const label = (booking) => (booking.status === 'cancelled' && CANCELLED[booking.cancelled_by]) || LABEL[booking.status] || booking.status
 
 export const PastBooking = ({ booking }) => {
     const date = parseDateKey(booking.appointment_date)
@@ -22,7 +19,7 @@ export const PastBooking = ({ booking }) => {
                 <strong>{booking.services?.service_name || 'Booking'}</strong>
                 <span>{business.business_name} at {(booking.appointment_time || '').slice(0, 5)}, {date.getFullYear()}</span>
             </span>
-            <span className={`lc-cl-past__state is-${booking.status}${booking.cancelled_by ? ` by-${booking.cancelled_by}` : ''}`}>{label(booking)}</span>
+            <span className={`lc-cl-past__state is-${booking.status}`}>{LABEL[booking.status] || booking.status}</span>
             {business.slug && (
                 <Link to={`/${business.slug}`} className="lc-cl-past__again" aria-label={`Book again at ${business.business_name}`}>
                     <RotateCcw size={15} aria-hidden="true" />

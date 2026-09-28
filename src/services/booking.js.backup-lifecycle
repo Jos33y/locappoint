@@ -1,6 +1,5 @@
 import { supabase } from '../config/supabase'
 import { addDays, zonedNow } from './business'
-import { weekFromRows } from './hours'
 import { fromMinutes, parseDateKey, toMinutes, todayKey } from './dates'
 
 const STEP = 30
@@ -95,7 +94,7 @@ export const loadNextBooking = async (email) => {
     return data?.[0] || null
 }
 
-const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, cancelled_by, rescheduled_from, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price)'
+const BOOKING_FIELDS = 'id, appointment_date, appointment_time, duration_minutes, status, notes, businesses (business_name, slug, address, city, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail), services (service_name, duration_minutes, price)'
 
 export const loadMyBookings = async (email) => {
     const { data, error } = await supabase
@@ -109,37 +108,10 @@ export const loadMyBookings = async (email) => {
 }
 
 export const cancelMyBooking = async (id) => {
-    const { error } = await supabase.rpc('cancel_my_booking', { p_appointment_id: id })
+    const { data, error } = await supabase.from('appointments').update({ status: 'cancelled' }).eq('id', id).select('id')
     if (error) throw error
+    if (!data || data.length === 0) throw new Error('Cancel returned 0 rows for booking ' + id)
 }
-
-export const rescheduleMyBooking = async ({ id, dateKey, minutes }) => {
-    const { error } = await supabase.rpc('reschedule_appointment', { p_appointment_id: id, p_date: dateKey, p_time: fromMinutes(minutes) })
-    if (error) throw error
-}
-
-export const loadWeek = async (businessId) => {
-    const { data, error } = await supabase
-        .from('availability')
-        .select('staff_id, day_of_week, start_time, end_time, is_active')
-        .eq('business_id', businessId)
-        .eq('is_active', true)
-    if (error) throw error
-    return weekFromRows(data || [])
-}
-
-export const canChange = (booking) => {
-    const business = booking.businesses || {}
-    const { dateKey, minutes } = zonedNow(business.timezone || 'Europe/Lisbon')
-    const cutoff = Number(business.cancel_cutoff_minutes) || 0
-    const start = toMinutes(booking.appointment_time)
-    const daysAhead = Math.round((parseDateKey(booking.appointment_date) - parseDateKey(dateKey)) / 86400000)
-    return daysAhead * 1440 + start - cutoff > minutes
-}
-
-export const bookingPrice = (booking) => booking.price ?? booking.services?.price
-
-export const USER_ERRORS = ['22023', 'P0001', 'P0002', '28000', '42501']
 
 export const loadPlaces = async () => {
     const [places, services, hours] = await Promise.all([

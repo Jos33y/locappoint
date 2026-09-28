@@ -1,9 +1,8 @@
-import { CalendarClock, MessageCircle, Navigation, Phone, X } from 'lucide-react'
+import { MessageCircle, Navigation, Phone, X } from 'lucide-react'
 import { Button } from '../../ui'
 import { BookingTicket } from '../../booking/sheet/BookingTicket'
 import { whatsappLink } from '../../../services/business'
-import { parseDateKey, toMinutes } from '../../../services/dates'
-import { bookingPrice, canChange, monthShort } from '../../../services/booking'
+import { toMinutes } from '../../../services/dates'
 import { clock } from '../../../services/hours'
 import { whenLabel } from '../NextBooking'
 import '../../../styles/client/client-bookings.css'
@@ -11,28 +10,19 @@ import '../../../styles/client/client-bookings.css'
 const mapsLink = (address, city) =>
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([address, city].filter(Boolean).join(', '))}`
 
-const movedLabel = (value) => {
-    const [dateKey, time] = String(value).split(/[T ]/)
-    const date = parseDateKey(dateKey)
-    if (!date) return null
-    return `${date.toLocaleDateString('en-GB', { weekday: 'short' })} ${date.getDate()} ${monthShort(date)} at ${(time || '').slice(0, 5)}`
-}
-
-export const UpcomingBooking = ({ booking, lead = false, onCancel, onMove }) => {
+export const UpcomingBooking = ({ booking, lead = false, onCancel }) => {
     const business = booking.businesses || {}
-    const service = { ...booking.services, duration_minutes: booking.duration_minutes || booking.services?.duration_minutes, price: bookingPrice(booking) }
+    const service = { ...booking.services, duration_minutes: booking.duration_minutes || booking.services?.duration_minutes }
     const minutes = toMinutes(booking.appointment_time)
     const confirmed = booking.status === 'confirmed'
     const whatsapp = whatsappLink(business.whatsapp, `Hi ${business.business_name}, about my booking on ${booking.appointment_date} at ${clock(minutes)}: `)
     const phone = business.phone?.replace(/\s+/g, '')
-    const open = canChange(booking)
-    const moved = booking.rescheduled_from ? movedLabel(booking.rescheduled_from) : null
 
     return (
         <article className={`lc-cl-bk${lead ? ' is-lead' : ''}`}>
             <p className="lc-cl-bk__when">
                 <b>{whenLabel(booking.appointment_date)}</b>
-                <span>{confirmed ? 'Confirmed' : 'Waiting for the business to confirm'}</span>
+                <span>{confirmed ? 'Confirmed by the business' : 'Waiting for the business to confirm'}</span>
             </p>
             <BookingTicket
                 business={business}
@@ -42,7 +32,6 @@ export const UpcomingBooking = ({ booking, lead = false, onCancel, onMove }) => 
                 stamp={confirmed ? 'Confirmed' : 'Pending'}
                 stampTone={confirmed ? 'success' : 'signal'}
             />
-            {moved && <p className="lc-cl-bk__moved">Moved from {moved}</p>}
             {booking.notes?.trim() && <p className="lc-cl-bk__note"><b>Your note:</b> {booking.notes.trim()}</p>}
             <div className="lc-cl-bk__actions">
                 {business.address?.trim() && (
@@ -53,14 +42,7 @@ export const UpcomingBooking = ({ booking, lead = false, onCancel, onMove }) => 
                 ) : phone && (
                     <Button variant="secondary" icon={Phone} href={`tel:${phone}`}>Call</Button>
                 )}
-                {open && booking.services?.id && (
-                    <Button variant="secondary" icon={CalendarClock} onClick={() => onMove(booking)}>Change time</Button>
-                )}
-                {open ? (
-                    <Button variant="quiet" icon={X} className="lc-cl-bk__cancel" onClick={() => onCancel(booking)}>Cancel booking</Button>
-                ) : (
-                    <p className="lc-cl-bk__late">Too late to change online. Message {business.business_name} if your plans change.</p>
-                )}
+                <Button variant="quiet" icon={X} className="lc-cl-bk__cancel" onClick={() => onCancel(booking)}>Cancel booking</Button>
             </div>
         </article>
     )

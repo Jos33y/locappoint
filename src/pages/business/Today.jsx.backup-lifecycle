@@ -55,7 +55,7 @@ const Today = () => {
     const counted = visible.filter((b) => b.status !== 'cancelled')
     const expected = counted
         .filter((b) => b.status !== 'no_show')
-        .reduce((sum, b) => sum + Number(b.price ?? b.services?.price ?? 0), 0)
+        .reduce((sum, b) => sum + Number(b.services?.price || 0), 0)
     const pending = visible.filter((b) => b.status === 'pending')
 
     const hasService = activeServices.length > 0
