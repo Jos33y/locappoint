@@ -454,8 +454,6 @@
 .lc-bk-ticket__stub::before { left: calc(var(--lc-bk-notch) * -1); }
 .lc-bk-ticket__stub::after { right: calc(var(--lc-bk-notch) * -1); clip-path: inset(0 50% 0 0); }
 
-.lc-bk-ticket.is-stamped .lc-bk-ticket__stub { padding-right: 116px; }
-
 .lc-bk-ticket__biz {
     color: var(--lc-ink-1);
     font-size: var(--lc-t-label);
@@ -471,9 +469,8 @@
 
 .lc-bk-ticket__stamp {
     position: absolute;
-    top: 50%;
-    right: var(--space-4);
-    margin-top: -12px;
+    top: var(--space-3);
+    right: var(--space-3);
     padding: 3px 10px;
     border-radius: var(--lc-r-sm);
     box-shadow: inset 0 0 0 1.5px var(--signal);
@@ -482,11 +479,6 @@
     font-weight: var(--font-weight-semibold);
     transform: rotate(-6deg);
     animation: lc-bk-stamp var(--lc-base) var(--lc-ease) both;
-}
-
-.lc-bk-ticket__stamp.is-success {
-    box-shadow: inset 0 0 0 1.5px var(--lc-success);
-    color: var(--lc-success);
 }
 
 @keyframes lc-bk-stamp {

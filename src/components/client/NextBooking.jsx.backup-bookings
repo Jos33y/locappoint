@@ -5,7 +5,7 @@ import { addDays } from '../../services/business'
 import { monthShort } from '../../services/booking'
 import '../../styles/client/client-shell.css'
 
-export const whenLabel = (dateKey) => {
+const whenLabel = (dateKey) => {
     const today = todayKey()
     if (dateKey === today) return 'Today'
     if (dateKey === addDays(today, 1)) return 'Tomorrow'

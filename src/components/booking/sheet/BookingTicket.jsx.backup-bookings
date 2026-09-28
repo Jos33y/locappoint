@@ -7,7 +7,7 @@ import '../../../styles/client/booking-sheet.css'
 
 const hasPrice = (price) => String(price ?? '').trim() !== '' && !Number.isNaN(Number(String(price).replace(',', '.')))
 
-export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stampTone = 'signal' }) => {
+export const BookingTicket = ({ business, service, dateKey, minutes, stamp }) => {
     const date = parseDateKey(dateKey)
     const duration = Number(service.duration_minutes) || 0
     const meta = [duration ? durationLabel(duration) : null, hasPrice(service.price) ? menuPrice(service.price) : null].filter(Boolean).join(', ')
@@ -30,11 +30,11 @@ export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stam
                     </p>
                     {meta && <p className="lc-bk-ticket__meta">{meta}</p>}
                 </div>
+                {stamp && <span className="lc-bk-ticket__stamp">{stamp}</span>}
             </div>
             <div className="lc-bk-ticket__stub">
                 <span className="lc-bk-ticket__biz">{business.business_name}</span>
                 {business.address?.trim() && <span className="lc-bk-ticket__addr">{fullAddress(business.address, business.city)}</span>}
-                {stamp && <span className={`lc-bk-ticket__stamp is-${stampTone}`}>{stamp}</span>}
             </div>
         </div>
     )
