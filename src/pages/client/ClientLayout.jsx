@@ -1,114 +1,149 @@
-import { useEffect } from 'react'
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { ArrowLeftRight, CalendarDays, Home, LogOut, Search, Store, UserRound } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import {
-    Home,
-    Search,
-    Calendar,
-    User,
-    LogOut,
-    Menu,
-    ArrowLeftRight,
-    Store
-} from 'lucide-react'
-import '../../styles/client/client.css'
+import { Mark, Wordmark, initials } from '../../components/business/Brand'
+import AccountMenu from '../../components/business/AccountMenu'
+import { NextBooking } from '../../components/client/NextBooking'
+import { Sheet } from '../../components/ui'
+import { loadNextBooking } from '../../services/booking'
+import '../../styles/business/shell.css'
+import '../../styles/client/client-shell.css'
+
+const NAV = [
+    { to: '/client', label: 'Home', icon: Home, end: true },
+    { to: '/client/appointments', label: 'Bookings', icon: CalendarDays },
+    { to: '/client/search', label: 'Find a place', icon: Search },
+]
+
+const TABS = [...NAV, { to: '/client/profile', label: 'Profile', icon: UserRound }]
+
+const TITLES = { '/client': 'Home', '/client/appointments': 'Bookings', '/client/search': 'Find a place', '/client/profile': 'Profile' }
 
 const ClientLayout = () => {
     const { user, userProfile, signOut, setMode, hasBusiness } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
+    const [next, setNext] = useState({ status: 'loading', booking: null })
+    const [accountOpen, setAccountOpen] = useState(false)
+    const email = userProfile?.email || user?.email || ''
+    const name = userProfile?.full_name || ''
 
     useEffect(() => { setMode('client') }, [setMode])
+    useEffect(() => { setAccountOpen(false) }, [location.pathname])
 
-    const handleSignOut = () => {
-        signOut()
+    useEffect(() => {
+        if (!email) return undefined
+        let cancelled = false
+        loadNextBooking(email)
+            .then((booking) => { if (!cancelled) setNext({ status: 'ready', booking }) })
+            .catch((err) => {
+                console.error('Next booking failed:', err)
+                if (!cancelled) setNext({ status: 'ready', booking: null })
+            })
+        return () => { cancelled = true }
+    }, [email, location.pathname])
+
+    const leave = async () => {
+        await signOut()
         navigate('/auth', { state: { tab: 'signin' } })
     }
 
-    const isActive = (path) => {
-        if (path === '/client') {
-            return location.pathname === '/client'
-        }
-        return location.pathname === path || location.pathname.startsWith(path + '/')
-    }
-
-    const navLinks = [
-        { path: '/client', label: 'Home', icon: Home },
-        { path: '/client/search', label: 'Find Businesses', icon: Search },
-        { path: '/client/appointments', label: 'My Appointments', icon: Calendar },
-        { path: '/client/profile', label: 'Profile', icon: User },
+    const accountItems = [
+        { to: '/client/profile', icon: UserRound, label: 'Profile' },
+        hasBusiness
+            ? { to: '/portal', icon: ArrowLeftRight, label: 'Switch to my business' }
+            : { to: '/portal', icon: Store, label: 'Start a business' },
     ]
 
+    const title = TITLES[location.pathname] || 'Home'
+
     return (
-        <div className="client-layout">
-            {/* Sidebar */}
-            <aside className="client-sidebar">
-                <div className="client-sidebar-header">
-                    <h2 className="client-logo">LocAppoint</h2>
-                    <p className="client-subtitle">Client Dashboard</p>
+        <div className="biz-shell lc-cl-shell">
+            <aside className="biz-sidebar" aria-label="Booking navigation">
+                <div className="biz-brand">
+                    <Mark size={28} />
+                    <Wordmark />
                 </div>
 
-                <nav className="client-nav">
-                    {navLinks.map((link) => {
-                        const Icon = link.icon
-                        return (
-                            <Link
-                                key={link.path}
-                                to={link.path}
-                                className={`client-nav-link ${isActive(link.path) ? 'active' : ''}`}
-                            >
-                                <Icon size={20} className="nav-icon" />
-                                <span className="nav-label">{link.label}</span>
-                            </Link>
-                        )
-                    })}
+                <NextBooking state={next} />
+
+                <nav className="biz-sidebar__nav" aria-label="Main">
+                    <div className="biz-navgroup">
+                        {NAV.map(({ to, label, icon: Icon, end }) => (
+                            <NavLink key={to} to={to} end={end} className="biz-navlink">
+                                <Icon size={18} aria-hidden="true" />
+                                <span className="biz-navlink__label">{label}</span>
+                            </NavLink>
+                        ))}
+                    </div>
                 </nav>
 
-                <div className="client-sidebar-footer">
-                    <div className="client-user-info">
-                        <div className="user-avatar">
-                            {userProfile?.full_name?.charAt(0).toUpperCase() || 'C'}
-                        </div>
-                        <div className="user-details">
-                            <p className="user-name">{userProfile?.full_name || 'Client'}</p>
-                            <p className="user-email">{user?.email}</p>
-                        </div>
-                    </div>
-                    {hasBusiness ? (
-                        <Link to="/portal" className="btn-signout">
-                            <ArrowLeftRight size={16} />
-                            <span>Switch to My business</span>
-                        </Link>
-                    ) : (
-                        <Link to="/portal/profile" className="btn-signout">
-                            <Store size={16} />
-                            <span>Start a business</span>
-                        </Link>
-                    )}
-                    <button onClick={handleSignOut} className="btn-signout">
-                        <LogOut size={16} />
-                        <span>Sign Out</span>
-                    </button>
+                <div className="biz-sidebar__foot">
+                    <AccountMenu name={name} email={email} onSignOut={leave} links={accountItems} ownPages={['/client/profile']} />
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <main className="client-main">
-                <div className="client-header">
-                    <button className="mobile-menu-toggle">
-                        <Menu size={24} />
-                    </button>
-                    <div className="client-breadcrumb">
-                        <Link to="/">Home</Link>
-                        <span className="breadcrumb-separator">/</span>
-                        <span>Dashboard</span>
+            <div className="biz-main">
+                <header className="biz-topbar">
+                    <span className="biz-topbar__brand">
+                        <Mark size={26} />
+                        <span className="biz-topbar__name">{title}</span>
+                    </span>
+                    <span className="biz-topbar__title">{title}</span>
+                    {location.pathname !== '/client/search' && (
+                        <Link to="/client/search" className="biz-search lc-cl-search">
+                            <Search size={16} aria-hidden="true" />
+                            <span>Find a barber, salon or clinic</span>
+                        </Link>
+                    )}
+                    <div className="biz-topbar__actions lc-cl-topacts">
+                        <button type="button" className="biz-iconbtn lc-cl-me" aria-label="Account" onClick={() => setAccountOpen(true)}>
+                            <span className="biz-avatar">{initials(name || email)}</span>
+                        </button>
+                    </div>
+                </header>
+
+                <main className="biz-content">
+                    <div className="lc-cl-frame">
+                        <Outlet />
+                    </div>
+                </main>
+            </div>
+
+            <nav className="biz-tabbar lc-cl-tabbar" aria-label="Booking">
+                {TABS.map(({ to, label, icon: Icon, end }) => (
+                    <NavLink key={to} to={to} end={end} className="biz-tab">
+                        <Icon size={22} aria-hidden="true" />
+                        <span>{label}</span>
+                    </NavLink>
+                ))}
+            </nav>
+
+            <Sheet open={accountOpen} onClose={() => setAccountOpen(false)} title="Account">
+                <div className="biz-more">
+                    <div className="lc-cl-who">
+                        <span className="biz-avatar">{initials(name || email)}</span>
+                        <span>
+                            <strong>{name || email}</strong>
+                            {name && <small>{email}</small>}
+                        </span>
+                    </div>
+                    <NextBooking state={next} />
+                    <div className="biz-navgroup">
+                        {accountItems.map(({ to, icon: Icon, label }) => (
+                            <Link key={label} to={to} className="biz-navlink">
+                                <Icon size={20} aria-hidden="true" />
+                                <span className="biz-navlink__label">{label}</span>
+                            </Link>
+                        ))}
+                        <button type="button" className="biz-navlink" onClick={leave}>
+                            <LogOut size={20} aria-hidden="true" />
+                            <span className="biz-navlink__label">Sign out</span>
+                        </button>
                     </div>
                 </div>
-
-                <div className="client-content">
-                    <Outlet />
-                </div>
-            </main>
+            </Sheet>
         </div>
     )
 }

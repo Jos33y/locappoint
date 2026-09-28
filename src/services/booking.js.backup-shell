@@ -1,6 +1,6 @@
 import { supabase } from '../config/supabase'
 import { addDays, zonedNow } from './business'
-import { fromMinutes, parseDateKey, toMinutes, todayKey } from './dates'
+import { fromMinutes, parseDateKey, toMinutes } from './dates'
 
 const STEP = 30
 const PENDING = 'pendingBooking'
@@ -78,20 +78,6 @@ export const readBookParam = (search) => {
     const match = value && /^([^.]+)\.(\d{4}-\d{2}-\d{2})\.(\d{2})(\d{2})$/.exec(value)
     if (!match || !parseDateKey(match[2])) return null
     return { serviceId: match[1], dateKey: match[2], minutes: Number(match[3]) * 60 + Number(match[4]) }
-}
-
-export const loadNextBooking = async (email) => {
-    const { data, error } = await supabase
-        .from('appointments')
-        .select('id, appointment_date, appointment_time, status, businesses (business_name, slug), services (service_name)')
-        .eq('client_email', email)
-        .gte('appointment_date', todayKey())
-        .in('status', ['pending', 'confirmed'])
-        .order('appointment_date', { ascending: true })
-        .order('appointment_time', { ascending: true })
-        .limit(1)
-    if (error) throw error
-    return data?.[0] || null
 }
 
 export const clearPending = () => {
