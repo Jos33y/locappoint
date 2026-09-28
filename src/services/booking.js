@@ -113,6 +113,30 @@ export const cancelMyBooking = async (id) => {
     if (!data || data.length === 0) throw new Error('Cancel returned 0 rows for booking ' + id)
 }
 
+export const loadPlaces = async () => {
+    const [places, services, hours] = await Promise.all([
+        supabase.from('businesses')
+            .select('id, business_name, slug, description, category, category_detail, city, neighbourhood, timezone, banner_url, logo_url')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false }),
+        supabase.from('services').select('business_id, price, is_active').eq('is_active', true),
+        supabase.from('availability').select('business_id, staff_id, day_of_week, start_time, end_time, is_active').eq('is_active', true),
+    ])
+    for (const result of [places, services, hours]) if (result.error) throw result.error
+    const prices = new Map()
+    for (const s of services.data || []) {
+        const price = Number(String(s.price ?? '').replace(',', '.'))
+        if (String(s.price ?? '').trim() === '' || Number.isNaN(price)) continue
+        prices.set(s.business_id, Math.min(prices.get(s.business_id) ?? Infinity, price))
+    }
+    const rows = new Map()
+    for (const h of hours.data || []) {
+        if (!rows.has(h.business_id)) rows.set(h.business_id, [])
+        rows.get(h.business_id).push(h)
+    }
+    return (places.data || []).map((b) => ({ ...b, fromPrice: prices.get(b.id) ?? null, hourRows: rows.get(b.id) || [] }))
+}
+
 export const clearPending = () => {
     try { sessionStorage.removeItem(PENDING) } catch { /* nothing to clear */ }
 }

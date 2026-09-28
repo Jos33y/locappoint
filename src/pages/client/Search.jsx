@@ -1,265 +1,167 @@
-import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { supabase } from '../../config/supabase'
-import { Search as SearchIcon, MapPin, Filter, X } from 'lucide-react'
-import { CATEGORIES, CATEGORY_SECTIONS, categoryKey, categoryLabel } from '../../constants/categories'
-import '../../styles/dashboard.css'
-import '../../styles/client/client.css'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { RotateCw, Search as SearchIcon, X } from 'lucide-react'
+import { Button, Chip, ChipGroup, Picker } from '../../components/ui'
+import { PlaceResult } from '../../components/client/find/PlaceResult'
+import { NoMatch } from '../../components/client/find/NoMatch'
+import { openStatus } from '../../components/business/PublicPageView'
+import { loadPlaces } from '../../services/booking'
+import { weekFromRows } from '../../services/hours'
+import { CATEGORIES, categoryKey, categoryLabel } from '../../constants/categories'
+import '../../styles/client/find-page.css'
+
+const fold = (text) => (text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+
+const matches = (place, q) => {
+    if (!q) return true
+    const cat = CATEGORIES.find((c) => c.value === categoryKey(place.category))
+    const hay = fold([place.business_name, place.description, place.neighbourhood, place.city, categoryLabel(place.category, place.category_detail), cat?.keywords].join(' '))
+    return fold(q).split(/\s+/).filter(Boolean).every((word) => hay.includes(word))
+}
 
 const ClientSearch = () => {
-    const [searchParams, setSearchParams] = useSearchParams()
-    const [businesses, setBusinesses] = useState([])
-    const [filteredBusinesses, setFilteredBusinesses] = useState([])
-    const [loading, setLoading] = useState(true)
-
-    // Search and filter states
-    const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
-    const [selectedCategory, setSelectedCategory] = useState(categoryKey(searchParams.get('category') || ''))
-    const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || '')
-
-    useEffect(() => {
-        fetchBusinesses()
-    }, [])
+    const [params, setParams] = useSearchParams()
+    const [state, setState] = useState({ status: 'loading', places: [] })
+    const [attempt, setAttempt] = useState(0)
+    const [draft, setDraft] = useState(params.get('q') || '')
+    const q = params.get('q') || ''
+    const category = categoryKey(params.get('category') || '')
+    const city = params.get('city') || ''
+    const openNow = params.get('open') === '1'
 
     useEffect(() => {
-        applyFilters()
-    }, [businesses, searchQuery, selectedCategory, selectedCity])
+        let cancelled = false
+        setState((s) => ({ ...s, status: 'loading' }))
+        loadPlaces()
+            .then((places) => { if (!cancelled) setState({ status: 'ready', places }) })
+            .catch((err) => {
+                console.error('Places failed:', err)
+                if (!cancelled) setState({ status: 'error', places: [] })
+            })
+        return () => { cancelled = true }
+    }, [attempt])
 
-    const fetchBusinesses = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('businesses')
-                .select(`
-                    id,
-                    business_name,
-                    slug,
-                    description,
-                    category,
-                    category_detail,
-                    city,
-                    location,
-                    is_active
-                `)
-                .eq('is_active', true)
-                .order('created_at', { ascending: false })
+    useEffect(() => { setDraft(q) }, [q])
 
-            if (error) throw error
-            setBusinesses(data || [])
-        } catch (error) {
-            console.error('Error fetching businesses:', error)
-        } finally {
-            setLoading(false)
+    const set = (patch) => {
+        const next = new URLSearchParams(params)
+        Object.entries(patch).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k)))
+        setParams(next, { replace: true })
+    }
+
+    const withStatus = useMemo(
+        () => state.places.map((p) => ({ ...p, isOpen: Boolean(openStatus(weekFromRows(p.hourRows), p.timezone)?.open) })),
+        [state.places],
+    )
+
+    const searched = useMemo(() => withStatus.filter((p) => matches(p, q) && (!city || p.city === city)), [withStatus, q, city])
+
+    const categories = useMemo(() => {
+        const counts = new Map()
+        for (const p of searched) {
+            const key = categoryKey(p.category)
+            if (key) counts.set(key, (counts.get(key) || 0) + 1)
         }
-    }
+        return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([value, count]) => ({ value, count, label: CATEGORIES.find((c) => c.value === value)?.label || 'Other' }))
+    }, [searched])
 
-    const applyFilters = () => {
-        let filtered = [...businesses]
+    const cities = useMemo(() => [...new Set(state.places.map((p) => p.city).filter(Boolean))].sort(), [state.places])
 
-        // Search query filter
-        if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase()
-            filtered = filtered.filter(business =>
-                business.business_name.toLowerCase().includes(query) ||
-                business.description?.toLowerCase().includes(query) ||
-                categoryLabel(business.category, business.category_detail).toLowerCase().includes(query) ||
-                (CATEGORIES.find((c) => c.value === categoryKey(business.category))?.keywords || '').includes(query)
-            )
-        }
+    const results = searched.filter((p) => (!category || categoryKey(p.category) === category) && (!openNow || p.isOpen))
+    const filtered = Boolean(q || category || city || openNow)
 
-        // Category filter
-        if (selectedCategory) {
-            filtered = filtered.filter(business =>
-                categoryKey(business.category) === selectedCategory
-            )
-        }
-
-        // City filter
-        if (selectedCity) {
-            filtered = filtered.filter(business =>
-                business.city === selectedCity
-            )
-        }
-
-        setFilteredBusinesses(filtered)
-    }
-
-    const handleSearch = (e) => {
-        e.preventDefault()
-        updateSearchParams()
-    }
-
-    const updateSearchParams = () => {
-        const params = new URLSearchParams()
-        if (searchQuery) params.set('q', searchQuery)
-        if (selectedCategory) params.set('category', selectedCategory)
-        if (selectedCity) params.set('city', selectedCity)
-        setSearchParams(params)
-    }
-
-    const clearFilters = () => {
-        setSearchQuery('')
-        setSelectedCategory('')
-        setSelectedCity('')
-        setSearchParams(new URLSearchParams())
-    }
-
-    const hasActiveFilters = searchQuery || selectedCategory || selectedCity
-
-    if (loading) {
-        return (
-            <div className="loading-container">
-                <div className="spinner"></div>
-                <p>Loading businesses...</p>
-            </div>
-        )
+    const submit = (event) => {
+        event.preventDefault()
+        set({ q: draft.trim() })
     }
 
     return (
-        <div className="search-page">
-            {/* Page Header */}
-            <div className="search-header">
-                <h1>Find Businesses</h1>
-                <p className="page-subtitle">
-                    Discover local businesses and book appointments
-                </p>
-            </div>
-
-            {/* Search Bar */}
-            <form onSubmit={handleSearch} className="search-bar-large">
-                <SearchIcon size={24} style={{ color: 'var(--accent-primary)' }} />
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by business name, service, or category..."
-                    className="input"
-                />
-                <button type="submit" className="btn btn--primary">
-                    Search
-                </button>
-            </form>
-
-            {/* Filters */}
-            <div className="search-filters">
-                <div className="filter-group">
-                    <label htmlFor="category">Category</label>
-                    <select
-                        id="category"
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="input"
-                    >
-                        <option value="">All types</option>
-                        {CATEGORY_SECTIONS.map(({ group, items }) => (
-                            <optgroup key={group} label={group}>
-                                {items.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                            </optgroup>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="filter-group">
-                    <label htmlFor="city">City</label>
-                    <select
-                        id="city"
-                        value={selectedCity}
-                        onChange={(e) => setSelectedCity(e.target.value)}
-                        className="input"
-                    >
-                        <option value="">All Cities</option>
-                        <option value="Lisbon">Lisbon</option>
-                        <option value="Porto">Porto</option>
-                        <option value="Braga">Braga</option>
-                        <option value="Faro">Faro</option>
-                        <option value="Coimbra">Coimbra</option>
-                        <option value="Cascais">Cascais</option>
-                        <option value="Aveiro">Aveiro</option>
-                        <option value="Évora">Évora</option>
-                    </select>
-                </div>
-
-                {hasActiveFilters && (
-                    <div className="filter-group" style={{ justifyContent: 'flex-end', marginTop: 'auto' }}>
-                        <button
-                            onClick={clearFilters}
-                            className="btn btn--outline"
-                            style={{ marginTop: 'auto' }}
-                        >
-                            <X size={16} />
-                            Clear Filters
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            {/* Results */}
-            <div style={{ marginBottom: 'var(--space-4)' }}>
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-                    Found {filteredBusinesses.length} {filteredBusinesses.length === 1 ? 'business' : 'businesses'}
-                </p>
-            </div>
-
-            {/* Businesses Grid */}
-            {filteredBusinesses.length === 0 ? (
-                <div className="empty-state">
-                    <Filter size={48} className="empty-state-icon" />
-                    <h2>No businesses found</h2>
-                    <p>
-                        {hasActiveFilters
-                            ? 'Try adjusting your filters or search terms'
-                            : 'No businesses available at the moment'
-                        }
-                    </p>
-                    {hasActiveFilters && (
-                        <button onClick={clearFilters} className="btn btn--primary">
-                            Clear Filters
+        <div className="biz-page lc-cl-find">
+            <header className="lc-cl-find__head">
+                <h1 className="biz-page__title">Find a place</h1>
+                <form className="lc-cl-find__field" role="search" onSubmit={submit}>
+                    <SearchIcon size={18} aria-hidden="true" />
+                    <input
+                        type="search"
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                        placeholder="Barber, nails, dentist, or a name"
+                        aria-label="Search places"
+                        autoComplete="off"
+                        enterKeyHint="search"
+                    />
+                    {draft && (
+                        <button type="button" className="lc-cl-find__clear" aria-label="Clear search" onClick={() => { setDraft(''); set({ q: '' }) }}>
+                            <X size={16} aria-hidden="true" />
                         </button>
                     )}
+                    <Button type="submit" size="sm">Search</Button>
+                </form>
+            </header>
+
+            {state.status === 'ready' && state.places.length > 0 && (
+                <div className="lc-cl-find__filters">
+                    <ChipGroup label="Filter">
+                        <Chip selected={openNow} onClick={() => set({ open: openNow ? '' : '1' })}>Open now</Chip>
+                        <Chip selected={!category} onClick={() => set({ category: '' })}>All</Chip>
+                        {categories.map((c) => (
+                            <Chip key={c.value} selected={category === c.value} count={c.count} onClick={() => set({ category: category === c.value ? '' : c.value })}>{c.label}</Chip>
+                        ))}
+                    </ChipGroup>
+                    {cities.length > 1 && (
+                        <div className="lc-cl-find__city">
+                            <Picker
+                                value={city}
+                                onChange={(value) => set({ city: value })}
+                                options={[{ value: '', label: 'All cities' }, ...cities.map((c) => ({ value: c, label: c }))]}
+                                title="City"
+                            />
+                        </div>
+                    )}
                 </div>
-            ) : (
-                <div className="businesses-grid">
-                    {filteredBusinesses.map((business) => (
-                        <Link
-                            key={business.id}
-                            to={`/${business.slug}`}
-                            className="business-card"
-                        >
-                            <div className="business-card-banner">
-                                <div className="business-card-logo">
-                                    {business.business_name.charAt(0).toUpperCase()}
-                                </div>
-                            </div>
+            )}
 
-                            <div className="business-card-content">
-                                <h3 className="business-card-name">
-                                    {business.business_name}
-                                </h3>
-
-                                {business.category && (
-                                    <span className="business-card-category">
-                                        {categoryLabel(business.category, business.category_detail)}
-                                    </span>
-                                )}
-
-                                {business.description && (
-                                    <p className="business-card-description">
-                                        {business.description}
-                                    </p>
-                                )}
-
-                                <div className="business-card-meta">
-                                    {business.city && (
-                                        <div className="business-card-meta-item">
-                                            <MapPin size={14} />
-                                            <span>{business.city}</span>
-                                            {business.location && `, ${business.location}`}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </Link>
+            {state.status === 'loading' && (
+                <ul className="lc-cl-results" aria-hidden="true">
+                    {[0, 1, 2].map((i) => (
+                        <li key={i} className="lc-cl-result is-skeleton">
+                            <span className="lc-skel" style={{ height: 96, borderRadius: 0 }} />
+                            <span className="lc-cl-result__body">
+                                <span className="lc-skel" style={{ width: '60%', height: 16 }} />
+                                <span className="lc-skel" style={{ width: '40%', height: 12 }} />
+                            </span>
+                        </li>
                     ))}
+                </ul>
+            )}
+
+            {state.status === 'error' && (
+                <div className="lc-cl-find__error" role="alert">
+                    <p>We could not load places. Check your connection and try again.</p>
+                    <Button variant="secondary" icon={RotateCw} onClick={() => setAttempt((n) => n + 1)}>Try again</Button>
                 </div>
+            )}
+
+            {state.status === 'ready' && (
+                state.places.length === 0 ? (
+                    <NoMatch title="No places yet" body="Businesses in Lisbon are setting up their pages. Check back soon." />
+                ) : results.length === 0 ? (
+                    <NoMatch
+                        title={q ? `Nothing matches "${q}"` : 'Nothing matches these filters'}
+                        body={openNow ? 'Nothing that matches is open right now. Try without Open now.' : 'Try a different word, or clear the filters.'}
+                        onClear={() => { setDraft(''); setParams(new URLSearchParams(), { replace: true }) }}
+                    />
+                ) : (
+                    <>
+                        <p className="lc-cl-find__count" aria-live="polite">
+                            {results.length === 1 ? '1 place' : `${results.length} places`}
+                            {filtered ? '' : ' taking bookings'}
+                        </p>
+                        <ul className="lc-cl-results">
+                            {results.map((place) => <PlaceResult key={place.id} place={place} />)}
+                        </ul>
+                    </>
+                )
             )}
         </div>
     )
