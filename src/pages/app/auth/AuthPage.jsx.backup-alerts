@@ -39,7 +39,14 @@ const AuthPage = () => {
     const [unconfirmed, setUnconfirmed] = useState('')
     const [resending, setResending] = useState(false)
 
-    const { signIn, signUp, signInWithGoogle, signInWithApple, resendConfirmation } = useAuth()
+    const { user, signIn, signUp, signInWithGoogle, signInWithApple, resendConfirmation } = useAuth()
+
+    // Already signed in: go where the link meant to take you instead of showing the form again.
+    useEffect(() => {
+        if (!user) return
+        const wantsBusiness = navState.userType === 'business' && navState.tab === 'signup'
+        navigate(returnTo || (wantsBusiness ? '/portal' : '/me'), { replace: true })
+    }, [user, returnTo, navState.userType, navState.tab, navigate])
 
     useEffect(() => {
         if (navState.tab) setActiveTab(navState.tab)

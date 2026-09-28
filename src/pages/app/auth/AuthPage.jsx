@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
 import { User, Building2, AlertCircle, CheckCircle2, ArrowRight, MailCheck, CalendarCheck } from 'lucide-react'
@@ -11,6 +11,23 @@ const HOME_PATHS = ['/', '/?app']
 
 const safePath = (path) =>
     typeof path === 'string' && path.startsWith('/') && !path.startsWith('//') && !path.startsWith('/auth') && !HOME_PATHS.includes(path) ? path : null
+
+const AUTH_ERRORS = {
+    invalid_credentials: 'That email and password do not match. Check them, or use Forgot to reset your password.',
+    user_already_exists: 'There is already an account with this email. Sign in instead.',
+    email_exists: 'There is already an account with this email. Sign in instead.',
+    weak_password: 'Choose a stronger password: at least 6 characters, not a common one.',
+    over_email_send_rate_limit: 'Too many emails sent just now. Wait a minute and try again.',
+    over_request_rate_limit: 'Too many attempts just now. Wait a minute and try again.',
+    email_address_invalid: 'That email address does not look right.',
+}
+
+const authError = (err, fallback) => {
+    if (err?.code && AUTH_ERRORS[err.code]) return AUTH_ERRORS[err.code]
+    if (/invalid login credentials/i.test(err?.message || '')) return AUTH_ERRORS.invalid_credentials
+    if (/already registered/i.test(err?.message || '')) return AUTH_ERRORS.user_already_exists
+    return err?.message || fallback
+}
 
 const pathOf = (from) => (typeof from === 'string' ? from : from ? `${from.pathname || ''}${from.search || ''}` : null)
 
@@ -37,6 +54,7 @@ const AuthPage = () => {
     const [message, setMessage] = useState(isVerified ? 'Email verified. Sign in to continue.' : '')
     const [loading, setLoading] = useState(false)
     const [unconfirmed, setUnconfirmed] = useState('')
+    const alertsRef = useRef(null)
     const [resending, setResending] = useState(false)
 
     const { user, signIn, signUp, signInWithGoogle, signInWithApple, resendConfirmation } = useAuth()
@@ -56,6 +74,12 @@ const AuthPage = () => {
             setMessage('Email verified. Sign in to continue.')
         }
     }, [location.state, location.key, isVerified, navState.tab, navState.userType])
+
+    useEffect(() => {
+        if (!error && !message) return
+        const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+        alertsRef.current?.scrollIntoView({ block: 'center', behavior: calm ? 'auto' : 'smooth' })
+    }, [error, message])
 
     const switchTab = (tab) => {
         setActiveTab(tab)
@@ -116,6 +140,7 @@ const AuthPage = () => {
         e.preventDefault()
         setError('')
         setMessage('')
+        setUnconfirmed('')
 
         if (!validateForm()) return
 
@@ -130,7 +155,7 @@ const AuthPage = () => {
                         setError('Confirm your email first. Open the link we sent you, or get a new one below.')
                         return
                     }
-                    setError(signinErr.message || 'Sign in failed. Check your credentials.')
+                    setError(authError(signinErr, 'Sign in failed. Check your email and password.'))
                     return
                 }
                 navigate(returnTo || '/me', { replace: true })
@@ -142,19 +167,13 @@ const AuthPage = () => {
                     next: returnTo,
                 })
                 if (signupErr) {
-                    setError(signupErr.message || 'Sign up failed. Try again.')
+                    setError(authError(signupErr, 'Sign up failed. Try again.'))
                     return
                 }
-                setMessage(booking
-                    ? 'Account created. Open the link we emailed you and it brings you back to your booking.'
-                    : 'Account created. Check your inbox for the verification email.')
-                setFormData({ email: '', password: '', full_name: '', phone: '', confirmPassword: '' })
-
-                setTimeout(() => {
-                    setActiveTab('signin')
-                    setFormData((prev) => ({ ...prev, email: formData.email }))
-                    setMessage('')
-                }, 6000)
+                const sentTo = formData.email.trim()
+                setActiveTab('signin')
+                setFormData({ email: sentTo, password: '', full_name: '', phone: '', confirmPassword: '' })
+                setMessage(`Account created. We sent a link to ${sentTo}. Open it to confirm your email${booking ? ' and it brings you back to your booking' : ''}. Nothing there after a minute? Check spam, or sign in below and we send a new one.`)
             }
         } catch (err) {
             setError(err.message || 'Something went wrong. Try again.')
@@ -257,6 +276,7 @@ const AuthPage = () => {
                 <div className={`auth-tabs__indicator ${activeTab === 'signup' ? 'auth-tabs__indicator--right' : ''}`} aria-hidden="true"></div>
             </div>
 
+            <div ref={alertsRef} className="auth-alerts">
             {error && (
                 <div className="auth-alert auth-alert--error" role="alert">
                     <AlertCircle size={14} strokeWidth={2.2} />
@@ -276,6 +296,7 @@ const AuthPage = () => {
                     <span>{message}</span>
                 </div>
             )}
+            </div>
 
             {activeTab === 'signup' && !booking && (
                 <div className="auth-toggle">
