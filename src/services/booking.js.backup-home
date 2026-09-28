@@ -94,6 +94,25 @@ export const loadNextBooking = async (email) => {
     return data?.[0] || null
 }
 
+const BOOKING_FIELDS = 'id, appointment_date, appointment_time, duration_minutes, status, notes, businesses (business_name, slug, address, city, phone, whatsapp, timezone), services (service_name, duration_minutes, price)'
+
+export const loadMyBookings = async (email) => {
+    const { data, error } = await supabase
+        .from('appointments')
+        .select(BOOKING_FIELDS)
+        .eq('client_email', email)
+        .order('appointment_date', { ascending: true })
+        .order('appointment_time', { ascending: true })
+    if (error) throw error
+    return data || []
+}
+
+export const cancelMyBooking = async (id) => {
+    const { data, error } = await supabase.from('appointments').update({ status: 'cancelled' }).eq('id', id).select('id')
+    if (error) throw error
+    if (!data || data.length === 0) throw new Error('Cancel returned 0 rows for booking ' + id)
+}
+
 export const clearPending = () => {
     try { sessionStorage.removeItem(PENDING) } catch { /* nothing to clear */ }
 }

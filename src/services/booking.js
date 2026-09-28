@@ -94,7 +94,7 @@ export const loadNextBooking = async (email) => {
     return data?.[0] || null
 }
 
-const BOOKING_FIELDS = 'id, appointment_date, appointment_time, duration_minutes, status, notes, businesses (business_name, slug, address, city, phone, whatsapp, timezone), services (service_name, duration_minutes, price)'
+const BOOKING_FIELDS = 'id, appointment_date, appointment_time, duration_minutes, status, notes, businesses (business_name, slug, address, city, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail), services (service_name, duration_minutes, price)'
 
 export const loadMyBookings = async (email) => {
     const { data, error } = await supabase

@@ -1,273 +1,112 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { supabase } from '../../config/supabase'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, RotateCw, Search } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import { parseDateKey, todayKey } from '../../services/dates'
-import { Search, Calendar, MapPin, Clock, ArrowRight } from 'lucide-react'
-import { CATEGORY_SECTIONS } from '../../constants/categories'
-import '../../styles/dashboard.css'
-import '../../styles/client/client.css'
+import { Button } from '../../components/ui'
+import { UpcomingBooking } from '../../components/client/bookings/UpcomingBooking'
+import { CancelSheet } from '../../components/client/bookings/CancelSheet'
+import { EmptyTicket } from '../../components/client/bookings/EmptyTicket'
+import { BookingToast } from '../../components/client/bookings/BookingToast'
+import { useMyBookings } from '../../components/client/bookings/useMyBookings'
+import { PlaceCard } from '../../components/client/home/PlaceCard'
+import '../../styles/client/client-bookings.css'
+import '../../styles/client/home-page.css'
+
+const greeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 5) return 'Good evening'
+    if (hour < 12) return 'Good morning'
+    if (hour < 18) return 'Good afternoon'
+    return 'Good evening'
+}
 
 const ClientHome = () => {
-    const { userProfile } = useAuth()
+    const { user, userProfile } = useAuth()
     const navigate = useNavigate()
-    const [upcomingAppointments, setUpcomingAppointments] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [searchQuery, setSearchQuery] = useState('')
-    const [searchCategory, setSearchCategory] = useState('')
-    const [searchCity, setSearchCity] = useState('')
+    const email = userProfile?.email || user?.email || ''
+    const first = (userProfile?.full_name || '').trim().split(/\s+/)[0]
+    const { state, groups, load, cancelling, busy, cancelError, toast, askCancel, keep, confirmCancel } = useMyBookings(email)
+    const [query, setQuery] = useState('')
 
-    useEffect(() => {
-        fetchUpcomingAppointments()
-    }, [])
-
-    const fetchUpcomingAppointments = async () => {
-        try {
-            const today = todayKey()
-
-            const { data, error } = await supabase
-                .from('appointments')
-                .select(`
-                    *,
-                    businesses (
-                        business_name,
-                        slug,
-                        city
-                    ),
-                    services (
-                        service_name,
-                        duration_minutes
-                    )
-                `)
-                .eq('client_email', userProfile.email)
-                .gte('appointment_date', today)
-                .in('status', ['pending', 'confirmed'])
-                .order('appointment_date', { ascending: true })
-                .order('appointment_time', { ascending: true })
-                .limit(3)
-
-            if (error) throw error
-            setUpcomingAppointments(data || [])
-        } catch (error) {
-            console.error('Error fetching upcoming appointments:', error)
-        } finally {
-            setLoading(false)
+    const places = useMemo(() => {
+        const seen = new Map()
+        for (const row of [...groups.upcoming, ...groups.past]) {
+            const b = row.businesses
+            if (b?.slug && !seen.has(b.slug)) seen.set(b.slug, { business: b, service: row.services?.service_name || 'a booking' })
         }
-    }
+        return [...seen.values()].slice(0, 6)
+    }, [groups])
 
-    const handleQuickSearch = (e) => {
-        e.preventDefault()
-        const params = new URLSearchParams()
-        if (searchQuery) params.append('q', searchQuery)
-        if (searchCategory) params.append('category', searchCategory)
-        if (searchCity) params.append('city', searchCity)
-        
-        navigate(`/client/search?${params.toString()}`)
-    }
+    const next = groups.upcoming[0]
+    const more = groups.upcoming.length - 1
 
-    const formatDate = (dateString) => {
-        const date = parseDateKey(dateString)
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        })
-    }
-
-    const formatTime = (timeString) => {
-        if (!timeString) return 'N/A'
-        const [hours, minutes] = timeString.split(':')
-        const hour = parseInt(hours)
-        const ampm = hour >= 12 ? 'PM' : 'AM'
-        const displayHour = hour % 12 || 12
-        return `${displayHour}:${minutes} ${ampm}`
-    }
-
-    if (loading) {
-        return (
-            <div className="loading-container">
-                <div className="spinner"></div>
-                <p>Loading...</p>
-            </div>
-        )
+    const find = (event) => {
+        event.preventDefault()
+        const q = query.trim()
+        navigate(q ? `/client/search?q=${encodeURIComponent(q)}` : '/client/search')
     }
 
     return (
-        <div className="client-home">
-            {/* Welcome Section */}
-            <div className="welcome-section">
-                <h1>Welcome back, {userProfile?.full_name || 'there'}!</h1>
-                <p>Find and book appointments with local businesses</p>
-            </div>
+        <div className="biz-page lc-cl-home">
+            <header className="lc-cl-home__head">
+                <h1 className="biz-page__title">{first ? `${greeting()}, ${first}` : greeting()}</h1>
+                {state.status === 'ready' && !next && <p className="lc-cl-home__hello">Book your next visit in a minute.</p>}
+            </header>
 
-            {/* Quick Search */}
-            <div className="quick-search">
-                <h2>Find a Business</h2>
-                <form onSubmit={handleQuickSearch} className="search-form">
-                    <div className="search-input-group">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search by business name or service..."
-                            className="input"
-                        />
-                        <select
-                            value={searchCategory}
-                            onChange={(e) => setSearchCategory(e.target.value)}
-                            className="input"
-                        >
-                            <option value="">All types</option>
-                            {CATEGORY_SECTIONS.map(({ group, items }) => (
-                                <optgroup key={group} label={group}>
-                                    {items.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                                </optgroup>
-                            ))}
-                        </select>
-                        <select
-                            value={searchCity}
-                            onChange={(e) => setSearchCity(e.target.value)}
-                            className="input"
-                        >
-                            <option value="">All Cities</option>
-                            <option value="Lisbon">Lisbon</option>
-                            <option value="Porto">Porto</option>
-                            <option value="Braga">Braga</option>
-                            <option value="Faro">Faro</option>
-                            <option value="Coimbra">Coimbra</option>
-                            <option value="Cascais">Cascais</option>
-                        </select>
-                    </div>
-                    <button type="submit" className="btn btn--primary">
-                        <Search size={18} />
-                        Search
-                    </button>
-                </form>
-            </div>
-
-            {/* Upcoming Appointments */}
-            <div className="upcoming-section">
-                <div className="section-header">
-                    <h2>Upcoming Appointments</h2>
-                    <Link to="/client/appointments" className="link">
-                        View All →
-                    </Link>
+            {state.status === 'loading' && (
+                <div className="lc-cl-bk is-lead" aria-hidden="true">
+                    <span className="lc-skel" style={{ width: 140, height: 18 }} />
+                    <span className="lc-skel" style={{ width: '100%', height: 190, borderRadius: 16 }} />
                 </div>
+            )}
 
-                {upcomingAppointments.length === 0 ? (
-                    <div className="empty-state">
-                        <Calendar size={48} className="empty-state-icon" />
-                        <h3>No upcoming appointments</h3>
-                        <p>Search for businesses and book your first appointment!</p>
-                        <Link to="/client/search" className="btn btn--primary">
-                            <Search size={18} />
-                            Find Businesses
+            {state.status === 'error' && (
+                <div className="lc-cl-bookings__error" role="alert">
+                    <p>We could not load your bookings. Check your connection and try again.</p>
+                    <Button variant="secondary" icon={RotateCw} onClick={load}>Try again</Button>
+                </div>
+            )}
+
+            {state.status === 'ready' && (next ? (
+                <section className="lc-cl-home__next" aria-label="Next booking">
+                    <UpcomingBooking booking={next} lead onCancel={askCancel} />
+                    {more > 0 && (
+                        <Link to="/client/appointments" className="lc-cl-home__more">
+                            <span>{more === 1 ? '1 more booking coming up' : `${more} more bookings coming up`}</span>
+                            <ArrowRight size={16} aria-hidden="true" />
                         </Link>
-                    </div>
-                ) : (
-                    <div className="upcoming-appointments-list">
-                        {upcomingAppointments.map((appointment) => (
-                            <div key={appointment.id} className="upcoming-appointment-card">
-                                <div className="appointment-date-badge">
-                                    <div className="date-day">
-                                        {parseDateKey(appointment.appointment_date).getDate()}
-                                    </div>
-                                    <div className="date-month">
-                                        {parseDateKey(appointment.appointment_date).toLocaleDateString('en', {
-                                            month: 'short'
-                                        })}
-                                    </div>
-                                </div>
+                    )}
+                </section>
+            ) : <EmptyTicket />)}
 
-                                <div className="appointment-content" style={{ flex: 1 }}>
-                                    <h3 style={{ 
-                                        fontSize: 'var(--text-base)', 
-                                        fontWeight: 'var(--font-weight-semibold)',
-                                        color: 'var(--text-primary)',
-                                        margin: '0 0 var(--space-2) 0'
-                                    }}>
-                                        {appointment.businesses?.business_name}
-                                    </h3>
-                                    <p style={{ 
-                                        fontSize: 'var(--text-sm)', 
-                                        color: 'var(--accent-secondary)',
-                                        margin: '0 0 var(--space-2) 0'
-                                    }}>
-                                        {appointment.services?.service_name}
-                                    </p>
-                                    <div style={{ 
-                                        display: 'flex', 
-                                        gap: 'var(--space-3)',
-                                        fontSize: 'var(--text-sm)',
-                                        color: 'var(--text-secondary)'
-                                    }}>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
-                                            <Calendar size={14} />
-                                            {formatDate(appointment.appointment_date)}
-                                        </span>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
-                                            <Clock size={14} />
-                                            {formatTime(appointment.appointment_time)}
-                                        </span>
-                                        {appointment.businesses?.city && (
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
-                                                <MapPin size={14} />
-                                                {appointment.businesses.city}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
+            {next && <form className="lc-cl-home__find" role="search" onSubmit={find}>
+                <label className="lc-cl-home__findlabel" htmlFor="lc-cl-home-q">Find a place</label>
+                <span className="lc-cl-home__field">
+                    <Search size={18} aria-hidden="true" />
+                    <input
+                        id="lc-cl-home-q"
+                        type="search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Barber, nails, dentist, or a name"
+                        autoComplete="off"
+                        enterKeyHint="search"
+                    />
+                    <Button type="submit" size="sm">Search</Button>
+                </span>
+            </form>}
 
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    <span className={`status-badge status-${appointment.status}`}>
-                                        {appointment.status}
-                                    </span>
-                                </div>
+            {places.length > 0 && (
+                <section className="lc-cl-home__places" aria-labelledby="lc-cl-home-places">
+                    <h2 id="lc-cl-home-places" className="lc-cl-home__h2">Book again</h2>
+                    <ul className="lc-cl-places">
+                        {places.map((place) => <PlaceCard key={place.business.slug} place={place} />)}
+                    </ul>
+                </section>
+            )}
 
-                                <Link 
-                                    to={`/client/appointments`}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        padding: 'var(--space-2)',
-                                        color: 'var(--accent-primary)',
-                                        transition: 'all var(--transition-fast)'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
-                                >
-                                    <ArrowRight size={20} />
-                                </Link>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Quick Actions */}
-            <div className="quick-actions">
-                <h2>Quick Actions</h2>
-                <div className="actions-grid">
-                    <Link to="/client/search" className="action-card">
-                        <Search size={32} className="action-icon" />
-                        <h3>Find Businesses</h3>
-                        <p>Search for salons, spas, clinics and more</p>
-                    </Link>
-
-                    <Link to="/client/appointments" className="action-card">
-                        <Calendar size={32} className="action-icon" />
-                        <h3>My Appointments</h3>
-                        <p>View and manage your bookings</p>
-                    </Link>
-
-                    <Link to="/client/profile" className="action-card">
-                        <Search size={32} className="action-icon" />
-                        <h3>Update Profile</h3>
-                        <p>Manage your account settings</p>
-                    </Link>
-                </div>
-            </div>
+            <CancelSheet booking={cancelling} busy={busy} error={cancelError} onKeep={keep} onConfirm={confirmCancel} />
+            <BookingToast message={toast} />
         </div>
     )
 }
