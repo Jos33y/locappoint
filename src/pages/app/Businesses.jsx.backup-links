@@ -12,8 +12,7 @@ import '../../styles/client/find-page.css'
 import '../../styles/app/businesses.css'
 
 const COHORT_SIZE = 10
-const SIGN_UP = { pathname: '/auth', state: { tab: 'signup', userType: 'business' } }
-const START = { pathname: '/portal', state: null }
+const JOIN = { pathname: '/auth', state: { tab: 'signup', userType: 'business' } }
 
 const fold = (text) => (text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase()
 const inCity = (place, names) => names.includes(fold(place.city))
@@ -42,9 +41,9 @@ const CohortSlots = ({ filled }) => (
     </svg>
 )
 
-const JoinCard = ({ join, wide = false }) => (
+const JoinCard = ({ wide = false }) => (
     <li className={`lc-br-join${wide ? ' is-wide' : ''}`}>
-        <Link to={join.pathname} state={join.state} className="lc-br-join__link">
+        <Link to={JOIN.pathname} state={JOIN.state} className="lc-br-join__link">
             <span className="lc-br-join__cover" aria-hidden="true">
                 <StreetGridCover seed="your-business" tint="azure" />
                 <span className="lc-br-join__logo"><Plus size={18} /></span>
@@ -61,8 +60,7 @@ const JoinCard = ({ join, wide = false }) => (
 const Businesses = () => {
     const [state, setState] = useState({ status: 'loading', places: [] })
     const [attempt, setAttempt] = useState(0)
-    const { user, hasBusiness } = useAuth()
-    const join = user ? START : SIGN_UP
+    const { hasBusiness } = useAuth()
 
     useEffect(() => {
         let cancelled = false
@@ -163,7 +161,7 @@ const Businesses = () => {
                     {ready && (
                         <ul className="lc-cl-results">
                             {places.map((place) => <PlaceResult key={place.id} place={place} from="/businesses" />)}
-                            {!hasBusiness && <JoinCard join={join} wide={places.length === 0} />}
+                            {!hasBusiness && <JoinCard wide={places.length === 0} />}
                         </ul>
                     )}
                 </section>
@@ -173,7 +171,7 @@ const Businesses = () => {
                         <h2>Run a business in Lisbon?</h2>
                         <p>Get your own booking page on Locappoint. Free for the first twelve months.</p>
                         <div className="lc-br-cta__buttons">
-                            <Button to={join.pathname} state={join.state} iconRight={ArrowRight}>Get your booking page</Button>
+                            <Button to={JOIN.pathname} state={JOIN.state} iconRight={ArrowRight}>Get your booking page</Button>
                             <Button to="/partnership" variant="secondary">Apply as a partner</Button>
                         </div>
                     </section>
