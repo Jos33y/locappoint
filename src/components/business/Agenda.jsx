@@ -37,7 +37,16 @@ const Agenda = ({ dateKey, bookings, blocks, hours, staff, members, nowMinutes, 
             })
         }
 
-        const all = [...rows, ...blockRows, ...gaps].sort((a, b) => a.start - b.start || (a.kind === 'gap') - (b.kind === 'gap'))
+        // Lunch and closing are part of the day too; without them the timeline jumps and just stops.
+        const marks = []
+        const wins = windowsFor(hours, staff?.id || members[0]?.id, weekday)
+        if (!past && wins.length) {
+            wins.slice(1).forEach((w, i) => marks.push({ kind: 'break', start: wins[i][1], end: w[0] }))
+            const close = wins[wins.length - 1][1]
+            marks.push({ kind: 'close', start: close, end: close })
+        }
+
+        const all = [...rows, ...blockRows, ...gaps, ...marks].sort((a, b) => a.start - b.start || (a.kind === 'gap') - (b.kind === 'gap'))
         if (nowMinutes != null) {
             const index = all.findIndex((r) => r.end > nowMinutes)
             all.splice(index === -1 ? all.length : index, 0, { kind: 'now', start: nowMinutes })
@@ -75,6 +84,24 @@ const Agenda = ({ dateKey, bookings, blocks, hours, staff, members, nowMinutes, 
                                     Book
                                 </button>
                             </div>
+                        </li>
+                    )
+                }
+
+                if (item.kind === 'break') {
+                    return (
+                        <li key={`break-${item.start}`} className="biz-agenda__row biz-agenda__row--mark">
+                            <span className="biz-agenda__time biz-num">{minutesToLabel(item.start)}</span>
+                            <div className="biz-agenda__mark">Lunch break until <span className="biz-num">{minutesToLabel(item.end)}</span></div>
+                        </li>
+                    )
+                }
+
+                if (item.kind === 'close') {
+                    return (
+                        <li key="close" className="biz-agenda__row biz-agenda__row--mark">
+                            <span className="biz-agenda__time biz-num">{minutesToLabel(item.start)}</span>
+                            <div className="biz-agenda__mark">Closes</div>
                         </li>
                     )
                 }

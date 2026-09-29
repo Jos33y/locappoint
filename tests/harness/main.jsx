@@ -34,6 +34,7 @@ import SettingsPage from '@src/pages/business/SettingsPage'
 import InboxPage from '@src/components/inbox/InboxPage'
 import Insights from '@src/pages/business/Insights'
 import Reviews from '@src/pages/business/Reviews'
+import Invite from '@src/pages/business/Invite'
 import ClientHome from '@src/pages/client/Home'
 import ClientAppointments from '@src/pages/client/MyAppointments'
 import ClientSearch from '@src/pages/client/Search'
@@ -92,7 +93,7 @@ const App = () => (
           <Route path="help" element={<Help />} />
           <Route path="channels" element={<Channels />} />
           <Route path="reviews" element={<Reviews />} />
-          <Route path="invite" element={<Planned section="invite" />} />
+          <Route path="invite" element={<Invite />} />
           <Route path="setup" element={<Setup />} />
         </Route>
         <Route path="/client" element={<ClientHome />} />

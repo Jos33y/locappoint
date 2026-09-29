@@ -26,6 +26,8 @@ const ForgotPassword = lazy(() => import('./pages/app/auth/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/app/auth/ResetPassword'))
 const AuthConfirm = lazy(() => import('./pages/app/auth/AuthConfirm'))
 const ManageBooking = lazy(() => import('./pages/app/ManageBooking'))
+const Join = lazy(() => import('./pages/app/Join'))
+const Invite = lazy(() => import('./pages/business/Invite'))
 
 const BusinessShell = lazy(() => import('./components/business/BusinessShell'))
 const Today = lazy(() => import('./pages/business/Today'))
@@ -118,7 +120,7 @@ const BookingApp = () => (
                         <Route path="channels" element={inShell(<Channels />)} />
                         <Route path="setup" element={inShell(<Setup />)} />
                         <Route path="reviews" element={inShell(<Reviews />)} />
-                        <Route path="invite" element={inShell(<Planned section="invite" />)} />
+                        <Route path="invite" element={inShell(<Invite />)} />
                         <Route path="appointments" element={<Navigate to="/portal/calendar" replace />} />
                         <Route path="availability" element={<Navigate to="/portal/hours" replace />} />
                         <Route path="profile" element={<Navigate to="/portal/page" replace />} />
@@ -141,6 +143,7 @@ const BookingApp = () => (
                     </Route>
 
                     {/* Last so explicit routes win over a matching slug. */}
+                    <Route path="/join/:code" element={<Join />} />
                     <Route path="/:businessSlug" element={<PublicBusinessPage />} />
 
                     <Route path="*" element={<Navigate to="/" replace />} />

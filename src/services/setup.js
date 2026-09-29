@@ -2,6 +2,7 @@ import { supabase } from '../config/supabase'
 import { slugProblem } from '../constants/reservedSlugs'
 import { timezoneForPlace } from '../constants/locations'
 import { rowsFromWeek } from './hours'
+import { claimStoredReferral } from './referrals'
 
 export const BUSINESS_FIELDS =
     'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes'
@@ -71,6 +72,7 @@ export const createDraft = async (userId, details) => {
         .select(BUSINESS_FIELDS)
         .single()
     if (error) throw error
+    claimStoredReferral().catch((err) => console.error('Referral claim failed:', err))
     return data
 }
 

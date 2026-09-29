@@ -68,6 +68,7 @@ const KINDS = {
         booking_request: (p) => ({ label: p.moved_from ? 'Moved, needs your OK' : 'Waiting for you', tone: 'warning' }),
         booking_cancelled: () => ({ label: 'Cancelled by the client', tone: 'danger', off: true }),
         booking_moved: () => ({ label: 'Moved by the client', tone: 'info' }),
+        referral_points: (p) => ({ label: `+${p.points} points`, tone: 'success' }),
         review_new: (p) => ({ label: `New review, ${p.rating} ${Number(p.rating) === 1 ? 'star' : 'stars'}`, tone: Number(p.rating) >= 4 ? 'success' : Number(p.rating) === 3 ? 'info' : 'warning' }),
     },
     client: {
@@ -85,12 +86,14 @@ const KINDS = {
 const clip = (text, n = 90) => { const t = String(text || '').trim(); return t.length > n ? `${t.slice(0, n - 1)}…` : t }
 
 const reviewLine = (item, p) => {
+    if (item.kind === 'referral_points') return `${p.business_name || 'A business you invited'}: ${String(p.label || '').toLowerCase()}`
     if (item.kind === 'review_new') return p.body ? `“${clip(p.body)}”` : `${p.service_name || 'Visit'}, stars only`
     if (item.kind === 'review_reply') return `${p.business_name || 'The business'}: “${clip(p.reply)}”`
     return ''
 }
 
 const hrefFor = (item, forBusiness, p) => {
+    if (item.kind === 'referral_points') return '/portal/invite'
     if (item.kind === 'review_new') return p.review_id ? `/portal/reviews?review=${p.review_id}` : '/portal/reviews'
     if (!item.appointment_id) return null
     if (forBusiness) return `/portal/calendar?booking=${item.appointment_id}`
@@ -110,7 +113,7 @@ export const describeItem = (item) => {
         ...kind,
         time: String(p.time || '').slice(0, 5),
         day: p.date ? shortDay(p.date) : '',
-        title: forBusiness ? p.client_name || 'A client' : p.service_name || 'Your booking',
+        title: item.kind === 'referral_points' ? 'Points earned' : forBusiness ? p.client_name || 'A client' : p.service_name || 'Your booking',
         sub: reviewLine(item, p) || (forBusiness
             ? [p.service_name, duration, price]
             : [p.business_name, p.staff_name ? `with ${p.staff_name}` : '', price]

@@ -1,0 +1,215 @@
+.lc-inv__lead {
+    max-width: 60ch;
+    margin: var(--space-1) 0 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-body);
+}
+
+.lc-inv__skel { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.lc-inv__error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-danger-tint);
+}
+
+.lc-inv__error p { margin: 0; color: var(--lc-ink-1); font-size: var(--lc-t-label); }
+
+.lc-inv__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+}
+
+.lc-inv__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-5);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-inv__eyebrow {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-inv__big {
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-display);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--lc-track-display);
+    line-height: 1;
+}
+
+.lc-inv__note {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-inv__url {
+    margin: 0;
+    overflow: hidden;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-mono);
+    font-size: var(--lc-t-body);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lc-inv__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+.lc-inv__h2 {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-inv__none {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+.lc-inv-ladder {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lc-inv-ladder::before {
+    content: "";
+    position: absolute;
+    top: 13px;
+    right: calc(100% / 12);
+    left: calc(100% / 12);
+    height: 2px;
+    background: var(--lc-line-strong);
+}
+
+.lc-inv-ladder__step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+    text-align: center;
+}
+
+.lc-inv-ladder__dot {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 2px var(--lc-line-strong);
+    color: var(--lc-on-accent);
+}
+
+.lc-inv-ladder__step.is-on .lc-inv-ladder__dot {
+    background: var(--signal);
+    box-shadow: none;
+}
+
+.lc-inv-ladder__label {
+    color: var(--lc-ink-2);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.lc-inv-ladder__pts {
+    color: var(--lc-warning);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Six labels do not fit side by side on a phone: the ladder stands up. */
+@media (max-width: 639px) {
+    .lc-inv-ladder:not(.is-compact) { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+
+    .lc-inv-ladder:not(.is-compact)::before { top: 14px; bottom: 14px; left: 13px; right: auto; width: 2px; height: auto; }
+
+    .lc-inv-ladder:not(.is-compact) .lc-inv-ladder__step { flex-direction: row; gap: var(--space-3); text-align: left; }
+
+    .lc-inv-ladder:not(.is-compact) .lc-inv-ladder__label { flex: 1; font-size: var(--lc-t-body); }
+}
+
+.lc-inv-ladder.is-compact { margin: 0; }
+
+.lc-inv-ladder.is-compact::before { top: 8px; }
+
+.lc-inv-ladder.is-compact .lc-inv-ladder__dot { width: 18px; height: 18px; }
+
+.lc-inv-ladder.is-compact .lc-inv-ladder__step:not(.is-on) .lc-inv-ladder__dot { background: var(--lc-card); }
+
+.lc-inv-ladder__short { color: var(--lc-ink-3); font-size: 12px; }
+
+.lc-inv__list {
+    display: flex;
+    flex-direction: column;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lc-inv__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "who earned" "ladder ladder";
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+}
+
+.lc-inv__row + .lc-inv__row { border-top: 1px solid var(--lc-line); }
+
+.lc-inv__row .lc-inv-ladder { grid-area: ladder; }
+
+.lc-inv__who { grid-area: who; display: flex; flex-direction: column; min-width: 0; }
+
+.lc-inv__who strong { color: var(--lc-ink-1); font-size: var(--lc-t-body); overflow-wrap: anywhere; }
+
+.lc-inv__who span { color: var(--lc-ink-3); font-size: var(--lc-t-label); }
+
+.lc-inv__earned {
+    grid-area: earned;
+    color: var(--lc-warning);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+}
+
+@media (min-width: 720px) {
+    .lc-inv__top { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); }
+}
+
+@media (min-width: 1024px) {
+    .lc-inv__row {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) 64px;
+        grid-template-areas: "who ladder earned";
+    }
+
+    .lc-inv__earned { text-align: right; }
+}

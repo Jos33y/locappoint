@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import DayRail from '../../components/business/DayRail'
 import Agenda from '../../components/business/Agenda'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
 import StaffFilter from '../../components/business/StaffFilter'
+import { WeekRings } from '../../components/business/WeekRings'
+import { weekFigures } from '../../services/day'
+import { moneyFor } from '../../services/insights'
 import {
     STATUS_LABEL,
     addDays,
@@ -26,7 +30,8 @@ const Calendar = () => {
     const isDesktop = useIsDesktop()
     const today = zonedNow(business.timezone)
     const [view, setView] = useState('day')
-    const [anchor, setAnchor] = useState(today.dateKey)
+    const [params, setParams] = useSearchParams()
+    const [anchor, setAnchor] = useState(() => (/^\d{4}-\d{2}-\d{2}$/.test(params.get('date') || '') ? params.get('date') : today.dateKey))
     const [staffFilter, setStaffFilter] = useState(isOwner ? 'all' : me?.id)
     const [bookings, setBookings] = useState([])
     const [blocks, setBlocks] = useState([])
@@ -67,6 +72,13 @@ const Calendar = () => {
         () => visible.filter((b) => b.status === 'pending' && b.appointment_date === anchor).sort((a, b) => a.appointment_time.localeCompare(b.appointment_time)),
         [visible, anchor]
     )
+
+    useEffect(() => {
+        if (params.get('date')) setParams((prev) => { const next = new URLSearchParams(prev); next.delete('date'); return next }, { replace: true })
+    }, [params, setParams])
+
+    const money = useMemo(() => moneyFor(business.country), [business.country])
+    const week = view === 'week' ? weekFigures({ bookings: visible, hours, members: columns, now: today, anchor: range[0] }) : null
 
     const step = view === 'day' ? 1 : 7
     const title = view === 'day'
@@ -173,6 +185,10 @@ const Calendar = () => {
                     })}
                     onBookingTap={openBooking}
                 />
+            )}
+
+            {view === 'week' && week && (
+                <WeekRings week={week} todayKey={today.dateKey} money={money} onPick={(key) => { setAnchor(key); setView('day') }} />
             )}
 
             {view === 'week' && (

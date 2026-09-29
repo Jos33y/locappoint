@@ -6,7 +6,7 @@ const dk = (n) => { const [y, m, d] = key.split('-').map(Number); const t = new 
 
 export const DATA = {
   businesses: [{ id: 'b1', user_id: 'u1', business_name: 'Femtos Barbearia', slug: 'femtos-barbearia', timezone: 'Europe/Lisbon', is_active: true, launched_at: '2026-09-25T10:00:00Z', city: 'Lisbon', country: 'PT', neighbourhood: 'Arroios', category: 'barbershop', category_detail: null, phone: '+351912345678', whatsapp: '+351912345678', description: 'Classic cuts and hot towel shaves in Arroios.', address: 'Rua Morais Soares 12', logo_url: null, banner_url: cover }],
-  business_members: [{ id: 'm1', user_id: 'u1', business_id: 'b1', role: 'owner', display_name: 'Miles Farra', status: 'active', is_bookable: true, sort_order: 0 }],
+  business_members: [{ id: 'm1', user_id: 'u1', business_id: 'b1', role: new URLSearchParams(window.location.search).get('staff') === '1' ? 'staff' : 'owner', display_name: 'Miles Farra', status: 'active', is_bookable: true, sort_order: 0 }],
   services: [
     { id: 's1', business_id: 'b1', service_name: 'Haircut', duration_minutes: 30, price: 18, is_active: true, sort_order: 0 },
     { id: 's2', business_id: 'b1', service_name: 'Beard trim', duration_minutes: 20, price: 12, is_active: true, sort_order: 1 },
@@ -95,6 +95,15 @@ const REVIEWS = [
   { id: 'rv3', appointment_id: 'p7', rating: 1, body: 'Never went there but it looks bad.', client_name: 'Rui Costa', author: 'Rui C.', service: 'Haircut', staff_name: null, date: dk(-12), time: '12:00', created_at: `${dk(-11)}T09:00:00Z`, reply: null, replied_at: null, hidden: false, reported: true, visit_month: 'September 2026' },
 ]
 const summary = (items) => ({ count: items.length, average: items.length ? Math.round((items.reduce((s, r) => s + r.rating, 0) / items.length) * 10) / 10 : null, stars: [5, 4, 3, 2, 1].map((n) => items.filter((r) => r.rating === n).length) })
+const LADDER = [['joined', 0, 10, 'Joins Locappoint'], ['bookings_1', 1, 20, 'First booking'], ['bookings_10', 10, 30, '10 bookings'], ['bookings_25', 25, 50, '25 bookings'], ['bookings_50', 50, 75, '50 bookings'], ['bookings_100', 100, 100, '100 bookings']].map(([milestone, bookings, points, label]) => ({ milestone, bookings, points, label }))
+const INVITED = [
+  { business_name: 'Corte Fino', city: 'Lisbon', joined_at: `${dk(-40)}T10:00:00Z`, live: true, bookings: 12, points: 60, reached: ['joined', 'bookings_1', 'bookings_10'] },
+  { business_name: 'Studio Unhas Porto', city: 'Porto', joined_at: `${dk(-3)}T10:00:00Z`, live: false, bookings: 0, points: 10, reached: ['joined'] },
+]
+const referralRpc = {
+  my_referrals: () => ({ code: 'ab12cd34', points: quiet('noinvites') ? 0 : 70, ladder: LADDER, invited: quiet('noinvites') ? [] : INVITED }),
+  claim_referral: () => false,
+}
 const reviewRpc = {
   owner_reviews: () => (quiet('noreviews') ? { ...summary([]), waiting: 0, items: [] } : { ...summary(REVIEWS), waiting: REVIEWS.filter((r) => !r.reply).length, items: REVIEWS }),
   public_reviews: (args) => (quiet('noreviews') ? { ...summary([]), items: [] } : { ...summary(REVIEWS), count: 7, items: REVIEWS.slice(0, 2).map(({ client_name, ...r }) => ({ ...r, id: `${r.id}-${args.p_offset || 0}` })) }),
@@ -127,7 +136,7 @@ const builder = (table) => {
   let change = null
   let inserted = null
   const api = {
-    select(cols) { if (table === 'appointments' && /cancel_cutoff_minutes/.test(cols || '')) rows = [...DATA.my_appointments]; return api },
+    select(cols) { if (table === 'appointments' && /cancel_cutoff_minutes/.test(cols || '')) rows = new URLSearchParams(window.location.search).get('nobookings') === '1' ? [] : [...DATA.my_appointments]; return api },
     eq(k, v) { rows = rows.filter((r) => !(k in r) || r[k] === v); return api },
     in(k, vals) { rows = rows.filter((r) => vals.includes(r[k])); return api },
     neq() { return api }, gte() { return api }, lte() { return api }, lt() { return api }, gt() { return api },
@@ -161,7 +170,7 @@ const builder = (table) => {
 
 export const supabase = {
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

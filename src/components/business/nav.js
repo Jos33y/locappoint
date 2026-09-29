@@ -6,7 +6,6 @@ export const NAV_GROUPS = [
         items: [
             { to: '/portal', label: 'Today', icon: Sun, end: true, tab: true, tour: 'today' },
             { to: '/portal/calendar', label: 'Calendar', icon: CalendarDays, tab: true, tour: 'calendar' },
-            { to: '/portal/assistant', label: 'Loca AI', icon: Bot, tab: true, planned: 'assistant', tour: 'ai' },
             { to: '/portal/clients', label: 'Clients', icon: Users, tab: true, planned: 'clients' },
         ],
     },
@@ -34,7 +33,7 @@ export const HUBS = [
             { to: '/portal/channels', label: 'Channels', name: 'Channels', icon: Radio, keywords: ['link', 'whatsapp', 'google', 'qr'] },
             { to: '/portal/insights', label: 'Insights', name: 'Insights', icon: ChartColumn, keywords: ['money', 'stats', 'reports', 'visits', 'busiest'] },
             { to: '/portal/reviews', label: 'Reviews', name: 'Reviews', icon: Star, keywords: ['ratings', 'stars', 'reply'] },
-            { to: '/portal/invite', label: 'Invite', name: 'Invite a business', icon: Gift, planned: 'invite', keywords: ['referral', 'free month'] },
+            { to: '/portal/invite', label: 'Invite', name: 'Invite a business', icon: Gift, keywords: ['referral', 'points', 'invite'] },
         ],
     },
 ]
@@ -103,18 +102,6 @@ export const PLANNED = {
         ],
         preview: 'chart',
     },
-    invite: {
-        title: 'Invite a business',
-        icon: Gift,
-        promise: 'Know a business that should be on Locappoint? Invite them. When they start, you both get a month free.',
-        points: [
-            'Your own invite link to send on WhatsApp or by email',
-            'One free month for you and one for them when they take their first booking',
-            'See who you invited and which months you have earned',
-            'No limit on how many businesses you invite',
-        ],
-        preview: 'list',
-    },
     notifications: {
         title: 'Notifications',
         icon: Bell,
@@ -141,7 +128,7 @@ export const titleFor = (pathname) => {
 }
 
 export const TOUR_STEPS = [
-    { target: 'today', title: 'Today is your home', body: 'Your day at a glance: who is next, what needs confirming, and the free time you can still fill.' },
+    { target: 'today', title: 'Today is your home', body: 'How full today is, what you earned and what is still to come, your week, and what needs you.' },
     { target: 'new', title: 'Add a booking in seconds', body: 'Phone call or walk-in? Tap here, pick a time, type a name. That is it.' },
     { target: 'calendar', title: 'Plan ahead', body: 'See any day or the whole week. Tap a booking to confirm, move or cancel it.' },
     { target: 'more', title: 'Everything else lives here', body: 'Your page, services, hours, channels, help and settings. Your setup progress is at the top.' },

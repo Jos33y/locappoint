@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, RotateCw, Search } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
@@ -11,8 +11,14 @@ import { useMyBookings } from '../../components/client/bookings/useMyBookings'
 import { AgainCard } from '../../components/client/home/AgainCard'
 import { useRebook } from '../../components/client/bookings/useRebook'
 import { BookingSheet } from '../../components/booking/BookingSheet'
+import { WaitingOnYou } from '../../components/client/home/WaitingOnYou'
+import { PlaceResult } from '../../components/client/find/PlaceResult'
+import { RateSheet } from '../../components/reviews/RateSheet'
+import { canReview, submitMyReview } from '../../services/reviews'
+import { loadPlaces } from '../../services/booking'
 import '../../styles/client/client-bookings.css'
 import '../../styles/client/home-page.css'
+import '../../styles/client/home-overview.css'
 
 const greeting = () => {
     const hour = new Date().getHours()
@@ -40,6 +46,36 @@ const ClientHome = () => {
 
     const next = groups.upcoming[0]
     const more = groups.upcoming.length - 1
+    const [rating, setRating] = useState(null)
+    const [popular, setPopular] = useState([])
+    const toRate = groups.past.filter(canReview)
+    const unconfirmed = groups.upcoming.filter((b) => b.status === 'pending' && b.id !== next?.id)
+    const brandNew = state.status === 'ready' && state.rows.length === 0
+
+    // Someone with no bookings yet sees places worth booking, best rated first, rather than an empty page.
+    useEffect(() => {
+        if (!brandNew) return undefined
+        let cancelled = false
+        loadPlaces()
+            .then((all) => {
+                if (cancelled) return
+                const ranked = [...all].sort((a, b) => (b.rating?.count || 0) - (a.rating?.count || 0) || (b.rating?.average || 0) - (a.rating?.average || 0))
+                setPopular(ranked.slice(0, 3))
+            })
+            .catch(() => {})
+        return () => { cancelled = true }
+    }, [brandNew])
+
+    const saveReview = async (row, values) => {
+        const result = await submitMyReview({ id: row.id, ...values })
+        load()
+        return result
+    }
+
+    const againFromReview = (row) => {
+        setRating(null)
+        rebook.openRow(row)
+    }
 
     const find = (event) => {
         event.preventDefault()
@@ -80,6 +116,8 @@ const ClientHome = () => {
                 </section>
             ) : <EmptyTicket />)}
 
+            {state.status === 'ready' && <WaitingOnYou rate={toRate} waiting={unconfirmed} onRate={setRating} />}
+
             {next && <form className="lc-cl-home__find" role="search" onSubmit={find}>
                 <label className="lc-cl-home__findlabel" htmlFor="lc-cl-home-q">Find a place</label>
                 <span className="lc-cl-home__field">
@@ -107,7 +145,17 @@ const ClientHome = () => {
                 </section>
             )}
 
+            {brandNew && popular.length > 0 && (
+                <section className="lc-cl-popular" aria-labelledby="lc-cl-popular-title">
+                    <h2 id="lc-cl-popular-title" className="lc-cl-home__h2">Popular on Locappoint</h2>
+                    <ul className="lc-cl-popular__list">
+                        {popular.map((place) => <PlaceResult key={place.id} place={place} from="/client" />)}
+                    </ul>
+                </section>
+            )}
+
             <CancelSheet booking={cancelling} busy={busy} error={cancelError} onKeep={keep} onConfirm={confirmCancel} />
+            {rating && <RateSheet booking={rating} onSave={saveReview} onAgain={againFromReview} onClose={() => setRating(null)} />}
             {rebook.again && (
                 <BookingSheet
                     business={rebook.again.business}
