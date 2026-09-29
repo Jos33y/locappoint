@@ -9,6 +9,7 @@ import { CancelSheet } from '../../components/client/bookings/CancelSheet'
 import { EmptyTicket } from '../../components/client/bookings/EmptyTicket'
 import { BookingToast } from '../../components/client/bookings/BookingToast'
 import { useMyBookings } from '../../components/client/bookings/useMyBookings'
+import { useRebook } from '../../components/client/bookings/useRebook'
 import { BookingSheet } from '../../components/booking/BookingSheet'
 import { bookingPrice } from '../../services/booking'
 import '../../styles/client/client-bookings.css'
@@ -21,6 +22,9 @@ const ClientAppointments = () => {
     const [params, setParams] = useSearchParams()
     const [focused, setFocused] = useState(null)
     const linked = params.get('booking')
+    const againId = params.get('again')
+    const rebook = useRebook(Boolean(email))
+    const { openRow, places: rebookPlaces } = rebook
 
     // Links from emails and notifications carry ?booking=<id>: show its tab and bring it into view.
     useEffect(() => {
@@ -32,6 +36,20 @@ const ClientAppointments = () => {
         }
         setParams((prev) => { const next = new URLSearchParams(prev); next.delete('booking'); return next }, { replace: true })
     }, [linked, state.status, groups, setParams])
+
+    // The follow-up bell item carries ?again=<id>: open "Book again" for that visit.
+    useEffect(() => {
+        if (!againId || state.status !== 'ready' || rebookPlaces.status === 'loading') return
+        const row = state.rows.find((b) => b.id === againId)
+        if (row?.services?.id && row.businesses) openRow(row)
+        setParams((prev) => { const next = new URLSearchParams(prev); next.delete('again'); return next }, { replace: true })
+    }, [againId, state.status, state.rows, rebookPlaces.status, openRow, setParams])
+
+    const closeAgain = () => {
+        rebook.close()
+        moved()
+        rebook.reload()
+    }
 
     useEffect(() => {
         if (!focused) return undefined
@@ -55,9 +73,9 @@ const ClientAppointments = () => {
                 )}
             </header>
 
-            {moveError && (
+            {(moveError || rebook.againError) && (
                 <div className="lc-cl-bookings__error" role="alert">
-                    <p>{moveError}</p>
+                    <p>{moveError || rebook.againError}</p>
                 </div>
             )}
 
@@ -90,7 +108,7 @@ const ClientAppointments = () => {
                     <p className="lc-cl-bookings__none">{view === 'past' ? 'No past bookings yet.' : 'Nothing cancelled.'}</p>
                 ) : (
                     <ul className="lc-cl-pastlist">
-                        {groups[view].map((b) => <PastBooking key={b.id} booking={b} focused={b.id === focused} />)}
+                        {groups[view].map((b) => <PastBooking key={b.id} booking={b} focused={b.id === focused} onAgain={rebook.openRow} />)}
                     </ul>
                 )
             )}
@@ -104,6 +122,15 @@ const ClientAppointments = () => {
                     move={moving.booking}
                     onMoved={moved}
                     onClose={closeMove}
+                />
+            )}
+            {rebook.again && (
+                <BookingSheet
+                    business={rebook.again.business}
+                    service={rebook.again.rebook.service}
+                    week={rebook.again.week}
+                    rebook={rebook.again.rebook}
+                    onClose={closeAgain}
                 />
             )}
             <BookingToast message={toast} />

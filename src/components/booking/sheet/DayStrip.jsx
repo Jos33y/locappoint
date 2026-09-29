@@ -5,7 +5,7 @@ import '../../../styles/client/booking-sheet.css'
 
 const monthOf = (date) => date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
-export const DayStrip = ({ days, selected, onSelect, duration, nowMinutes }) => {
+export const DayStrip = ({ days, selected, onSelect, duration, nowMinutes, usual = null }) => {
     const rowRef = useRef(null)
     const [shown, setShown] = useState(() => monthOf((days.find((d) => d.key === selected) || days[0]).date))
     const [edges, setEdges] = useState({ start: true, end: false })
@@ -53,14 +53,14 @@ export const DayStrip = ({ days, selected, onSelect, duration, nowMinutes }) => 
                             key={d.key}
                             data-key={d.key}
                             type="button"
-                            className={`lc-bk-day${closed ? ' is-closed' : ''}${d.today ? ' is-today' : ''}`}
+                            className={`lc-bk-day${closed ? ' is-closed' : ''}${d.today ? ' is-today' : ''}${d.key === usual && !closed && !done ? ' is-usual' : ''}`}
                             aria-pressed={d.key === selected}
                             disabled={closed || done}
                             onClick={() => onSelect(d.key)}
                         >
                             <span className="lc-bk-day__wd">{d.today ? 'Today' : d.date.toLocaleDateString('en-GB', { weekday: 'short' })}</span>
                             <span className="lc-bk-day__num">{d.date.getDate()}</span>
-                            <span className="lc-bk-day__sub">{closed ? 'Closed' : done ? 'Past' : monthShort(d.date)}</span>
+                            <span className="lc-bk-day__sub">{closed ? 'Closed' : done ? 'Past' : d.key === usual ? 'Usual' : monthShort(d.date)}</span>
                         </button>
                     )
                 })}

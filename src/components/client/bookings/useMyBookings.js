@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { USER_ERRORS, cancelMyBooking, loadMyBookings, loadWeek } from '../../../services/booking'
-import { todayKey } from '../../../services/dates'
+import { USER_ERRORS, cancelMyBooking, isAhead, loadMyBookings, loadWeek } from '../../../services/booking'
 
 const ACTIVE = ['pending', 'confirmed']
 
@@ -32,8 +31,7 @@ export const useMyBookings = (email) => {
     }, [toast])
 
     const groups = useMemo(() => {
-        const today = todayKey()
-        const upcoming = state.rows.filter((r) => r.appointment_date >= today && ACTIVE.includes(r.status))
+        const upcoming = state.rows.filter((r) => ACTIVE.includes(r.status) && isAhead(r))
         const past = state.rows.filter((r) => r.status !== 'cancelled' && !upcoming.includes(r)).reverse()
         const cancelled = state.rows.filter((r) => r.status === 'cancelled').reverse()
         return { upcoming, past, cancelled }

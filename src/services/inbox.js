@@ -76,6 +76,7 @@ const KINDS = {
         booking_cancelled: () => ({ label: 'Cancelled by the business', tone: 'danger', off: true }),
         booking_moved: () => ({ label: 'New time from the business', tone: 'info' }),
         booking_reminder: () => ({ label: 'Coming up', tone: 'info' }),
+        visit_followup: () => ({ label: 'Book again', tone: 'success' }),
     },
 }
 
@@ -98,7 +99,7 @@ export const describeItem = (item) => {
         ).filter(Boolean).join(' · '),
         was: movedFrom ? `${shortDay(movedFrom)}, ${movedFrom.slice(11, 16)}` : '',
         href: item.appointment_id
-            ? `${forBusiness ? '/portal/calendar' : '/client/appointments'}?booking=${item.appointment_id}`
+            ? `${forBusiness ? '/portal/calendar' : '/client/appointments'}?${item.kind === 'visit_followup' ? 'again' : 'booking'}=${item.appointment_id}`
             : null,
     }
 }

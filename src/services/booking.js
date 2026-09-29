@@ -1,7 +1,7 @@
 import { supabase } from '../config/supabase'
 import { addDays, zonedNow } from './business'
 import { weekFromRows } from './hours'
-import { fromMinutes, parseDateKey, toMinutes, todayKey } from './dates'
+import { fromMinutes, parseDateKey, toDateKey, toMinutes, todayKey } from './dates'
 
 const STEP = 30
 const PENDING = 'pendingBooking'
@@ -18,16 +18,22 @@ export const bookingDays = (timeZone, week, count = 28) => {
     })
 }
 
-export const slotsFor = ({ windows, busy, duration, after = -1 }) => {
-    const taken = busy.map((b) => [toMinutes(b.start_time), toMinutes(b.end_time)])
-    return windows.map((w) => {
-        const slots = []
-        for (let start = w.start; start + duration <= w.end; start += STEP) {
-            const end = start + duration
-            if (start > after && !taken.some(([s, e]) => start < e && end > s)) slots.push(start)
+// Free times come from the same function the server books with, so staff hours, blocks and
+// overlaps agree. Shown on the half-hour grid of each opening window.
+export const windowsFor = ({ windows, free, after = -1 }) => {
+    const out = windows.map((w) => ({ ...w, slots: [] }))
+    const extra = []
+    for (const m of free) {
+        if (m <= after) continue
+        const w = out.find((x) => m >= x.start && m < x.end)
+        if (w) {
+            if ((m - w.start) % STEP === 0) w.slots.push(m)
+        } else if (m % STEP === 0) {
+            extra.push(m)
         }
-        return { ...w, slots }
-    })
+    }
+    if (extra.length) out.push({ start: extra[0], end: extra[extra.length - 1] + STEP, slots: extra })
+    return out.sort((a, b) => a.start - b.start)
 }
 
 export const hasTimeLeft = (day, duration, nowMinutes) =>
@@ -36,13 +42,19 @@ export const hasTimeLeft = (day, duration, nowMinutes) =>
         return first + duration <= w.end
     })
 
-export const loadBusy = async (businessId, dateKey) => {
-    const { data, error } = await supabase.rpc('get_busy_slots', { p_business_id: businessId, p_date: dateKey })
+export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null, ignore = null }) => {
+    const { data, error } = await supabase.rpc('get_available_slots', {
+        p_business_id: businessId,
+        p_service_id: serviceId,
+        p_date: dateKey,
+        p_staff_id: staffId,
+        p_ignore_appointment: ignore,
+    })
     if (error) throw error
-    return data || []
+    return [...new Set((data || []).map((row) => toMinutes(row.slot_time)))].sort((a, b) => a - b)
 }
 
-export const requestBooking = async ({ businessId, serviceId, dateKey, minutes, name, email, phone, notes }) => {
+export const requestBooking = async ({ businessId, serviceId, staffId = null, dateKey, minutes, name, email, phone, notes }) => {
     const { data, error } = await supabase.rpc('book_appointment', {
         p_business_id: businessId,
         p_service_id: serviceId,
@@ -52,6 +64,7 @@ export const requestBooking = async ({ businessId, serviceId, dateKey, minutes, 
         p_client_email: email,
         p_client_phone: phone,
         p_notes: notes,
+        p_staff_id: staffId,
     })
     if (error) throw error
     return data
@@ -164,6 +177,69 @@ export const canChange = (booking) => {
 }
 
 export const bookingPrice = (booking) => booking.price ?? booking.services?.price
+
+// Still ahead in the business's own time: a 09:00 visit is past by 09:30, not at midnight.
+export const isAhead = (booking) => {
+    const { dateKey, minutes } = zonedNow(booking.businesses?.timezone || 'Europe/Lisbon')
+    if (booking.appointment_date !== dateKey) return booking.appointment_date > dateKey
+    return toMinutes(booking.appointment_time) + (Number(booking.duration_minutes) || 0) > minutes
+}
+
+export const loadMyRebook = async () => {
+    const { data, error } = await supabase.rpc('my_rebook')
+    if (error) throw error
+    return data || []
+}
+
+export const loadRebookByLink = async (token) => {
+    const { data, error } = await supabase.rpc('rebook_by_link', { p_token: token })
+    if (error) throw error
+    return data
+}
+
+export const stopEmailsByLink = async (token) => {
+    const { error } = await supabase.rpc('stop_emails_by_link', { p_token: token })
+    if (error) throw error
+}
+
+export const firstOnOrAfter = (days, dateKey) => days.find((d) => d.key >= dateKey && d.windows.length > 0)
+
+export const gapLabel = (days) => {
+    if (days < 10) return days === 1 ? 'day' : `${days} days`
+    if (days < 60) {
+        const weeks = Math.round(days / 7)
+        return weeks === 1 ? 'week' : `${weeks} weeks`
+    }
+    const months = Math.round(days / 30)
+    return months === 1 ? 'month' : `${months} months`
+}
+
+export const dueLabel = (rhythm) => {
+    if (!rhythm?.due_date) return rhythm?.last_date ? `Last visit ${shortDate(rhythm.last_date)}` : ''
+    const days = Math.round((parseDateKey(rhythm.due_date) - parseDateKey(rhythm.today || todayKey())) / 86400000)
+    if (days < -1) return 'Due now'
+    if (days <= 0) return 'Due today'
+    if (days === 1) return 'Due tomorrow'
+    return days < 14 ? `Due in ${days} days` : `Due ${shortDate(rhythm.due_date)}`
+}
+
+export const shortDate = (dateKey) => {
+    const date = parseDateKey(String(dateKey).slice(0, 10))
+    return date ? `${date.getDate()} ${monthShort(date)}` : ''
+}
+
+// What a "Book again" opens with: the service, the person if still bookable, and the suggested day.
+export const rebookFrom = ({ service, staffId, staffName, staffCount, rhythm, client }) => ({
+    service,
+    staffId: staffId || null,
+    staffName: staffName || null,
+    staffCount: Number(staffCount) || 1,
+    suggested: rhythm?.suggested_date || null,
+    due: rhythm?.due_date || null,
+    today: rhythm?.today || toDateKey(new Date()),
+    gapDays: rhythm?.gap_days || null,
+    client: client || null,
+})
 
 export const USER_ERRORS = ['22023', 'P0001', 'P0002', '28000', '42501']
 

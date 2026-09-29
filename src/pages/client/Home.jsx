@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, RotateCw, Search } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
@@ -8,7 +8,9 @@ import { CancelSheet } from '../../components/client/bookings/CancelSheet'
 import { EmptyTicket } from '../../components/client/bookings/EmptyTicket'
 import { BookingToast } from '../../components/client/bookings/BookingToast'
 import { useMyBookings } from '../../components/client/bookings/useMyBookings'
-import { PlaceCard } from '../../components/client/home/PlaceCard'
+import { AgainCard } from '../../components/client/home/AgainCard'
+import { useRebook } from '../../components/client/bookings/useRebook'
+import { BookingSheet } from '../../components/booking/BookingSheet'
 import '../../styles/client/client-bookings.css'
 import '../../styles/client/home-page.css'
 
@@ -27,15 +29,14 @@ const ClientHome = () => {
     const first = (userProfile?.full_name || '').trim().split(/\s+/)[0]
     const { state, groups, load, cancelling, busy, cancelError, toast, askCancel, keep, confirmCancel } = useMyBookings(email)
     const [query, setQuery] = useState('')
+    const rebook = useRebook(Boolean(email))
+    const places = rebook.places.items.slice(0, 6)
 
-    const places = useMemo(() => {
-        const seen = new Map()
-        for (const row of [...groups.upcoming, ...groups.past]) {
-            const b = row.businesses
-            if (b?.slug && !seen.has(b.slug)) seen.set(b.slug, { business: b, service: row.services?.service_name || 'a booking' })
-        }
-        return [...seen.values()].slice(0, 6)
-    }, [groups])
+    const closeAgain = () => {
+        rebook.close()
+        load()
+        rebook.reload()
+    }
 
     const next = groups.upcoming[0]
     const more = groups.upcoming.length - 1
@@ -99,13 +100,23 @@ const ClientHome = () => {
             {places.length > 0 && (
                 <section className="lc-cl-home__places" aria-labelledby="lc-cl-home-places">
                     <h2 id="lc-cl-home-places" className="lc-cl-home__h2">Book again</h2>
-                    <ul className="lc-cl-places">
-                        {places.map((place) => <PlaceCard key={place.business.slug} place={place} />)}
+                    {rebook.againError && <p className="lc-again-error" role="alert">{rebook.againError}</p>}
+                    <ul className="lc-again-list">
+                        {places.map((item) => <AgainCard key={item.business.id} item={item} onBook={rebook.openPlace} />)}
                     </ul>
                 </section>
             )}
 
             <CancelSheet booking={cancelling} busy={busy} error={cancelError} onKeep={keep} onConfirm={confirmCancel} />
+            {rebook.again && (
+                <BookingSheet
+                    business={rebook.again.business}
+                    service={rebook.again.rebook.service}
+                    week={rebook.again.week}
+                    rebook={rebook.again.rebook}
+                    onClose={closeAgain}
+                />
+            )}
             <BookingToast message={toast} />
         </div>
     )

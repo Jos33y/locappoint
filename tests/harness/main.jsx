@@ -33,6 +33,11 @@ import HoursPage from '@src/pages/business/HoursPage'
 import SettingsPage from '@src/pages/business/SettingsPage'
 import InboxPage from '@src/components/inbox/InboxPage'
 import Insights from '@src/pages/business/Insights'
+import ClientHome from '@src/pages/client/Home'
+import ClientAppointments from '@src/pages/client/MyAppointments'
+import ManageBooking from '@src/pages/app/ManageBooking'
+import { InboxProvider } from '@src/components/inbox/InboxContext'
+import '@src/styles/client/client-shell.css'
 import { DATA } from './fakeSupabase'
 
 const params = new URLSearchParams(window.location.search)
@@ -50,8 +55,8 @@ const Where = () => { const l = useLocation(); window.__path = l.pathname; retur
 const Auth = ({ children }) => {
   const [mode, setMode] = useState('business')
   const value = useMemo(() => ({
-    user: { id: 'u1', email: params.get('email') || 'milesfarra@gmail.com' },
-    userProfile: { id: 'u1', full_name: params.has('noname') ? '' : 'Miles Farra', created_at: '2026-03-14T10:00:00Z' },
+    user: params.has('guest') ? null : { id: 'u1', email: params.get('email') || 'milesfarra@gmail.com' },
+    userProfile: params.has('guest') ? null : { id: 'u1', email: params.get('email') || 'milesfarra@gmail.com', full_name: params.has('noname') ? '' : 'Miles Farra', created_at: '2026-03-14T10:00:00Z' },
     business: DATA.businesses[0],
     loading: false,
     mode, setMode,
@@ -87,7 +92,10 @@ const App = () => (
           <Route path="invite" element={<Planned section="invite" />} />
           <Route path="setup" element={<Setup />} />
         </Route>
-        <Route path="/client" element={<p>Client side</p>} />
+        <Route path="/client" element={<ClientHome />} />
+        <Route path="/client/appointments" element={<ClientAppointments />} />
+        <Route path="/client/notifications" element={<InboxProvider audience="client"><InboxPage audience="client" /></InboxProvider>} />
+        <Route path="/b/:token" element={<ManageBooking />} />
       </Routes>
     </MemoryRouter>
   </Auth>

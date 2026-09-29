@@ -46,6 +46,8 @@ const CASES = [
     ['booking_moved', { audience: 'business', moved_from: '2026-09-30T11:00' }],
     ['booking_reminder', { audience: 'client', date: tomorrow() }],
     ['booking_new', { audience: 'business', price: 0 }],
+    ['visit_followup', { audience: 'client', date: '2026-09-28', suggested_date: '2026-10-26', gap_days: 28, visits: 3 }],
+    ['visit_followup', { audience: 'client', suggested_date: null, gap_days: null, visits: 1, staff_name: null, manage_token: null, has_account: true }],
     ['booking_request', { audience: 'business', status: 'pending' }],
     ['booking_request', { audience: 'business', status: 'pending', moved_from: '2026-09-30T11:00' }],
 ]
@@ -104,6 +106,13 @@ export default async ({ browser, check, server, root }) => {
             const ics = msg.attachments?.[0] ? Buffer.from(msg.attachments[0].content, 'base64').toString('utf8') : ''
             check(/BEGIN:VEVENT/.test(ics) && /DTSTART:20261001T0930\d{2}Z/.test(ics), `${label} carries a calendar invite at the right UTC time`)
             check(/calendar\.google\.com\/calendar\/render\?action=TEMPLATE/.test(msg.html), `${label} offers Google Calendar`)
+        }
+        if (kind === 'visit_followup') {
+            const linked = Boolean(extra.manage_token !== null)
+            check(!linked || (/\/b\/[a-f0-9]{32,}\?again=1/.test(msg.html) && /\/b\/[a-f0-9]{32,}\?stop=1/.test(msg.html)), `${label} books again and stops emails through the manage link`)
+            check(/Stop follow-up emails/.test(msg.html) && /Stop follow-up emails/.test(msg.text), `${label} always offers a way to stop`)
+            check(!extra.gap_days || /every 4 weeks/.test(msg.html), `${label} explains the suggested day`)
+            check(!msg.attachments, `${label} carries no calendar invite`)
         }
         if (kind === 'booking_confirmed' && extra.audience === 'client') {
             const guest = extra.has_account !== true

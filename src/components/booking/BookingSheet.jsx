@@ -7,7 +7,7 @@ import { useNow } from '../business/ShopClock'
 import { useAuth } from '../../hooks/useAuth'
 import { durationLabel, menuPrice } from '../../services/business'
 import { trackPage } from '../../services/pageStats'
-import { USER_ERRORS, bookingDays, clearPending, hasTimeLeft, loadBusy, monthShort, requestBooking, rescheduleMyBooking, savePending, slotsFor } from '../../services/booking'
+import { USER_ERRORS, bookingDays, clearPending, firstOnOrAfter, hasTimeLeft, loadSlots, monthShort, requestBooking, rescheduleMyBooking, savePending, windowsFor } from '../../services/booking'
 import { parsePhone } from '../ui/PhoneField'
 import { clock } from '../../services/hours'
 import { parseDateKey, toMinutes } from '../../services/dates'
@@ -17,9 +17,11 @@ import { BookingTicket } from './sheet/BookingTicket'
 import { AddToCalendar } from './AddToCalendar'
 import { BookingDetails } from './sheet/BookingDetails'
 import { OwnerNote } from './sheet/OwnerNote'
+import { RebookNote } from './sheet/RebookNote'
 import '../../styles/client/booking-sheet.css'
 
 const TITLES = { time: 'Pick a time', review: 'Check and confirm', done: 'Booking requested' }
+const AGAIN_TITLES = { ...TITLES, time: 'Book again' }
 const MOVE_TITLES = { time: 'Pick a new time', review: 'Check the new time', done: 'Booking moved' }
 const TAKEN = ['23P01']
 
@@ -30,7 +32,7 @@ const dayShort = (day) => `${day.date.toLocaleDateString('en-GB', { weekday: 'sh
 const firstBookable = (days, duration, nowMinutes) =>
     days.find((d) => d.windows.length > 0 && hasTimeLeft(d, duration, nowMinutes))
 
-export const BookingSheet = ({ business, service, week, resume, owner = false, move = null, mover, onMoved, onClose }) => {
+export const BookingSheet = ({ business, service, week, resume, owner = false, move = null, rebook = null, mover, onMoved, onClose }) => {
     const navigate = useNavigate()
     const { user, userProfile } = useAuth()
     const timeZone = business.timezone || 'Europe/Lisbon'
@@ -41,10 +43,13 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     const held = resume && days.some((d) => d.key === resume.dateKey && d.windows.length > 0) ? resume : null
     const was = move ? { dateKey: move.appointment_date, minutes: toMinutes(move.appointment_time) } : null
     const auto = business.auto_confirm === true
+    const [staffId, setStaffId] = useState(rebook?.staffId || null)
+    const usual = rebook?.suggested ? firstOnOrAfter(days, rebook.suggested)?.key || null : null
 
     const [step, setStep] = useState(held ? 'review' : 'time')
     const [dayKey, setDayKey] = useState(() => held?.dateKey
         || (was && days.some((d) => d.key === was.dateKey) ? was.dateKey : null)
+        || (usual && days.find((d) => d.key === usual && hasTimeLeft(d, duration, nowMinutes))?.key)
         || firstBookable(days, duration, nowMinutes)?.key || days[0].key)
     const [minutes, setMinutes] = useState(held?.minutes ?? null)
     const [busy, setBusy] = useState({})
@@ -52,8 +57,9 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     const [sending, setSending] = useState(false)
     const [errors, setErrors] = useState({})
     const [details, setDetails] = useState(() => {
-        const phone = parsePhone(userProfile?.phone || '', business.country || 'PT')
-        return { name: userProfile?.full_name || '', email: '', phone: phone.e164, phoneValid: phone.valid, country: phone.country || business.country || 'PT', notes: '' }
+        const last = rebook?.client || {}
+        const phone = parsePhone(userProfile?.phone || last.phone || '', business.country || 'PT')
+        return { name: userProfile?.full_name || last.name || '', email: last.email || '', phone: phone.e164, phoneValid: phone.valid, country: phone.country || business.country || 'PT', notes: '' }
     })
 
     const day = days.find((d) => d.key === dayKey) || days[0]
@@ -70,25 +76,27 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     const fetchDay = useCallback(async (key) => {
         setBusy((b) => ({ ...b, [key]: { state: 'loading' } }))
         try {
-            let rows = await loadBusy(business.id, key)
-            if (was && key === was.dateKey) {
-                const own = rows.findIndex((r) => toMinutes(r.start_time) === was.minutes)
-                if (own >= 0) rows = rows.filter((_, i) => i !== own)
-            }
-            setBusy((b) => ({ ...b, [key]: { state: 'ready', rows } }))
+            const free = await loadSlots({ businessId: business.id, serviceId: service.id, dateKey: key, staffId, ignore: move?.id || null })
+            setBusy((b) => ({ ...b, [key]: { state: 'ready', free } }))
         } catch (err) {
             console.error('Busy times failed:', err)
             setBusy((b) => ({ ...b, [key]: { state: 'error' } }))
         }
-    }, [business.id, was?.dateKey, was?.minutes])
+    }, [business.id, service.id, staffId, move?.id])
 
     useEffect(() => {
         if (!busy[dayKey]) fetchDay(dayKey)
     }, [dayKey, busy, fetchDay])
 
+    const pickStaff = (id) => {
+        setStaffId(id)
+        setMinutes(null)
+        setBusy({})
+    }
+
     const windows = useMemo(() => (entry?.state === 'ready'
-        ? slotsFor({ windows: day.windows, busy: entry.rows, duration, after: day.today ? nowMinutes : -1 })
-        : []), [entry, day, duration, nowMinutes])
+        ? windowsFor({ windows: day.windows, free: entry.free, after: day.today ? nowMinutes : -1 })
+        : []), [entry, day, nowMinutes])
 
     const next = useMemo(() => {
         const rest = days.slice(days.indexOf(day) + 1)
@@ -130,6 +138,7 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
             await requestBooking({
                 businessId: business.id,
                 serviceId: service.id,
+                staffId,
                 dateKey: dayKey,
                 minutes,
                 name: details.name.trim(),
@@ -174,7 +183,7 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     }
 
     const unchanged = was && dayKey === was.dateKey && minutes === was.minutes
-    const titles = move ? MOVE_TITLES : TITLES
+    const titles = move ? MOVE_TITLES : rebook ? AGAIN_TITLES : TITLES
     const stamp = auto ? 'Confirmed' : 'Requested'
 
     const close = () => {
@@ -233,7 +242,8 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
                         </span>
                         {hasPrice(service.price) && <span className="lc-bk-service__price">{menuPrice(service.price)}</span>}
                     </div>
-                    <DayStrip days={days} selected={dayKey} onSelect={pickDay} duration={duration} nowMinutes={nowMinutes} />
+                    {rebook && <RebookNote rebook={rebook} staffId={staffId} onStaff={pickStaff} picked={dayKey} usual={usual} />}
+                    <DayStrip days={days} selected={dayKey} onSelect={pickDay} duration={duration} nowMinutes={nowMinutes} usual={usual} />
                     {notice && <p className="lc-bk-notice" role="alert">{notice}</p>}
                     <TimeGrid
                         state={entry?.state || 'loading'}

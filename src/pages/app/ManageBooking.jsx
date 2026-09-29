@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { RotateCw, UserRound } from 'lucide-react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { RotateCcw, RotateCw, UserRound } from 'lucide-react'
 import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 import { Button, EmptyState, Skeleton } from '../../components/ui'
@@ -10,11 +10,11 @@ import { PastBooking } from '../../components/client/bookings/PastBooking'
 import { CancelSheet } from '../../components/client/bookings/CancelSheet'
 import { BookingToast } from '../../components/client/bookings/BookingToast'
 import { BookingSheet } from '../../components/booking/BookingSheet'
-import { USER_ERRORS, bookingPrice, cancelByLink, loadByLink, loadWeek, rescheduleByLink } from '../../services/booking'
-import { todayKey } from '../../services/dates'
+import { USER_ERRORS, bookingPrice, cancelByLink, gapLabel, isAhead, loadByLink, loadRebookByLink, loadWeek, rebookFrom, rescheduleByLink, shortDate, stopEmailsByLink } from '../../services/booking'
 import '../../styles/public-page.css'
 import '../../styles/client/client-bookings.css'
 import '../../styles/client/manage-booking.css'
+import '../../styles/client/rebook.css'
 
 // The page behind "Manage booking" in every booking email. No sign-in: the link is the key.
 const ManageBooking = () => {
@@ -28,10 +28,19 @@ const ManageBooking = () => {
     const [moving, setMoving] = useState(null)
     const [toast, setToast] = useState(null)
     const [moveError, setMoveError] = useState('')
+    const [params, setParams] = useSearchParams()
+    const [info, setInfo] = useState(null)
+    const [again, setAgain] = useState(null)
+    const [stop, setStop] = useState({ status: params.get('stop') === '1' ? 'ask' : 'idle', error: '' })
+    const wantsAgain = params.get('again') === '1'
 
     const load = useCallback(async () => {
         try {
-            const booking = await loadByLink(token)
+            const [booking, rebook] = await Promise.all([
+                loadByLink(token),
+                loadRebookByLink(token).catch((err) => { console.error('Book again failed:', err); return null }),
+            ])
+            setInfo(rebook)
             setState({ status: booking ? 'ready' : 'missing', booking })
         } catch (err) {
             console.error('Booking link failed:', err)
@@ -74,8 +83,58 @@ const ManageBooking = () => {
     }
 
     const b = state.booking
-    const upcoming = b && ['pending', 'confirmed'].includes(b.status) && b.appointment_date >= todayKey()
+    const upcoming = b && ['pending', 'confirmed'].includes(b.status) && isAhead(b)
     const guest = b && !b.has_account && !user
+    const canAgain = Boolean(b && !upcoming && info?.booking?.service?.active)
+    const rhythm = info?.rhythm
+
+    const startAgain = useCallback(async () => {
+        setMoveError('')
+        try {
+            const week = await loadWeek(info.business.id)
+            setAgain({
+                business: info.business,
+                week,
+                rebook: rebookFrom({
+                    service: info.booking.service,
+                    staffId: info.booking.staff_id,
+                    staffName: info.booking.staff_name,
+                    staffCount: info.booking.staff_count,
+                    rhythm: info.rhythm,
+                    client: info.client,
+                }),
+            })
+        } catch (err) {
+            console.error('Hours failed:', err)
+            setMoveError('We could not load the free times. Check your connection and try again.')
+        }
+    }, [info])
+
+    // "Book again" in the follow-up email lands here with ?again=1.
+    useEffect(() => {
+        if (!wantsAgain || state.status !== 'ready') return
+        if (canAgain) startAgain()
+        setParams((prev) => { const next = new URLSearchParams(prev); next.delete('again'); return next }, { replace: true })
+    }, [wantsAgain, state.status, canAgain, startAgain, setParams])
+
+    const stopEmails = async () => {
+        setStop({ status: 'busy', error: '' })
+        try {
+            await stopEmailsByLink(token)
+            setStop({ status: 'done', error: '' })
+        } catch (err) {
+            console.error('Stop emails failed:', err)
+            setStop({ status: 'ask', error: 'We could not do that. Check your connection and try again.' })
+        }
+    }
+    const stopped = stop.status === 'done' || (stop.status !== 'idle' && info?.emails_stopped)
+
+    let againText = `Same ${info?.booking?.service?.service_name || 'service'} at ${info?.business?.business_name || 'this place'}, straight to the free times.`
+    if (rhythm?.gap_days) {
+        againText = rhythm.due_date && rhythm.due_date < rhythm.today
+            ? `You come about every ${gapLabel(rhythm.gap_days)}, so you are due.`
+            : `You come about every ${gapLabel(rhythm.gap_days)}. Next due ${shortDate(rhythm.due_date)}.`
+    }
 
     return (
         <div className="lc-pubpage">
@@ -111,6 +170,24 @@ const ManageBooking = () => {
                             <p className="lc-mb__sub">For {b.client_name}. No sign-in needed on this page.</p>
                         </header>
 
+                        {stop.status !== 'idle' && (
+                            <section className="lc-again-stop" aria-live="polite">
+                                {stopped ? (
+                                    <p><b>Done.</b> No more follow-up emails to {b.client_email}. Confirmations and changes to your bookings still arrive.</p>
+                                ) : (
+                                    <>
+                                        <p className="lc-again-stop__title">Stop follow-up emails?</p>
+                                        <p>You will not get emails after a visit asking you to book again, from any business on Locappoint. Confirmations and changes to your bookings still arrive.</p>
+                                        {stop.error && <p className="lc-mb__error" role="alert">{stop.error}</p>}
+                                        <div className="lc-again-stop__actions">
+                                            <Button variant="secondary" onClick={() => setStop({ status: 'idle', error: '' })}>Keep them</Button>
+                                            <Button loading={stop.status === 'busy'} onClick={stopEmails}>Stop them</Button>
+                                        </div>
+                                    </>
+                                )}
+                            </section>
+                        )}
+
                         {moveError && <p className="lc-mb__error" role="alert">{moveError}</p>}
                         {upcoming ? (
                             <UpcomingBooking booking={b} lead onCancel={() => { setCancelError(''); setCancelling(true) }} onMove={askMove} />
@@ -118,6 +195,20 @@ const ManageBooking = () => {
                             <ul className="lc-cl-pastlist">
                                 <PastBooking booking={b} />
                             </ul>
+                        )}
+
+                        {canAgain && (
+                            <aside className="lc-mb__account lc-again-mb">
+                                <span className="lc-mb__icon" aria-hidden="true"><RotateCcw size={20} /></span>
+                                <div className="lc-mb__text">
+                                    <p className="lc-mb__heading">Book your next visit</p>
+                                    <p>{againText}</p>
+                                </div>
+                                <Button icon={RotateCcw} onClick={startAgain}>Book again</Button>
+                            </aside>
+                        )}
+                        {b && !upcoming && info && !canAgain && info.business?.slug && (
+                            <p className="lc-mb__all"><Link to={`/${info.business.slug}`}>See {info.business.business_name}'s services</Link></p>
                         )}
 
                         {guest && (
@@ -146,6 +237,15 @@ const ManageBooking = () => {
                     mover={({ dateKey, minutes }) => rescheduleByLink({ token, dateKey, minutes })}
                     onMoved={() => { setToast('Booking moved'); load() }}
                     onClose={() => setMoving(null)}
+                />
+            )}
+            {again && (
+                <BookingSheet
+                    business={again.business}
+                    service={again.rebook.service}
+                    week={again.week}
+                    rebook={again.rebook}
+                    onClose={() => { setAgain(null); load() }}
                 />
             )}
             <BookingToast message={toast} />
