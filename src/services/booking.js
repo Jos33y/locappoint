@@ -81,11 +81,20 @@ export const readBookParam = (search) => {
     return { serviceId: match[1], dateKey: match[2], minutes: Number(match[3]) * 60 + Number(match[4]) }
 }
 
+// Your bookings: made while signed in, or as a guest with your email. Filtered to you, because a
+// business owner can also read their own business's bookings.
+const mine = async (email) => {
+    const { data } = await supabase.auth.getSession()
+    const id = data?.session?.user?.id
+    const safe = String(email || '').replace(/[,()]/g, '')
+    return id ? `client_id.eq.${id},client_email.eq.${safe}` : `client_email.eq.${safe}`
+}
+
 export const loadNextBooking = async (email) => {
     const { data, error } = await supabase
         .from('appointments')
         .select('id, appointment_date, appointment_time, status, businesses (business_name, slug), services (service_name)')
-        .eq('client_email', email)
+        .or(await mine(email))
         .gte('appointment_date', todayKey())
         .in('status', ['pending', 'confirmed'])
         .order('appointment_date', { ascending: true })
@@ -101,7 +110,7 @@ export const loadMyBookings = async (email) => {
     const { data, error } = await supabase
         .from('appointments')
         .select(BOOKING_FIELDS)
-        .eq('client_email', email)
+        .or(await mine(email))
         .order('appointment_date', { ascending: true })
         .order('appointment_time', { ascending: true })
     if (error) throw error
@@ -115,6 +124,23 @@ export const cancelMyBooking = async (id) => {
 
 export const rescheduleMyBooking = async ({ id, dateKey, minutes }) => {
     const { error } = await supabase.rpc('reschedule_appointment', { p_appointment_id: id, p_date: dateKey, p_time: fromMinutes(minutes) })
+    if (error) throw error
+}
+
+// The private manage link from a booking email: see, move or cancel without signing in.
+export const loadByLink = async (token) => {
+    const { data, error } = await supabase.rpc('booking_by_link', { p_token: token })
+    if (error) throw error
+    return data
+}
+
+export const cancelByLink = async (token) => {
+    const { error } = await supabase.rpc('cancel_by_link', { p_token: token })
+    if (error) throw error
+}
+
+export const rescheduleByLink = async ({ token, dateKey, minutes }) => {
+    const { error } = await supabase.rpc('reschedule_by_link', { p_token: token, p_date: dateKey, p_time: fromMinutes(minutes) })
     if (error) throw error
 }
 

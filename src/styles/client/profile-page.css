@@ -9,3 +9,26 @@
     margin-top: calc(var(--space-2) * -1);
     white-space: normal;
 }
+
+.lc-cl-on {
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    background: var(--lc-success-tint);
+    color: var(--lc-success);
+    font-size: 12px;
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-cl-profile .biz-st__rowdetail b {
+    color: var(--lc-ink-2);
+    font-weight: var(--font-weight-semibold);
+    overflow-wrap: anywhere;
+}
+
+.lc-cl-emailnote {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+    overflow-wrap: anywhere;
+}

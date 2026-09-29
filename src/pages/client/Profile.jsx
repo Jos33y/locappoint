@@ -10,6 +10,7 @@ import StreetGridCover from '../../components/business/StreetGridCover'
 import SaveState from '../../components/business/SaveState'
 import { useAutosave } from '../../components/business/useAutosave'
 import { PasswordSheet, SettingsRow as Row, SettingsSection as Section, SignOutSheet } from '../../components/business/AccountSheets'
+import { EmailSheet } from '../../components/client/EmailSheet'
 import { BookingToast } from '../../components/client/bookings/BookingToast'
 import { SUPPORT } from '../../constants/support'
 import '../../styles/business/settings-page.css'
@@ -31,6 +32,7 @@ const ClientProfile = () => {
     const [phoneTouched, setPhoneTouched] = useState(false)
     const [passwordOpen, setPasswordOpen] = useState(false)
     const [signOutOpen, setSignOutOpen] = useState(false)
+    const [emailOpen, setEmailOpen] = useState(false)
     const [toast, setToast] = useState(null)
 
     const trimmed = name.trim()
@@ -105,8 +107,8 @@ const ClientProfile = () => {
                             <SaveState state={autosave.state} onRetry={autosave.retry} blockedText={nameProblem || phoneTouched ? 'Not saved yet' : 'Saves when the phone number is complete'} />
                         </div>
                         <div className="biz-st__rule" />
-                        <Row title="Sign-in email" detail="Used to sign in and for booking emails. Changing it is done by our team.">
-                            <Button variant="secondary" size="sm" icon={Mail} href={`mailto:${SUPPORT.email}?subject=${encodeURIComponent('Change my sign-in email')}`}>Ask to change</Button>
+                        <Row title="Sign-in email" detail={<>You sign in with <b>{email}</b>, and booking emails go there.</>}>
+                            <Button variant="secondary" size="sm" icon={Mail} onClick={() => setEmailOpen(true)}>Change email</Button>
                         </Row>
                     </div>
                 </section>
@@ -122,7 +124,15 @@ const ClientProfile = () => {
                 </Section>
 
                 <Section id="alerts" title="Notifications">
-                    <Row title="Booking reminders" detail="Email and WhatsApp reminders before your bookings, and a message when a business confirms.">
+                    <Row title="Booking emails" detail="When you book, when a business confirms, moves or cancels, and a reminder the day before. Each one has a link to add it to your calendar or change it.">
+                        <span className="lc-cl-on">On</span>
+                    </Row>
+                    <div className="biz-st__rule" />
+                    <Row title="In the app" detail="The bell at the top shows the same news, the moment it happens.">
+                        <span className="lc-cl-on">On</span>
+                    </Row>
+                    <div className="biz-st__rule" />
+                    <Row title="WhatsApp reminders" detail="The day-before reminder on WhatsApp, for people who live there more than in email.">
                         <span className="biz-soon">Soon</span>
                     </Row>
                 </Section>
@@ -160,6 +170,12 @@ const ClientProfile = () => {
                 onDone={() => { setPasswordOpen(false); say('Password changed') }}
             />
             <SignOutSheet open={signOutOpen} onClose={() => setSignOutOpen(false)} />
+            <EmailSheet
+                open={emailOpen}
+                current={email}
+                onClose={() => setEmailOpen(false)}
+                onSent={(next) => { setEmailOpen(false); say(`Check ${next} to confirm the change`) }}
+            />
             <BookingToast message={toast} />
         </div>
     )

@@ -24,6 +24,8 @@ const SAMPLE = {
     status: 'confirmed',
     client_name: 'Joe <script>alert(1)</script> Silva',
     client_phone: '+351 911 222 333',
+    has_account: false,
+    manage_token: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6',
 }
 
 const tomorrow = () => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)
@@ -34,6 +36,7 @@ const CASES = [
     ['business_live', {}],
     ['business_live', { auto_confirm: false, name: null }],
     ['booking_confirmed', { audience: 'client' }],
+    ['booking_confirmed', { audience: 'client', has_account: true, manage_token: null }],
     ['booking_confirmed', { audience: 'client', country: 'NG', timezone: 'Africa/Lagos', price: 15000, staff_name: null, address: null, city: null, business_whatsapp: null, business_phone: null }],
     ['booking_requested', { audience: 'client', status: 'pending' }],
     ['booking_declined', { audience: 'client', status: 'cancelled' }],
@@ -97,6 +100,16 @@ export default async ({ browser, check, server, root }) => {
         check(!msg.html.includes('<script>'), `${label} escapes names`)
         check(![...msg.html.matchAll(/href="([^"]+)"/g)].some(([, href]) => !/^(https:\/\/|mailto:)/.test(href)), `${label} links are https`)
         check(!/<\/?(p|span|td|tr|table|a|br|strong)\b|&[a-z]+;|&#\d+;/i.test(msg.text), `${label} plain text has no markup or entities`)
+        if (['booking_confirmed', 'booking_moved'].includes(kind) && extra.audience === 'client') {
+            const ics = msg.attachments?.[0] ? Buffer.from(msg.attachments[0].content, 'base64').toString('utf8') : ''
+            check(/BEGIN:VEVENT/.test(ics) && /DTSTART:20261001T0930\d{2}Z/.test(ics), `${label} carries a calendar invite at the right UTC time`)
+            check(/calendar\.google\.com\/calendar\/render\?action=TEMPLATE/.test(msg.html), `${label} offers Google Calendar`)
+        }
+        if (kind === 'booking_confirmed' && extra.audience === 'client') {
+            const guest = extra.has_account !== true
+            check(guest === /\/b\/[a-f0-9]{32,}/.test(msg.html), `${label} links to the manage page when it has a link`)
+            check(guest === /Create a free account/.test(msg.html), `${label} invites guests to make an account, and only guests`)
+        }
 
         for (const width of [375, 620]) {
             const page = await browser.newPage()

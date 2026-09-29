@@ -41,10 +41,13 @@ const AuthPage = () => {
     const returnTo = safePath(navState.returnTo) || safePath(searchParams.get('next')) || safePath(pathOf(navState.from))
     const booking = navState.booking || null
 
-    const [activeTab, setActiveTab] = useState(isVerified ? 'signin' : (navState.tab || 'signin'))
+    // Guests arrive from a booking or its email with their address, ready to make an account.
+    const queryTab = ['signin', 'signup'].includes(searchParams.get('tab')) ? searchParams.get('tab') : null
+    const startEmail = (navState.email || searchParams.get('email') || '').slice(0, 254)
+    const [activeTab, setActiveTab] = useState(isVerified ? 'signin' : (navState.tab || queryTab || 'signin'))
     const [userType, setUserType] = useState(navState.userType || 'client')
     const [formData, setFormData] = useState({
-        email: '',
+        email: startEmail,
         password: '',
         full_name: '',
         phone: '',

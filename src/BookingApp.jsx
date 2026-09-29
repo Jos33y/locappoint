@@ -25,6 +25,7 @@ const AuthPage = lazy(() => import('./pages/app/auth/AuthPage'))
 const ForgotPassword = lazy(() => import('./pages/app/auth/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/app/auth/ResetPassword'))
 const AuthConfirm = lazy(() => import('./pages/app/auth/AuthConfirm'))
+const ManageBooking = lazy(() => import('./pages/app/ManageBooking'))
 
 const BusinessShell = lazy(() => import('./components/business/BusinessShell'))
 const Today = lazy(() => import('./pages/business/Today'))
@@ -85,6 +86,7 @@ const BookingApp = () => (
                     <Route path="/admin" element={<AdminPage />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/auth/confirm" element={<AuthConfirm />} />
+                    <Route path="/b/:token" element={<ManageBooking />} />
                     <Route path="/me" element={<HomeRedirect />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />

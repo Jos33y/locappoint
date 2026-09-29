@@ -1,0 +1,98 @@
+/* The manage-booking page behind the email link. Prefix lc-mb. */
+
+.lc-mb {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-4) var(--space-12);
+}
+
+.lc-mb__skel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.lc-mb__head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.lc-mb__title {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-title);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--lc-track-title);
+}
+
+.lc-mb__sub {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-body);
+}
+
+.lc-mb__account {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-3) var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-mb__account .ui-btn,
+.lc-mb__account .btn {
+    grid-column: 2;
+    justify-self: start;
+}
+
+.lc-mb__icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    background: var(--lc-info-tint);
+    color: var(--lc-info);
+}
+
+.lc-mb__text p {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+    overflow-wrap: anywhere;
+}
+
+.lc-mb__text .lc-mb__heading {
+    margin-bottom: 2px;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-mb__all {
+    margin: 0;
+    font-size: var(--lc-t-label);
+}
+
+.lc-mb__all a {
+    color: var(--lc-info);
+}
+
+.lc-mb__error {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-danger-tint);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+}

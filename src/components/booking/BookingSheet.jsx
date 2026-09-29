@@ -14,7 +14,7 @@ import { parseDateKey, toMinutes } from '../../services/dates'
 import { DayStrip } from './sheet/DayStrip'
 import { TimeGrid } from './sheet/TimeGrid'
 import { BookingTicket } from './sheet/BookingTicket'
-import { AccountGate } from './sheet/AccountGate'
+import { AddToCalendar } from './AddToCalendar'
 import { BookingDetails } from './sheet/BookingDetails'
 import { OwnerNote } from './sheet/OwnerNote'
 import '../../styles/client/booking-sheet.css'
@@ -30,7 +30,7 @@ const dayShort = (day) => `${day.date.toLocaleDateString('en-GB', { weekday: 'sh
 const firstBookable = (days, duration, nowMinutes) =>
     days.find((d) => d.windows.length > 0 && hasTimeLeft(d, duration, nowMinutes))
 
-export const BookingSheet = ({ business, service, week, resume, owner = false, move = null, onMoved, onClose }) => {
+export const BookingSheet = ({ business, service, week, resume, owner = false, move = null, mover, onMoved, onClose }) => {
     const navigate = useNavigate()
     const { user, userProfile } = useAuth()
     const timeZone = business.timezone || 'Europe/Lisbon'
@@ -53,7 +53,7 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     const [errors, setErrors] = useState({})
     const [details, setDetails] = useState(() => {
         const phone = parsePhone(userProfile?.phone || '', business.country || 'PT')
-        return { name: userProfile?.full_name || '', phone: phone.e164, phoneValid: phone.valid, country: phone.country || business.country || 'PT', notes: '' }
+        return { name: userProfile?.full_name || '', email: '', phone: phone.e164, phoneValid: phone.valid, country: phone.country || business.country || 'PT', notes: '' }
     })
 
     const day = days.find((d) => d.key === dayKey) || days[0]
@@ -115,9 +115,12 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
         })
     }
 
+    const accountEmail = userProfile?.email || user?.email || ''
     const confirm = async () => {
         const problems = {}
+        const email = accountEmail || details.email.trim().toLowerCase()
         if (!details.name.trim()) problems.name = 'Add the name the business should expect'
+        if (!accountEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) problems.email = 'Enter the email for your confirmation'
         if (!details.phoneValid) problems.phone = 'Enter a phone number the business can call'
         setErrors(problems)
         if (Object.keys(problems).length) return
@@ -130,7 +133,7 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
                 dateKey: dayKey,
                 minutes,
                 name: details.name.trim(),
-                email: userProfile?.email || user?.email || '',
+                email,
                 phone: details.phone,
                 notes: details.notes.trim(),
             })
@@ -159,7 +162,8 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
         setSending(true)
         setNotice('')
         try {
-            await rescheduleMyBooking({ id: move.id, dateKey: dayKey, minutes })
+            if (mover) await mover({ dateKey: dayKey, minutes })
+            else await rescheduleMyBooking({ id: move.id, dateKey: dayKey, minutes })
             setStep('done')
             onMoved?.()
         } catch (err) {
@@ -196,21 +200,25 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     } else if (step === 'review' && owner) {
         footer = <Button full to="/portal/calendar">Open my calendar</Button>
     } else if (step === 'review') {
-        footer = user ? (
-            <Button full loading={sending} onClick={confirm}>Confirm booking</Button>
-        ) : (
-            <div className="lc-bk-foot lc-bk-foot--gate">
-                <Button variant="secondary" onClick={() => toAuth('signin')}>Sign in</Button>
-                <Button onClick={() => toAuth('signup')}>Create account</Button>
-            </div>
-        )
+        footer = <Button full loading={sending} onClick={confirm}>Confirm booking</Button>
     } else {
         footer = (
             <div className="lc-bk-foot lc-bk-foot--gate">
-                {!move && <Button variant="secondary" to="/client/appointments">My bookings</Button>}
+                {!move && user && <Button variant="secondary" to="/client/appointments">My bookings</Button>}
                 <Button onClick={close}>Done</Button>
             </div>
         )
+    }
+
+    const event = minutes === null ? null : {
+        id: move?.id,
+        title: `${service.service_name.trim()} at ${business.business_name}`,
+        dateKey: dayKey,
+        minutes,
+        duration,
+        timeZone,
+        location: [business.address, business.city].filter(Boolean).join(', '),
+        details: business.phone ? `${business.business_name}: ${business.whatsapp || business.phone}` : '',
     }
 
     return (
@@ -252,15 +260,14 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
                         </p>
                     ) : owner ? (
                         <OwnerNote />
-                    ) : user ? (
+                    ) : (
                         <BookingDetails
                             value={details}
                             errors={errors}
-                            email={userProfile?.email || user?.email}
+                            email={accountEmail}
+                            onSignIn={user ? null : () => toAuth('signin')}
                             onChange={(patch) => { setDetails((d) => ({ ...d, ...patch })); setErrors({}) }}
                         />
-                    ) : (
-                        <AccountGate businessName={business.business_name} />
                     )}
                     {notice && <p className="lc-bk-notice" role="alert">{notice}</p>}
                 </>
@@ -272,8 +279,17 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
                     <p className="lc-bk-done">
                         {move
                             ? (auto ? 'Your booking is moved to the new time.' : `${business.business_name} will confirm the new time.`)
-                            : (auto ? `You are booked in at ${business.business_name}. You can find it in My bookings.` : `${business.business_name} has your request and will confirm it. You can find it in My bookings.`)}
+                            : user
+                                ? (auto ? `You are booked in at ${business.business_name}. You can find it in My bookings.` : `${business.business_name} has your request and will confirm it. You can find it in My bookings.`)
+                                : (auto ? `You are booked in at ${business.business_name}.` : `${business.business_name} has your request and will confirm it.`)}
+                        {!move && !user && <> We sent the details to <b>{details.email.trim().toLowerCase()}</b>, with a link to change or cancel it.</>}
                     </p>
+                    {auto && event && <AddToCalendar booking={event} />}
+                    {!move && !user && (
+                        <p className="lc-bk-later">
+                            No account needed. To see all your bookings in one place, <button type="button" className="lc-bk-link" onClick={() => navigate('/auth', { state: { tab: 'signup', userType: 'client', email: details.email.trim().toLowerCase() } })}>create a free account</button> with this email later.
+                        </p>
+                    )}
                 </>
             )}
         </Sheet>

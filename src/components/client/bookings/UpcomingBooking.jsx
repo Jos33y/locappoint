@@ -1,6 +1,7 @@
 import { CalendarClock, MessageCircle, Navigation, Phone, X } from 'lucide-react'
 import { Button } from '../../ui'
 import { BookingTicket } from '../../booking/sheet/BookingTicket'
+import { AddToCalendar } from '../../booking/AddToCalendar'
 import { whatsappLink } from '../../../services/business'
 import { parseDateKey, toMinutes } from '../../../services/dates'
 import { bookingPrice, canChange, monthShort } from '../../../services/booking'
@@ -62,6 +63,21 @@ export const UpcomingBooking = ({ booking, lead = false, focused = false, onCanc
                     <p className="lc-cl-bk__late">Too late to change online. Message {business.business_name} if your plans change.</p>
                 )}
             </div>
+            {confirmed && (
+                <AddToCalendar
+                    compact
+                    booking={{
+                        id: booking.id,
+                        title: `${booking.services?.service_name || 'Booking'} at ${business.business_name}`,
+                        dateKey: booking.appointment_date,
+                        minutes,
+                        duration: service.duration_minutes,
+                        timeZone: business.timezone,
+                        location: [business.address, business.city].filter(Boolean).join(', '),
+                        details: business.whatsapp || business.phone ? `${business.business_name}: ${business.whatsapp || business.phone}` : '',
+                    }}
+                />
+            )}
         </article>
     )
 }
