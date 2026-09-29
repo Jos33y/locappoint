@@ -57,10 +57,10 @@ export default function StatusApp() {
                             <span>Live status / Locappoint</span>
                         </div>
                         <h1 id="hero-title" className="hero__title">
-                            Booking platform <span className="signal">built</span>. Next: the <span className="azure">Lisbon beta.</span>
+                            Booking platform <span className="signal">running</span>. Finishing it for the <span className="azure">Lisbon beta.</span>
                         </h1>
                         <p className="hero__lede">
-                            Clients book, owners run their day. Left before the first businesses go live: hardening, the phone apps and WhatsApp alerts.
+                            Clients book, owners run their day. Before the first businesses go live: the last launch features, hardening and the phone apps.
                         </p>
 
                         <div className="hero__stats">
@@ -71,13 +71,13 @@ export default function StatusApp() {
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Launch ready</div>
-                                <div className="hero__stat-value"><span className="azure">80%</span></div>
-                                <div className="hero__stat-sub">Product built</div>
+                                <div className="hero__stat-value"><span className="azure">70%</span></div>
+                                <div className="hero__stat-sub">Core product built</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Now building</div>
-                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>Hardening</div>
-                                <div className="hero__stat-sub">Then the phone apps</div>
+                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>Launch features</div>
+                                <div className="hero__stat-sub">Then hardening, apps</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Updated</div>
@@ -121,9 +121,9 @@ export default function StatusApp() {
                             <div className="phase__body">
                                 <div className="phase__row">
                                     <span className="phase__num">Phase 2</span>
-                                    <span className="phase__name">MVP booking</span>
+                                    <span className="phase__name">Launch product</span>
                                 </div>
-                                <div className="phase__sub">Built. Hardening, apps and first businesses left.</div>
+                                <div className="phase__sub">Core built. Last features, hardening and apps left.</div>
                             </div>
                             <span className="phase__status phase__status--building">Active build</span>
                         </a>
@@ -135,9 +135,9 @@ export default function StatusApp() {
                             <div className="phase__body">
                                 <div className="phase__row">
                                     <span className="phase__num">Phase 3</span>
-                                    <span className="phase__name">What sets us apart</span>
+                                    <span className="phase__name">Why people prefer us</span>
                                 </div>
-                                <div className="phase__sub">Eight ideas scoped. The first businesses pick the winners.</div>
+                                <div className="phase__sub">WhatsApp, the Google Book button, filling empty slots.</div>
                             </div>
                             <span className="phase__status phase__status--scoped">Scoped</span>
                         </a>
@@ -149,9 +149,9 @@ export default function StatusApp() {
                             <div className="phase__body">
                                 <div className="phase__row">
                                     <span className="phase__num">Phase 4</span>
-                                    <span className="phase__name">AI features</span>
+                                    <span className="phase__name">AI</span>
                                 </div>
-                                <div className="phase__sub">Built once businesses are paying and staying.</div>
+                                <div className="phase__sub">What keeps businesses paying. Built straight after Phase 3.</div>
                             </div>
                             <span className="phase__status phase__status--planned">Planned</span>
                         </a>
@@ -198,14 +198,14 @@ export default function StatusApp() {
                 <section className="section reveal" id="phase-2" aria-labelledby="phase-2-title">
                     <div className="section__head">
                         <span className="section__eyebrow">03 / Phase 2</span>
-                        <h2 className="section__title" id="phase-2-title">The booking platform</h2>
-                        <p className="section__lede">Built and running on locappoint.com.</p>
+                        <h2 className="section__title" id="phase-2-title">The launch product</h2>
+                        <p className="section__lede">Running on locappoint.com. What Lisbon and Porto launch with.</p>
                     </div>
 
                     <article className="detail">
                         <div className="detail__head">
                             <span className="detail__num">Phase 2</span>
-                            <span className="detail__title">MVP booking platform</span>
+                            <span className="detail__title">Launch product</span>
                         </div>
                         <div className="detail__grid">
                             <div className="detail__col">
@@ -223,18 +223,23 @@ export default function StatusApp() {
                                 </div>
                             </div>
                             <div className="detail__col detail__col--active">
-                                <div className="detail__col-label">In progress</div>
+                                <div className="detail__col-label">Still to build</div>
                                 <div className="detail__list">
-                                    <div className="detail__item detail__item--active">Hardening: security, speed, errors</div>
+                                    <div className="detail__item detail__item--active">Hours: several breaks, closed dates, buffer</div>
+                                    <div className="detail__item detail__item--active">Calendar: month view, block time</div>
+                                    <div className="detail__item detail__item--active">Services: reorder and combos</div>
+                                    <div className="detail__item detail__item--active">Insights in money: lost, saved</div>
+                                    <div className="detail__item detail__item--active">The 2-hour reminder</div>
+                                    <div className="detail__item detail__item--active">QR poster for the counter</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--next">
                                 <div className="detail__col-label">Before launch</div>
                                 <div className="detail__list">
+                                    <div className="detail__item detail__item--next">Hardening: security, speed, errors</div>
                                     <div className="detail__item detail__item--next">Android app: download, then Google Play</div>
                                     <div className="detail__item detail__item--next">iPhone app: TestFlight, then App Store</div>
                                     <div className="detail__item detail__item--next">Push notifications for owners</div>
-                                    <div className="detail__item detail__item--next">WhatsApp alerts</div>
                                     <div className="detail__item detail__item--next">"Join Beta" on the waitlist</div>
                                     <div className="detail__item detail__item--next">First five businesses live in Lisbon</div>
                                 </div>
@@ -242,7 +247,7 @@ export default function StatusApp() {
                         </div>
                         <div className="detail__target">
                             <span className="detail__target-label">Waiting on</span>
-                            <span className="detail__target-value">App review, Meta approval for WhatsApp, and owners saying yes.</span>
+                            <span className="detail__target-value">App review and owners saying yes.</span>
                         </div>
                     </article>
                 </section>
@@ -252,33 +257,41 @@ export default function StatusApp() {
                 <section className="section reveal" id="phase-3" aria-labelledby="phase-3-title">
                     <div className="section__head">
                         <span className="section__eyebrow">04 / Phase 3</span>
-                        <h2 className="section__title" id="phase-3-title">What sets us apart</h2>
-                        <p className="section__lede">Booking alone is not enough. Owners pick two or three of these.</p>
+                        <h2 className="section__title" id="phase-3-title">Why people prefer us</h2>
+                        <p className="section__lede">Fewer empty chairs, fewer no-shows, found in more places.</p>
                     </div>
 
                     <article className="detail">
                         <div className="detail__head">
                             <span className="detail__num">Phase 3</span>
-                            <span className="detail__title">Standout features</span>
+                            <span className="detail__title">Intermediate</span>
                         </div>
                         <div className="detail__grid">
                             <div className="detail__col">
-                                <div className="detail__col-label">Candidates</div>
+                                <div className="detail__col-label">For businesses</div>
                                 <div className="detail__list">
-                                    <div className="detail__item">Walk-in queue for barbers</div>
-                                    <div className="detail__item">Many shops, one owner</div>
-                                    <div className="detail__item">No-show reduction, measured in euros</div>
-                                    <div className="detail__item">Cash tracking for Lagos</div>
-                                    <div className="detail__item">Combo slots: cut and beard in one</div>
-                                    <div className="detail__item">Group classes</div>
-                                    <div className="detail__item">Pages that replace Wix</div>
-                                    <div className="detail__item">Portuguese, English and local languages</div>
+                                    <div className="detail__item">Empty slots offered to clients who are due back</div>
+                                    <div className="detail__item">Clients confirm to keep their booking</div>
+                                    <div className="detail__item">WhatsApp reminders and confirmations</div>
+                                    <div className="detail__item">Book button on Google Maps and Search</div>
+                                    <div className="detail__item">Weekly recap to share on WhatsApp Status</div>
+                                    <div className="detail__item">Walk-in queue, if owners ask for it</div>
+                                </div>
+                            </div>
+                            <div className="detail__col">
+                                <div className="detail__col-label">For clients</div>
+                                <div className="detail__list">
+                                    <div className="detail__item">Search by who is free today</div>
+                                    <div className="detail__item">Alerts when an earlier time opens</div>
+                                    <div className="detail__item">Saved places</div>
+                                    <div className="detail__item">Photos of work and staff profiles</div>
+                                    <div className="detail__item">Loyalty stamps and family bookings</div>
                                 </div>
                             </div>
                         </div>
                         <div className="detail__target">
-                            <span className="detail__target-label">Decided</span>
-                            <span className="detail__target-value">Once the first businesses are live and using it.</span>
+                            <span className="detail__target-label">Waiting on</span>
+                            <span className="detail__target-value">Meta approval for WhatsApp and Google approval for the Book button. Both start now.</span>
                         </div>
                     </article>
                 </section>
@@ -288,30 +301,35 @@ export default function StatusApp() {
                 <section className="section reveal" id="phase-4" aria-labelledby="phase-4-title">
                     <div className="section__head">
                         <span className="section__eyebrow">05 / Phase 4</span>
-                        <h2 className="section__title" id="phase-4-title">AI features</h2>
-                        <p className="section__lede">On the roadmap. Built once there is real data to learn from.</p>
+                        <h2 className="section__title" id="phase-4-title">AI</h2>
+                        <p className="section__lede">The reason businesses stay and pay. Built on the same booking engine, so it cannot double-book.</p>
                     </div>
 
                     <article className="detail">
                         <div className="detail__head">
                             <span className="detail__num">Phase 4</span>
-                            <span className="detail__title">AI layer</span>
+                            <span className="detail__title">Advanced</span>
                         </div>
                         <div className="detail__grid">
                             <div className="detail__col">
-                                <div className="detail__col-label">Roadmap</div>
+                                <div className="detail__col-label">For owners</div>
                                 <div className="detail__list">
+                                    <div className="detail__item">Loca AI: "what is my day", "block 2 to 4"</div>
                                     <div className="detail__item">No-show prediction</div>
-                                    <div className="detail__item">Booking by WhatsApp chat</div>
                                     <div className="detail__item">Profiles written in Portuguese and English</div>
-                                    <div className="detail__item">Search you can talk to</div>
-                                    <div className="detail__item">Scheduling assistant</div>
+                                </div>
+                            </div>
+                            <div className="detail__col">
+                                <div className="detail__col-label">For clients</div>
+                                <div className="detail__list">
+                                    <div className="detail__item">Book, move and cancel by WhatsApp chat</div>
+                                    <div className="detail__item">Book from Claude, ChatGPT and Gemini</div>
                                 </div>
                             </div>
                         </div>
                         <div className="detail__target">
-                            <span className="detail__target-label">Starts</span>
-                            <span className="detail__target-value">Once businesses are paying and staying.</span>
+                            <span className="detail__target-label">Then</span>
+                            <span className="detail__target-value">Payments and languages: deposits, subscriptions, Portuguese screens.</span>
                         </div>
                     </article>
                 </section>
@@ -374,7 +392,7 @@ export default function StatusApp() {
                     </div>
 
                     <div className="surfaces">
-                        <a className="surface surface--building" href="https://locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="80">
+                        <a className="surface surface--building" href="https://locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="70">
                             <div className="surface__head">
                                 <span className="surface__status surface__status--building">
                                     <span className="surface__status-dot" aria-hidden="true"></span>
@@ -383,7 +401,7 @@ export default function StatusApp() {
                                 <span className="surface__pct"></span>
                             </div>
                             <div className="surface__url">locappoint.com</div>
-                            <div className="surface__desc">The booking platform. In hardening.</div>
+                            <div className="surface__desc">The booking platform. Launch features in progress.</div>
                             <div className="surface__bar" aria-hidden="true">
                                 <div className="surface__bar-fill"></div>
                             </div>
@@ -447,10 +465,10 @@ export default function StatusApp() {
                         </div>
                         <div className="need">
                             <div className="need__head">
-                                <div className="need__title">WhatsApp approval</div>
+                                <div className="need__title">WhatsApp and Google approval</div>
                                 <div className="need__when">Start now</div>
                             </div>
-                            <p className="need__text">Meta needs the company papers and a phone number only Locappoint uses.</p>
+                            <p className="need__text">Meta needs the company papers and a phone number only Locappoint uses. Google needs the same for the Book button.</p>
                         </div>
                     </div>
                 </section>
