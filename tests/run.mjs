@@ -10,10 +10,11 @@ import businessPage from './suites/business-page.mjs'
 import servicesHours from './suites/services-hours.mjs'
 import settings from './suites/settings.mjs'
 import emails from './suites/emails.mjs'
+import notifications from './suites/notifications.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const [target = 'quick', filter] = process.argv.slice(2)
-const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage], ['services and hours', servicesHours], ['settings', settings]] }
+const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage], ['services and hours', servicesHours], ['settings', settings], ['notifications', notifications]] }
 SUITES.emails = [['emails', emails]]
 SUITES.all = [...SUITES.flows, ...SUITES.emails, ...SUITES.layout]
 SUITES.quick = [...SUITES.flows, ...SUITES.emails, ['layout, 4 key screens', layout]]

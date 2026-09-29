@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
 import { RotateCw } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { Button, Segmented } from '../../components/ui'
@@ -18,24 +17,6 @@ const ClientAppointments = () => {
     const email = userProfile?.email || user?.email || ''
     const { state, groups, load, cancelling, busy, cancelError, toast, askCancel, keep, confirmCancel, moving, moveError, askMove, closeMove, moved } = useMyBookings(email)
     const [view, setView] = useState('upcoming')
-    const [params, setParams] = useSearchParams()
-    const [focused, setFocused] = useState(null)
-    const linked = params.get('booking')
-
-    // Links from emails and notifications carry ?booking=<id>: show its tab and bring it into view.
-    useEffect(() => {
-        if (!linked || state.status !== 'ready') return
-        const tab = ['upcoming', 'past', 'cancelled'].find((key) => groups[key].some((b) => b.id === linked))
-        if (tab) {
-            setView(tab)
-            setFocused(linked)
-        }
-        setParams((prev) => { const next = new URLSearchParams(prev); next.delete('booking'); return next }, { replace: true })
-    }, [linked, state.status, groups, setParams])
-
-    useEffect(() => {
-        if (focused) document.getElementById(`booking-${focused}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    }, [focused, view])
 
     const options = [
         { value: 'upcoming', label: `Upcoming ${groups.upcoming.length}` },
@@ -76,7 +57,7 @@ const ClientAppointments = () => {
                 groups.upcoming.length === 0 ? <EmptyTicket /> : (
                     <div className="lc-cl-bookings__list">
                         {groups.upcoming.map((b, i) => (
-                            <UpcomingBooking key={b.id} booking={b} lead={i === 0} focused={b.id === focused} onCancel={askCancel} onMove={askMove} />
+                            <UpcomingBooking key={b.id} booking={b} lead={i === 0} onCancel={askCancel} onMove={askMove} />
                         ))}
                     </div>
                 )
@@ -87,7 +68,7 @@ const ClientAppointments = () => {
                     <p className="lc-cl-bookings__none">{view === 'past' ? 'No past bookings yet.' : 'Nothing cancelled.'}</p>
                 ) : (
                     <ul className="lc-cl-pastlist">
-                        {groups[view].map((b) => <PastBooking key={b.id} booking={b} focused={b.id === focused} />)}
+                        {groups[view].map((b) => <PastBooking key={b.id} booking={b} />)}
                     </ul>
                 )
             )}

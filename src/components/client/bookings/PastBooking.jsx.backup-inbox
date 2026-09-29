@@ -9,11 +9,11 @@ const CANCELLED = { client: 'You cancelled', business: 'Cancelled by the busines
 
 const label = (booking) => (booking.status === 'cancelled' && CANCELLED[booking.cancelled_by]) || LABEL[booking.status] || booking.status
 
-export const PastBooking = ({ booking, focused = false }) => {
+export const PastBooking = ({ booking }) => {
     const date = parseDateKey(booking.appointment_date)
     const business = booking.businesses || {}
     return (
-        <li id={`booking-${booking.id}`} className={`lc-cl-past${focused ? ' is-focus' : ''}`}>
+        <li className="lc-cl-past">
             <span className="lc-cl-past__date">
                 <small>{monthShort(date)}</small>
                 <b>{date.getDate()}</b>

@@ -18,7 +18,7 @@ const movedLabel = (value) => {
     return `${date.toLocaleDateString('en-GB', { weekday: 'short' })} ${date.getDate()} ${monthShort(date)} at ${(time || '').slice(0, 5)}`
 }
 
-export const UpcomingBooking = ({ booking, lead = false, focused = false, onCancel, onMove }) => {
+export const UpcomingBooking = ({ booking, lead = false, onCancel, onMove }) => {
     const business = booking.businesses || {}
     const service = { ...booking.services, duration_minutes: booking.duration_minutes || booking.services?.duration_minutes, price: bookingPrice(booking) }
     const minutes = toMinutes(booking.appointment_time)
@@ -29,7 +29,7 @@ export const UpcomingBooking = ({ booking, lead = false, focused = false, onCanc
     const moved = booking.rescheduled_from ? movedLabel(booking.rescheduled_from) : null
 
     return (
-        <article id={`booking-${booking.id}`} className={`lc-cl-bk${lead ? ' is-lead' : ''}${focused ? ' is-focus' : ''}`}>
+        <article className={`lc-cl-bk${lead ? ' is-lead' : ''}`}>
             <p className="lc-cl-bk__when">
                 <b>{whenLabel(booking.appointment_date)}</b>
                 <span>{confirmed ? 'Confirmed' : 'Waiting for the business to confirm'}</span>

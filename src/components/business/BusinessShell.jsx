@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
-import { ArrowLeftRight, Bell, ChevronRight, CirclePlay, Clock, LogOut, Menu, Plus, Search, Settings, Share2 } from 'lucide-react'
+import { Link, NavLink, Navigate, Outlet, useLocation, useSearchParams } from 'react-router-dom'
+import { ArrowLeftRight, ChevronRight, CirclePlay, Clock, LogOut, Menu, Plus, Search, Settings, Share2 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import { loadWorkspace, pageStrength } from '../../services/business'
+import { loadBooking, loadWorkspace, pageStrength } from '../../services/business'
+import { describeItem } from '../../services/inbox'
+import { InboxProvider } from '../inbox/InboxContext'
+import { InboxBell } from '../inbox/InboxBell'
 import { WorkspaceContext } from './WorkspaceContext'
 import { HUBS, NAV_FOOT, NAV_ITEMS, hubFor } from './nav'
 import { BrandLoader, Mark, Ring, Wordmark, initials } from './Brand'
@@ -107,6 +110,7 @@ const ambientTone = (timeZone = 'Europe/Lisbon') => {
 const BusinessShell = () => {
     const { user, userProfile, business: ownedBusiness, signOut, setMode } = useAuth()
     const location = useLocation()
+    const [params, setParams] = useSearchParams()
     const [workspace, setWorkspace] = useState(null)
     const [loadError, setLoadError] = useState('')
     const [bookingsVersion, setBookingsVersion] = useState(0)
@@ -161,6 +165,32 @@ const BusinessShell = () => {
     }, [workspace])
     const closeBooking = useCallback(() => setOpenBookingRow(null), [])
 
+    // A new inbox item: the calendar reloads and a toast says what happened.
+    const onArrive = useCallback((row) => {
+        refreshBookings()
+        const d = describeItem(row)
+        notify(`${d.label}: ${d.title}, ${d.day} ${d.time}`)
+    }, [refreshBookings, notify])
+
+    // Links from emails and notifications carry ?booking=<id>. Open that booking, then drop the parameter.
+    const bookingParam = params.get('booking')
+    const businessId = workspace?.business?.id
+    useEffect(() => {
+        if (!bookingParam || !businessId) return undefined
+        let cancelled = false
+        loadBooking(businessId, bookingParam)
+            .then((row) => {
+                if (cancelled) return
+                if (row) openBooking(row)
+                else notify('That booking is no longer in your calendar')
+            })
+            .catch((err) => console.error('Booking link failed:', err))
+            .finally(() => {
+                if (!cancelled) setParams((prev) => { const next = new URLSearchParams(prev); next.delete('booking'); return next }, { replace: true })
+            })
+        return () => { cancelled = true }
+    }, [bookingParam, businessId, openBooking, notify, setParams])
+
     const value = useMemo(() => {
         if (!workspace) return null
         const me = workspace.members.find((m) => m.user_id === user?.id) || null
@@ -212,158 +242,158 @@ const BusinessShell = () => {
     const hub = hubFor(location.pathname)
 
     return (
-        <div className="biz-shell">
-            <aside className="biz-sidebar" aria-label="Business navigation">
-                <div className="biz-brand">
-                    <Mark size={28} />
-                    <Wordmark />
+        <InboxProvider audience="business" onArrive={onArrive}>
+            <div className="biz-shell">
+                <aside className="biz-sidebar" aria-label="Business navigation">
+                    <div className="biz-brand">
+                        <Mark size={28} />
+                        <Wordmark />
+                    </div>
+
+                    <Link to="/portal/page" className="biz-bizcard">
+                        <span className="biz-avatar biz-avatar--business">{initials(business.business_name)}</span>
+                        <span className="biz-bizcard__text">
+                            <strong>{business.business_name}</strong>
+                            <small className={business.is_active === false ? 'is-paused' : ''}>
+                                {business.is_active === false ? 'Bookings paused' : 'Taking bookings'}
+                            </small>
+                        </span>
+                        <ChevronRight size={16} aria-hidden="true" className="biz-bizcard__chevron" />
+                    </Link>
+
+                    <nav className="biz-sidebar__nav" aria-label="Main">
+                        <div className="biz-navgroup">
+                            {NAV_ITEMS.map((item) => <NavItem key={item.to} item={item} />)}
+                        </div>
+                        <div className="biz-navgroup">
+                            {HUBS.map((item) => <HubLink key={item.id} hub={item} active={item === hub} />)}
+                        </div>
+                    </nav>
+
+                    <div className="biz-sidebar__foot">
+                        {setupOpen && <StartRow strength={strength} />}
+                        <AccountMenu name={userProfile?.full_name || ''} email={user?.email || ''} onTour={openTour} onSignOut={signOut} />
+                    </div>
+                </aside>
+
+                <div className={`biz-main biz-main--${ambientTone(value?.business?.timezone)}`}>
+                    <div className="biz-ambient" aria-hidden="true" />
+                    <header className="biz-topbar">
+                        <span className="biz-topbar__brand">
+                            <Mark size={26} />
+                            <span className="biz-topbar__name">{business.business_name}</span>
+                        </span>
+                        <span className="biz-topbar__title"><TopClock timeZone={value?.business?.timezone} /></span>
+                        <button type="button" className="biz-search" onClick={() => setCmdOpen(true)} aria-keyshortcuts={IS_MAC ? 'Meta+K' : 'Control+K'}>
+                            <Search size={16} aria-hidden="true" />
+                            <span>Search or jump to</span>
+                            <kbd>{IS_MAC ? '⌘K' : 'Ctrl K'}</kbd>
+                        </button>
+                        <div className="biz-topbar__actions">
+                            <InboxBell to="/portal/notifications" />
+                            <button type="button" className="biz-iconbtn biz-topbar__share" onClick={() => setShareOpen(true)} aria-label="Share your booking link">
+                                <Share2 size={18} aria-hidden="true" />
+                            </button>
+                            <button type="button" className="btn btn--primary biz-topbar__new" onClick={() => openNewBooking()} disabled={!value} data-tour="new">
+                                <Plus size={18} aria-hidden="true" /> New booking
+                            </button>
+                        </div>
+                    </header>
+
+                    <main className="biz-content">
+                        {loadError ? (
+                            <div className="biz-state" role="alert">
+                                <BrandLoader label="Could not load" />
+                                <p>{loadError}</p>
+                                <button type="button" className="btn btn--secondary" onClick={reloadWorkspace}>Try again</button>
+                            </div>
+                        ) : value ? (
+                            <WorkspaceContext.Provider value={value}>
+                                {hub && <HubNav hub={hub} />}
+                                <Outlet />
+                            </WorkspaceContext.Provider>
+                        ) : (
+                            <ShellSkeleton />
+                        )}
+                    </main>
                 </div>
 
-                <Link to="/portal/page" className="biz-bizcard">
-                    <span className="biz-avatar biz-avatar--business">{initials(business.business_name)}</span>
-                    <span className="biz-bizcard__text">
-                        <strong>{business.business_name}</strong>
-                        <small className={business.is_active === false ? 'is-paused' : ''}>
-                            {business.is_active === false ? 'Bookings paused' : 'Taking bookings'}
-                        </small>
-                    </span>
-                    <ChevronRight size={16} aria-hidden="true" className="biz-bizcard__chevron" />
-                </Link>
-
-                <nav className="biz-sidebar__nav" aria-label="Main">
-                    <div className="biz-navgroup">
-                        {NAV_ITEMS.map((item) => <NavItem key={item.to} item={item} />)}
-                    </div>
-                    <div className="biz-navgroup">
-                        {HUBS.map((item) => <HubLink key={item.id} hub={item} active={item === hub} />)}
-                    </div>
+                <nav className="biz-tabbar" aria-label="Business">
+                    {tabs.map((item) => {
+                        const Icon = item.icon
+                        return (
+                            <NavLink key={item.to} to={item.to} end={item.end} className="biz-tab" data-tour={item.tour}>
+                                <Icon size={22} aria-hidden="true" />
+                                <span>{item.label}</span>
+                            </NavLink>
+                        )
+                    })}
+                    <button type="button" className={`biz-tab${moreActive ? ' active' : ''}`} onClick={() => setMoreOpen(true)} aria-haspopup="dialog" data-tour="more">
+                        <Menu size={22} aria-hidden="true" />
+                        <span>More</span>
+                    </button>
                 </nav>
 
-                <div className="biz-sidebar__foot">
-                    {setupOpen && <StartRow strength={strength} />}
-                    <AccountMenu name={userProfile?.full_name || ''} email={user?.email || ''} onTour={openTour} onSignOut={signOut} />
-                </div>
-            </aside>
-
-            <div className={`biz-main biz-main--${ambientTone(value?.business?.timezone)}`}>
-                <div className="biz-ambient" aria-hidden="true" />
-                <header className="biz-topbar">
-                    <span className="biz-topbar__brand">
-                        <Mark size={26} />
-                        <span className="biz-topbar__name">{business.business_name}</span>
-                    </span>
-                    <span className="biz-topbar__title"><TopClock timeZone={value?.business?.timezone} /></span>
-                    <button type="button" className="biz-search" onClick={() => setCmdOpen(true)} aria-keyshortcuts={IS_MAC ? 'Meta+K' : 'Control+K'}>
-                        <Search size={16} aria-hidden="true" />
-                        <span>Search or jump to</span>
-                        <kbd>{IS_MAC ? '⌘K' : 'Ctrl K'}</kbd>
+                {value && (
+                    <button type="button" className="biz-fab" onClick={() => openNewBooking()} aria-label="New booking" data-tour="new">
+                        <Plus size={26} aria-hidden="true" />
                     </button>
-                    <div className="biz-topbar__actions">
-                        <NavLink to="/portal/notifications" className="biz-iconbtn" aria-label="Notifications">
-                            <Bell size={18} aria-hidden="true" />
-                        </NavLink>
-                        <button type="button" className="biz-iconbtn biz-topbar__share" onClick={() => setShareOpen(true)} aria-label="Share your booking link">
-                            <Share2 size={18} aria-hidden="true" />
-                        </button>
-                        <button type="button" className="btn btn--primary biz-topbar__new" onClick={() => openNewBooking()} disabled={!value} data-tour="new">
-                            <Plus size={18} aria-hidden="true" /> New booking
-                        </button>
-                    </div>
-                </header>
+                )}
 
-                <main className="biz-content">
-                    {loadError ? (
-                        <div className="biz-state" role="alert">
-                            <BrandLoader label="Could not load" />
-                            <p>{loadError}</p>
-                            <button type="button" className="btn btn--secondary" onClick={reloadWorkspace}>Try again</button>
+                <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} title="More">
+                    <div className="biz-more">
+                        {setupOpen && <StartCard strength={strength} onClick={() => setMoreOpen(false)} />}
+                        {HUBS.map((group) => (
+                            <div key={group.id} className="biz-navgroup">
+                                <p className="biz-navgroup__label">{group.label}</p>
+                                {group.pages.map((page) => (
+                                    <NavItem key={page.to} item={{ ...page, label: page.name }} compact onClick={() => setMoreOpen(false)} />
+                                ))}
+                            </div>
+                        ))}
+                        <div className="biz-navgroup">
+                            <p className="biz-navgroup__label">Help</p>
+                            {NAV_FOOT.map((item) => <NavItem key={item.to} item={item} compact onClick={() => setMoreOpen(false)} />)}
+                            <button type="button" className="biz-navlink" onClick={openTour}>
+                                <CirclePlay size={20} aria-hidden="true" />
+                                <span className="biz-navlink__label">Replay the tour</span>
+                            </button>
                         </div>
-                    ) : value ? (
-                        <WorkspaceContext.Provider value={value}>
-                            {hub && <HubNav hub={hub} />}
-                            <Outlet />
-                        </WorkspaceContext.Provider>
-                    ) : (
-                        <ShellSkeleton />
-                    )}
-                </main>
-            </div>
-
-            <nav className="biz-tabbar" aria-label="Business">
-                {tabs.map((item) => {
-                    const Icon = item.icon
-                    return (
-                        <NavLink key={item.to} to={item.to} end={item.end} className="biz-tab" data-tour={item.tour}>
-                            <Icon size={22} aria-hidden="true" />
-                            <span>{item.label}</span>
-                        </NavLink>
-                    )
-                })}
-                <button type="button" className={`biz-tab${moreActive ? ' active' : ''}`} onClick={() => setMoreOpen(true)} aria-haspopup="dialog" data-tour="more">
-                    <Menu size={22} aria-hidden="true" />
-                    <span>More</span>
-                </button>
-            </nav>
-
-            {value && (
-                <button type="button" className="biz-fab" onClick={() => openNewBooking()} aria-label="New booking" data-tour="new">
-                    <Plus size={26} aria-hidden="true" />
-                </button>
-            )}
-
-            <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} title="More">
-                <div className="biz-more">
-                    {setupOpen && <StartCard strength={strength} onClick={() => setMoreOpen(false)} />}
-                    {HUBS.map((group) => (
-                        <div key={group.id} className="biz-navgroup">
-                            <p className="biz-navgroup__label">{group.label}</p>
-                            {group.pages.map((page) => (
-                                <NavItem key={page.to} item={{ ...page, label: page.name }} compact onClick={() => setMoreOpen(false)} />
-                            ))}
+                        <div className="biz-navgroup">
+                            <p className="biz-navgroup__label">Account</p>
+                            <NavLink to="/portal/settings" className="biz-navlink" onClick={() => setMoreOpen(false)}>
+                                <Settings size={20} aria-hidden="true" />
+                                <span className="biz-navlink__label">Settings</span>
+                            </NavLink>
+                            <Link to="/client" className="biz-navlink" onClick={() => setMoreOpen(false)}>
+                                <ArrowLeftRight size={20} aria-hidden="true" />
+                                <span className="biz-navlink__label">Switch to Booking</span>
+                            </Link>
+                            <button type="button" className="biz-navlink" onClick={signOut}>
+                                <LogOut size={20} aria-hidden="true" />
+                                <span className="biz-navlink__label">Sign out</span>
+                            </button>
                         </div>
-                    ))}
-                    <div className="biz-navgroup">
-                        <p className="biz-navgroup__label">Help</p>
-                        {NAV_FOOT.map((item) => <NavItem key={item.to} item={item} compact onClick={() => setMoreOpen(false)} />)}
-                        <button type="button" className="biz-navlink" onClick={openTour}>
-                            <CirclePlay size={20} aria-hidden="true" />
-                            <span className="biz-navlink__label">Replay the tour</span>
-                        </button>
                     </div>
-                    <div className="biz-navgroup">
-                        <p className="biz-navgroup__label">Account</p>
-                        <NavLink to="/portal/settings" className="biz-navlink" onClick={() => setMoreOpen(false)}>
-                            <Settings size={20} aria-hidden="true" />
-                            <span className="biz-navlink__label">Settings</span>
-                        </NavLink>
-                        <Link to="/client" className="biz-navlink" onClick={() => setMoreOpen(false)}>
-                            <ArrowLeftRight size={20} aria-hidden="true" />
-                            <span className="biz-navlink__label">Switch to Booking</span>
-                        </Link>
-                        <button type="button" className="biz-navlink" onClick={signOut}>
-                            <LogOut size={20} aria-hidden="true" />
-                            <span className="biz-navlink__label">Sign out</span>
-                        </button>
-                    </div>
+                </Sheet>
+
+                {value && (
+                    <WorkspaceContext.Provider value={value}>
+                        <Sheet open={shareOpen} onClose={() => setShareOpen(false)} title="Your booking link">
+                            <ShareLink business={value.business} />
+                        </Sheet>
+                        <NewBookingSheet open={Boolean(newBooking)} prefill={newBooking} onClose={closeNewBooking} />
+                        <BookingDetailSheet booking={openBookingRow} onClose={closeBooking} />
+                        <Tour open={tourOpen} onClose={closeTour} />
+                        <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} actions={paletteActions} />
+                    </WorkspaceContext.Provider>
+                )}
+
+                <div className="biz-toast" role="status" aria-live="polite">
+                    {toast && <span key={toast.key} className="biz-toast__msg">{toast.message}</span>}
                 </div>
-            </Sheet>
-
-            {value && (
-                <WorkspaceContext.Provider value={value}>
-                    <Sheet open={shareOpen} onClose={() => setShareOpen(false)} title="Your booking link">
-                        <ShareLink business={value.business} />
-                    </Sheet>
-                    <NewBookingSheet open={Boolean(newBooking)} prefill={newBooking} onClose={closeNewBooking} />
-                    <BookingDetailSheet booking={openBookingRow} onClose={closeBooking} />
-                    <Tour open={tourOpen} onClose={closeTour} />
-                    <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} actions={paletteActions} />
-                </WorkspaceContext.Provider>
-            )}
-
-            <div className="biz-toast" role="status" aria-live="polite">
-                {toast && <span key={toast.key} className="biz-toast__msg">{toast.message}</span>}
             </div>
-        </div>
+        </InboxProvider>
     )
 }
 

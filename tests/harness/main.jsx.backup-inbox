@@ -31,7 +31,6 @@ import Setup from '@src/pages/business/Setup'
 import ServicesPage from '@src/pages/business/ServicesPage'
 import HoursPage from '@src/pages/business/HoursPage'
 import SettingsPage from '@src/pages/business/SettingsPage'
-import InboxPage from '@src/components/inbox/InboxPage'
 import { DATA } from './fakeSupabase'
 
 const params = new URLSearchParams(window.location.search)
@@ -40,7 +39,6 @@ if (params.get('logo') === '1') DATA.businesses[0].logo_url = '/brand/loca-app-i
 if (params.get('setup') === '1') DATA.businesses[0].launched_at = null
 if (params.get('noservices') === '1') DATA.services.length = 0
 if (params.get('nohours') === '1') DATA.availability.length = 0
-if (params.get('noinbox') === '1') DATA.inbox.length = 0
 if (params.get('empty') === '1') Object.assign(DATA.businesses[0], { banner_url: null, logo_url: null, description: null, address: null, whatsapp: null })
 try { if (params.get('tour') !== '1') localStorage.setItem('locappoint_tour_done', '1'); else localStorage.removeItem('locappoint_tour_done') } catch { /* noop */ }
 
@@ -78,7 +76,7 @@ const App = () => (
           <Route path="clients" element={<Planned section="clients" />} />
           <Route path="team" element={<Planned section="team" />} />
           <Route path="insights" element={<Planned section="insights" />} />
-          <Route path="notifications" element={<InboxPage audience="business" />} />
+          <Route path="notifications" element={<Planned section="notifications" />} />
           <Route path="start" element={<GettingStarted />} />
           <Route path="help" element={<Help />} />
           <Route path="channels" element={<Channels />} />

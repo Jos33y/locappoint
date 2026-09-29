@@ -115,17 +115,6 @@ export const loadBookings = async (businessId, fromKey, toKey) => {
     return data
 }
 
-export const loadBooking = async (businessId, id) => {
-    const { data, error } = await supabase
-        .from('appointments')
-        .select('id, staff_id, service_id, appointment_date, appointment_time, duration_minutes, status, source, client_name, client_phone, client_email, notes, price, cancelled_by, rescheduled_from, services(service_name, price)')
-        .eq('business_id', businessId)
-        .eq('id', id)
-        .maybeSingle()
-    if (error) throw error
-    return data
-}
-
 export const loadBlocks = async (businessId, fromKey, toKey) => {
     const { data, error } = await supabase
         .from('time_blocks')

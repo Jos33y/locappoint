@@ -30,7 +30,6 @@ const BusinessShell = lazy(() => import('./components/business/BusinessShell'))
 const Today = lazy(() => import('./pages/business/Today'))
 const Calendar = lazy(() => import('./pages/business/Calendar'))
 const Planned = lazy(() => import('./pages/business/Planned'))
-const InboxPage = lazy(() => import('./components/inbox/InboxPage'))
 const UiGallery = lazy(() => import('./pages/business/UiGallery'))
 const GettingStarted = lazy(() => import('./pages/business/GettingStarted'))
 const Help = lazy(() => import('./pages/business/Help'))
@@ -107,7 +106,7 @@ const BookingApp = () => (
                         <Route path="clients" element={inShell(<Planned section="clients" />)} />
                         <Route path="team" element={inShell(<Planned section="team" />)} />
                         <Route path="insights" element={inShell(<Planned section="insights" />)} />
-                        <Route path="notifications" element={inShell(<InboxPage audience="business" />)} />
+                        <Route path="notifications" element={inShell(<Planned section="notifications" />)} />
                         <Route path="ui" element={inShell(<UiGallery />)} />
                         <Route path="start" element={inShell(<GettingStarted />)} />
                         <Route path="help" element={inShell(<Help />)} />
@@ -133,7 +132,6 @@ const BookingApp = () => (
                         <Route path="search" element={inShell(<ClientSearch />)} />
                         <Route path="appointments" element={inShell(<ClientAppointments />)} />
                         <Route path="profile" element={inShell(<ClientProfile />)} />
-                        <Route path="notifications" element={inShell(<InboxPage audience="client" />)} />
                     </Route>
 
                     {/* Last so explicit routes win over a matching slug. */}

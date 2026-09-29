@@ -166,7 +166,7 @@ a.lc-cl-next:hover {
 .lc-cl-shell .biz-more .lc-cl-next { margin-bottom: var(--space-2); }
 
 @media (min-width: 1024px) {
-    .lc-cl-shell .lc-cl-me { display: none; }
+    .lc-cl-shell .lc-cl-topacts { display: none; }
 
     .lc-cl-shell .biz-search {
         width: 320px;
