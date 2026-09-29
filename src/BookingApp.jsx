@@ -33,6 +33,7 @@ const Calendar = lazy(() => import('./pages/business/Calendar'))
 const Planned = lazy(() => import('./pages/business/Planned'))
 const InboxPage = lazy(() => import('./components/inbox/InboxPage'))
 const Insights = lazy(() => import('./pages/business/Insights'))
+const Reviews = lazy(() => import('./pages/business/Reviews'))
 const UiGallery = lazy(() => import('./pages/business/UiGallery'))
 const GettingStarted = lazy(() => import('./pages/business/GettingStarted'))
 const Help = lazy(() => import('./pages/business/Help'))
@@ -116,7 +117,7 @@ const BookingApp = () => (
                         <Route path="help" element={inShell(<Help />)} />
                         <Route path="channels" element={inShell(<Channels />)} />
                         <Route path="setup" element={inShell(<Setup />)} />
-                        <Route path="reviews" element={inShell(<Planned section="reviews" />)} />
+                        <Route path="reviews" element={inShell(<Reviews />)} />
                         <Route path="invite" element={inShell(<Planned section="invite" />)} />
                         <Route path="appointments" element={<Navigate to="/portal/calendar" replace />} />
                         <Route path="availability" element={<Navigate to="/portal/hours" replace />} />

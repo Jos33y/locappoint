@@ -70,7 +70,8 @@ const past = (id, n, service, status = 'completed', extra = {}) => ({
   notes: '', price: service?.price ?? 20, cancelled_by: null, rescheduled_from: null, businesses: femtos(), services: service, ...extra,
 })
 DATA.my_appointments = [
-  past('c1', -57, haircut), past('c2', -29, trim, 'no_show'), past('c3', -1, haircut, 'confirmed'),
+  past('c1', -57, haircut, 'completed', { reviews: [{ id: 'r1', rating: 5, body: 'Best fade I have had in Lisbon.', reply: 'Thank you, see you soon.', replied_at: `${dk(-50)}T10:00:00Z`, created_at: `${dk(-56)}T10:00:00Z`, status: 'published' }] }),
+  past('c2', -29, trim, 'no_show'), past('c3', -1, haircut, 'confirmed'),
   past('c5', -40, null, 'completed', { businesses: nove }),
 ]
 const rebookPlaces = () => (new URLSearchParams(window.location.search).get('noplaces') === '1' ? [] : [
@@ -87,6 +88,24 @@ const slots = (staff) => {
   for (let m = from; m <= 18 * 60 + 30; m += 15) out.push({ slot_time: `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}:00`, staff_id: staff || 'm1', staff_name: staff === 'm2' ? 'Rita' : 'Miles Farra' })
   return out
 }
+const quiet = (flag) => new URLSearchParams(window.location.search).get(flag) === '1'
+const REVIEWS = [
+  { id: 'rv1', appointment_id: 'p9', rating: 5, body: 'Best fade I have had in Lisbon. On time, and Miles remembered how I like it.', client_name: 'Ana Ferreira', author: 'Ana F.', service: 'Haircut', staff_name: 'Miles Farra', date: dk(-2), time: '10:00', created_at: `${dk(-1)}T09:00:00Z`, reply: null, replied_at: null, hidden: false, reported: false, visit_month: 'September 2026' },
+  { id: 'rv2', appointment_id: 'p8', rating: 4, body: null, client_name: 'Jameson Clarke', author: 'Jameson C.', service: 'Beard trim', staff_name: null, date: dk(-9), time: '15:00', created_at: `${dk(-8)}T09:00:00Z`, reply: 'Thanks Jameson, see you next time.', replied_at: `${dk(-7)}T09:00:00Z`, hidden: false, reported: false, visit_month: 'September 2026' },
+  { id: 'rv3', appointment_id: 'p7', rating: 1, body: 'Never went there but it looks bad.', client_name: 'Rui Costa', author: 'Rui C.', service: 'Haircut', staff_name: null, date: dk(-12), time: '12:00', created_at: `${dk(-11)}T09:00:00Z`, reply: null, replied_at: null, hidden: false, reported: true, visit_month: 'September 2026' },
+]
+const summary = (items) => ({ count: items.length, average: items.length ? Math.round((items.reduce((s, r) => s + r.rating, 0) / items.length) * 10) / 10 : null, stars: [5, 4, 3, 2, 1].map((n) => items.filter((r) => r.rating === n).length) })
+const reviewRpc = {
+  owner_reviews: () => (quiet('noreviews') ? { ...summary([]), waiting: 0, items: [] } : { ...summary(REVIEWS), waiting: REVIEWS.filter((r) => !r.reply).length, items: REVIEWS }),
+  public_reviews: (args) => (quiet('noreviews') ? { ...summary([]), items: [] } : { ...summary(REVIEWS), count: 7, items: REVIEWS.slice(0, 2).map(({ client_name, ...r }) => ({ ...r, id: `${r.id}-${args.p_offset || 0}` })) }),
+  business_ratings: () => (quiet('noreviews') ? [] : [{ business_id: 'b1', average: 4.7, count: 12 }]),
+  review_by_link: () => (quiet('reviewed') ? { can_review: false, can_edit: true, review: { id: 'x', rating: 4, body: 'Good.', reply: null, created_at: new Date().toISOString() } } : { can_review: true, can_edit: false, review: null }),
+  submit_review_by_link: (args) => ({ can_review: false, can_edit: true, review: { id: 'new', rating: args.p_rating, body: args.p_body, reply: null, created_at: new Date().toISOString() } }),
+  submit_my_review: (args) => ({ can_review: false, can_edit: true, review: { id: 'new', rating: args.p_rating, body: args.p_body, reply: null, created_at: new Date().toISOString() } }),
+  reply_to_review: () => null,
+  report_review: () => null,
+}
+
 const clientRpc = {
   my_rebook: () => rebookPlaces(),
   get_available_slots: (args) => slots(args.p_staff_id),
@@ -142,7 +161,7 @@ const builder = (table) => {
 
 export const supabase = {
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

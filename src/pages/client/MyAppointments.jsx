@@ -10,6 +10,8 @@ import { EmptyTicket } from '../../components/client/bookings/EmptyTicket'
 import { BookingToast } from '../../components/client/bookings/BookingToast'
 import { useMyBookings } from '../../components/client/bookings/useMyBookings'
 import { useRebook } from '../../components/client/bookings/useRebook'
+import { RateSheet } from '../../components/reviews/RateSheet'
+import { submitMyReview } from '../../services/reviews'
 import { BookingSheet } from '../../components/booking/BookingSheet'
 import { bookingPrice } from '../../services/booking'
 import '../../styles/client/client-bookings.css'
@@ -23,6 +25,8 @@ const ClientAppointments = () => {
     const [focused, setFocused] = useState(null)
     const linked = params.get('booking')
     const againId = params.get('again')
+    const rateId = params.get('rate')
+    const [rating, setRating] = useState(null)
     const rebook = useRebook(Boolean(email))
     const { openRow, places: rebookPlaces } = rebook
 
@@ -44,6 +48,28 @@ const ClientAppointments = () => {
         if (row?.services?.id && row.businesses) openRow(row)
         setParams((prev) => { const next = new URLSearchParams(prev); next.delete('again'); return next }, { replace: true })
     }, [againId, state.status, state.rows, rebookPlaces.status, openRow, setParams])
+
+    // The follow-up bell item carries ?rate=<id>: open the review for that visit.
+    useEffect(() => {
+        if (!rateId || state.status !== 'ready') return
+        const row = state.rows.find((b) => b.id === rateId)
+        if (row) {
+            setView('past')
+            setRating(row)
+        }
+        setParams((prev) => { const next = new URLSearchParams(prev); next.delete('rate'); return next }, { replace: true })
+    }, [rateId, state.status, state.rows, setParams])
+
+    const saveReview = async (row, values) => {
+        const result = await submitMyReview({ id: row.id, ...values })
+        moved()
+        return result
+    }
+
+    const againFromReview = (row) => {
+        setRating(null)
+        openRow(row)
+    }
 
     const closeAgain = () => {
         rebook.close()
@@ -108,7 +134,7 @@ const ClientAppointments = () => {
                     <p className="lc-cl-bookings__none">{view === 'past' ? 'No past bookings yet.' : 'Nothing cancelled.'}</p>
                 ) : (
                     <ul className="lc-cl-pastlist">
-                        {groups[view].map((b) => <PastBooking key={b.id} booking={b} focused={b.id === focused} onAgain={rebook.openRow} />)}
+                        {groups[view].map((b) => <PastBooking key={b.id} booking={b} focused={b.id === focused} onAgain={rebook.openRow} onRate={setRating} />)}
                     </ul>
                 )
             )}
@@ -124,6 +150,7 @@ const ClientAppointments = () => {
                     onClose={closeMove}
                 />
             )}
+            {rating && <RateSheet booking={rating} onSave={saveReview} onAgain={againFromReview} onClose={() => setRating(null)} />}
             {rebook.again && (
                 <BookingSheet
                     business={rebook.again.business}

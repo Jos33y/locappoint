@@ -48,6 +48,12 @@ const CASES = [
     ['booking_new', { audience: 'business', price: 0 }],
     ['visit_followup', { audience: 'client', date: '2026-09-28', suggested_date: '2026-10-26', gap_days: 28, visits: 3 }],
     ['visit_followup', { audience: 'client', suggested_date: null, gap_days: null, visits: 1, staff_name: null, manage_token: null, has_account: true }],
+    ['visit_followup', { audience: 'client', date: '2026-09-28', suggested_date: '2026-10-26', gap_days: 28, ask_review: false }],
+    ['visit_followup', { audience: 'client', date: '2026-09-28', booked_again: true }],
+    ['review_new', { audience: 'business', rating: 4, review_id: '0f6c2b8e-4d1a-4c8e-9b7a-2f1e3d4c5b6a', body: 'Great <b>fade</b>, and on time.\nWould book again.' }],
+    ['review_new', { audience: 'business', rating: 1, body: null }],
+    ['review_reply', { audience: 'client', rating: 5, body: 'Best cut in Lisbon & worth it.', reply: 'Thank you <Ana>, see you next month.' }],
+    ['review_reply', { audience: 'client', rating: 3, body: null, reply: 'Thanks for coming.', manage_token: null }],
     ['booking_request', { audience: 'business', status: 'pending' }],
     ['booking_request', { audience: 'business', status: 'pending', moved_from: '2026-09-30T11:00' }],
 ]
@@ -109,10 +115,23 @@ export default async ({ browser, check, server, root }) => {
         }
         if (kind === 'visit_followup') {
             const linked = Boolean(extra.manage_token !== null)
-            check(!linked || (/\/b\/[a-f0-9]{32,}\?again=1/.test(msg.html) && /\/b\/[a-f0-9]{32,}\?stop=1/.test(msg.html)), `${label} books again and stops emails through the manage link`)
+            const ask = extra.ask_review !== false
+            const offer = extra.booked_again !== true
+            check(!linked || !offer || /\/b\/[a-f0-9]{32,}\?again=1/.test(msg.html), `${label} books again through the manage link`)
+            check(!linked || /\/b\/[a-f0-9]{32,}\?stop=1/.test(msg.html), `${label} stops emails through the manage link`)
+            check(ask === ([1, 2, 3, 4, 5].every((n) => msg.html.includes(`rate=${n}"`)) || (!linked && /rate=appt-1/.test(msg.html))), `${label} asks for stars only when there is no review yet`)
+            check(offer === /Book again/.test(msg.html), `${label} offers Book again only when nothing is booked`)
+            check(ask ? /^How was/.test(msg.subject) : /^Book your next/.test(msg.subject), `${label} subject leads with the ask: ${msg.subject}`)
             check(/Stop follow-up emails/.test(msg.html) && /Stop follow-up emails/.test(msg.text), `${label} always offers a way to stop`)
-            check(!extra.gap_days || /every 4 weeks/.test(msg.html), `${label} explains the suggested day`)
+            check(!extra.gap_days || !offer || /every 4 weeks/.test(msg.html), `${label} explains the suggested day`)
             check(!msg.attachments, `${label} carries no calendar invite`)
+        }
+        if (kind === 'review_new') {
+            check(/\/portal\/reviews/.test(msg.html) && !msg.html.includes('<b>fade</b>'), `${label} links to Reviews and escapes the review`)
+            check(msg.subject.includes(`${extra.rating} out of 5`), `${label} subject has the rating`)
+        }
+        if (kind === 'review_reply') {
+            check(!msg.html.includes('<Ana>') && /Stop follow-up emails/.test(msg.html), `${label} escapes the reply and offers a way to stop`)
         }
         if (kind === 'booking_confirmed' && extra.audience === 'client') {
             const guest = extra.has_account !== true

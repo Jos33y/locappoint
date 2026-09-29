@@ -10,6 +10,7 @@ import { PublicPageView } from '../../components/business/PublicPageView'
 import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { weekFromRows } from '../../services/hours'
 import { clearPending, readBookParam, readPending } from '../../services/booking'
+import { loadPublicReviews } from '../../services/reviews'
 import { trackPage, visitSource } from '../../services/pageStats'
 import '../../styles/public-page.css'
 
@@ -102,6 +103,10 @@ const PublicBusinessPage = () => {
                 if (services.error) throw services.error
                 if (hours.error) throw hours.error
                 if (!cancelled) setState({ status: 'ready', business, services: services.data, week: weekFromRows(hours.data) })
+                // Reviews never hold the page up: it shows without them if they fail.
+                loadPublicReviews(business.id)
+                    .then((reviews) => { if (!cancelled && reviews) setState((s) => (s.business?.id === business.id ? { ...s, reviews } : s)) })
+                    .catch((err) => console.error('Reviews failed:', err))
             } catch (err) {
                 console.error('Business page load failed:', err)
                 if (!cancelled) setState({ status: 'error' })
@@ -138,6 +143,11 @@ const PublicBusinessPage = () => {
     useEffect(() => {
         if (visitedId) trackPage(visitedId, 'view', visitSource({ search: location.search, cameFromApp }))
     }, [visitedId, location.search, cameFromApp])
+
+    const moreReviews = async () => {
+        const next = await loadPublicReviews(state.business.id, state.reviews.items.length)
+        setState((s) => ({ ...s, reviews: { ...next, items: [...s.reviews.items, ...next.items] } }))
+    }
 
     const back = () => {
         if (location.state?.from) navigate(location.state.from)
@@ -179,6 +189,8 @@ const PublicBusinessPage = () => {
                         business={state.business}
                         services={state.services}
                         week={state.week}
+                        reviews={state.reviews}
+                        onMoreReviews={moreReviews}
                         onBook={(service) => { setResume(null); setBooking(service) }}
                     />
                 )}

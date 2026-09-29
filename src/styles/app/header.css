@@ -239,3 +239,25 @@
         padding: 2px 6px 3px;
     }
 }
+
+/* Phones: the bar has room for the mark, one action and the menu. Language comes back with translated screens. */
+@media (max-width: 420px) {
+    .loca-app-header__beta,
+    .loca-app-header__actions .language-switcher {
+        display: none;
+    }
+
+    .loca-app-header__actions {
+        gap: 8px;
+    }
+}
+
+@media (max-width: 360px) {
+    .loca-app-header__wm {
+        font-size: 16px;
+    }
+
+    .loca-app-header__btn {
+        padding: 8px 10px;
+    }
+}

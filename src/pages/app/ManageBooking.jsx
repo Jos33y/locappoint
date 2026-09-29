@@ -15,6 +15,8 @@ import '../../styles/public-page.css'
 import '../../styles/client/client-bookings.css'
 import '../../styles/client/manage-booking.css'
 import '../../styles/client/rebook.css'
+import { LinkReview } from '../../components/reviews/LinkReview'
+import { reviewByLink, submitReviewByLink } from '../../services/reviews'
 
 // The page behind "Manage booking" in every booking email. No sign-in: the link is the key.
 const ManageBooking = () => {
@@ -30,17 +32,21 @@ const ManageBooking = () => {
     const [moveError, setMoveError] = useState('')
     const [params, setParams] = useSearchParams()
     const [info, setInfo] = useState(null)
+    const [review, setReview] = useState(null)
+    const preset = Number(params.get('rate')) || null
     const [again, setAgain] = useState(null)
     const [stop, setStop] = useState({ status: params.get('stop') === '1' ? 'ask' : 'idle', error: '' })
     const wantsAgain = params.get('again') === '1'
 
     const load = useCallback(async () => {
         try {
-            const [booking, rebook] = await Promise.all([
+            const [booking, rebook, reviewState] = await Promise.all([
                 loadByLink(token),
                 loadRebookByLink(token).catch((err) => { console.error('Book again failed:', err); return null }),
+                reviewByLink(token).catch((err) => { console.error('Review failed:', err); return null }),
             ])
             setInfo(rebook)
+            setReview(reviewState)
             setState({ status: booking ? 'ready' : 'missing', booking })
         } catch (err) {
             console.error('Booking link failed:', err)
@@ -197,6 +203,14 @@ const ManageBooking = () => {
                             </ul>
                         )}
 
+                        {!upcoming && (
+                            <LinkReview
+                                state={review}
+                                businessName={b.businesses?.business_name || 'the business'}
+                                preset={preset >= 1 && preset <= 5 ? preset : null}
+                                onSubmit={async (values) => setReview(await submitReviewByLink({ token, ...values }))}
+                            />
+                        )}
                         {canAgain && (
                             <aside className="lc-mb__account lc-again-mb">
                                 <span className="lc-mb__icon" aria-hidden="true"><RotateCcw size={20} /></span>

@@ -117,7 +117,7 @@ export const loadNextBooking = async (email) => {
     return data?.[0] || null
 }
 
-const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, cancelled_by, rescheduled_from, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price)'
+const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, cancelled_by, rescheduled_from, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price), reviews (id, rating, body, reply, replied_at, created_at, status)'
 
 export const loadMyBookings = async (email) => {
     const { data, error } = await supabase
@@ -244,13 +244,14 @@ export const rebookFrom = ({ service, staffId, staffName, staffCount, rhythm, cl
 export const USER_ERRORS = ['22023', 'P0001', 'P0002', '28000', '42501']
 
 export const loadPlaces = async () => {
-    const [places, services, hours] = await Promise.all([
+    const [places, services, hours, ratings] = await Promise.all([
         supabase.from('businesses')
             .select('id, business_name, slug, description, category, category_detail, city, neighbourhood, timezone, banner_url, logo_url')
             .eq('is_active', true)
             .order('created_at', { ascending: false }),
         supabase.from('services').select('business_id, price, is_active').eq('is_active', true),
         supabase.from('availability').select('business_id, staff_id, day_of_week, start_time, end_time, is_active').eq('is_active', true),
+        supabase.rpc('business_ratings'),
     ])
     for (const result of [places, services, hours]) if (result.error) throw result.error
     const prices = new Map()
@@ -264,7 +265,9 @@ export const loadPlaces = async () => {
         if (!rows.has(h.business_id)) rows.set(h.business_id, [])
         rows.get(h.business_id).push(h)
     }
-    return (places.data || []).map((b) => ({ ...b, fromPrice: prices.get(b.id) ?? null, hourRows: rows.get(b.id) || [] }))
+    // Ratings are a nice-to-have in results: if they fail, places still list.
+    const stars = new Map((ratings.error ? [] : ratings.data || []).map((r) => [r.business_id, { average: Number(r.average), count: Number(r.count) }]))
+    return (places.data || []).map((b) => ({ ...b, fromPrice: prices.get(b.id) ?? null, hourRows: rows.get(b.id) || [], rating: stars.get(b.id) || null }))
 }
 
 export const clearPending = () => {

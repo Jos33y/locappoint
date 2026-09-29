@@ -33,9 +33,12 @@ import HoursPage from '@src/pages/business/HoursPage'
 import SettingsPage from '@src/pages/business/SettingsPage'
 import InboxPage from '@src/components/inbox/InboxPage'
 import Insights from '@src/pages/business/Insights'
+import Reviews from '@src/pages/business/Reviews'
 import ClientHome from '@src/pages/client/Home'
 import ClientAppointments from '@src/pages/client/MyAppointments'
+import ClientSearch from '@src/pages/client/Search'
 import ManageBooking from '@src/pages/app/ManageBooking'
+import PublicBusinessPage from '@src/pages/app/PublicBusinessPage'
 import { InboxProvider } from '@src/components/inbox/InboxContext'
 import '@src/styles/client/client-shell.css'
 import { DATA } from './fakeSupabase'
@@ -88,14 +91,16 @@ const App = () => (
           <Route path="start" element={<GettingStarted />} />
           <Route path="help" element={<Help />} />
           <Route path="channels" element={<Channels />} />
-          <Route path="reviews" element={<Planned section="reviews" />} />
+          <Route path="reviews" element={<Reviews />} />
           <Route path="invite" element={<Planned section="invite" />} />
           <Route path="setup" element={<Setup />} />
         </Route>
         <Route path="/client" element={<ClientHome />} />
         <Route path="/client/appointments" element={<ClientAppointments />} />
+        <Route path="/client/search" element={<ClientSearch />} />
         <Route path="/client/notifications" element={<InboxProvider audience="client"><InboxPage audience="client" /></InboxProvider>} />
         <Route path="/b/:token" element={<ManageBooking />} />
+        <Route path="/:businessSlug" element={<PublicBusinessPage />} />
       </Routes>
     </MemoryRouter>
   </Auth>

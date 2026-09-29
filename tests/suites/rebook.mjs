@@ -88,10 +88,10 @@ export default async ({ browser, url, check }) => {
 
     p = await open('/client/notifications')
     const item = await p.evaluate(() => {
-        const el = [...document.querySelectorAll('.lc-ibx__item')].find((e) => e.querySelector('.lc-ibx__label')?.textContent === 'Book again')
+        const el = [...document.querySelectorAll('.lc-ibx__item')].find((e) => e.querySelector('.lc-ibx__label')?.textContent === 'How was it?')
         return el && { href: el.getAttribute('href'), title: el.querySelector('.lc-ibx__title')?.textContent }
     })
-    check(item?.href === '/client/appointments?again=c3' && item?.title === 'Haircut', `follow-up bell item: ${JSON.stringify(item)}`)
+    check(item?.href === '/client/appointments?rate=c3' && item?.title === 'Haircut', `follow-up bell item asks for stars first: ${JSON.stringify(item)}`)
     await p.close()
 
     p = await open('/b/tok-1234567890abcdef1234567890abcdef', 390, 844, '&guest=1')

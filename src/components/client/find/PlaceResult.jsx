@@ -5,6 +5,8 @@ import { openStatus } from '../../business/PublicPageView'
 import { menuPrice } from '../../../services/business'
 import { weekFromRows } from '../../../services/hours'
 import { categoryLabel } from '../../../constants/categories'
+import { Stars } from '../../reviews/Stars'
+import { reviewCount } from '../../../services/reviews'
 import '../../../styles/client/find-page.css'
 
 export const PlaceResult = ({ place, from = '/client/search' }) => {
@@ -24,6 +26,15 @@ export const PlaceResult = ({ place, from = '/client/search' }) => {
                             <span className="lc-cl-result__price"><small>from</small> {menuPrice(place.fromPrice)}</span>
                         )}
                     </span>
+                    {place.rating?.count ? (
+                        <span className="lc-cl-result__rating">
+                            <Stars value={place.rating.average} size={13} />
+                            <b>{place.rating.average.toFixed(1)}</b>
+                            <span>{reviewCount(place.rating.count)}</span>
+                        </span>
+                    ) : (
+                        <span className="lc-cl-result__rating is-new">New on Locappoint</span>
+                    )}
                     <span className="lc-cl-result__what">{[categoryLabel(place.category, place.category_detail), where].filter(Boolean).join(' in ')}</span>
                     {status && (
                         <span className={`lc-cl-result__status${status.open ? ' is-open' : ''}`}>

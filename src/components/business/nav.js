@@ -33,7 +33,7 @@ export const HUBS = [
         pages: [
             { to: '/portal/channels', label: 'Channels', name: 'Channels', icon: Radio, keywords: ['link', 'whatsapp', 'google', 'qr'] },
             { to: '/portal/insights', label: 'Insights', name: 'Insights', icon: ChartColumn, keywords: ['money', 'stats', 'reports', 'visits', 'busiest'] },
-            { to: '/portal/reviews', label: 'Reviews', name: 'Reviews', icon: Star, planned: 'reviews', keywords: ['ratings'] },
+            { to: '/portal/reviews', label: 'Reviews', name: 'Reviews', icon: Star, keywords: ['ratings', 'stars', 'reply'] },
             { to: '/portal/invite', label: 'Invite', name: 'Invite a business', icon: Gift, planned: 'invite', keywords: ['referral', 'free month'] },
         ],
     },
@@ -102,18 +102,6 @@ export const PLANNED = {
             'A weekly recap, ready to share on WhatsApp or Instagram',
         ],
         preview: 'chart',
-    },
-    reviews: {
-        title: 'Reviews',
-        icon: Star,
-        promise: 'Let happy clients say so, where new clients will read it.',
-        points: [
-            'Clients rate their visit after it is marked completed',
-            'Reviews show on your business page and in Browse',
-            'Reply publicly, or privately when something went wrong',
-            'Only clients who really visited can leave a review',
-        ],
-        preview: 'list',
     },
     invite: {
         title: 'Invite a business',

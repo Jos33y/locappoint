@@ -7,6 +7,7 @@ import { PublicStatus } from './public/PublicStatus'
 import { PublicMenu } from './public/PublicMenu'
 import { PublicHours } from './public/PublicHours'
 import { PublicFind } from './public/PublicFind'
+import { PublicReviews, RatingLine } from '../reviews/PublicReviews'
 import { whatsappLink, zonedNow } from '../../services/business'
 import { parseDateKey } from '../../services/dates'
 import { categoryLabel } from '../../constants/categories'
@@ -34,7 +35,7 @@ export const openStatus = (week, timeZone) => {
 const mapsLink = (address, city) =>
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([address, city].filter(Boolean).join(', '))}`
 
-export const PublicPageView = ({ business, services, week, preview = false, onBook }) => {
+export const PublicPageView = ({ business, services, week, preview = false, onBook, reviews, onMoreReviews }) => {
     const name = business.business_name?.trim() || 'Your business'
     const timeZone = business.timezone || 'Europe/Lisbon'
     const now = useNow(timeZone)
@@ -61,6 +62,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                     <div className="lc-pub__id">
                         <h1 className="lc-pub__name">{name}</h1>
                         {where && <p className="lc-pub__where">{where}</p>}
+                        <RatingLine reviews={reviews} />
                     </div>
                 </header>
 
@@ -75,6 +77,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                 <div className="lc-pub__main">
                     {business.description?.trim() && <p className="lc-pub__about">{business.description.trim()}</p>}
                     <PublicMenu services={services} name={name} whatsapp={whatsapp} preview={preview} onBook={onBook} />
+                    <PublicReviews reviews={reviews} name={name} onMore={onMoreReviews} />
                     {hasHours && <PublicHours week={week} todayDow={now?.dow} />}
                 </div>
 
