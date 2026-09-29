@@ -57,10 +57,10 @@ export default function StatusApp() {
                             <span>Live status / Locappoint</span>
                         </div>
                         <h1 id="hero-title" className="hero__title">
-                            Phase 1 closed. Phase 2 <span className="signal">underway</span>. <span className="azure">Launch on track.</span>
+                            Booking platform <span className="signal">built</span>. Hardening for the <span className="azure">Lisbon beta.</span>
                         </h1>
                         <p className="hero__lede">
-                            The waitlist rebuild against the locked brand is complete. The admin dashboard with full conversion tracking is live. With Phase 1 closed, the booking platform underneath becomes the active build for the next fourteen weeks.
+                            Clients can find a business, book, move, cancel and review. Owners run their day, their clients and their team from one portal. What is left before the first Lisbon businesses go live: a hardening pass, the iPhone and Android apps, and WhatsApp alerts.
                         </p>
 
                         <div className="hero__stats">
@@ -71,18 +71,18 @@ export default function StatusApp() {
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Launch ready</div>
-                                <div className="hero__stat-value"><span className="azure">40%</span></div>
-                                <div className="hero__stat-sub">Foundation, brand, auth locked</div>
+                                <div className="hero__stat-value"><span className="azure">80%</span></div>
+                                <div className="hero__stat-sub">Booking, portal, clients, team shipped</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Now building</div>
-                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>MVP booking</div>
+                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>Hardening, apps</div>
                                 <div className="hero__stat-sub">Lisbon-first cohort</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Updated</div>
                                 <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>
-                                    <time className="js-relative" dateTime="2026-07-01T09:00:00Z">1 July 2026</time>
+                                    <time className="js-relative" dateTime="2026-09-29T20:00:00Z">29 September 2026</time>
                                 </div>
                                 <div className="hero__stat-sub">This page auto-refreshes</div>
                             </div>
@@ -123,7 +123,7 @@ export default function StatusApp() {
                                     <span className="phase__num">Phase 2</span>
                                     <span className="phase__name">MVP booking</span>
                                 </div>
-                                <div className="phase__sub">Foundation underneath wired: routing, database, auth, portals, calendar bones. Pitch video closes Phase 1, then this becomes active build.</div>
+                                <div className="phase__sub">Booking end to end, public pages, business portal, client area, reviews, clients and team are built. Hardening, the phone apps and WhatsApp alerts close it out.</div>
                             </div>
                             <span className="phase__status phase__status--building">Active build</span>
                         </a>
@@ -220,7 +220,7 @@ export default function StatusApp() {
                     <div className="section__head">
                         <span className="section__eyebrow">03 / Phase 2 detail</span>
                         <h2 className="section__title" id="phase-2-title">The booking platform itself</h2>
-                        <p className="section__lede">The foundation underneath is wired: routing, database, auth, layouts, calendar bones. The screens businesses actually use day to day, and the end-to-end booking experience, are still ahead. This is where most of the build work sits.</p>
+                        <p className="section__lede">The screens businesses use every day and the whole booking experience are built and running on locappoint.com. What remains is making it sturdy, getting it into the app stores, and putting the first businesses on it.</p>
                     </div>
 
                     <article className="detail">
@@ -230,41 +230,43 @@ export default function StatusApp() {
                         </div>
                         <div className="detail__grid">
                             <div className="detail__col">
-                                <div className="detail__col-label">Foundation in place</div>
+                                <div className="detail__col-label">Built</div>
                                 <div className="detail__list">
-                                    <div className="detail__item detail__item--done">Routing structure for the whole app</div>
-                                    <div className="detail__item detail__item--done">Database structure (nine tables, production-ready)</div>
-                                    <div className="detail__item detail__item--done">Authentication scaffolding (email and Google sign-in)</div>
-                                    <div className="detail__item detail__item--done">Business portal layout</div>
-                                    <div className="detail__item detail__item--done">Client area layout</div>
-                                    <div className="detail__item detail__item--done">Booking calendar bones</div>
+                                    <div className="detail__item detail__item--done">Booking end to end: find a business, pick a service, person and time, book, get the email</div>
+                                    <div className="detail__item detail__item--done">Clients move or cancel from a link in their email, no account needed</div>
+                                    <div className="detail__item detail__item--done">Public business pages at locappoint.com/your-name, with hours, map, services and reviews</div>
+                                    <div className="detail__item detail__item--done">Business onboarding: details, services, opening hours, then live</div>
+                                    <div className="detail__item detail__item--done">Today: the day as a ring, the week at a glance, what needs the owner, money earned and to come</div>
+                                    <div className="detail__item detail__item--done">Calendar by day and week, with new bookings, moves, confirmations and no-shows</div>
+                                    <div className="detail__item detail__item--done">Booking emails to clients and owners, with reminders, always on</div>
+                                    <div className="detail__item detail__item--done">Notifications in the app the moment a booking lands</div>
+                                    <div className="detail__item detail__item--done">Reviews: only clients who came can leave one, owners reply in public</div>
+                                    <div className="detail__item detail__item--done">One-tap rebooking for clients, and a home that shows what waits on them</div>
+                                    <div className="detail__item detail__item--done">Clients: everyone who booked, how reliable they are, private notes, who is due back</div>
+                                    <div className="detail__item detail__item--done">Team: add staff, their services and hours, each with their own login</div>
+                                    <div className="detail__item detail__item--done">Insights: money, the booking funnel, busiest times, where visitors come from</div>
+                                    <div className="detail__item detail__item--done">Referrals: businesses invite businesses and earn points</div>
                                 </div>
                             </div>
-                            <div className="detail__col">
-                                <div className="detail__col-label">Paused for</div>
+                            <div className="detail__col detail__col--active">
+                                <div className="detail__col-label">In progress</div>
                                 <div className="detail__list">
-                                    <div className="detail__item">Pitch video render. Then this kicks back into active build.</div>
+                                    <div className="detail__item detail__item--active">Hardening pass: security, speed, and what people see when the connection drops</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--next">
-                                <div className="detail__col-label">Still to build</div>
+                                <div className="detail__col-label">Before launch</div>
                                 <div className="detail__list">
-                                    <div className="detail__item detail__item--next">End-to-end booking flow that real customers can complete</div>
-                                    <div className="detail__item detail__item--next">Brand-aligned portal and client screens</div>
-                                    <div className="detail__item detail__item--next">Public business pages (locappoint.com/your-name)</div>
-                                    <div className="detail__item detail__item--next">WhatsApp-first booking (one-click confirm template, booking lives inside WhatsApp)</div>
-                                    <div className="detail__item detail__item--next">Email confirmations as backup channel</div>
-                                    <div className="detail__item detail__item--next">Business onboarding flow (profile, services, availability)</div>
-                                    <div className="detail__item detail__item--next">PWA install on iPhone and Android (no app store needed)</div>
-                                    <div className="detail__item detail__item--next">Analytics for the booking platform itself</div>
-                                    <div className="detail__item detail__item--next">Waitlist transitions to "Join Beta" entry point</div>
+                                    <div className="detail__item detail__item--next">iPhone and Android apps in the App Store and Google Play</div>
+                                    <div className="detail__item detail__item--next">WhatsApp alerts for bookings (needs Meta business approval)</div>
+                                    <div className="detail__item detail__item--next">Waitlist becomes the "Join Beta" entry point</div>
                                     <div className="detail__item detail__item--next">First five businesses onboarded and live in Lisbon</div>
                                 </div>
                             </div>
                         </div>
                         <div className="detail__target">
                             <span className="detail__target-label">Honest answer</span>
-                            <span className="detail__target-value">Fourteen weeks of focused build after Phase 1 closes, with milestone gates every four weeks. The foundation saves us time on plumbing, not on product surface. We re-scope at each gate if needed.</span>
+                            <span className="detail__target-value">The product is there. Launch now waits on three outside clocks: app store review, Meta approval for WhatsApp, and owners saying yes. Those are the dates to watch.</span>
                         </div>
                     </article>
                 </section>
@@ -426,7 +428,7 @@ export default function StatusApp() {
                             </div>
                         </a>
 
-                        <a className="surface surface--building" href="https://locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="15">
+                        <a className="surface surface--building" href="https://locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="80">
                             <div className="surface__head">
                                 <span className="surface__status surface__status--building">
                                     <span className="surface__status-dot" aria-hidden="true"></span>
@@ -435,7 +437,7 @@ export default function StatusApp() {
                                 <span className="surface__pct"></span>
                             </div>
                             <div className="surface__url">locappoint.com</div>
-                            <div className="surface__desc">The booking platform itself, now on the main domain. Phase 2 build, end-to-end flow underway.</div>
+                            <div className="surface__desc">The booking platform itself. Built end to end, being hardened for the Lisbon beta.</div>
                             <div className="surface__bar" aria-hidden="true">
                                 <div className="surface__bar-fill"></div>
                             </div>
@@ -449,23 +451,30 @@ export default function StatusApp() {
                     <div className="section__head">
                         <span className="section__eyebrow">08 / Your input</span>
                         <h2 className="section__title" id="need-title">What we need from you</h2>
-                        <p className="section__lede">Two things to unblock the path to launch. One copy block, one decision.</p>
+                        <p className="section__lede">Three things only you can unblock. All of them run on outside clocks, so the sooner they start, the sooner we launch.</p>
                     </div>
 
                     <div className="needs">
                         <div className="need">
                             <div className="need__head">
-                                <div className="need__title">Founder note copy</div>
-                                <div className="need__when">Needed before Phase 1 close</div>
+                                <div className="need__title">First Lisbon businesses</div>
+                                <div className="need__when">Needed before launch</div>
                             </div>
-                            <p className="need__text">About 80 words in your voice for the waitlist page. Why Locappoint, why Lisbon and Lagos, why now. We have a placeholder live, we want yours.</p>
+                            <p className="need__text">Five owners who agree to go live in the beta: barbers, salons or clinics you know. We onboard them with you, one by one, and fix what they trip on.</p>
                         </div>
                         <div className="need">
                             <div className="need__head">
-                                <div className="need__title">Pitch video appearance</div>
-                                <div className="need__when">Optional, decide this week</div>
+                                <div className="need__title">Company details for the app stores</div>
+                                <div className="need__when">Needed this month</div>
                             </div>
-                            <p className="need__text">A six to ten second cut-in showing you on camera, founder voice. If yes, we send a recording brief. If not, the video ships fine without it. Plan A and Plan B are both built.</p>
+                            <p className="need__text">Apple needs a D-U-N-S number for the company account, and Google a verified developer account. Both take days to weeks, so we start now.</p>
+                        </div>
+                        <div className="need">
+                            <div className="need__head">
+                                <div className="need__title">WhatsApp Business approval</div>
+                                <div className="need__when">Start now, runs in the background</div>
+                            </div>
+                            <p className="need__text">Meta verifies the business before WhatsApp alerts can send. We need the company registration papers and a phone number that only Locappoint uses.</p>
                         </div>
                     </div>
                 </section>
@@ -490,7 +499,7 @@ export default function StatusApp() {
                     <div>
                         <div className="footer__col-label">Meta</div>
                         <div className="footer__meta">
-                            Status page v1.0<br />
+                            Status page v1.1<br />
                             status.locappoint.com
                         </div>
                     </div>
