@@ -10,7 +10,6 @@ import { PublicPageView } from '../../components/business/PublicPageView'
 import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { weekFromRows } from '../../services/hours'
 import { clearPending, readBookParam, readPending } from '../../services/booking'
-import { trackPage, visitSource } from '../../services/pageStats'
 import '../../styles/public-page.css'
 
 const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url, auto_confirm'
@@ -132,12 +131,6 @@ const PublicBusinessPage = () => {
     }, [state])
 
     const owner = state.status === 'ready' && Boolean(ownBusiness?.id) && ownBusiness.id === state.business.id
-
-    const visitedId = state.status === 'ready' && !owner ? state.business.id : null
-    const cameFromApp = Boolean(location.state?.from)
-    useEffect(() => {
-        if (visitedId) trackPage(visitedId, 'view', visitSource({ search: location.search, cameFromApp }))
-    }, [visitedId, location.search, cameFromApp])
 
     const back = () => {
         if (location.state?.from) navigate(location.state.from)

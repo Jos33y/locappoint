@@ -26,6 +26,33 @@ export const DATA = {
   ],
 }
 
+// A believable Insights answer for any period, or a brand-new business with ?noinsights=1.
+const insights = (days) => {
+  const quiet = new URLSearchParams(window.location.search).get('noinsights') === '1'
+  const back = (n) => { const d = new Date(today); d.setDate(d.getDate() - n); return new Intl.DateTimeFormat('en-CA').format(d) }
+  const daily = Array.from({ length: days }, (_, i) => {
+    const n = days - 1 - i
+    const bookings = quiet ? 0 : [3, 5, 0, 4, 6, 8, 2][n % 7]
+    return { day: back(n), bookings, earned: bookings * 16 }
+  })
+  const sum = (k) => daily.reduce((s, d) => s + d[k], 0)
+  const period = (scale) => quiet
+    ? { earned: 0, earned_count: 0, bookings: 0, no_shows: 0, no_show_value: 0, cancelled_by_client: 0, cancelled_by_business: 0, clients: 0, new_clients: 0, views: 0, starts: 0, times: 0, booked_online: 0, booked_counted: 0 }
+    : { earned: Math.round(sum('earned') * scale), earned_count: Math.round(sum('bookings') * scale), bookings: Math.round(sum('bookings') * scale), no_shows: 1, no_show_value: 18, cancelled_by_client: 2, cancelled_by_business: 1, clients: Math.round(sum('bookings') * 0.7), new_clients: Math.round(sum('bookings') * 0.3), views: 60 * days, starts: 14 * days, times: 9 * days, booked_online: 4 * days, booked_counted: 4 * days }
+  return {
+    days, from: back(days - 1), today: key, country: 'PT', counting_since: quiet ? null : back(days - 1),
+    current: period(1), previous: period(0.8),
+    ahead: quiet ? { count: 0, value: 0 } : { count: 11, value: 196 },
+    daily,
+    sources: quiet ? [] : [['instagram', 34], ['whatsapp', 12], ['direct', 8], ['google', 4], ['locappoint', 2]].map(([source, v]) => ({ source, views: v * days })),
+    mobile_views: quiet ? 0 : 48 * days,
+    hours: { open: 9, close: 19 },
+    busiest: quiet ? [] : [[1, 10, 2], [2, 11, 3], [3, 17, 4], [4, 18, 6], [5, 17, 8], [5, 18, 9], [6, 10, 12], [6, 11, 10], [6, 12, 7], [2, 15, 1]].map(([dow, hour, bookings]) => ({ dow, hour, bookings })),
+    services: quiet ? [] : [{ name: 'Haircut', bookings: 21, value: 378 }, { name: 'Beard trim', bookings: 9, value: 108 }, { name: 'Haircut and beard trim with hot towel finish', bookings: 4, value: 120 }],
+    lead_hours: quiet ? null : 41,
+  }
+}
+
 export const calls = []
 window.__calls = calls
 
@@ -72,7 +99,7 @@ const builder = (table) => {
 
 export const supabase = {
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

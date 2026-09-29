@@ -6,7 +6,6 @@ import { DurationDial } from '../business/DurationDial'
 import { useNow } from '../business/ShopClock'
 import { useAuth } from '../../hooks/useAuth'
 import { durationLabel, menuPrice } from '../../services/business'
-import { trackPage } from '../../services/pageStats'
 import { USER_ERRORS, bookingDays, clearPending, hasTimeLeft, loadBusy, monthShort, requestBooking, rescheduleMyBooking, savePending, slotsFor } from '../../services/booking'
 import { parsePhone } from '../ui/PhoneField'
 import { clock } from '../../services/hours'
@@ -58,14 +57,6 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
 
     const day = days.find((d) => d.key === dayKey) || days[0]
     const entry = busy[dayKey]
-
-    const counts = !move && !owner
-    useEffect(() => {
-        if (counts) trackPage(business.id, 'start')
-    }, [counts, business.id])
-    useEffect(() => {
-        if (counts && step === 'review') trackPage(business.id, 'time')
-    }, [counts, step, business.id])
 
     const fetchDay = useCallback(async (key) => {
         setBusy((b) => ({ ...b, [key]: { state: 'loading' } }))

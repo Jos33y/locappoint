@@ -30,7 +30,7 @@ const ShareLink = ({ business }) => {
                 </button>
                 <a
                     className="btn btn--secondary"
-                    href={`https://wa.me/?text=${encodeURIComponent(`Book with ${business.business_name}: ${pageUrl(business.slug, 'wa')}`)}`}
+                    href={`https://wa.me/?text=${encodeURIComponent(`Book with ${business.business_name}: ${link}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                 >

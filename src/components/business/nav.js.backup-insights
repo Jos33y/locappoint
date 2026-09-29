@@ -32,7 +32,7 @@ export const HUBS = [
         tour: 'grow',
         pages: [
             { to: '/portal/channels', label: 'Channels', name: 'Channels', icon: Radio, keywords: ['link', 'whatsapp', 'google', 'qr'] },
-            { to: '/portal/insights', label: 'Insights', name: 'Insights', icon: ChartColumn, keywords: ['money', 'stats', 'reports', 'visits', 'busiest'] },
+            { to: '/portal/insights', label: 'Insights', name: 'Insights', icon: ChartColumn, planned: 'insights', keywords: ['money', 'stats', 'reports'] },
             { to: '/portal/reviews', label: 'Reviews', name: 'Reviews', icon: Star, planned: 'reviews', keywords: ['ratings'] },
             { to: '/portal/invite', label: 'Invite', name: 'Invite a business', icon: Gift, planned: 'invite', keywords: ['referral', 'free month'] },
         ],

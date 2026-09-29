@@ -32,7 +32,6 @@ import ServicesPage from '@src/pages/business/ServicesPage'
 import HoursPage from '@src/pages/business/HoursPage'
 import SettingsPage from '@src/pages/business/SettingsPage'
 import InboxPage from '@src/components/inbox/InboxPage'
-import Insights from '@src/pages/business/Insights'
 import { DATA } from './fakeSupabase'
 
 const params = new URLSearchParams(window.location.search)
@@ -78,7 +77,7 @@ const App = () => (
           <Route path="assistant" element={<Planned section="assistant" />} />
           <Route path="clients" element={<Planned section="clients" />} />
           <Route path="team" element={<Planned section="team" />} />
-          <Route path="insights" element={<Insights />} />
+          <Route path="insights" element={<Planned section="insights" />} />
           <Route path="notifications" element={<InboxPage audience="business" />} />
           <Route path="start" element={<GettingStarted />} />
           <Route path="help" element={<Help />} />

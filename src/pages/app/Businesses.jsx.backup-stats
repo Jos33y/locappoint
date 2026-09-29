@@ -92,7 +92,7 @@ const Businesses = () => {
                         <p className="lc-br-hero__kicker">Lisbon, first cohort</p>
                         <h1 className="lc-br-hero__title">Book Lisbon's first businesses on Locappoint.</h1>
                         <p className="lc-br-hero__lede">
-                            A first group of ten Lisbon businesses taking bookings through Locappoint. Pick a place, choose a time and you are booked in under a minute.
+                            A first group of ten Lisbon businesses taking bookings through Locappoint. Pick a place, choose a time and send your request in under a minute.
                         </p>
                     </div>
 
