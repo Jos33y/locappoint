@@ -2,13 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { Search, User } from 'lucide-react'
-import { PALETTE_PAGES } from './nav'
+import { PALETTE_PAGES, STAFF_PALETTE_PAGES } from './nav'
 import { loadClients } from '../../services/clients'
 import '../../styles/business/palette.css'
 
-const PAGES = PALETTE_PAGES
-
-const CommandPalette = ({ open, onClose, actions, businessId }) => {
+const CommandPalette = ({ open, onClose, actions, businessId, staff = false }) => {
     const navigate = useNavigate()
     const [query, setQuery] = useState('')
     const [active, setActive] = useState(0)
@@ -42,10 +40,10 @@ const CommandPalette = ({ open, onClose, actions, businessId }) => {
         const match = (item) => !q || item.label.toLowerCase().includes(q) || item.keywords?.some((k) => k.includes(q) || (digits.length >= 3 && k.includes(digits)))
         return [
             { label: 'Actions', items: actions.filter(match) },
-            { label: 'Go to', items: PAGES.filter(match) },
+            { label: 'Go to', items: (staff ? STAFF_PALETTE_PAGES : PALETTE_PAGES).filter(match) },
             { label: 'Clients', items: q.length >= 2 ? clients.filter(match).slice(0, 6) : [] },
         ].filter((g) => g.items.length)
-    }, [query, actions, clients])
+    }, [query, actions, clients, staff])
 
     const flat = groups.flatMap((g) => g.items)
 

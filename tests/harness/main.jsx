@@ -36,6 +36,8 @@ import Insights from '@src/pages/business/Insights'
 import Reviews from '@src/pages/business/Reviews'
 import Invite from '@src/pages/business/Invite'
 import Clients from '@src/pages/business/Clients'
+import Team from '@src/pages/business/Team'
+import TeamJoin from '@src/pages/app/TeamJoin'
 import ClientHome from '@src/pages/client/Home'
 import ClientAppointments from '@src/pages/client/MyAppointments'
 import ClientSearch from '@src/pages/client/Search'
@@ -51,6 +53,7 @@ if (params.get('logo') === '1') DATA.businesses[0].logo_url = '/brand/loca-app-i
 if (params.get('setup') === '1') DATA.businesses[0].launched_at = null
 if (params.get('noservices') === '1') DATA.services.length = 0
 if (params.get('nohours') === '1') DATA.availability.length = 0
+if (params.get('lunch') === '1') DATA.availability.splice(0, DATA.availability.length, ...[1, 2, 3, 4, 5, 6].flatMap((d) => [['09:00:00', '13:00:00'], ['14:00:00', '19:00:00']].map(([s, e], i) => ({ id: `a${d}${i}`, business_id: 'b1', staff_id: null, day_of_week: d, start_time: s, end_time: e }))))
 if (params.get('noinbox') === '1') DATA.inbox.length = 0
 if (params.get('empty') === '1') Object.assign(DATA.businesses[0], { banner_url: null, logo_url: null, description: null, address: null, whatsapp: null })
 try { if (params.get('tour') !== '1') localStorage.setItem('locappoint_tour_done', '1'); else localStorage.removeItem('locappoint_tour_done') } catch { /* noop */ }
@@ -62,7 +65,7 @@ const Auth = ({ children }) => {
   const value = useMemo(() => ({
     user: params.has('guest') ? null : { id: 'u1', email: params.get('email') || 'milesfarra@gmail.com' },
     userProfile: params.has('guest') ? null : { id: 'u1', email: params.get('email') || 'milesfarra@gmail.com', full_name: params.has('noname') ? '' : 'Miles Farra', created_at: '2026-03-14T10:00:00Z' },
-    business: DATA.businesses[0],
+    business: params.has('nobiz') ? null : params.get('staff') === '1' ? { ...DATA.businesses[0], staff: true } : DATA.businesses[0],
     loading: false,
     mode, setMode,
     signOut: () => { window.__signedOut = true },
@@ -87,7 +90,7 @@ const App = () => (
           <Route path="settings" element={<SettingsPage />} />
           <Route path="assistant" element={<Planned section="assistant" />} />
           <Route path="clients" element={<Clients />} />
-          <Route path="team" element={<Planned section="team" />} />
+          <Route path="team" element={<Team />} />
           <Route path="insights" element={<Insights />} />
           <Route path="notifications" element={<InboxPage audience="business" />} />
           <Route path="start" element={<GettingStarted />} />
@@ -102,6 +105,7 @@ const App = () => (
         <Route path="/client/search" element={<ClientSearch />} />
         <Route path="/client/notifications" element={<InboxProvider audience="client"><InboxPage audience="client" /></InboxProvider>} />
         <Route path="/b/:token" element={<ManageBooking />} />
+        <Route path="/team/:token" element={<TeamJoin />} />
         <Route path="/:businessSlug" element={<PublicBusinessPage />} />
       </Routes>
     </MemoryRouter>

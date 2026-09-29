@@ -18,10 +18,11 @@ export const defaultWeek = () => {
     return week
 }
 
-export const weekFromRows = (rows) => {
+// The business's own week by default; pass a member id for that person's own hours.
+export const weekFromRows = (rows, staffId = null) => {
     const week = emptyWeek()
     for (const row of rows) {
-        if (row.staff_id || row.is_active === false) continue
+        if ((row.staff_id || null) !== staffId || row.is_active === false) continue
         week[row.day_of_week].push({ start: toMinutes(row.start_time), end: toMinutes(row.end_time) })
     }
     week.forEach((day) => day.sort((a, b) => a.start - b.start))

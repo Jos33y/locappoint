@@ -138,8 +138,8 @@ export const serviceBookingCount = async (businessId, serviceId) => {
 
 const windowKey = (row) => `${row.day_of_week}|${row.start_time.slice(0, 5)}`
 
-export const saveHours = async (businessId, week, existingRows) => {
-    const current = existingRows.filter((r) => !r.staff_id)
+export const saveHours = async (businessId, week, existingRows, staffId = null) => {
+    const current = existingRows.filter((r) => (r.staff_id || null) === staffId)
     const wanted = rowsFromWeek(week)
     const wantedByKey = new Map(wanted.map((r) => [windowKey(r), r]))
     const currentByKey = new Map(current.map((r) => [windowKey(r), r]))
@@ -165,7 +165,7 @@ export const saveHours = async (businessId, week, existingRows) => {
 
     const inserts = wanted
         .filter((r) => !currentByKey.has(windowKey(r)))
-        .map((r) => ({ ...r, business_id: businessId, staff_id: null, is_active: true }))
+        .map((r) => ({ ...r, business_id: businessId, staff_id: staffId, is_active: true }))
     if (inserts.length > 0) {
         const { error } = await supabase.from('availability').insert(inserts)
         if (error) throw error

@@ -1,0 +1,223 @@
+.lc-team__lead {
+    max-width: 60ch;
+    margin: var(--space-1) 0 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-body);
+}
+
+.lc-team__skel { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.lc-team-error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-danger-tint);
+}
+
+.lc-team-error p { margin: 0; color: var(--lc-ink-1); font-size: var(--lc-t-label); }
+
+.lc-team-warn {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-warning-tint);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+}
+
+.lc-team-warn svg { flex: none; margin-top: 1px; color: var(--lc-warning); }
+
+/* The team with its week */
+
+.lc-team-card {
+    padding: var(--space-2) 0;
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-team-head, .lc-team-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "face who go" "face rota rota";
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-4);
+}
+
+.lc-team-head { display: none; padding-top: var(--space-1); padding-bottom: 0; }
+
+.lc-team-head__days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-micro);
+    text-align: center;
+}
+
+.lc-team-list { margin: 0; padding: 0; list-style: none; }
+
+.lc-team-list li + li .lc-team-row { border-top: 1px solid var(--lc-line); }
+
+.lc-team-row {
+    width: 100%;
+    min-height: 64px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--lc-fast) var(--lc-ease);
+}
+
+.lc-team-row:hover { background: var(--lc-raised-hover); }
+
+.lc-team-row .ui-avatar { grid-area: face; align-self: start; }
+
+.lc-team-row__who { grid-area: who; display: flex; flex-direction: column; min-width: 0; }
+
+.lc-team-row__who strong {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-medium);
+    overflow-wrap: anywhere;
+}
+
+.lc-team-row__who > span { color: var(--lc-ink-3); font-size: var(--lc-t-label); overflow-wrap: anywhere; }
+
+.lc-team-tag {
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-full);
+    background: var(--lc-well);
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-micro);
+    font-style: normal;
+    font-weight: var(--font-weight-medium);
+}
+
+.lc-team-row .lc-team-rota { grid-area: rota; }
+
+.lc-team-row__go { grid-area: go; color: var(--lc-ink-4); }
+
+@media (min-width: 720px) {
+    .lc-team-head, .lc-team-row {
+        grid-template-columns: auto minmax(0, 1fr) 280px auto;
+        grid-template-areas: "face who rota go";
+    }
+
+    .lc-team-head { display: grid; }
+
+    .lc-team-head > span:first-child { grid-column: 1 / 3; }
+
+    .lc-team-head__days { grid-column: 3; }
+}
+
+/* One bar per weekday: the working windows against the widest day anyone works. */
+.lc-team-rota {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.lc-team-rota__cell { display: flex; flex-direction: column; gap: 2px; }
+
+.lc-team-rota__letter { color: var(--lc-ink-4); font-size: var(--lc-t-micro); line-height: 1; text-align: center; }
+
+@media (min-width: 720px) {
+    .lc-team-rota__letter { display: none; }
+}
+
+.lc-team-rota__day {
+    position: relative;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--lc-well);
+    overflow: hidden;
+}
+
+.lc-team-rota__day.is-closed { background: none; box-shadow: inset 0 0 0 1px var(--lc-line); }
+
+.lc-team-rota__bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 3px;
+    background: var(--azure);
+}
+
+.lc-team-rota.is-off .lc-team-rota__bar { background: var(--lc-line-strong); }
+
+.lc-team-solo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-xl);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-team-solo p { flex: 1 1 280px; margin: 0; color: var(--lc-ink-2); font-size: var(--lc-t-label); line-height: var(--lc-lh-body); }
+
+.lc-team-solo strong { color: var(--lc-ink-1); }
+
+/* Sheets */
+
+.lc-team-form, .lc-team-sheet { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.lc-team-sheet { gap: var(--space-5); }
+
+.lc-team-block { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-3); }
+
+.lc-team-block + .lc-team-block { padding-top: var(--space-5); border-top: 1px solid var(--lc-line); }
+
+.lc-team-block > .ui-btn { align-self: flex-start; }
+
+.lc-team-h3 { margin: 0; color: var(--lc-ink-1); font-size: var(--lc-t-body); font-weight: var(--font-weight-semibold); }
+
+.lc-team-note { margin: 0; color: var(--lc-ink-3); font-size: var(--lc-t-label); line-height: var(--lc-lh-body); }
+
+.lc-team-err { margin: 0; color: var(--lc-danger); font-size: var(--lc-t-label); }
+
+.lc-team-login { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+
+.lc-team-login__url {
+    max-width: 100%;
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lc-team-login__acts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.lc-team-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--azure);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.lc-team-link.is-danger { align-self: flex-start; min-height: 44px; color: var(--lc-danger); }

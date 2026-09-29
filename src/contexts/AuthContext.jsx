@@ -31,8 +31,21 @@ export const AuthProvider = ({ children }) => {
 
         if (error) console.error('Error fetching user profile:', error)
         if (ownedError) console.error('Error fetching business:', ownedError)
+        // No business of their own: they may be on someone's team.
+        let team = null
+        if (!owned) {
+            const { data: seat, error: seatError } = await supabase
+                .from('business_members')
+                .select('businesses(id, business_name, slug, is_active, launched_at)')
+                .eq('user_id', userId)
+                .eq('status', 'active')
+                .limit(1)
+                .maybeSingle()
+            if (seatError) console.error('Error fetching team:', seatError)
+            if (seat?.businesses) team = { ...seat.businesses, staff: true }
+        }
         setUserProfile(data ?? null)
-        setBusiness(owned ?? null)
+        setBusiness(owned ?? team)
         setProfileStatus(data ? 'ready' : 'missing')
         setLoading(false)
     }
@@ -182,7 +195,7 @@ export const AuthProvider = ({ children }) => {
         try { localStorage.setItem(MODE_KEY, next) } catch { /* noop */ }
     }, [])
 
-    const currentMode = mode ?? (userProfile?.user_type === 'business' ? 'business' : 'client')
+    const currentMode = mode ?? (userProfile?.user_type === 'business' || business?.staff ? 'business' : 'client')
     const homePath = currentMode === 'business' ? '/portal' : '/client'
 
     const value = {

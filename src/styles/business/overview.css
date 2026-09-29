@@ -117,7 +117,8 @@
 
 .biz-ring__open { fill: none; stroke: var(--lc-line-strong); }
 
-.biz-ring__break { fill: none; stroke: var(--lc-ink-4); stroke-dasharray: 2 6; stroke-linecap: round; }
+/* A break is a gap in the day: the dark well with one quiet thread through it. */
+.biz-ring__break { fill: none; stroke: var(--lc-line-strong); }
 
 .biz-ring__closed { fill: none; stroke: var(--lc-line-strong); stroke-dasharray: 4 8; }
 

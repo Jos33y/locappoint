@@ -7,7 +7,7 @@ import { describeItem } from '../../services/inbox'
 import { InboxProvider } from '../inbox/InboxContext'
 import { InboxBell } from '../inbox/InboxBell'
 import { WorkspaceContext } from './WorkspaceContext'
-import { HUBS, NAV_FOOT, NAV_ITEMS, hubFor } from './nav'
+import { HUBS, NAV_FOOT, NAV_ITEMS, hubFor, staffCanSee } from './nav'
 import { BrandLoader, Mark, Ring, Wordmark, initials } from './Brand'
 import { Sheet } from '../ui'
 import NewBookingSheet from './NewBookingSheet'
@@ -161,11 +161,13 @@ const BusinessShell = () => {
         try { localStorage.setItem(TOUR_KEY, '1') } catch { /* noop */ }
     }, [])
 
+    const staffOnly = Boolean(ownedBusiness?.staff)
+
     useEffect(() => {
-        if (!workspace || tourSeen()) return undefined
+        if (!workspace || tourSeen() || staffOnly) return undefined
         const timer = setTimeout(() => setTourOpen(true), 900)
         return () => clearTimeout(timer)
-    }, [workspace])
+    }, [workspace, staffOnly])
     const closeBooking = useCallback(() => setOpenBookingRow(null), [])
 
     // A new inbox item: the calendar reloads and a toast says what happened.
@@ -237,11 +239,14 @@ const BusinessShell = () => {
         return <Outlet />
     }
 
+    if (staffOnly && !staffCanSee(location.pathname)) return <Navigate to="/portal" replace />
+
     const business = value?.business || ownedBusiness
+    const hubs = staffOnly ? [] : HUBS
     const tabs = NAV_ITEMS.filter((item) => item.tab)
     const moreActive = !tabs.some((item) => (item.end ? location.pathname === item.to : location.pathname.startsWith(item.to)))
     const strength = value?.strength
-    const setupOpen = Boolean(strength && strength.percent < 100)
+    const setupOpen = !staffOnly && Boolean(strength && strength.percent < 100)
     const hub = hubFor(location.pathname)
 
     return (
@@ -253,15 +258,15 @@ const BusinessShell = () => {
                         <Wordmark />
                     </div>
 
-                    <Link to="/portal/page" className="biz-bizcard">
+                    <Link to={staffOnly ? '/portal' : '/portal/page'} className="biz-bizcard">
                         <span className="biz-avatar biz-avatar--business">{initials(business.business_name)}</span>
                         <span className="biz-bizcard__text">
                             <strong>{business.business_name}</strong>
                             <small className={business.is_active === false ? 'is-paused' : ''}>
-                                {business.is_active === false ? 'Bookings paused' : 'Taking bookings'}
+                                {staffOnly ? 'Your calendar' : business.is_active === false ? 'Bookings paused' : 'Taking bookings'}
                             </small>
                         </span>
-                        <ChevronRight size={16} aria-hidden="true" className="biz-bizcard__chevron" />
+                        {!staffOnly && <ChevronRight size={16} aria-hidden="true" className="biz-bizcard__chevron" />}
                     </Link>
 
                     <nav className="biz-sidebar__nav" aria-label="Main">
@@ -269,7 +274,7 @@ const BusinessShell = () => {
                             {NAV_ITEMS.map((item) => <NavItem key={item.to} item={item} />)}
                         </div>
                         <div className="biz-navgroup">
-                            {HUBS.map((item) => <HubLink key={item.id} hub={item} active={item === hub} />)}
+                            {hubs.map((item) => <HubLink key={item.id} hub={item} active={item === hub} />)}
                         </div>
                     </nav>
 
@@ -346,7 +351,7 @@ const BusinessShell = () => {
                 <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} title="More">
                     <div className="biz-more">
                         {setupOpen && <StartCard strength={strength} onClick={() => setMoreOpen(false)} />}
-                        {HUBS.map((group) => (
+                        {hubs.map((group) => (
                             <div key={group.id} className="biz-navgroup">
                                 <p className="biz-navgroup__label">{group.label}</p>
                                 {group.pages.map((page) => (
@@ -388,7 +393,7 @@ const BusinessShell = () => {
                         <NewBookingSheet open={Boolean(newBooking)} prefill={newBooking} onClose={closeNewBooking} />
                         <BookingDetailSheet booking={openBookingRow} onClose={closeBooking} />
                         <Tour open={tourOpen} onClose={closeTour} />
-                        <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} actions={paletteActions} businessId={businessId} />
+                        <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} actions={paletteActions} businessId={businessId} staff={staffOnly} />
                     </WorkspaceContext.Provider>
                 )}
 

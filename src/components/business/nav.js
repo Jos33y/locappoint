@@ -21,7 +21,7 @@ export const HUBS = [
             { to: '/portal/page', label: 'Page', name: 'Business page', icon: Store, keywords: ['profile', 'photos', 'logo', 'cover', 'address', 'description'] },
             { to: '/portal/services', label: 'Services', name: 'Services', icon: Scissors, keywords: ['prices', 'menu', 'duration'] },
             { to: '/portal/hours', label: 'Hours', name: 'Opening hours', icon: Clock, keywords: ['schedule', 'open', 'closed', 'lunch'] },
-            { to: '/portal/team', label: 'Team', name: 'Team', icon: UsersRound, planned: 'team', keywords: ['staff', 'barbers'] },
+            { to: '/portal/team', label: 'Team', name: 'Team', icon: UsersRound, keywords: ['staff', 'barbers', 'people', 'login'] },
         ],
     },
     {
@@ -53,6 +53,11 @@ export const HUB_PAGES = HUBS.flatMap((hub) => hub.pages.map((page) => ({ ...pag
 
 export const PALETTE_PAGES = [...NAV_ITEMS, ...HUB_PAGES, ...NAV_FOOT, { to: '/portal/settings', label: 'Settings', icon: Settings }]
 
+// Staff run their own day: bookings, clients and their account. The business itself is the owner's.
+const STAFF_PATHS = ['/portal', '/portal/calendar', '/portal/clients', '/portal/notifications', '/portal/help', '/portal/settings']
+export const staffCanSee = (pathname) => STAFF_PATHS.some((p) => pathname === p || (p !== '/portal' && pathname.startsWith(`${p}/`)))
+export const STAFF_PALETTE_PAGES = PALETTE_PAGES.filter((page) => staffCanSee(page.to))
+
 export const PLANNED = {
     assistant: {
         title: 'Loca AI',
@@ -65,18 +70,6 @@ export const PLANNED = {
             'Decide what it may answer, and when it hands the chat over to you',
         ],
         preview: 'chat',
-    },
-    team: {
-        title: 'Team',
-        icon: UsersRound,
-        promise: 'Add the people who take bookings, each with their own calendar.',
-        points: [
-            'Invite by email or phone; they join with their own account',
-            'Owner and staff roles: staff see their own day, you see everyone',
-            'Each person has their own hours and the services they do',
-            'Clients pick a person, or anyone who is free',
-        ],
-        preview: 'list',
     },
     insights: {
         title: 'Insights',

@@ -92,7 +92,7 @@ export const DayRing = ({ dateKey, bookings, hours, staff, figures, nowMinutes, 
                     <path key={`w${a}`} className="biz-ring__open" d={arc(c, r, turn(a), turn(b))} strokeWidth={stroke} />
                 ))}
                 {breaks.map(([a, b]) => (
-                    <path key={`b${a}`} className="biz-ring__break" d={arc(c, r, turn(a), turn(b))} strokeWidth={stroke * 0.35} />
+                    <path key={`b${a}`} className="biz-ring__break" d={arc(c, r, turn(a), turn(b))} strokeWidth={2} />
                 ))}
                 {hours24.map((m) => {
                     const [x1, y1] = point(c, r + stroke / 2 + 2, turn(m))

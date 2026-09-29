@@ -32,7 +32,7 @@ export default async ({ browser, url, check }) => {
     await p.close()
 
     p = await open(390, 844, '&staff=1')
-    check(await p.evaluate(() => /Only the owner/.test(document.querySelector('.lc-inv')?.textContent || '') && !document.querySelector('.lc-inv__url')), 'staff see the owner-only note, no link')
+    check(await p.evaluate(() => window.__path === '/portal' && !document.querySelector('.lc-inv__url')), 'staff are sent back to their day, no link')
     await p.close()
 
     for (const [w, h] of [[320, 640], [390, 844], [1024, 768], [1272, 588]]) {

@@ -119,6 +119,27 @@ const clientRpc2 = {
   }),
   save_client_note: (args) => { if (args.p_body.trim()) NOTES[args.p_key] = args.p_body.trim(); else delete NOTES[args.p_key]; return null },
 }
+const TEAM = [
+  { id: 'm1', display_name: 'Miles Farra', role: 'owner', is_bookable: true, sort_order: 0, login_email: 'milesfarra@gmail.com', invite_token: null, services: [], upcoming: 4, served_30: 31 },
+  { id: 'm2', display_name: 'Ana Costa', role: 'staff', is_bookable: true, sort_order: 1, login_email: null, invite_token: null, services: ['s1'], upcoming: 2, served_30: 12 },
+  { id: 'm3', display_name: 'Rui Lopes', role: 'staff', is_bookable: false, sort_order: 2, login_email: 'rui@example.pt', invite_token: null, services: [], upcoming: 0, served_30: 0 },
+]
+const TOKEN = 'a'.repeat(40)
+const teamRpc = {
+  team_members: () => (quiet('solo') ? TEAM.slice(0, 1) : TEAM),
+  add_team_member: (args) => { const id = `m${TEAM.length + 1}`; TEAM.push({ id, display_name: args.p_name.trim(), role: 'staff', is_bookable: true, sort_order: TEAM.length, login_email: null, invite_token: null, services: [], upcoming: 0, served_30: 0 }); return id },
+  update_team_member: (args) => { Object.assign(TEAM.find((m) => m.id === args.p_member_id), { display_name: args.p_name.trim(), is_bookable: args.p_bookable }); return null },
+  set_member_services: (args) => { TEAM.find((m) => m.id === args.p_member_id).services = args.p_service_ids; return null },
+  member_invite_link: (args) => { TEAM.find((m) => m.id === args.p_member_id).invite_token = TOKEN; return TOKEN },
+  remove_team_member: (args) => {
+    const m = TEAM.find((x) => x.id === args.p_member_id)
+    if (m.upcoming) throw new Error(`${m.display_name} has ${m.upcoming} bookings ahead. Move them to someone else first.`)
+    TEAM.splice(TEAM.indexOf(m), 1)
+    return null
+  },
+  team_invite_info: (args) => (args.p_token === TOKEN ? { display_name: 'Ana Costa', business_name: 'Femtos Barbearia', city: 'Lisbon', logo_url: null, owner_name: 'Miles Farra' } : null),
+  accept_team_invite: () => 'b1',
+}
 const referralRpc = {
   my_referrals: () => ({ code: 'ab12cd34', points: quiet('noinvites') ? 0 : 70, ladder: LADDER, invited: quiet('noinvites') ? [] : INVITED }),
   claim_referral: () => false,
@@ -189,7 +210,7 @@ const builder = (table) => {
 
 export const supabase = {
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),
