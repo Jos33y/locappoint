@@ -100,6 +100,25 @@ const INVITED = [
   { business_name: 'Corte Fino', city: 'Lisbon', joined_at: `${dk(-40)}T10:00:00Z`, live: true, bookings: 12, points: 60, reached: ['joined', 'bookings_1', 'bookings_10'] },
   { business_name: 'Studio Unhas Porto', city: 'Porto', joined_at: `${dk(-3)}T10:00:00Z`, live: false, bookings: 0, points: 10, reached: ['joined'] },
 ]
+const CLIENTS = [
+  { key: 'p:912345678', name: 'Ana Silva', phone: '+351 912 345 678', email: 'ana@example.pt', visits: 5, no_shows: 1, late_cancels: 0, reliability: 83, spent: 90, first_visit: dk(-150), last_visit: dk(-32), next_at: null, gap_days: 29, due_on: dk(-3), recent: ['came', 'came', 'no_show', 'came', 'came', 'came'], service_id: 's1', staff_id: 'm1', has_note: true },
+  { key: 'p:933000111', name: 'Rui Costa', phone: '933000111', email: null, visits: 8, no_shows: 0, late_cancels: 0, reliability: 100, spent: 144, first_visit: dk(-120), last_visit: dk(-10), next_at: `${dk(4)}T11:00:00`, gap_days: 16, due_on: null, recent: Array(8).fill('came'), service_id: 's1', staff_id: 'm1', has_note: false },
+  { key: 'e:joao@example.pt', name: 'Joao Pereira', phone: null, email: 'joao@example.pt', visits: 1, no_shows: 2, late_cancels: 1, reliability: 25, spent: 12, first_visit: dk(-60), last_visit: dk(-60), next_at: null, gap_days: null, due_on: null, recent: ['late_cancel', 'no_show', 'no_show', 'came'], service_id: 's2', staff_id: 'm1', has_note: false },
+  { key: 'p:966555444', name: 'Marta Nunes', phone: '966555444', email: null, visits: 0, no_shows: 0, late_cancels: 0, reliability: null, spent: 0, first_visit: null, last_visit: null, next_at: `${dk(1)}T09:30:00`, gap_days: null, due_on: null, recent: [], service_id: 's2', staff_id: 'm1', has_note: false },
+]
+const NOTES = { 'p:912345678': 'Likes a skin fade, number 2 on top.' }
+const clientRpc2 = {
+  business_clients: () => (quiet('noclients') ? [] : CLIENTS.map((c) => ({ ...c, has_note: Boolean(NOTES[c.key]) }))),
+  client_history: (args) => ({
+    note: NOTES[args.p_key] ? { body: NOTES[args.p_key], updated_at: `${dk(-5)}T10:00:00Z` } : null,
+    visits: [
+      { id: 'h1', date: dk(-32), time: '10:00', service: 'Haircut', staff: 'Miles Farra', price: 18, status: 'confirmed', outcome: 'came', source: 'web' },
+      { id: 'h2', date: dk(-61), time: '10:30', service: 'Haircut', staff: 'Miles Farra', price: 18, status: 'no_show', outcome: 'no_show', source: 'web' },
+      { id: 'h3', date: dk(-90), time: '11:00', service: null, staff: null, price: 18, status: 'completed', outcome: 'came', source: 'manual' },
+    ],
+  }),
+  save_client_note: (args) => { if (args.p_body.trim()) NOTES[args.p_key] = args.p_body.trim(); else delete NOTES[args.p_key]; return null },
+}
 const referralRpc = {
   my_referrals: () => ({ code: 'ab12cd34', points: quiet('noinvites') ? 0 : 70, ladder: LADDER, invited: quiet('noinvites') ? [] : INVITED }),
   claim_referral: () => false,
@@ -170,7 +189,7 @@ const builder = (table) => {
 
 export const supabase = {
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

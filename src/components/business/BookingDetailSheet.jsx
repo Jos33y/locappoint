@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Mail, MessageCircle, Phone } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { History, Mail, MessageCircle, Phone } from 'lucide-react'
 import { Sheet } from '../ui'
 import { useWorkspace } from './WorkspaceContext'
 import {
@@ -15,6 +16,7 @@ import {
     zonedNow,
 } from '../../services/business'
 import { toMinutes } from '../../services/dates'
+import { clientKey } from '../../services/clients'
 
 const ACTIONS = {
     pending: [
@@ -162,6 +164,9 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                             <Mail size={18} /> Email
                         </a>
                     )}
+                    <Link className="biz-contact__btn" to={`/portal/clients?client=${encodeURIComponent(clientKey(booking))}`} onClick={onClose}>
+                        <History size={18} /> History
+                    </Link>
                 </div>
             )}
 

@@ -36,6 +36,7 @@ const Planned = lazy(() => import('./pages/business/Planned'))
 const InboxPage = lazy(() => import('./components/inbox/InboxPage'))
 const Insights = lazy(() => import('./pages/business/Insights'))
 const Reviews = lazy(() => import('./pages/business/Reviews'))
+const Clients = lazy(() => import('./pages/business/Clients'))
 const UiGallery = lazy(() => import('./pages/business/UiGallery'))
 const GettingStarted = lazy(() => import('./pages/business/GettingStarted'))
 const Help = lazy(() => import('./pages/business/Help'))
@@ -110,7 +111,7 @@ const BookingApp = () => (
                         <Route path="page" element={inShell(<BusinessPage />)} />
                         <Route path="settings" element={inShell(<SettingsPage />)} />
                         <Route path="assistant" element={inShell(<Planned section="assistant" />)} />
-                        <Route path="clients" element={inShell(<Planned section="clients" />)} />
+                        <Route path="clients" element={inShell(<Clients />)} />
                         <Route path="team" element={inShell(<Planned section="team" />)} />
                         <Route path="insights" element={inShell(<Insights />)} />
                         <Route path="notifications" element={inShell(<InboxPage audience="business" />)} />

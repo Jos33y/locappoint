@@ -1,18 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Search, User } from 'lucide-react'
 import { PALETTE_PAGES } from './nav'
+import { loadClients } from '../../services/clients'
 import '../../styles/business/palette.css'
 
 const PAGES = PALETTE_PAGES
 
-const CommandPalette = ({ open, onClose, actions }) => {
+const CommandPalette = ({ open, onClose, actions, businessId }) => {
     const navigate = useNavigate()
     const [query, setQuery] = useState('')
     const [active, setActive] = useState(0)
     const inputRef = useRef(null)
     const listRef = useRef(null)
+    const [clients, setClients] = useState([])
 
     useEffect(() => {
         if (!open) return
@@ -20,14 +22,30 @@ const CommandPalette = ({ open, onClose, actions }) => {
         setActive(0)
     }, [open])
 
+    // Clients load when the palette first opens, then stay for the session.
+    useEffect(() => {
+        if (!open || !businessId || clients.length) return
+        loadClients(businessId)
+            .then((list) => setClients((list || []).map((c) => ({
+                key: c.key,
+                label: c.name,
+                icon: User,
+                to: `/portal/clients?client=${encodeURIComponent(c.key)}`,
+                keywords: [c.email, (c.phone || '').replace(/\D/g, '')].filter(Boolean).map((k) => k.toLowerCase()),
+            }))))
+            .catch((err) => console.error('Palette clients failed:', err))
+    }, [open, businessId, clients.length])
+
     const groups = useMemo(() => {
         const q = query.trim().toLowerCase()
-        const match = (item) => !q || item.label.toLowerCase().includes(q) || item.keywords?.some((k) => k.includes(q))
+        const digits = q.replace(/\D/g, '')
+        const match = (item) => !q || item.label.toLowerCase().includes(q) || item.keywords?.some((k) => k.includes(q) || (digits.length >= 3 && k.includes(digits)))
         return [
             { label: 'Actions', items: actions.filter(match) },
             { label: 'Go to', items: PAGES.filter(match) },
+            { label: 'Clients', items: q.length >= 2 ? clients.filter(match).slice(0, 6) : [] },
         ].filter((g) => g.items.length)
-    }, [query, actions])
+    }, [query, actions, clients])
 
     const flat = groups.flatMap((g) => g.items)
 
@@ -64,7 +82,7 @@ const CommandPalette = ({ open, onClose, actions }) => {
                         className="lc-cmd__input"
                         value={query}
                         onChange={(event) => setQuery(event.target.value)}
-                        placeholder="Jump to a page or action"
+                        placeholder="Jump to a page, action or client"
                         aria-label="Jump to a page or action"
                         role="combobox"
                         aria-expanded="true"
@@ -86,7 +104,7 @@ const CommandPalette = ({ open, onClose, actions }) => {
                                 const Icon = item.icon
                                 return (
                                     <div
-                                        key={`${group.label}-${item.label}`}
+                                        key={`${group.label}-${item.key || item.label}`}
                                         id={`lc-cmd-${i}`}
                                         role="option"
                                         aria-selected={i === active}
@@ -103,7 +121,7 @@ const CommandPalette = ({ open, onClose, actions }) => {
                         </div>
                     ))}
                 </div>
-                <p className="lc-cmd__foot">Searching clients and bookings arrives with Clients.</p>
+                <p className="lc-cmd__foot">Type a name, phone or email to find a client.</p>
             </div>
         </div>,
         document.body

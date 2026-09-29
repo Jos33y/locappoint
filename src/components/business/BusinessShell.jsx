@@ -388,7 +388,7 @@ const BusinessShell = () => {
                         <NewBookingSheet open={Boolean(newBooking)} prefill={newBooking} onClose={closeNewBooking} />
                         <BookingDetailSheet booking={openBookingRow} onClose={closeBooking} />
                         <Tour open={tourOpen} onClose={closeTour} />
-                        <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} actions={paletteActions} />
+                        <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} actions={paletteActions} businessId={businessId} />
                     </WorkspaceContext.Provider>
                 )}
 

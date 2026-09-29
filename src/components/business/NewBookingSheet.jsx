@@ -45,13 +45,13 @@ const NewBookingSheet = ({ open, prefill, onClose }) => {
         if (!open) return
         const date = prefill?.date || today
         setForm({
-            serviceId: activeServices[0]?.id || '',
+            serviceId: prefill?.serviceId || activeServices[0]?.id || '',
             staffId: prefill?.staffId || (isOwner ? bookableMembers[0]?.id : me?.id) || '',
             date,
             time: prefill?.time || '',
-            name: '',
-            phone: '',
-            email: '',
+            name: prefill?.name || '',
+            phone: prefill?.phone || '',
+            email: prefill?.email || '',
             notes: '',
         })
         setOtherDate(!strip.includes(date))

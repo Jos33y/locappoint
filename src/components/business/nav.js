@@ -6,7 +6,7 @@ export const NAV_GROUPS = [
         items: [
             { to: '/portal', label: 'Today', icon: Sun, end: true, tab: true, tour: 'today' },
             { to: '/portal/calendar', label: 'Calendar', icon: CalendarDays, tab: true, tour: 'calendar' },
-            { to: '/portal/clients', label: 'Clients', icon: Users, tab: true, planned: 'clients' },
+            { to: '/portal/clients', label: 'Clients', icon: Users, tab: true, keywords: ['customers', 'regulars', 'notes', 'due back'] },
         ],
     },
 ]
@@ -65,18 +65,6 @@ export const PLANNED = {
             'Decide what it may answer, and when it hands the chat over to you',
         ],
         preview: 'chat',
-    },
-    clients: {
-        title: 'Clients',
-        icon: Users,
-        promise: 'Everyone who books you, in one place, with the history that matters.',
-        points: [
-            'Everyone who booked online, by phone or walked in, searchable',
-            'Visits, last visit and total spent on every client',
-            'Reliability at a glance: kept, cancelled and no-show counts',
-            'Private notes, and book again in one tap',
-        ],
-        preview: 'list',
     },
     team: {
         title: 'Team',

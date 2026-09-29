@@ -35,6 +35,7 @@ import InboxPage from '@src/components/inbox/InboxPage'
 import Insights from '@src/pages/business/Insights'
 import Reviews from '@src/pages/business/Reviews'
 import Invite from '@src/pages/business/Invite'
+import Clients from '@src/pages/business/Clients'
 import ClientHome from '@src/pages/client/Home'
 import ClientAppointments from '@src/pages/client/MyAppointments'
 import ClientSearch from '@src/pages/client/Search'
@@ -85,7 +86,7 @@ const App = () => (
           
           <Route path="settings" element={<SettingsPage />} />
           <Route path="assistant" element={<Planned section="assistant" />} />
-          <Route path="clients" element={<Planned section="clients" />} />
+          <Route path="clients" element={<Clients />} />
           <Route path="team" element={<Planned section="team" />} />
           <Route path="insights" element={<Insights />} />
           <Route path="notifications" element={<InboxPage audience="business" />} />
