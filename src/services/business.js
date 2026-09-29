@@ -48,7 +48,7 @@ export const startOfWeek = (dateKey) => {
 }
 
 export const formatDay = (dateKey, options = { weekday: 'long', day: 'numeric', month: 'long' }) =>
-    parseDateKey(dateKey).toLocaleDateString('en-GB', options)
+    parseDateKey(dateKey).toLocaleDateString('en-GB', options).replace(/\bSept\b/, 'Sep')
 
 export const shortTime = (time) => (time || '').slice(0, 5)
 

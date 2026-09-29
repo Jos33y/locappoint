@@ -327,3 +327,11 @@
         right: 2px;
     }
 }
+
+@media (pointer: coarse) {
+    .biz-st__legal a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+}

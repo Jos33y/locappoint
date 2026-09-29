@@ -21,7 +21,12 @@ export default async ({ browser, url, check }) => {
     check(await p.evaluate(() => document.querySelector('.biz-st__since')?.textContent) === 'Member since March 2026', 'member since in the identity card')
     check(await p.evaluate(() => !document.querySelector('.biz-page__head .biz-save') && Boolean(document.querySelector('.biz-st__namefield .biz-save'))), 'save state sits with the name field')
     check(!(await p.evaluate(() => [...document.querySelectorAll('.biz-st [role=switch]')].length)), 'no unwired notification switches')
-    check(await p.evaluate(() => document.body.textContent.includes('Booking alerts') && Boolean(document.querySelector('#alerts-title').closest('section').querySelector('.biz-soon'))), 'alerts marked Soon')
+    check(await p.evaluate(() => {
+        const section = document.querySelector('#alerts-title').closest('section')
+        return section.textContent.includes('Booking emails') && section.textContent.includes('Always on') && !section.querySelector('.ui-switch')
+    }), 'booking emails always on, with no switch')
+    check(await p.evaluate(() => Boolean(document.querySelector('.biz-st__legal a[href="/legal/dpa"]'))), 'data processing agreement linked')
+    check(await p.evaluate(() => !document.querySelector('a[href*="Change%20my%20sign-in%20email"]') && [...document.querySelectorAll('button')].some((b) => b.textContent.includes('Change email'))), 'owners change their own sign-in email')
     check(await p.evaluate(() => document.querySelector('.biz-account__btn').classList.contains('is-current')), 'account row current on settings')
     const name = await p.$('.biz-st__namefield input')
     await name.focus(); await selectAll(p); await p.keyboard.press('Backspace')

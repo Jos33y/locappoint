@@ -63,6 +63,11 @@ const Calendar = () => {
         [bookings, columns]
     )
 
+    const waiting = useMemo(
+        () => visible.filter((b) => b.status === 'pending' && b.appointment_date === anchor).sort((a, b) => a.appointment_time.localeCompare(b.appointment_time)),
+        [visible, anchor]
+    )
+
     const step = view === 'day' ? 1 : 7
     const title = view === 'day'
         ? formatDay(anchor)
@@ -140,6 +145,17 @@ const Calendar = () => {
                         }
                     }}
                 />
+            )}
+
+            {view === 'day' && isDesktop && waiting.length > 0 && (
+                <div className="biz-cal-needs" role="status">
+                    <span className="biz-cal-needs__label">{waiting.length === 1 ? '1 booking waits for you' : `${waiting.length} bookings wait for you`}</span>
+                    {waiting.map((b) => (
+                        <button key={b.id} type="button" className="biz-cal-needs__item" onClick={() => openBooking(b)}>
+                            <b className="biz-num">{shortTime(b.appointment_time)}</b> {b.client_name}
+                        </button>
+                    ))}
+                </div>
             )}
 
             {view === 'day' && !(loading && bookings.length === 0) && isDesktop && (

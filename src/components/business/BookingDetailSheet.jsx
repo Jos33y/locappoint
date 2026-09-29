@@ -12,7 +12,9 @@ import {
     setBookingStatus,
     shortTime,
     whatsappLink,
+    zonedNow,
 } from '../../services/business'
+import { toMinutes } from '../../services/dates'
 
 const ACTIONS = {
     pending: [
@@ -24,6 +26,13 @@ const ACTIONS = {
         { status: 'no_show', label: 'No-show', tone: 'secondary', done: 'Marked as no-show' },
         { status: 'cancelled', label: 'Cancel', tone: 'danger', done: 'Booking cancelled' },
     ],
+}
+
+// Completed and no-show only mean something once the visit has started; the database refuses them before.
+const hasStarted = (booking, timeZone) => {
+    const { dateKey, minutes } = zonedNow(timeZone || 'Europe/Lisbon')
+    if (booking.appointment_date !== dateKey) return booking.appointment_date < dateKey
+    return toMinutes(booking.appointment_time) <= minutes
 }
 
 const BookingDetailSheet = ({ booking, onClose }) => {
@@ -56,7 +65,9 @@ const BookingDetailSheet = ({ booking, onClose }) => {
     if (!booking) return null
 
     const staff = bookableMembers.find((m) => m.id === booking.staff_id)
-    const actions = ACTIONS[booking.status] || []
+    const started = hasStarted(booking, business.timezone)
+    const upcoming = booking.status === 'confirmed' && !started
+    const actions = (ACTIONS[booking.status] || []).filter((a) => started || !['completed', 'no_show'].includes(a.status))
     const whatsapp = whatsappLink(booking.client_phone)
 
     const act = async (action) => {
@@ -156,6 +167,11 @@ const BookingDetailSheet = ({ booking, onClose }) => {
 
             {!moving && actions.length > 0 && (
                 <div className="biz-actions">
+                    {upcoming && (
+                        <button type="button" className="btn btn--primary btn--lg" disabled={busy} onClick={() => setMoving(true)}>
+                            Move
+                        </button>
+                    )}
                     {actions.map((action) => (
                         <button
                             key={action.status}
@@ -167,10 +183,15 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                             {action.label}
                         </button>
                     ))}
-                    <button type="button" className="btn btn--ghost btn--lg" disabled={busy} onClick={() => setMoving(true)}>
-                        Move
-                    </button>
+                    {!upcoming && (
+                        <button type="button" className="btn btn--ghost btn--lg" disabled={busy} onClick={() => setMoving(true)}>
+                            Move
+                        </button>
+                    )}
                 </div>
+            )}
+            {!moving && upcoming && (
+                <p className="biz-hint">Completed and no-show open once it starts at {shortTime(booking.appointment_time)}.</p>
             )}
 
             {moving && move && (

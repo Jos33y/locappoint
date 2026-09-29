@@ -31,22 +31,22 @@ const Channels = () => {
             key: 'whatsapp',
             icon: MessageCircle,
             name: 'WhatsApp',
-            body: 'Clients book by sending a message to Locappoint on WhatsApp. No app, no form. Loca AI answers and books for you.',
-            status: { tone: 'warning', label: 'Setting up' },
+            body: 'Clients will book by sending a message to Locappoint on WhatsApp. No app, no form.',
+            status: { tone: 'neutral', label: 'Planned' },
         },
         {
             key: 'google',
             icon: MapPin,
             name: 'Google Maps and Search',
             body: 'A Book button on your Google listing that opens your Locappoint page.',
-            status: { tone: 'warning', label: 'Applying to Google' },
+            status: { tone: 'neutral', label: 'Planned' },
         },
         {
             key: 'ai',
             icon: Bot,
             name: 'Claude, ChatGPT and Gemini',
-            body: 'Clients ask their AI assistant for a barber nearby on Saturday, and book you right there.',
-            status: { tone: 'neutral', label: 'In build' },
+            body: 'Clients will ask their AI assistant for a barber nearby on Saturday, and book you right there.',
+            status: { tone: 'neutral', label: 'Planned' },
         },
     ]
 

@@ -975,3 +975,7 @@ select optgroup {
         animation: none;
     }
 }
+
+@media (pointer: coarse) {
+    .ui-seg__btn { min-height: 44px; }
+}

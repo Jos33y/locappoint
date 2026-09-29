@@ -5,6 +5,7 @@ import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { HoursEditor } from '../../components/business/HoursEditor'
 import { openStatus } from '../../components/business/PublicPageView'
 import SaveState from '../../components/business/SaveState'
+import { useIsDesktop } from '../../components/business/useIsDesktop'
 import { useAutosave } from '../../components/business/useAutosave'
 import { hasOpenDay, rowsFromWeek, weekFromRows, weekProblems } from '../../services/hours'
 import { loadSetup, saveHours } from '../../services/setup'
@@ -29,6 +30,7 @@ const LoadingState = () => (
 )
 
 const HoursPage = () => {
+    const isDesktop = useIsDesktop()
     const { business: shellBusiness, reloadWorkspace } = useWorkspace()
     const [phase, setPhase] = useState('loading')
     const [timezone, setTimezone] = useState('Europe/Lisbon')
@@ -111,7 +113,7 @@ const HoursPage = () => {
                         Some days had more than one break. They are shown here with one lunch break, and saving keeps what you see.
                     </p>
                 )}
-                <HoursEditor week={week} onChange={setWeek} templates={startedEmpty} timeZone={timezone} status={status} />
+                <HoursEditor week={week} onChange={setWeek} templates={startedEmpty} timeZone={timezone} status={status} weekAt={isDesktop ? 'top' : 'bottom'} />
                 <p className="biz-sh__tip">Clients can book any time inside these hours. Changes do not move bookings already made.</p>
             </div>
         </div>

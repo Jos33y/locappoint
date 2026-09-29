@@ -148,3 +148,44 @@
         width: 100%;
     }
 }
+
+.biz-cal-needs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-warning-tint);
+}
+
+.biz-cal-needs__label {
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-cal-needs__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--lc-raised);
+    box-shadow: var(--lc-shadow-raised);
+    color: var(--lc-ink-1);
+    font: inherit;
+    font-size: var(--lc-t-label);
+    cursor: pointer;
+}
+
+.biz-cal-needs__item:focus-visible {
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+}
+
+@media (hover: hover) {
+    .biz-cal-needs__item:hover { background: var(--lc-raised-hover); }
+}

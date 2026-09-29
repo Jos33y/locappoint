@@ -128,6 +128,10 @@ const ClientProfile = () => {
                         <span className="lc-cl-on">On</span>
                     </Row>
                     <div className="biz-st__rule" />
+                    <Row title="After a visit" detail="The morning after, one email to rate it and book the next one. Each has a one-tap link to stop them.">
+                        <span className="lc-cl-on">On</span>
+                    </Row>
+                    <div className="biz-st__rule" />
                     <Row title="In the app" detail="The bell at the top shows the same news, the moment it happens.">
                         <span className="lc-cl-on">On</span>
                     </Row>

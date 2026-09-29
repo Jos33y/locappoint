@@ -349,6 +349,26 @@
     align-self: center;
 }
 
+@media (max-width: 639px) {
+    .lc-channels .biz-page__head {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .lc-channel {
+        flex-wrap: wrap;
+    }
+
+    .lc-channel__main {
+        flex-basis: calc(100% - 44px - var(--space-4));
+    }
+
+    .lc-channel__action {
+        flex-basis: 100%;
+        padding-left: calc(44px + var(--space-4));
+    }
+}
+
 
 @media (min-width: 1024px) {
     .lc-help__grid {

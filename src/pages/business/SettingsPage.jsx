@@ -11,7 +11,9 @@ import SaveState from '../../components/business/SaveState'
 import { PasswordSheet, SettingsRow as Row, SettingsSection as Section, SignOutSheet } from '../../components/business/AccountSheets'
 import { useAutosave } from '../../components/business/useAutosave'
 import { SUPPORT } from '../../constants/support'
+import { EmailSheet } from '../../components/client/EmailSheet'
 import '../../styles/business/settings-page.css'
+import '../../styles/client/profile-page.css'
 
 const memberSince = (value) => {
     const date = value ? new Date(value) : null
@@ -27,6 +29,7 @@ const SettingsPage = () => {
     const [savedName, setSavedName] = useState(userProfile?.full_name || '')
     const [passwordOpen, setPasswordOpen] = useState(false)
     const [signOutOpen, setSignOutOpen] = useState(false)
+    const [emailOpen, setEmailOpen] = useState(false)
 
     const trimmed = name.trim()
     const nameProblem = trimmed ? null : 'Enter the name people know you by'
@@ -79,8 +82,8 @@ const SettingsPage = () => {
                             <SaveState state={autosave.state} onRetry={autosave.retry} blockedText="Enter your name to save it" />
                         </div>
                         <div className="biz-st__rule" />
-                        <Row title="Sign-in email" detail="Used to sign in and for booking emails. Changing it is done by our team.">
-                            <Button variant="secondary" size="sm" icon={Mail} href={`mailto:${SUPPORT.email}?subject=${encodeURIComponent('Change my sign-in email')}`}>Ask to change</Button>
+                        <Row title="Sign-in email" detail="Used to sign in and for booking emails.">
+                            <Button variant="secondary" size="sm" icon={Mail} onClick={() => setEmailOpen(true)}>Change email</Button>
                         </Row>
                     </div>
                 </section>
@@ -96,7 +99,15 @@ const SettingsPage = () => {
                 </Section>
 
                 <Section id="alerts" title="Notifications">
-                    <Row title="Booking alerts" detail="Email and WhatsApp alerts for new, moved and cancelled bookings.">
+                    <Row title="Booking emails" detail={<>Every new booking, request, move and cancellation goes to <b>{email}</b>. They always send, so nothing slips past you.</>}>
+                        <span className="lc-cl-on">Always on</span>
+                    </Row>
+                    <div className="biz-st__rule" />
+                    <Row title="In the app" detail="The bell at the top shows the same news, the moment it happens.">
+                        <span className="lc-cl-on">On</span>
+                    </Row>
+                    <div className="biz-st__rule" />
+                    <Row title="WhatsApp alerts" detail="The same alerts on WhatsApp, once Locappoint is on WhatsApp.">
                         <span className="biz-soon">Soon</span>
                     </Row>
                 </Section>
@@ -121,6 +132,8 @@ const SettingsPage = () => {
                     <span aria-hidden="true">·</span>
                     <Link to="/terms">Terms</Link>
                     <span aria-hidden="true">·</span>
+                    <Link to="/legal/dpa">Data processing agreement</Link>
+                    <span aria-hidden="true">·</span>
                     <span>Support: <a href={`mailto:${SUPPORT.email}`}>{SUPPORT.email}</a></span>
                 </p>
             </div>
@@ -132,6 +145,12 @@ const SettingsPage = () => {
                 onDone={() => { setPasswordOpen(false); notify('Password changed') }}
             />
             <SignOutSheet open={signOutOpen} onClose={() => setSignOutOpen(false)} />
+            <EmailSheet
+                open={emailOpen}
+                current={email}
+                onClose={() => setEmailOpen(false)}
+                onSent={(next) => { setEmailOpen(false); notify(`Check ${next} to confirm the change`) }}
+            />
         </div>
     )
 }

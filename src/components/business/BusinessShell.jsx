@@ -19,6 +19,9 @@ import HubNav from './HubNav'
 import AccountMenu from './AccountMenu'
 import '../../styles/business/shell.css'
 
+// The floating + belongs where bookings are; on Page, Hours or Settings it only covers content.
+const FAB_PAGES = ['/portal', '/portal/calendar']
+
 const NavItem = ({ item, onClick, compact = false }) => {
     const Icon = item.icon
     return (
@@ -334,7 +337,7 @@ const BusinessShell = () => {
                     </button>
                 </nav>
 
-                {value && (
+                {value && FAB_PAGES.includes(location.pathname) && (
                     <button type="button" className="biz-fab" onClick={() => openNewBooking()} aria-label="New booking" data-tour="new">
                         <Plus size={26} aria-hidden="true" />
                     </button>

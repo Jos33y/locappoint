@@ -26,7 +26,7 @@ export const moneyFor = (country) => (value) => {
 
 export const SOURCE_LABEL = {
     direct: 'Typed or saved link',
-    locappoint: 'LocAppoint search',
+    locappoint: 'Locappoint search',
     whatsapp: 'WhatsApp',
     instagram: 'Instagram',
     facebook: 'Facebook',

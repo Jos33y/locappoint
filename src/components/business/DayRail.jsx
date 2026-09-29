@@ -51,10 +51,14 @@ const DayRail = ({ dateKey, columns, bookings, blocks, hours, nowMinutes, onSlot
     for (let m = start; m <= end; m += 60) hourMarks.push(m)
     const showNow = nowMinutes != null && nowMinutes >= start && nowMinutes <= end
 
+    // Open on now, or before opening on the first booking that needs the owner, so a short laptop screen shows what matters.
     useEffect(() => {
         const box = scrollRef.current
         if (!box) return
-        box.scrollTop = showNow ? Math.max(0, y(nowMinutes) - box.clientHeight / 3) : 0
+        const all = perColumn.flatMap((c) => c.bookings)
+        const pending = all.filter((b) => b.status === 'pending').map(bookingStart).sort((a, b) => a - b)[0]
+        const target = showNow ? nowMinutes : pending ?? null
+        box.scrollTop = target == null ? 0 : Math.max(0, y(target) - box.clientHeight / 3)
     }, [dateKey])
 
     const handleColumnClick = (event, memberId) => {
