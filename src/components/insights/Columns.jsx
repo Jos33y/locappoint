@@ -12,7 +12,9 @@ const niceMax = (value) => {
 const dayName = (key, options) => parseDateKey(key).toLocaleDateString('en-GB', options).replace(',', '').replace('Sept', 'Sep')
 
 // Daily columns; past 45 days they fold into weeks so bars stay readable on a phone.
-const columnsFor = (days) => {
+const columnsFor = (rows) => {
+    // The database sends each day as a timestamp (2026-09-23T00:00:00); only the date part matters.
+    const days = rows.map((d) => ({ ...d, day: String(d.day).slice(0, 10) }))
     if (days.length <= 45) {
         return days.map((d) => ({
             key: d.day,

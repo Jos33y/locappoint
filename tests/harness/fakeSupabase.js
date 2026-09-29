@@ -33,7 +33,7 @@ const insights = (days) => {
   const daily = Array.from({ length: days }, (_, i) => {
     const n = days - 1 - i
     const bookings = quiet ? 0 : [3, 5, 0, 4, 6, 8, 2][n % 7]
-    return { day: back(n), bookings, earned: bookings * 16 }
+    return { day: `${back(n)}T00:00:00`, bookings, earned: bookings * 16 }
   })
   const sum = (k) => daily.reduce((s, d) => s + d[k], 0)
   const period = (scale) => quiet
