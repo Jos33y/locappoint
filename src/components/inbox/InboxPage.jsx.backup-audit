@@ -116,12 +116,6 @@ const InboxPage = ({ audience }) => {
 
     useEffect(() => { load() }, [load, version])
 
-    const [, setTick] = useState(0)
-    useEffect(() => {
-        const timer = setInterval(() => setTick((t) => t + 1), 60000)
-        return () => clearInterval(timer)
-    }, [])
-
     return (
         <div className="biz-page lc-ibx">
             <header className="lc-ibx__head">

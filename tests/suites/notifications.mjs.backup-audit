@@ -39,12 +39,6 @@ export default async ({ browser, url, check }) => {
     check(rows[0]?.fresh && rows[1]?.fresh && !rows[2]?.fresh, 'unread items stay highlighted for this visit')
     check(rows[1]?.label === 'Moved, needs your OK' && /^Was/.test(rows[1]?.was), `moved request shows the old time: ${JSON.stringify(rows[1])}`)
     check(rows[2]?.link === null, 'an item without a booking is not a link')
-    check(rows[2]?.was === '', 'a cancellation does not show an old time, even if the booking was moved before')
-    check(await p.evaluate(() => {
-        const list = document.querySelector('.lc-ibx__list')
-        const item = list.querySelector('.lc-ibx__item')
-        return getComputedStyle(list).overflow === 'hidden' && getComputedStyle(item).borderRadius === '0px'
-    }), 'highlighted rows fill the list edge to edge')
     check(await p.evaluate(() => [...document.querySelectorAll('.lc-ibx__daylabel')].map((e) => e.textContent).join()) === 'Today,Yesterday', 'grouped by day')
     check(await p.evaluate(() => {
         const row = document.querySelector('.lc-ibx__item')

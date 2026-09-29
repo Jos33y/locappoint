@@ -34,10 +34,7 @@ const ClientAppointments = () => {
     }, [linked, state.status, groups, setParams])
 
     useEffect(() => {
-        if (!focused) return undefined
-        document.getElementById(`booking-${focused}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-        const timer = setTimeout(() => setFocused(null), 2600)
-        return () => clearTimeout(timer)
+        if (focused) document.getElementById(`booking-${focused}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
     }, [focused, view])
 
     const options = [

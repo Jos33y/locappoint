@@ -86,7 +86,7 @@ export const describeItem = (item) => {
     const forBusiness = item.audience === 'business'
     const price = priceLabel(p.price, p.country)
     const duration = p.duration_minutes ? durationLabel(Number(p.duration_minutes)) : ''
-    const movedFrom = p.moved_from && (item.kind === 'booking_moved' || item.kind === 'booking_request') ? String(p.moved_from) : ''
+    const movedFrom = p.moved_from ? String(p.moved_from) : ''
     return {
         ...kind,
         time: String(p.time || '').slice(0, 5),

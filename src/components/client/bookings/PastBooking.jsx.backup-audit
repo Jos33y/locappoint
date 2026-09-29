@@ -20,7 +20,7 @@ export const PastBooking = ({ booking, focused = false }) => {
             </span>
             <span className="lc-cl-past__text">
                 <strong>{booking.services?.service_name || 'Booking'}</strong>
-                <span>{business.business_name} at {(booking.appointment_time || '').slice(0, 5)}{date.getFullYear() !== new Date().getFullYear() ? `, ${date.getFullYear()}` : ''}</span>
+                <span>{business.business_name} at {(booking.appointment_time || '').slice(0, 5)}, {date.getFullYear()}</span>
             </span>
             <span className={`lc-cl-past__state is-${booking.status}${booking.cancelled_by ? ` by-${booking.cancelled_by}` : ''}`}>{label(booking)}</span>
             {business.slug && (

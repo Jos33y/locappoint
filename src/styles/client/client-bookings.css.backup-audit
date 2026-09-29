@@ -52,20 +52,12 @@
     gap: var(--space-3);
     border-radius: var(--lc-r-xl);
     scroll-margin: var(--space-20);
-    outline: 2px solid transparent;
-    outline-offset: var(--space-2);
-    transition: outline-color var(--lc-slow) var(--lc-ease);
-}
-
-.lc-cl-past {
-    outline: 2px solid transparent;
-    transition: outline-color var(--lc-slow) var(--lc-ease);
 }
 
 .lc-cl-bk.is-focus,
 .lc-cl-past.is-focus {
-    outline-color: var(--lc-info);
-    transition-duration: var(--lc-fast);
+    outline: 2px solid var(--lc-info);
+    outline-offset: var(--space-2);
 }
 
 .lc-cl-past.is-focus {
