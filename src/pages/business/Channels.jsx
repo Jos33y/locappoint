@@ -1,5 +1,7 @@
-import { Bot, Copy, Link2, MapPin, MessageCircle } from 'lucide-react'
+import { useState } from 'react'
+import { Bot, Copy, Link2, MapPin, MessageCircle, QrCode as QrIcon } from 'lucide-react'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
+import PosterSheet from '../../components/business/PosterSheet'
 import { Button, Card, Stat, Status } from '../../components/ui'
 import '../../styles/business/support.css'
 import { pageUrl } from '../../services/links'
@@ -7,6 +9,7 @@ import { pageUrl } from '../../services/links'
 const Channels = () => {
     const { business, notify } = useWorkspace()
     const link = pageUrl(business.slug)
+    const [poster, setPoster] = useState(false)
 
     const copy = async () => {
         try {
@@ -22,9 +25,14 @@ const Channels = () => {
             key: 'link',
             icon: Link2,
             name: 'Your booking link',
-            body: 'Clients open your page, pick a service and a time, and book. Put it in your Instagram bio and WhatsApp status.',
+            body: 'Clients open your page, pick a service and a time, and book. Put it in your Instagram bio and WhatsApp status, and print the QR poster for the counter.',
             status: { tone: 'success', label: 'Live' },
-            action: <Button variant="secondary" icon={Copy} onClick={copy}>Copy link</Button>,
+            action: (
+                <>
+                    <Button variant="secondary" icon={Copy} onClick={copy}>Copy link</Button>
+                    <Button variant="secondary" icon={QrIcon} onClick={() => setPoster(true)}>QR poster</Button>
+                </>
+            ),
             detail: link.replace(/^https?:\/\//, ''),
         },
         {
@@ -78,6 +86,7 @@ const Channels = () => {
                     </Card>
                 ))}
             </div>
+            <PosterSheet open={poster} onClose={() => setPoster(false)} business={business} link={link} notify={notify} />
         </div>
     )
 }

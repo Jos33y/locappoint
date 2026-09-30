@@ -23,13 +23,14 @@ const safeMatrix = (value) => {
     try { return matrixFor(value) } catch { return null }
 }
 
-export const QrCode = ({ value, label, size = 176 }) => {
+// size null leaves the code fluid, sized by the surrounding CSS (the printed poster).
+export const QrCode = ({ value, label, size = 176, className = '' }) => {
     const matrix = useMemo(() => safeMatrix(value), [value])
     if (!matrix) return null
     const box = matrix.size + QUIET * 2
     return (
-        <span className="ui-qr" style={{ width: size, height: size }}>
-            <svg viewBox={`0 0 ${box} ${box}`} width={size} height={size} role="img" aria-label={label} shapeRendering="crispEdges">
+        <span className={`ui-qr${className ? ` ${className}` : ''}`} style={size ? { width: size, height: size } : undefined}>
+            <svg viewBox={`0 0 ${box} ${box}`} width={size || undefined} height={size || undefined} role="img" aria-label={label} shapeRendering="crispEdges">
                 <path className="ui-qr__modules" d={pathFor(matrix)} />
             </svg>
         </span>

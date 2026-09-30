@@ -6,6 +6,22 @@ export const loadInsights = async (businessId, days) => {
     return data
 }
 
+// What reminders did in the period. Owner only; the saving is an estimate and absent until there is enough to compare.
+export const loadReminderEffect = async (businessId, days) => {
+    const { data, error } = await supabase.rpc('reminder_effect', { p_business_id: businessId, p_days: days })
+    if (error) throw error
+    return data
+}
+
+// One plain sentence about the money, the way an owner would say it.
+export const moneySentence = ({ now, days, money }) => {
+    if (!now) return ''
+    const span = days === 7 ? 'this week' : `in these ${days} days`
+    if (now.no_show_value > 0) return `No-shows cost you ${money(now.no_show_value)} ${span}.`
+    if (now.bookings > 0) return `Nothing lost to no-shows ${span}.`
+    return ''
+}
+
 const formats = new Map()
 
 // Whole amounts without cents, cents only when there are cents. Naira for Nigeria, euro otherwise.

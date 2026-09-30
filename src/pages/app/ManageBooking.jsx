@@ -108,6 +108,7 @@ const ManageBooking = () => {
                     staffCount: info.booking.staff_count,
                     rhythm: info.rhythm,
                     client: info.client,
+                    addonIds: info.booking.addon_ids,
                 }),
             })
         } catch (err) {

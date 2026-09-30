@@ -27,6 +27,18 @@
     gap: var(--space-4);
 }
 
+/* One plain sentence on what no-shows cost, under the dates. */
+.lc-ins__say {
+    margin: var(--space-2) 0 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-ins__say.is-bad {
+    color: var(--lc-danger);
+}
+
 .lc-ins__body {
     display: flex;
     flex-direction: column;
@@ -86,6 +98,10 @@
     font-size: var(--lc-t-figure);
     font-weight: var(--font-weight-semibold);
     line-height: var(--lc-lh-tight);
+}
+
+.lc-ins-tile.is-bad .lc-ins-tile__value {
+    color: var(--lc-danger);
 }
 
 .lc-ins-tile__meta {
@@ -490,6 +506,27 @@
     font-weight: var(--font-weight-semibold);
 }
 
+/* What reminders did */
+
+.lc-ins-rem .lc-ins-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.lc-ins-saved {
+    margin: 0;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--lc-line);
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-body);
+}
+
+.lc-ins-saved b {
+    display: block;
+    margin-bottom: var(--space-1);
+    color: var(--lc-success);
+    font-size: var(--lc-t-heading);
+}
+
 /* Empty */
 
 .lc-ins-empty {
@@ -557,5 +594,9 @@
 
     .lc-ins-facts {
         grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .lc-ins-rem .lc-ins-facts {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }

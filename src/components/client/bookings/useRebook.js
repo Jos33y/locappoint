@@ -35,6 +35,7 @@ export const useRebook = (enabled) => {
             staffName: last.staff_name,
             staffCount: last.staff_count,
             rhythm: item.rhythm,
+            addonIds: last.addon_ids,
         }))
     }, [open])
 

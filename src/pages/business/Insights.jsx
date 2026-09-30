@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowDownRight, ArrowUpRight, RotateCw, Share2 } from 'lucide-react'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
-import { Button, Segmented } from '../../components/ui'
+import { Button, Segmented, useCountUp } from '../../components/ui'
 import { Columns } from '../../components/insights/Columns'
 import { BarList } from '../../components/insights/BarList'
 import { Funnel } from '../../components/insights/Funnel'
 import { Heatmap } from '../../components/insights/Heatmap'
-import { SOURCE_LABEL, change, leadLabel, loadInsights, moneyFor, percent } from '../../services/insights'
+import { SOURCE_LABEL, change, leadLabel, loadInsights, loadReminderEffect, moneyFor, moneySentence, percent } from '../../services/insights'
 import { formatDay } from '../../services/business'
 import '../../styles/business/insights.css'
 
@@ -32,8 +32,48 @@ const Delta = ({ now, before, upIsGood = true, money }) => {
     )
 }
 
-const Tile = ({ label, value, children }) => (
-    <div className="lc-ins-tile">
+// Money that moves: figures count up when they arrive and settle on the exact amount, cents included.
+const settle = (shown, target) => (Math.abs(shown - target) < 0.005 ? target : Math.round(shown))
+
+const CountMoney = ({ value, money }) => {
+    const target = Number(value) || 0
+    const shown = useCountUp(target)
+    return money(settle(shown, target))
+}
+
+const CountNum = ({ value }) => {
+    const target = Number(value) || 0
+    return <span className="biz-num">{Math.round(useCountUp(target))}</span>
+}
+
+const Reminders = ({ r, days, money }) => {
+    if (!r) return null
+    const span = days === 7 ? 'this week' : `in these ${days} days`
+    if (!r.reminded) {
+        return (
+            <Card title="What reminders did" className="is-wide lc-ins-rem">
+                <p className="lc-ins-none">Clients get a reminder the day before and two hours before. What it changes shows here after the first reminded visits.</p>
+            </Card>
+        )
+    }
+    return (
+        <Card title="What reminders did" note={`Reminders went to ${r.reminded} ${r.reminded === 1 ? 'client' : 'clients'} ${span}.`} className="is-wide lc-ins-rem">
+            <dl className="lc-ins-facts">
+                <div><dt>Came</dt><dd><CountNum value={r.reminded_came} /></dd></div>
+                <div><dt>No-shows</dt><dd><CountNum value={r.reminded_no_show} /></dd></div>
+                <div><dt>Kept</dt><dd className="biz-num"><CountMoney value={r.reminded_value} money={money} /></dd></div>
+            </dl>
+            {r.saved_estimate > 0 ? (
+                <p className="lc-ins-saved"><b>About <CountMoney value={r.saved_estimate} money={money} /> saved.</b> Clients who got a reminder missed fewer visits than those who booked too late for one.</p>
+            ) : (
+                <p className="lc-ins-none">{r.reminded >= 10 && r.other >= 10 ? 'Reminded clients miss visits as often as the rest, so no saving to show yet.' : 'An estimate of money saved shows once there are at least ten reminded visits and ten without a reminder to compare.'}</p>
+            )}
+        </Card>
+    )
+}
+
+const Tile = ({ label, value, children, tone }) => (
+    <div className={`lc-ins-tile${tone ? ` is-${tone}` : ''}`}>
         <span className="lc-ins-tile__label">{label}</span>
         <span className="lc-ins-tile__value">{value}</span>
         {children && <span className="lc-ins-tile__meta">{children}</span>}
@@ -70,12 +110,18 @@ const Insights = () => {
     const { business, isOwner } = useWorkspace()
     const [days, setDays] = useState(7)
     const [state, setState] = useState({ status: 'loading', data: null })
+    const [reminders, setReminders] = useState(null)
     const money = useMemo(() => moneyFor(business.country), [business.country])
 
     const load = useCallback(async () => {
         setState((prev) => ({ status: prev.data ? 'refreshing' : 'loading', data: prev.data }))
         try {
-            setState({ status: 'ready', data: await loadInsights(business.id, days) })
+            const [data, effect] = await Promise.all([
+                loadInsights(business.id, days),
+                loadReminderEffect(business.id, days).catch((err) => { console.error('Reminder figures failed:', err); return null }),
+            ])
+            setState({ status: 'ready', data })
+            setReminders(effect)
         } catch (err) {
             console.error('Insights failed:', err)
             setState((prev) => ({ status: err?.code === '42501' ? 'owner' : 'error', data: prev.data }))
@@ -104,6 +150,7 @@ const Insights = () => {
     const counted = d?.counting_since && d.counting_since > d.from ? d.counting_since : null
     const returning = now ? now.clients - now.new_clients : 0
     const lead = leadLabel(d?.lead_hours)
+    const say = d && !quiet ? moneySentence({ now, days: d.days, money }) : ''
 
     return (
         <div className="biz-page lc-ins">
@@ -113,6 +160,7 @@ const Insights = () => {
                     <p className="lc-ins__range">
                         {d ? `${short(d.from)} to ${short(d.today)}, against the ${d.days} days before` : 'Loading your numbers'}
                     </p>
+                    {say && <p className={`lc-ins__say${now.no_show_value > 0 ? ' is-bad' : ''}`}>{say}</p>}
                 </div>
                 <Segmented options={PERIODS} value={days} onChange={setDays} label="Period" />
             </header>
@@ -145,21 +193,23 @@ const Insights = () => {
                     <div className="lc-ins-kpis">
                         <div className="lc-ins-hero">
                             <span className="lc-ins-tile__label">Earned</span>
-                            <span className="lc-ins-hero__value">{money(now.earned)}</span>
+                            <span className="lc-ins-hero__value"><CountMoney value={now.earned} money={money} /></span>
                             <span className="lc-ins-tile__meta">
                                 <Delta now={now.earned} before={before.earned} money={money} />
                             </span>
                         </div>
-                        <Tile label="Booked ahead" value={money(d.ahead.value)}>
+                        <Tile label="Booked ahead" value={<CountMoney value={d.ahead.value} money={money} />}>
                             {d.ahead.count} {d.ahead.count === 1 ? 'booking' : 'bookings'} in the next {d.days} days
                         </Tile>
-                        <Tile label="Bookings" value={<span className="biz-num">{now.bookings}</span>}>
+                        <Tile label="Bookings" value={<CountNum value={now.bookings} />}>
                             <Delta now={now.bookings} before={before.bookings} />
                         </Tile>
-                        <Tile label="Lost to no-shows" value={money(now.no_show_value)}>
+                        <Tile label="Lost to no-shows" value={<CountMoney value={now.no_show_value} money={money} />} tone={now.no_show_value > 0 ? 'bad' : null}>
                             {now.no_shows} {now.no_shows === 1 ? 'no-show' : 'no-shows'}
                         </Tile>
                     </div>
+
+                    <Reminders r={reminders} days={d.days} money={money} />
 
                     <Card title="Earned per day" note={d.days > 45 ? 'By week. Hover or tap a column for the numbers.' : 'Hover or tap a column for the numbers.'} className="is-wide">
                         <Columns days={d.daily} money={money} />

@@ -29,6 +29,13 @@ export const DATA = {
   ],
 }
 
+// What reminders did: ?noreminders=1 for a business before its first reminded visit, ?fewreminders=1 for too few to compare.
+const reminderEffect = () => {
+  if (quiet('noreminders')) return { reminded: 0, reminded_came: 0, reminded_no_show: 0, reminded_value: 0, other: 0, other_no_show: 0, saved_estimate: null }
+  if (quiet('fewreminders')) return { reminded: 4, reminded_came: 4, reminded_no_show: 0, reminded_value: 72, other: 2, other_no_show: 1, saved_estimate: null }
+  return { reminded: 24, reminded_came: 22, reminded_no_show: 1, reminded_value: 410, other: 12, other_no_show: 3, saved_estimate: 36 }
+}
+
 // A believable Insights answer for any period, or a brand-new business with ?noinsights=1.
 const insights = (days) => {
   const quiet = new URLSearchParams(window.location.search).get('noinsights') === '1'
@@ -62,7 +69,7 @@ const haircut = { id: 's1', service_name: 'Haircut', duration_minutes: 30, price
 const trim = { id: 's2', service_name: 'Beard trim', duration_minutes: 20, price: 12 }
 const rhythm = () => ({
   visits: 3, last_date: dk(-1), recent: [dk(-57), dk(-29), dk(-1)], gap_days: 28, due_date: dk(10), suggested_date: dk(10), today: key, upcoming: null,
-  last: { appointment_id: 'c3', date: dk(-1), service: { ...haircut, active: true }, staff_id: 'm2', staff_name: 'Rita', staff_count: 2 },
+  last: { appointment_id: 'c3', date: dk(-1), service: { ...haircut, active: true }, staff_id: 'm2', staff_name: 'Rita', staff_count: 2, addon_ids: new URLSearchParams(window.location.search).get('extras') === '1' ? ['s2'] : null },
 })
 const nove = { id: 'b2', business_name: 'Studio Nove', slug: 'studio-nove', timezone: 'Europe/Lisbon', city: 'Porto', country: 'PT', category: 'nails', category_detail: null, logo_url: null, banner_url: null, auto_confirm: false, cancel_cutoff_minutes: 0 }
 const past = (id, n, service, status = 'completed', extra = {}) => ({
@@ -161,7 +168,7 @@ const clientRpc = {
   my_rebook: () => rebookPlaces(),
   get_available_slots: (args) => slots(args.p_staff_id),
   booking_by_link: () => guestBooking(),
-  rebook_by_link: () => ({ business: femtos(), booking: { service: { ...haircut, active: true }, staff_id: 'm2', staff_name: 'Rita', staff_count: 2 }, rhythm: rhythm(), client: { name: 'Ana Guest', email: 'ana@guest.pt', phone: '+351911111111' }, emails_stopped: false }),
+  rebook_by_link: () => ({ business: femtos(), booking: { service: { ...haircut, active: true }, staff_id: 'm2', staff_name: 'Rita', staff_count: 2, addon_ids: new URLSearchParams(window.location.search).get('extras') === '1' ? ['s2'] : null }, rhythm: rhythm(), client: { name: 'Ana Guest', email: 'ana@guest.pt', phone: '+351911111111' }, emails_stopped: false }),
   stop_emails_by_link: () => true,
   book_appointment: () => 'new-booking',
 }
@@ -212,7 +219,7 @@ const builder = (table) => {
 
 export const supabase = {
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),
