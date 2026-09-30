@@ -89,6 +89,8 @@ const slots = (staff) => {
   return out
 }
 const quiet = (flag) => new URLSearchParams(window.location.search).get(flag) === '1'
+if (quiet('extras')) { DATA.services[0].is_addon = false; DATA.services[1].is_addon = true; DATA.appointments[0].addons = [{ id: 's2', name: 'Beard trim', minutes: 20, price: 12 }] }
+if (quiet('blocks')) DATA.time_blocks.push({ id: 'tb1', business_id: 'b1', staff_id: null, starts_at: `${key}T17:00:00`, ends_at: `${key}T18:00:00`, reason: 'Doctor' }, { id: 'tb2', business_id: 'b1', staff_id: null, starts_at: `${dk(9)}T00:00:00`, ends_at: `${dk(11)}T00:00:00`, reason: 'Holiday' })
 const REVIEWS = [
   { id: 'rv1', appointment_id: 'p9', rating: 5, body: 'Best fade I have had in Lisbon. On time, and Miles remembered how I like it.', client_name: 'Ana Ferreira', author: 'Ana F.', service: 'Haircut', staff_name: 'Miles Farra', date: dk(-2), time: '10:00', created_at: `${dk(-1)}T09:00:00Z`, reply: null, replied_at: null, hidden: false, reported: false, visit_month: 'September 2026' },
   { id: 'rv2', appointment_id: 'p8', rating: 4, body: null, client_name: 'Jameson Clarke', author: 'Jameson C.', service: 'Beard trim', staff_name: null, date: dk(-9), time: '15:00', created_at: `${dk(-8)}T09:00:00Z`, reply: 'Thanks Jameson, see you next time.', replied_at: `${dk(-7)}T09:00:00Z`, hidden: false, reported: false, visit_month: 'September 2026' },

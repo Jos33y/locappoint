@@ -11,6 +11,7 @@ import {
     getSlots,
     moveBooking,
     setBookingStatus,
+    serviceLabel,
     shortTime,
     whatsappLink,
     zonedNow,
@@ -125,7 +126,7 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                 <div>
                     <dt>Service</dt>
                     <dd>
-                        {booking.services?.service_name || 'Service removed'}
+                        {serviceLabel(booking, 'Service removed')}
                         {(booking.price ?? booking.services?.price) != null && <span className="biz-num biz-muted"> {formatMoney(booking.price ?? booking.services.price)}</span>}
                     </dd>
                 </div>

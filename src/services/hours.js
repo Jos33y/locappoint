@@ -52,5 +52,8 @@ export const sameWindows = (a, b) =>
 export const clock = (minutes) =>
     `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
 
+// A break around midday that lasts a while is lunch; anything else is just a break.
+export const breakLabel = (gap) => (gap.start >= 690 && gap.start <= 900 && gap.end - gap.start >= 30 ? 'Lunch' : 'Break')
+
 export const windowsLabel = (windows) =>
     windows.length === 0 ? 'Closed' : windows.map((w) => `${clock(w.start)} to ${clock(w.end)}`).join(', ')

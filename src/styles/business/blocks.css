@@ -1,0 +1,61 @@
+.lc-blk { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.lc-blk__when { margin: 0; color: var(--lc-ink-1); font-size: var(--lc-t-body); font-weight: var(--font-weight-semibold); }
+
+.lc-blk__note { margin: 0; color: var(--lc-ink-3); font-size: var(--lc-t-label); }
+
+.lc-blk__times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+
+.lc-blk__times .ui-picker-wrap,
+.lc-blk__times .ui-picker-trigger--compact { width: 100%; }
+
+.lc-blk__warn {
+    margin: 0;
+    padding: var(--space-3);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-warning-tint);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+}
+
+.lc-blk__err { margin: 0; color: var(--lc-danger); font-size: var(--lc-t-label); }
+
+/* Hours page: time between bookings and closed dates. */
+.lc-hx {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-hx__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+
+.lc-hx__title { margin: 0; color: var(--lc-ink-1); font-size: var(--lc-t-body); font-weight: var(--font-weight-semibold); }
+
+.lc-hx__note { margin: var(--space-1) 0 0; color: var(--lc-ink-3); font-size: var(--lc-t-label); line-height: var(--lc-lh-snug); }
+
+.lc-hx__none { margin: 0; color: var(--lc-ink-3); font-size: var(--lc-t-label); }
+
+.lc-hx__list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+
+.lc-hx__row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--lc-line); }
+
+.lc-hx__row:first-child { border-top: 0; }
+
+.lc-hx__icon { flex: none; color: var(--signal); }
+
+.lc-hx__what { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+
+.lc-hx__what strong { color: var(--lc-ink-1); font-size: var(--lc-t-label); font-weight: var(--font-weight-medium); }
+
+.lc-hx__what span { color: var(--lc-ink-3); font-size: var(--lc-t-micro); overflow-wrap: anywhere; }
+
+.lc-hx .lc-hx__x { width: 44px; height: 44px; }
+
+/* Five choices share the card's width, so the row never runs off a phone. */
+.lc-hx .ui-seg { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+.lc-hx .ui-seg__btn { min-width: 0; padding: 0 var(--space-2); }

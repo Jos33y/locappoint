@@ -41,6 +41,7 @@ import TeamJoin from '@src/pages/app/TeamJoin'
 import ClientHome from '@src/pages/client/Home'
 import ClientAppointments from '@src/pages/client/MyAppointments'
 import ClientSearch from '@src/pages/client/Search'
+import ClientProfile from '@src/pages/client/Profile'
 import ManageBooking from '@src/pages/app/ManageBooking'
 import PublicBusinessPage from '@src/pages/app/PublicBusinessPage'
 import { InboxProvider } from '@src/components/inbox/InboxContext'
@@ -103,6 +104,7 @@ const App = () => (
         <Route path="/client" element={<ClientHome />} />
         <Route path="/client/appointments" element={<ClientAppointments />} />
         <Route path="/client/search" element={<ClientSearch />} />
+        <Route path="/client/profile" element={<ClientProfile />} />
         <Route path="/client/notifications" element={<InboxProvider audience="client"><InboxPage audience="client" /></InboxProvider>} />
         <Route path="/b/:token" element={<ManageBooking />} />
         <Route path="/team/:token" element={<TeamJoin />} />

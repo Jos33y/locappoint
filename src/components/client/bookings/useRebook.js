@@ -49,6 +49,7 @@ export const useRebook = (enabled) => {
             staffName: same ? last.staff_name : null,
             staffCount: last?.staff_count,
             rhythm: item?.rhythm,
+            addonIds: Array.isArray(row.addons) ? row.addons.map((a) => a.id) : [],
         }))
     }, [places.items, open])
 

@@ -724,3 +724,12 @@
     font-weight: var(--font-weight-semibold);
     font-variant-numeric: tabular-nums;
 }
+
+/* Extras: added to the service above, one booking and one slot. */
+.lc-bk-extras { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.lc-bk-extras__label { color: var(--lc-ink-3); font-size: var(--lc-t-label); }
+
+.lc-bk-extras__meta { margin-left: var(--space-1); color: var(--lc-ink-3); font-weight: var(--font-weight-normal); }
+
+.ui-chip.is-selected .lc-bk-extras__meta { color: inherit; }

@@ -1,5 +1,5 @@
 import { addDays, bookingStart, startOfWeek, windowsFor } from './business'
-import { parseDateKey } from './dates'
+import { parseDateKey, toDateKey } from './dates'
 
 const LIVE = ['pending', 'confirmed', 'completed']
 
@@ -36,6 +36,19 @@ export const dayFigures = ({ bookings, hours, members, dateKey, now }) => {
         count: day.filter((b) => LIVE.includes(b.status)).length,
         pending: day.filter((b) => b.status === 'pending'),
     }
+}
+
+// A month as whole weeks, Monday to Sunday, so the grid never starts mid-week.
+export const monthRange = (anchor) => {
+    const d = parseDateKey(anchor)
+    const first = toDateKey(new Date(d.getFullYear(), d.getMonth(), 1))
+    const last = toDateKey(new Date(d.getFullYear(), d.getMonth() + 1, 0))
+    return [startOfWeek(first), addDays(startOfWeek(last), 6)]
+}
+
+export const shiftMonth = (anchor, dir) => {
+    const d = parseDateKey(anchor)
+    return toDateKey(new Date(d.getFullYear(), d.getMonth() + dir, 1))
 }
 
 export const weekKeys = (dateKey) => {

@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Ban, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import DayRail from '../../components/business/DayRail'
 import Agenda from '../../components/business/Agenda'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
 import StaffFilter from '../../components/business/StaffFilter'
 import { WeekRings } from '../../components/business/WeekRings'
-import { weekFigures } from '../../services/day'
+import BlockSheet from '../../components/business/BlockSheet'
+import MonthGrid from '../../components/business/MonthGrid'
+import { Button } from '../../components/ui'
+import { monthRange, shiftMonth, weekFigures } from '../../services/day'
 import { moneyFor } from '../../services/insights'
 import {
     STATUS_LABEL,
@@ -37,9 +40,11 @@ const Calendar = () => {
     const [blocks, setBlocks] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
+    const [blockSheet, setBlockSheet] = useState(null)
 
     const range = useMemo(() => {
         if (view === 'day') return [anchor, anchor]
+        if (view === 'month') return monthRange(anchor)
         const from = startOfWeek(anchor)
         return [from, addDays(from, 6)]
     }, [view, anchor])
@@ -81,9 +86,13 @@ const Calendar = () => {
     const week = view === 'week' ? weekFigures({ bookings: visible, hours, members: columns, now: today, anchor: range[0] }) : null
 
     const step = view === 'day' ? 1 : 7
+    const move = (dir) => setAnchor(view === 'month' ? shiftMonth(anchor, dir) : addDays(anchor, dir * step))
+    const unit = { day: 'day', week: 'week', month: 'month' }[view]
     const title = view === 'day'
         ? formatDay(anchor)
-        : `${formatDay(range[0], { day: 'numeric', month: 'short' })} to ${formatDay(range[1], { day: 'numeric', month: 'short' })}`
+        : view === 'month'
+            ? formatDay(anchor, { month: 'long', year: 'numeric' })
+            : `${formatDay(range[0], { day: 'numeric', month: 'short' })} to ${formatDay(range[1], { day: 'numeric', month: 'short' })}`
 
     const days = view === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(range[0], i)) : []
 
@@ -95,7 +104,7 @@ const Calendar = () => {
                     <p className="biz-page__sub">{title}</p>
                 </div>
                 <div className="biz-seg" role="radiogroup" aria-label="View">
-                    {['day', 'week'].map((option) => (
+                    {['day', 'week', 'month'].map((option) => (
                         <button
                             key={option}
                             type="button"
@@ -104,26 +113,31 @@ const Calendar = () => {
                             className={`biz-seg__btn${view === option ? ' is-selected' : ''}`}
                             onClick={() => setView(option)}
                         >
-                            {option === 'day' ? 'Day' : 'Week'}
+                            {{ day: 'Day', week: 'Week', month: 'Month' }[option]}
                         </button>
                     ))}
                 </div>
             </header>
 
             <div className="biz-datenav">
-                <button type="button" className="biz-icon-btn" aria-label={view === 'day' ? 'Previous day' : 'Previous week'} onClick={() => setAnchor(addDays(anchor, -step))}>
+                <button type="button" className="biz-icon-btn" aria-label={`Previous ${unit}`} onClick={() => move(-1)}>
                     <ChevronLeft size={20} />
                 </button>
                 <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAnchor(today.dateKey)} disabled={anchor === today.dateKey}>
                     Today
                 </button>
-                <button type="button" className="biz-icon-btn" aria-label={view === 'day' ? 'Next day' : 'Next week'} onClick={() => setAnchor(addDays(anchor, step))}>
+                <button type="button" className="biz-icon-btn" aria-label={`Next ${unit}`} onClick={() => move(1)}>
                     <ChevronRight size={20} />
                 </button>
                 <label className="biz-datenav__pick">
                     <span className="biz-visually-hidden">Go to date</span>
                     <input className="biz-input" type="date" value={anchor} onChange={(event) => event.target.value && setAnchor(event.target.value)} />
                 </label>
+                {view === 'day' && (
+                    <Button variant="secondary" icon={Ban} className="biz-datenav__block" onClick={() => setBlockSheet({ dateKey: anchor, start: today.dateKey === anchor ? Math.ceil(today.minutes / 15) * 15 : null })}>
+                        Block time
+                    </Button>
+                )}
             </div>
 
             <StaffFilter members={isOwner ? bookableMembers : []} value={staffFilter} onChange={setStaffFilter} />
@@ -147,6 +161,7 @@ const Calendar = () => {
                     past={anchor < today.dateKey}
                     onBook={(minutes, staffId) => openNewBooking({ staffId, date: anchor, time: minutesToLabel(minutes) })}
                     onOpen={openBooking}
+                    onBlock={(block) => setBlockSheet({ dateKey: anchor, block })}
                     onConfirm={async (booking) => {
                         try {
                             await setBookingStatus(booking.id, 'confirmed')
@@ -184,6 +199,20 @@ const Calendar = () => {
                         time: `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`,
                     })}
                     onBookingTap={openBooking}
+                    onBlockTap={(block) => setBlockSheet({ dateKey: anchor, block })}
+                />
+            )}
+
+            {view === 'month' && !(loading && bookings.length === 0) && (
+                <MonthGrid
+                    anchor={anchor}
+                    range={range}
+                    bookings={visible}
+                    blocks={blocks}
+                    hours={hours}
+                    members={columns}
+                    today={today}
+                    onPick={(key) => { setAnchor(key); setView('day') }}
                 />
             )}
 
@@ -237,6 +266,14 @@ const Calendar = () => {
                     })}
                 </div>
             )}
+            <BlockSheet
+                open={Boolean(blockSheet)}
+                dateKey={blockSheet?.dateKey || anchor}
+                startMinutes={blockSheet?.start}
+                block={blockSheet?.block || null}
+                onClose={() => setBlockSheet(null)}
+                onChanged={refreshBookings}
+            />
         </div>
     )
 }

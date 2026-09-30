@@ -48,6 +48,7 @@ export const PublicMenu = ({ services, name, whatsapp, preview, onBook }) => {
                                         <span className="lc-pub__svcname">{service.service_name.trim()}</span>
                                         {minutes > 0 && <span className="lc-pub__svctime">{durationLabel(minutes)}</span>}
                                         {service.description?.trim() && <span className="lc-pub__svcdesc">{service.description.trim()}</span>}
+                                        {service.is_addon && <span className="lc-pub__svcextra">Can be added to any service</span>}
                                     </span>
                                     {hasPrice(service.price) && <span className="lc-pub__price">{menuPrice(service.price)}</span>}
                                     <span className="lc-pub__go" aria-hidden="true"><ChevronRight size={18} /></span>

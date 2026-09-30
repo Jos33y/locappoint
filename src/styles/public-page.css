@@ -885,3 +885,6 @@
 @media (hover: none) {
     .lc-pubpage__bar .ui-btn { min-height: 44px; }
 }
+
+/* An extra says so on the menu, so clients know before they open a service. */
+.lc-pub__svcextra { margin-top: 2px; color: var(--signal); font-size: var(--lc-t-label); }

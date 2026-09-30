@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import { parseDateKey } from '../../services/dates'
-import { bookingStart, blockMinutes, durationLabel, minutesToLabel, shortTime, windowsFor } from '../../services/business'
+import { breakLabel } from '../../services/hours'
+import { bookingStart, blockMinutes, durationLabel, minutesToLabel, serviceLabel, shortTime, windowsFor } from '../../services/business'
 
-const Agenda = ({ dateKey, bookings, blocks, hours, staff, members, nowMinutes, past = false, onBook, onOpen, onConfirm }) => {
+const Agenda = ({ dateKey, bookings, blocks, hours, staff, members, nowMinutes, past = false, onBook, onOpen, onConfirm, onBlock }) => {
     const weekday = parseDateKey(dateKey).getDay()
     const showStaff = !staff && members.length > 1
 
@@ -92,7 +93,7 @@ const Agenda = ({ dateKey, bookings, blocks, hours, staff, members, nowMinutes, 
                     return (
                         <li key={`break-${item.start}`} className="biz-agenda__row biz-agenda__row--mark">
                             <span className="biz-agenda__time biz-num">{minutesToLabel(item.start)}</span>
-                            <div className="biz-agenda__mark">Lunch break until <span className="biz-num">{minutesToLabel(item.end)}</span></div>
+                            <div className="biz-agenda__mark">{breakLabel(item) === 'Lunch' ? 'Lunch break' : 'Break'} until <span className="biz-num">{minutesToLabel(item.end)}</span></div>
                         </li>
                     )
                 }
@@ -110,9 +111,9 @@ const Agenda = ({ dateKey, bookings, blocks, hours, staff, members, nowMinutes, 
                     return (
                         <li key={`block-${item.block.id}`} className="biz-agenda__row">
                             <span className="biz-agenda__time biz-num">{minutesToLabel(item.start)}</span>
-                            <div className="biz-agenda__block">
+                            <button type="button" className="biz-agenda__block" onClick={() => onBlock?.(item.block)} disabled={!onBlock}>
                                 {`Blocked until ${minutesToLabel(item.end)}${item.block.reason ? `, ${item.block.reason}` : ''}`}
-                            </div>
+                            </button>
                         </li>
                     )
                 }
@@ -129,7 +130,7 @@ const Agenda = ({ dateKey, bookings, blocks, hours, staff, members, nowMinutes, 
                             <button type="button" className="biz-agenda__open" onClick={() => onOpen(booking)}>
                                 <span className="biz-agenda__who">{booking.client_name}</span>
                                 <span className="biz-agenda__what">
-                                    {booking.services?.service_name || 'Booking'}
+                                    {serviceLabel(booking)}
                                     {showStaff && memberName(booking.staff_id) ? ` with ${memberName(booking.staff_id)}` : ''}
                                 </span>
                                 {booking.status !== 'confirmed' && (

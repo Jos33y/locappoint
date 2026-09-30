@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { Button, Sheet } from '../ui'
+import { Button, Chip, ChipGroup, Sheet } from '../ui'
 import { DurationDial } from '../business/DurationDial'
 import { useNow } from '../business/ShopClock'
 import { useAuth } from '../../hooks/useAuth'
 import { durationLabel, menuPrice } from '../../services/business'
 import { trackPage } from '../../services/pageStats'
-import { USER_ERRORS, bookingDays, clearPending, firstOnOrAfter, hasTimeLeft, loadSlots, monthShort, requestBooking, rescheduleMyBooking, savePending, windowsFor } from '../../services/booking'
+import { USER_ERRORS, bookingDays, clearPending, firstOnOrAfter, hasTimeLeft, loadExtras, loadSlots, monthShort, requestBooking, rescheduleMyBooking, savePending, windowsFor } from '../../services/booking'
 import { parsePhone } from '../ui/PhoneField'
 import { clock } from '../../services/hours'
 import { parseDateKey, toMinutes } from '../../services/dates'
@@ -32,13 +32,36 @@ const dayShort = (day) => `${day.date.toLocaleDateString('en-GB', { weekday: 'sh
 const firstBookable = (days, duration, nowMinutes) =>
     days.find((d) => d.windows.length > 0 && hasTimeLeft(d, duration, nowMinutes))
 
-export const BookingSheet = ({ business, service, week, resume, owner = false, move = null, rebook = null, mover, onMoved, onClose }) => {
+export const BookingSheet = ({ business, service: baseService, extras: givenExtras, week, resume, owner = false, move = null, rebook = null, mover, onMoved, onClose }) => {
     const navigate = useNavigate()
     const { user, userProfile } = useAuth()
     const timeZone = business.timezone || 'Europe/Lisbon'
     const now = useNow(timeZone)
     const nowMinutes = now?.minutes ?? 0
-    const duration = Number(service.duration_minutes) || 30
+    // Extras come with the page; every other way in (Book again, bookings, the manage link) loads them here.
+    const [loadedExtras, setLoadedExtras] = useState([])
+    const offerExtras = !move && !owner
+    useEffect(() => {
+        if (givenExtras || !offerExtras) return undefined
+        let cancelled = false
+        loadExtras(business.id)
+            .then((rows) => { if (!cancelled) setLoadedExtras(rows) })
+            .catch((err) => console.error('Extras failed:', err))
+        return () => { cancelled = true }
+    }, [givenExtras, offerExtras, business.id])
+    const extras = useMemo(() => (givenExtras || loadedExtras).filter((e) => e.id !== baseService.id), [givenExtras, loadedExtras, baseService.id])
+    const [chosen, setAddonIds] = useState(() => resume?.addonIds || rebook?.addonIds || [])
+    const addonIds = useMemo(() => chosen.filter((id) => extras.some((e) => e.id === id)), [chosen, extras])
+    const addonKey = addonIds.join(',')
+    const picked = extras.filter((e) => addonIds.includes(e.id))
+    // One booking, one slot: the extras' time and price sit on top of the service's.
+    const service = picked.length ? {
+        ...baseService,
+        service_name: [baseService.service_name.trim(), ...picked.map((e) => e.service_name.trim())].join(' + '),
+        duration_minutes: Number(baseService.duration_minutes) + picked.reduce((s, e) => s + Number(e.duration_minutes), 0),
+        price: hasPrice(baseService.price) ? Number(baseService.price) + picked.reduce((s, e) => s + (Number(e.price) || 0), 0) : baseService.price,
+    } : baseService
+    const duration = Number(move?.duration_minutes) || Number(service.duration_minutes) || 30
     const days = useMemo(() => bookingDays(timeZone, week), [timeZone, week])
     const held = resume && days.some((d) => d.key === resume.dateKey && d.windows.length > 0) ? resume : null
     const was = move ? { dateKey: move.appointment_date, minutes: toMinutes(move.appointment_time) } : null
@@ -76,20 +99,29 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     const fetchDay = useCallback(async (key) => {
         setBusy((b) => ({ ...b, [key]: { state: 'loading' } }))
         try {
-            const free = await loadSlots({ businessId: business.id, serviceId: service.id, dateKey: key, staffId, ignore: move?.id || null })
+            const free = await loadSlots({ businessId: business.id, serviceId: service.id, dateKey: key, staffId, ignore: move?.id || null, addonIds })
             setBusy((b) => ({ ...b, [key]: { state: 'ready', free } }))
         } catch (err) {
             console.error('Busy times failed:', err)
             setBusy((b) => ({ ...b, [key]: { state: 'error' } }))
         }
-    }, [business.id, service.id, staffId, move?.id])
+    }, [business.id, service.id, staffId, move?.id, addonIds])
 
     useEffect(() => {
         if (!busy[dayKey]) fetchDay(dayKey)
     }, [dayKey, busy, fetchDay])
 
+    // Extras picked last time arrive after the sheet opens; the times must fit the whole booking.
+    useEffect(() => { setBusy({}) }, [addonKey])
+
     const pickStaff = (id) => {
         setStaffId(id)
+        setMinutes(null)
+        setBusy({})
+    }
+
+    const toggleExtra = (id) => {
+        setAddonIds(addonIds.includes(id) ? addonIds.filter((x) => x !== id) : [...addonIds, id].slice(0, 3))
         setMinutes(null)
         setBusy({})
     }
@@ -111,7 +143,7 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
     }
 
     const toAuth = (tab) => {
-        savePending({ slug: business.slug, serviceId: service.id, dateKey: dayKey, minutes })
+        savePending({ slug: business.slug, serviceId: service.id, dateKey: dayKey, minutes, addonIds })
         const back = `/${business.slug}?book=${encodeURIComponent(`${service.id}.${dayKey}.${clock(minutes).replace(':', '')}`)}`
         navigate('/auth', {
             state: {
@@ -145,6 +177,7 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
                 email,
                 phone: details.phone,
                 notes: details.notes.trim(),
+                addonIds,
             })
             clearPending()
             setStep('done')
@@ -242,6 +275,19 @@ export const BookingSheet = ({ business, service, week, resume, owner = false, m
                         </span>
                         {hasPrice(service.price) && <span className="lc-bk-service__price">{menuPrice(service.price)}</span>}
                     </div>
+                    {!move && !owner && extras.length > 0 && (
+                        <div className="lc-bk-extras">
+                            <span className="lc-bk-extras__label">Add to it</span>
+                            <ChipGroup label="Extras">
+                                {extras.map((e) => (
+                                    <Chip key={e.id} selected={addonIds.includes(e.id)} onClick={() => toggleExtra(e.id)}>
+                                        {`+ ${e.service_name.trim()}`}
+                                        <span className="lc-bk-extras__meta">{[durationLabel(Number(e.duration_minutes)), hasPrice(e.price) ? menuPrice(e.price) : null].filter(Boolean).join(', ')}</span>
+                                    </Chip>
+                                ))}
+                            </ChipGroup>
+                        </div>
+                    )}
                     {rebook && <RebookNote rebook={rebook} staffId={staffId} onStaff={pickStaff} picked={dayKey} usual={usual} />}
                     <DayStrip days={days} selected={dayKey} onSelect={pickDay} duration={duration} nowMinutes={nowMinutes} usual={usual} />
                     {notice && <p className="lc-bk-notice" role="alert">{notice}</p>}

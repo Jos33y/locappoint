@@ -1,5 +1,5 @@
 import { Coffee, DoorClosed } from 'lucide-react'
-import { WEEK, clock } from '../../../services/hours'
+import { WEEK, breakLabel, clock } from '../../../services/hours'
 import '../../../styles/public-page.css'
 
 export const PublicHours = ({ week, todayDow }) => (
@@ -29,7 +29,7 @@ export const PublicHours = ({ week, todayDow }) => (
                             {breaks.map((g) => (
                                 <span key={g.start} className="lc-pub__lunch">
                                     <Coffee size={13} aria-hidden="true" />
-                                    {`Lunch ${clock(g.start)} to ${clock(g.end)}`}
+                                    {`${breakLabel(g)} ${clock(g.start)} to ${clock(g.end)}`}
                                 </span>
                             ))}
                         </span>

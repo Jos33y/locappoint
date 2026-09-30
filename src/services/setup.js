@@ -5,7 +5,7 @@ import { rowsFromWeek } from './hours'
 import { claimStoredReferral } from './referrals'
 
 export const BUSINESS_FIELDS =
-    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes'
+    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes, buffer_minutes'
 
 export const slugFrom = (name) =>
     (name || '')
@@ -28,7 +28,7 @@ export const loadSetup = async (businessId) => {
     const [business, services, hours] = await Promise.all([
         supabase.from('businesses').select(BUSINESS_FIELDS).eq('id', businessId).single(),
         supabase.from('services')
-            .select('id, service_name, duration_minutes, price, description, is_active, sort_order')
+            .select('id, service_name, duration_minutes, price, description, is_active, is_addon, sort_order')
             .eq('business_id', businessId)
             .order('sort_order')
             .order('service_name'),
@@ -95,6 +95,7 @@ export const serviceRow = (service, index) => ({
     price: Number(String(service.price).replace(',', '.')),
     description: service.description?.trim() || null,
     is_active: service.is_active !== false,
+    is_addon: service.is_addon === true,
     sort_order: index,
 })
 

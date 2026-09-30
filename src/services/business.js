@@ -109,7 +109,7 @@ export const loadWorkspace = async (businessId) => {
 export const loadBookings = async (businessId, fromKey, toKey) => {
     const { data, error } = await supabase
         .from('appointments')
-        .select('id, staff_id, service_id, appointment_date, appointment_time, duration_minutes, status, source, client_name, client_phone, client_email, notes, price, cancelled_by, rescheduled_from, services(service_name, price)')
+        .select('id, staff_id, service_id, appointment_date, appointment_time, duration_minutes, status, source, client_name, client_phone, client_email, notes, price, cancelled_by, rescheduled_from, addons, services(service_name, price)')
         .eq('business_id', businessId)
         .gte('appointment_date', fromKey)
         .lte('appointment_date', toKey)
@@ -122,7 +122,7 @@ export const loadBookings = async (businessId, fromKey, toKey) => {
 export const loadBooking = async (businessId, id) => {
     const { data, error } = await supabase
         .from('appointments')
-        .select('id, staff_id, service_id, appointment_date, appointment_time, duration_minutes, status, source, client_name, client_phone, client_email, notes, price, cancelled_by, rescheduled_from, services(service_name, price)')
+        .select('id, staff_id, service_id, appointment_date, appointment_time, duration_minutes, status, source, client_name, client_phone, client_email, notes, price, cancelled_by, rescheduled_from, addons, services(service_name, price)')
         .eq('business_id', businessId)
         .eq('id', id)
         .maybeSingle()
@@ -187,6 +187,10 @@ export const getSlots = async ({ businessId, serviceId, date, staffId }) => {
     if (error) throw error
     return data || []
 }
+
+// The service as the client booked it, extras included: "Corte + Barba".
+export const serviceLabel = (booking, fallback = 'Booking') =>
+    [booking.services?.service_name || fallback, ...(Array.isArray(booking.addons) ? booking.addons.map((a) => a.name) : [])].filter(Boolean).join(' + ')
 
 export const bookingStart = (booking) => {
     const [hours, minutes] = booking.appointment_time.split(':').map(Number)

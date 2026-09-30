@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { parseDateKey, toMinutes } from '../../services/dates'
-import { STATUS_LABEL, bookingStart, minutesToLabel, shortTime } from '../../services/business'
+import { STATUS_LABEL, bookingStart, minutesToLabel, serviceLabel, shortTime } from '../../services/business'
 
 const PX_PER_MINUTE = 1.4
 const SNAP = 15
@@ -20,7 +20,7 @@ const blockRange = (block, dateKey) => {
     return [start, end]
 }
 
-const DayRail = ({ dateKey, columns, bookings, blocks, hours, nowMinutes, onSlotTap, onBookingTap }) => {
+const DayRail = ({ dateKey, columns, bookings, blocks, hours, nowMinutes, onSlotTap, onBookingTap, onBlockTap }) => {
     const scrollRef = useRef(null)
     const weekday = parseDateKey(dateKey).getDay()
 
@@ -102,13 +102,16 @@ const DayRail = ({ dateKey, columns, bookings, blocks, hours, nowMinutes, onSlot
                         ))}
 
                         {column.blocks.map((block) => (
-                            <div
+                            <button
+                                type="button"
                                 key={block.id}
                                 className="biz-rail__block"
                                 style={{ top: y(block.range[0]), height: (block.range[1] - block.range[0]) * PX_PER_MINUTE }}
+                                onClick={(event) => { event.stopPropagation(); onBlockTap?.(block) }}
+                                disabled={!onBlockTap}
                             >
                                 <span>Blocked{block.reason ? `: ${block.reason}` : ''}</span>
-                            </div>
+                            </button>
                         ))}
 
                         {column.bookings.map((booking) => {
@@ -121,14 +124,14 @@ const DayRail = ({ dateKey, columns, bookings, blocks, hours, nowMinutes, onSlot
                                     className={`biz-booking biz-booking--${booking.status}${blockHeight < 56 ? ' biz-booking--compact' : ''}`}
                                     style={{ top: y(from), height: blockHeight }}
                                     onClick={() => onBookingTap?.(booking)}
-                                    aria-label={`${shortTime(booking.appointment_time)} ${booking.client_name}, ${booking.services?.service_name || 'booking'}, ${STATUS_LABEL[booking.status]}`}
+                                    aria-label={`${shortTime(booking.appointment_time)} ${booking.client_name}, ${serviceLabel(booking, 'booking')}, ${STATUS_LABEL[booking.status]}`}
                                 >
                                     <span className="biz-booking__time">
                                         {shortTime(booking.appointment_time)}
                                         {booking.status === 'pending' && <span className="biz-booking__flag">Needs confirming</span>}
                                     </span>
                                     <span className="biz-booking__who">{booking.client_name}</span>
-                                    <span className="biz-booking__what">{booking.services?.service_name}</span>
+                                    <span className="biz-booking__what">{serviceLabel(booking, '')}</span>
                                 </button>
                             )
                         })}

@@ -7,9 +7,11 @@ import { openStatus } from '../../components/business/PublicPageView'
 import SaveState from '../../components/business/SaveState'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
 import { useAutosave } from '../../components/business/useAutosave'
+import { BufferCard, ClosedDates } from '../../components/business/HoursExtras'
 import { hasOpenDay, rowsFromWeek, weekFromRows, weekProblems } from '../../services/hours'
 import { loadSetup, saveHours } from '../../services/setup'
 import { pageUrl } from '../../services/links'
+import { zonedNow } from '../../services/business'
 import '../../styles/business/services-hours.css'
 
 const snapshot = (week) => JSON.stringify(rowsFromWeek(week))
@@ -31,13 +33,13 @@ const LoadingState = () => (
 
 const HoursPage = () => {
     const isDesktop = useIsDesktop()
-    const { business: shellBusiness, reloadWorkspace } = useWorkspace()
+    const { business: shellBusiness, reloadWorkspace, notify } = useWorkspace()
     const [phase, setPhase] = useState('loading')
     const [timezone, setTimezone] = useState('Europe/Lisbon')
+    const [buffer, setBuffer] = useState(0)
     const [rows, setRows] = useState([])
     const [week, setWeek] = useState(null)
     const [savedKey, setSavedKey] = useState('')
-    const [simplified, setSimplified] = useState(false)
     const [startedEmpty, setStartedEmpty] = useState(false)
     const current = useRef({ week, rows })
     current.current = { week, rows }
@@ -48,10 +50,10 @@ const HoursPage = () => {
             const data = await loadSetup(shellBusiness.id)
             const loaded = weekFromRows(data.hours)
             setTimezone(data.business.timezone || 'Europe/Lisbon')
+            setBuffer(data.business.buffer_minutes || 0)
             setRows(data.hours)
             setWeek(loaded)
             setSavedKey(snapshot(loaded))
-            setSimplified(loaded.some((day) => day.length > 2))
             setStartedEmpty(!hasOpenDay(loaded))
             setPhase('ready')
         } catch (err) {
@@ -108,13 +110,10 @@ const HoursPage = () => {
             </header>
 
             <div className="biz-sh__column">
-                {simplified && (
-                    <p className="biz-sh__note" role="note">
-                        Some days had more than one break. They are shown here with one lunch break, and saving keeps what you see.
-                    </p>
-                )}
                 <HoursEditor week={week} onChange={setWeek} templates={startedEmpty} timeZone={timezone} status={status} weekAt={isDesktop ? 'top' : 'bottom'} />
                 <p className="biz-sh__tip">Clients can book any time inside these hours. Changes do not move bookings already made.</p>
+                <BufferCard businessId={shellBusiness.id} value={buffer} onSaved={setBuffer} notify={notify} />
+                <ClosedDates businessId={shellBusiness.id} todayKey={zonedNow(timezone).dateKey} notify={notify} />
             </div>
         </div>
     )

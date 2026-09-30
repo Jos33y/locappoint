@@ -90,7 +90,7 @@ const PublicBusinessPage = () => {
                 }
                 const [services, hours] = await Promise.all([
                     supabase.from('services')
-                        .select('id, service_name, duration_minutes, price, description, is_active, sort_order')
+                        .select('id, service_name, duration_minutes, price, description, is_active, is_addon, sort_order')
                         .eq('business_id', business.id)
                         .eq('is_active', true)
                         .order('sort_order')
@@ -200,6 +200,7 @@ const PublicBusinessPage = () => {
                 <BookingSheet
                     business={state.business}
                     service={booking}
+                    extras={owner ? [] : state.services.filter((s) => s.is_addon && s.id !== booking.id)}
                     week={state.week}
                     resume={resume}
                     owner={owner}

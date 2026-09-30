@@ -124,7 +124,7 @@ const ClientProfile = () => {
                 </Section>
 
                 <Section id="alerts" title="Notifications">
-                    <Row title="Booking emails" detail="When you book, when a business confirms, moves or cancels, and a reminder the day before. Each one has a link to add it to your calendar or change it.">
+                    <Row title="Booking emails" detail="When you book, when a business confirms, moves or cancels, and reminders the day before and two hours before. They always send. Each one has a link to add it to your calendar or change it.">
                         <span className="lc-cl-on">On</span>
                     </Row>
                     <div className="biz-st__rule" />
@@ -136,7 +136,7 @@ const ClientProfile = () => {
                         <span className="lc-cl-on">On</span>
                     </Row>
                     <div className="biz-st__rule" />
-                    <Row title="WhatsApp reminders" detail="The day-before reminder on WhatsApp, for people who live there more than in email.">
+                    <Row title="WhatsApp reminders" detail="The same reminders on WhatsApp, for people who live there more than in email.">
                         <span className="biz-soon">Soon</span>
                     </Row>
                 </Section>

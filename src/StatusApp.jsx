@@ -227,7 +227,7 @@ export default function StatusApp() {
                                 <div className="detail__list">
                                     <div className="detail__item detail__item--active">Hours: several breaks, closed dates, buffer</div>
                                     <div className="detail__item detail__item--active">Calendar: month view, block time</div>
-                                    <div className="detail__item detail__item--active">Services: reorder and combos</div>
+                                    <div className="detail__item detail__item--active">Services: combo bookings</div>
                                     <div className="detail__item detail__item--active">Insights in money: lost, saved</div>
                                     <div className="detail__item detail__item--active">The 2-hour reminder</div>
                                     <div className="detail__item detail__item--active">QR poster for the counter</div>

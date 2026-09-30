@@ -42,19 +42,20 @@ export const hasTimeLeft = (day, duration, nowMinutes) =>
         return first + duration <= w.end
     })
 
-export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null, ignore = null }) => {
+export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null, ignore = null, addonIds = [] }) => {
     const { data, error } = await supabase.rpc('get_available_slots', {
         p_business_id: businessId,
         p_service_id: serviceId,
         p_date: dateKey,
         p_staff_id: staffId,
         p_ignore_appointment: ignore,
+        p_addon_ids: addonIds.length ? addonIds : null,
     })
     if (error) throw error
     return [...new Set((data || []).map((row) => toMinutes(row.slot_time)))].sort((a, b) => a - b)
 }
 
-export const requestBooking = async ({ businessId, serviceId, staffId = null, dateKey, minutes, name, email, phone, notes }) => {
+export const requestBooking = async ({ businessId, serviceId, staffId = null, dateKey, minutes, name, email, phone, notes, addonIds = [] }) => {
     const { data, error } = await supabase.rpc('book_appointment', {
         p_business_id: businessId,
         p_service_id: serviceId,
@@ -65,14 +66,15 @@ export const requestBooking = async ({ businessId, serviceId, staffId = null, da
         p_client_phone: phone,
         p_notes: notes,
         p_staff_id: staffId,
+        p_addon_ids: addonIds.length ? addonIds : null,
     })
     if (error) throw error
     return data
 }
 
-export const savePending = ({ slug, serviceId, dateKey, minutes }) => {
+export const savePending = ({ slug, serviceId, dateKey, minutes, addonIds = [] }) => {
     try {
-        sessionStorage.setItem(PENDING, JSON.stringify({ businessSlug: slug, serviceId, date: dateKey, time: fromMinutes(minutes), savedAt: Date.now() }))
+        sessionStorage.setItem(PENDING, JSON.stringify({ businessSlug: slug, serviceId, addonIds, date: dateKey, time: fromMinutes(minutes), savedAt: Date.now() }))
     } catch { /* storage blocked: the client picks the time again */ }
 }
 
@@ -81,7 +83,7 @@ export const readPending = (slug) => {
         const saved = JSON.parse(sessionStorage.getItem(PENDING) || 'null')
         if (!saved || saved.businessSlug !== slug || !parseDateKey(saved.date)) return null
         if (saved.savedAt && Date.now() - saved.savedAt > PENDING_TTL) return null
-        return { serviceId: saved.serviceId, dateKey: saved.date, minutes: toMinutes(saved.time) }
+        return { serviceId: saved.serviceId, addonIds: Array.isArray(saved.addonIds) ? saved.addonIds : [], dateKey: saved.date, minutes: toMinutes(saved.time) }
     } catch {
         return null
     }
@@ -117,7 +119,7 @@ export const loadNextBooking = async (email) => {
     return data?.[0] || null
 }
 
-const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, cancelled_by, rescheduled_from, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price), reviews (id, rating, body, reply, replied_at, created_at, status)'
+const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, cancelled_by, rescheduled_from, addons, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price), reviews (id, rating, body, reply, replied_at, created_at, status)'
 
 export const loadMyBookings = async (email) => {
     const { data, error } = await supabase
@@ -155,6 +157,19 @@ export const cancelByLink = async (token) => {
 export const rescheduleByLink = async ({ token, dateKey, minutes }) => {
     const { error } = await supabase.rpc('reschedule_by_link', { p_token: token, p_date: dateKey, p_time: fromMinutes(minutes) })
     if (error) throw error
+}
+
+// The services a business offers on top of another one, for the booking sheet's "Add to it" row.
+export const loadExtras = async (businessId) => {
+    const { data, error } = await supabase
+        .from('services')
+        .select('id, service_name, duration_minutes, price, sort_order')
+        .eq('business_id', businessId)
+        .eq('is_active', true)
+        .eq('is_addon', true)
+        .order('sort_order')
+    if (error) throw error
+    return data || []
 }
 
 export const loadWeek = async (businessId) => {
@@ -229,8 +244,9 @@ export const shortDate = (dateKey) => {
 }
 
 // What a "Book again" opens with: the service, the person if still bookable, and the suggested day.
-export const rebookFrom = ({ service, staffId, staffName, staffCount, rhythm, client }) => ({
+export const rebookFrom = ({ service, staffId, staffName, staffCount, rhythm, client, addonIds }) => ({
     service,
+    addonIds: addonIds || [],
     staffId: staffId || null,
     staffName: staffName || null,
     staffCount: Number(staffCount) || 1,

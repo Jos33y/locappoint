@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Coffee, DoorClosed, Plus, X } from 'lucide-react'
-import { Button } from '../ui'
+import { Button, IconButton } from '../ui'
 import { TimePicker } from '../ui/TimePicker'
-import { clock, dayProblem } from '../../services/hours'
+import { breakLabel, clock, dayProblem } from '../../services/hours'
 import { ShopClock, useNow } from './ShopClock'
 import '../../styles/business/editors.css'
 
@@ -12,16 +12,18 @@ const NAME = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Fri
 const LAST = 24 * 60 - 1
 
 const TEMPLATES = [
-    { key: 'tue-sat', title: 'Tuesday to Saturday', detail: '10:00 to 19:00, lunch 14:00', groups: [{ days: [2, 3, 4, 5, 6], open: 600, close: 1140, lunch: { start: 840, end: 900 } }] },
-    { key: 'weekdays', title: 'Weekdays and Saturday', detail: '9:00 to 18:00, Saturday to 14:00', groups: [{ days: [1, 2, 3, 4, 5], open: 540, close: 1080, lunch: { start: 780, end: 840 } }, { days: [6], open: 540, close: 840, lunch: null }] },
-    { key: 'mon-sat', title: 'Monday to Saturday', detail: '9:00 to 19:00, no break', groups: [{ days: [1, 2, 3, 4, 5, 6], open: 540, close: 1140, lunch: null }] },
+    { key: 'tue-sat', title: 'Tuesday to Saturday', detail: '10:00 to 19:00, lunch 14:00', groups: [{ days: [2, 3, 4, 5, 6], open: 600, close: 1140, breaks: [{ start: 840, end: 900 }] }] },
+    { key: 'weekdays', title: 'Weekdays and Saturday', detail: '9:00 to 18:00, Saturday to 14:00', groups: [{ days: [1, 2, 3, 4, 5], open: 540, close: 1080, breaks: [{ start: 780, end: 840 }] }, { days: [6], open: 540, close: 840, breaks: [] }] },
+    { key: 'mon-sat', title: 'Monday to Saturday', detail: '9:00 to 19:00, no break', groups: [{ days: [1, 2, 3, 4, 5, 6], open: 540, close: 1140, breaks: [] }] },
 ]
+
+const MAX_BREAKS = 3
 
 const groupFromWindows = (days, windows) => ({
     days,
     open: windows[0].start,
     close: windows[windows.length - 1].end,
-    lunch: windows.length > 1 ? { start: windows[0].end, end: windows[1].start } : null,
+    breaks: windows.slice(1).map((w, i) => ({ start: windows[i].end, end: w.start })),
 })
 
 export const groupsFromWeek = (week) => {
@@ -33,10 +35,21 @@ export const groupsFromWeek = (week) => {
         byShape.get(key).days.push(dow)
     }
     const groups = [...byShape.values()].map(({ days, windows }) => groupFromWindows(days, windows))
-    return groups.length ? groups : [{ days: [], open: 540, close: 1080, lunch: null }]
+    return groups.length ? groups : [{ days: [], open: 540, close: 1080, breaks: [] }]
 }
 
-const windowsOf = (g) => (g.lunch ? [{ start: g.open, end: g.lunch.start }, { start: g.lunch.end, end: g.close }] : [{ start: g.open, end: g.close }])
+const sortedBreaks = (g) => [...(g.breaks || [])].sort((a, b) => a.start - b.start)
+
+const windowsOf = (g) => {
+    const windows = []
+    let cursor = g.open
+    for (const b of sortedBreaks(g)) {
+        windows.push({ start: cursor, end: b.start })
+        cursor = b.end
+    }
+    windows.push({ start: cursor, end: g.close })
+    return windows
+}
 
 export const weekFromGroups = (groups) => {
     const week = [[], [], [], [], [], [], []]
@@ -47,9 +60,11 @@ export const weekFromGroups = (groups) => {
 export const groupProblem = (g) => {
     if (g.days.length === 0) return 'Pick at least one day'
     if (g.close <= g.open) return 'Closing time must be after opening time'
-    if (g.lunch) {
-        if (g.lunch.end <= g.lunch.start) return 'Lunch must end after it starts'
-        if (g.lunch.start <= g.open || g.lunch.end >= g.close) return 'Lunch must sit inside your opening hours'
+    const breaks = sortedBreaks(g)
+    for (const [i, b] of breaks.entries()) {
+        if (b.end <= b.start) return 'A break must end after it starts'
+        if (b.start <= g.open || b.end >= g.close) return 'Breaks must sit inside your opening hours'
+        if (i > 0 && b.start < breaks[i - 1].end) return 'Two breaks overlap'
     }
     return dayProblem(windowsOf(g))
 }
@@ -75,7 +90,7 @@ const dayRuns = (days) => {
 export const weekSentence = (groups) => {
     const real = groups.filter((g) => g.days.length > 0)
     if (real.length === 0) return 'Closed all week.'
-    const parts = real.map((g) => `${dayRuns(g.days)}, ${clock(g.open)} to ${clock(g.close)}${g.lunch ? `, lunch ${clock(g.lunch.start)} to ${clock(g.lunch.end)}` : ''}`)
+    const parts = real.map((g) => `${dayRuns(g.days)}, ${clock(g.open)} to ${clock(g.close)}${sortedBreaks(g).map((b) => `, ${breakLabel(b).toLowerCase()} ${clock(b.start)} to ${clock(b.end)}`).join('')}`)
     const open = new Set(real.flatMap((g) => g.days))
     const closed = ORDER.filter((d) => !open.has(d))
     return `${parts.join('. ')}.${closed.length ? ` Closed ${dayRuns(closed)}.` : ''}`
@@ -182,7 +197,7 @@ export const WeekView = ({ week, timeZone, status }) => {
                                 {breaks.map((g) => (
                                     <span key={g.start} className="biz-wk__lunch">
                                         <Coffee size={13} aria-hidden="true" />
-                                        {`Lunch ${clock(g.start)} to ${clock(g.end)}`}
+                                        {`${breakLabel(g)} ${clock(g.start)} to ${clock(g.end)}`}
                                     </span>
                                 ))}
                             </span>
@@ -204,6 +219,16 @@ const GroupCard = ({ group, index, taken, removable, weekEmpty, onChange, onRemo
     const problem = starting ? null : groupProblem(group)
     const set = (patch) => onChange({ ...group, ...patch })
     const toggle = (d) => set({ days: group.days.includes(d) ? group.days.filter((x) => x !== d) : [...group.days, d] })
+    const setBreak = (i, patch) => set({ breaks: group.breaks.map((b, j) => (j === i ? { ...b, ...patch } : b)) })
+    // The first break lands around midday; later ones find the next free half hour after the last break.
+    const addBreak = () => {
+        const taken = sortedBreaks(group)
+        const mid = Math.round(((group.open + group.close) / 2) / 60) * 60
+        let start = taken.length ? taken[taken.length - 1].end + 120 : Math.max(group.open + 60, mid - 60)
+        let length = taken.length ? 15 : 60
+        if (start + length >= group.close) { start = group.open + 60; length = 15 }
+        set({ breaks: [...group.breaks, { start, end: start + length }] })
+    }
 
     return (
         <li className={`biz-sched__card${problem ? ' has-error' : ''}`}>
@@ -237,31 +262,22 @@ const GroupCard = ({ group, index, taken, removable, weekEmpty, onChange, onRemo
                 <TimePicker value={group.close} label={`Group ${index + 1} closes`} min={15} onChange={(close) => set({ close })} />
             </div>
 
-            <div className="biz-sched__line">
-                <span className="biz-sched__label biz-sched__label--switch">
-                    <span id={`biz-lunch-${index}`}>Lunch</span>
-                    <button
-                        type="button"
-                        role="switch"
-                        aria-checked={Boolean(group.lunch)}
-                        aria-labelledby={`biz-lunch-${index}`}
-                        className={`ui-switch biz-sched__switch${group.lunch ? ' is-on' : ''}`}
-                        onClick={() => {
-                            if (group.lunch) return set({ lunch: null })
-                            const mid = Math.round(((group.open + group.close) / 2) / 60) * 60
-                            return set({ lunch: { start: Math.max(group.open + 60, mid - 60), end: Math.max(group.open + 120, mid) } })
-                        }}
-                    >
-                        <span className="ui-switch__thumb" />
-                    </button>
-                </span>
-                {group.lunch ? (
-                    <>
-                        <TimePicker value={group.lunch.start} label={`Group ${index + 1} lunch starts`} onChange={(start) => set({ lunch: { ...group.lunch, start } })} />
+            <div className="biz-sched__breaks">
+                {group.breaks.length === 0 && <span className="biz-sched__none">No break. Clients can book straight through.</span>}
+                {group.breaks.map((b, i) => (
+                    <div key={i} className="biz-sched__brk">
+                        <span className="biz-sched__label">{breakLabel(b)}</span>
+                        <TimePicker value={b.start} label={`Group ${index + 1} break ${i + 1} starts`} onChange={(start) => setBreak(i, { start })} />
                         <span className="biz-sched__to">to</span>
-                        <TimePicker value={group.lunch.end} label={`Group ${index + 1} lunch ends`} onChange={(end) => set({ lunch: { ...group.lunch, end } })} />
-                    </>
-                ) : <span className="biz-sched__none">No break. Clients can book straight through.</span>}
+                        <TimePicker value={b.end} label={`Group ${index + 1} break ${i + 1} ends`} onChange={(end) => setBreak(i, { end })} />
+                        <IconButton icon={X} label={`Remove this ${breakLabel(b).toLowerCase()}`} variant="quiet" className="biz-sched__brkx" onClick={() => set({ breaks: group.breaks.filter((_, j) => j !== i) })} />
+                    </div>
+                ))}
+                {group.breaks.length < MAX_BREAKS && (
+                    <Button variant="quiet" icon={Plus} className="biz-sched__addbrk" onClick={addBreak}>
+                        {group.breaks.length ? 'Add another break' : 'Add a break'}
+                    </Button>
+                )}
             </div>
 
             {problem && <p className="biz-sched__error" role="alert">{problem}</p>}
@@ -300,9 +316,9 @@ export const HoursEditor = ({ week, onChange, templates = true, timeZone, status
                             type="button"
                             className={`biz-sched__template${active === t.key ? ' is-on' : ''}`}
                             aria-pressed={active === t.key}
-                            onClick={() => commit(t.groups.map((g) => ({ ...g, days: [...g.days], lunch: g.lunch && { ...g.lunch } })))}
+                            onClick={() => commit(t.groups.map((g) => ({ ...g, days: [...g.days], breaks: g.breaks.map((b) => ({ ...b })) })))}
                         >
-                            <WeekGlyph days={t.groups.flatMap((g) => g.days)} lunchDays={t.groups.filter((g) => g.lunch).flatMap((g) => g.days)} />
+                            <WeekGlyph days={t.groups.flatMap((g) => g.days)} lunchDays={t.groups.filter((g) => g.breaks.length).flatMap((g) => g.days)} />
                             <span className="biz-sched__ttitle">{t.title}</span>
                             <span className="biz-sched__tdetail">{t.detail}</span>
                         </button>
@@ -329,7 +345,7 @@ export const HoursEditor = ({ week, onChange, templates = true, timeZone, status
                 <Button
                     variant="quiet"
                     icon={Plus}
-                    onClick={() => commit([...groups, { days: [free[0]], open: 600, close: 960, lunch: null }])}
+                    onClick={() => commit([...groups, { days: [free[0]], open: 600, close: 960, breaks: [] }])}
                 >
                     Different hours on other days
                 </Button>

@@ -17,6 +17,7 @@ export const blankService = (name = '', minutes = 30) => ({
     price: '',
     description: '',
     is_active: true,
+    is_addon: false,
 })
 
 export const serviceFromRow = (row) => ({
@@ -27,6 +28,7 @@ export const serviceFromRow = (row) => ({
     price: String(row.price),
     description: row.description || '',
     is_active: row.is_active !== false,
+    is_addon: row.is_addon === true,
 })
 
 const parsePrice = (price) => Number(String(price).replace(',', '.').trim())
@@ -132,6 +134,15 @@ const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusFie
                     onChange={(on) => set({ is_active: on })}
                     label="Show on your page"
                     description={service.is_active !== false ? 'Clients can book this service.' : 'Hidden. Clients cannot book it, and past bookings keep their details.'}
+                />
+            )}
+
+            {showVisibility && (
+                <Switch
+                    checked={service.is_addon === true}
+                    onChange={(on) => set({ is_addon: on })}
+                    label="Offer as an extra"
+                    description={service.is_addon ? 'Clients can add it to another service, in the same booking. It can still be booked on its own.' : 'Only booked on its own.'}
                 />
             )}
 
@@ -308,6 +319,7 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
                                                 <span className="biz-svc__main">
                                                     <span className="biz-svc__name">{name}</span>
                                                     {hidden && <span className="biz-svc__hidden">Hidden</span>}
+                                                    {service.is_addon && !hidden && <span className="biz-svc__hidden">Extra</span>}
                                                     {service.description?.trim() && <span className="biz-svc__desc">{service.description.trim()}</span>}
                                                 </span>
                                                 <span className="biz-svc__time">{minutes ? durationLabel(minutes) : 'No time'}</span>
