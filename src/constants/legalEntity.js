@@ -1,4 +1,4 @@
-export const LEGAL_UPDATED = '24 September 2026'
+export const LEGAL_UPDATED = '30 September 2026'
 
 export const PENDING = 'Published before public launch'
 

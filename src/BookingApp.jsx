@@ -5,6 +5,7 @@ import ProtectedRoute from './components/common/ProtectedRoute'
 import ScrollToTop from './components/common/ScrollToTop'
 import CanonicalSync from './components/common/CanonicalSync'
 import HomeRedirect from './components/common/HomeRedirect'
+import { RouteBoundary } from './components/common/ErrorBoundary'
 
 // Every screen loads on demand, so a client opening a business link from WhatsApp
 // only downloads the public page, never the portal or the client area.
@@ -59,7 +60,7 @@ const ClientProfile = lazy(() => import('./pages/client/Profile'))
 const Waiting = () => <div className="lc-route-wait" aria-busy="true" />
 
 // Inside the portal and client area the shell stays put; only the page area waits.
-const inShell = (element) => <Suspense fallback={<Waiting />}>{element}</Suspense>
+const inShell = (element) => <RouteBoundary><Suspense fallback={<Waiting />}>{element}</Suspense></RouteBoundary>
 
 const WAITLIST_URL = import.meta.env.DEV ? '/?waitlist' : 'https://waitlist.locappoint.com'
 
@@ -74,6 +75,7 @@ const BookingApp = () => (
         <BrowserRouter>
             <ScrollToTop />
             <CanonicalSync />
+            <RouteBoundary full>
             <Suspense fallback={<Waiting />}>
                 <Routes>
                     <Route path="/" element={<AppHome />} />
@@ -153,6 +155,7 @@ const BookingApp = () => (
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </Suspense>
+            </RouteBoundary>
         </BrowserRouter>
     </AuthProvider>
 )

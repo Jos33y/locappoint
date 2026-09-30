@@ -1,4 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react'
+import { ErrorBoundary } from './components/common/ErrorBoundary'
+import OfflineNotice from './components/common/OfflineNotice'
+import { installErrorHandlers } from './services/errors'
 
 const WaitlistApp = lazy(() => import('./WaitlistApp'))
 const BookingApp  = lazy(() => import('./BookingApp'))
@@ -52,6 +55,7 @@ const BootDismisser = () => {
 const App = () => {
     if (typeof window !== 'undefined' && redirectToApex()) return null
     const mode = detectMode()
+    installErrorHandlers(mode)
 
     let chunk
     if (mode === 'app') chunk = <BookingApp />
@@ -59,10 +63,13 @@ const App = () => {
     else chunk = <WaitlistApp />
 
     return (
-        <Suspense fallback={null}>
-            <BootDismisser />
-            {chunk}
-        </Suspense>
+        <ErrorBoundary full app={mode}>
+            <Suspense fallback={null}>
+                <BootDismisser />
+                {chunk}
+            </Suspense>
+            {mode === 'app' && <OfflineNotice />}
+        </ErrorBoundary>
     )
 }
 

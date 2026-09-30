@@ -96,6 +96,11 @@ const slots = (staff) => {
   return out
 }
 const quiet = (flag) => new URLSearchParams(window.location.search).get(flag) === '1'
+if (quiet('demo')) DATA.businesses[0].is_demo = true
+DATA.client_errors = [
+  { id: 'e1', message: "TypeError: Cannot read properties of undefined (reading 'map')", stack: "TypeError: Cannot read properties of undefined (reading 'map')\n    at Agenda (Agenda.jsx:40:12)", app: 'app', path: '/portal/calendar', release: 'index-B7x', user_agent: 'Mozilla/5.0 (iPhone)', user_id: 'u1', count: 14, first_seen_at: '2026-09-28T10:00:00Z', last_seen_at: new Date().toISOString() },
+  { id: 'e2', message: 'ReferenceError: slot is not defined', stack: 'ReferenceError: slot is not defined\n    at TimeGrid (TimeGrid.jsx:9:3)', app: 'app', path: '/femtos-barbearia', release: 'index-B7x', user_agent: 'Mozilla/5.0 (Android)', user_id: null, count: 2, first_seen_at: '2026-09-29T10:00:00Z', last_seen_at: '2026-09-29T11:00:00Z' },
+]
 if (quiet('extras')) { DATA.services[0].is_addon = false; DATA.services[1].is_addon = true; DATA.appointments[0].addons = [{ id: 's2', name: 'Beard trim', minutes: 20, price: 12 }] }
 if (quiet('blocks')) DATA.time_blocks.push({ id: 'tb1', business_id: 'b1', staff_id: null, starts_at: `${key}T17:00:00`, ends_at: `${key}T18:00:00`, reason: 'Doctor' }, { id: 'tb2', business_id: 'b1', staff_id: null, starts_at: `${dk(9)}T00:00:00`, ends_at: `${dk(11)}T00:00:00`, reason: 'Holiday' })
 const REVIEWS = [

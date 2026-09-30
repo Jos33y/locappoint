@@ -343,6 +343,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                         onChange={handleChange}
                                         placeholder={t('partnershipModal.interestPlaceholder', 'Investor, advisor, channel, etc')}
                                         rows="3"
+                                        maxLength={5000}
                                         disabled={loading}
                                     />
                                 </div>

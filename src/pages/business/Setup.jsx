@@ -192,14 +192,14 @@ const LiveScreen = ({ business, strength, onDone, finishing, media, onPickImage 
 
             <div className="lc-live__row">
                 <span className="lc-live__sticker">
-                    <QrCode value={link} label={`QR code for ${link}`} size={60} />
+                    <QrCode value={pageUrl(business.slug, 'qr')} label={`QR code for ${link}`} size={60} />
                     <span className="lc-live__stickercap">Scan to book</span>
                 </span>
                 <span className="lc-live__rowtext">
                     <strong>Put it on the mirror</strong>
                     <span>Clients scan it and book the next visit before they leave.</span>
                 </span>
-                <Button variant="quiet" size="sm" icon={Download} onClick={() => downloadQr(link, `${business.slug}-booking-qr.png`)}>Download</Button>
+                <Button variant="quiet" size="sm" icon={Download} onClick={() => downloadQr(pageUrl(business.slug, 'qr'), `${business.slug}-booking-qr.png`)}>Download</Button>
             </div>
 
             {strength.percent < 100 && (

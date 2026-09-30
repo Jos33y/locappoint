@@ -4,6 +4,7 @@ import { Loader2, AlertCircle } from 'lucide-react'
 import AnalyticsTab from './tabs/AnalyticsTab'
 import WaitlistTab from './tabs/WaitlistTab'
 import PartnershipTab from './tabs/PartnershipTab'
+import ErrorsTab from './tabs/ErrorsTab'
 
 const AdminDash = ({
     activeSection,
@@ -80,6 +81,7 @@ const AdminDash = ({
                     onDelete={onDeletePartnership}
                 />
             )}
+            {activeSection === 'errors' && <ErrorsTab formatDate={formatDate} formatTime={formatTime} />}
         </div>
     )
 }

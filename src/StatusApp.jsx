@@ -60,7 +60,7 @@ export default function StatusApp() {
                             Booking platform <span className="signal">running</span>. Finishing it for the <span className="azure">Lisbon beta.</span>
                         </h1>
                         <p className="hero__lede">
-                            Clients book, owners run their day. Before the first businesses go live: the last launch features, hardening and the phone apps.
+                            Clients book, owners run their day. Launch features are done. Before the first businesses go live: hardening and the phone apps.
                         </p>
 
                         <div className="hero__stats">
@@ -71,18 +71,18 @@ export default function StatusApp() {
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Launch ready</div>
-                                <div className="hero__stat-value"><span className="azure">70%</span></div>
-                                <div className="hero__stat-sub">Core product built</div>
+                                <div className="hero__stat-value"><span className="azure">85%</span></div>
+                                <div className="hero__stat-sub">Launch features built</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Now building</div>
-                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>Launch features</div>
-                                <div className="hero__stat-sub">Then hardening, apps</div>
+                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>Hardening</div>
+                                <div className="hero__stat-sub">Then the phone apps</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Updated</div>
                                 <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>
-                                    <time className="js-relative" dateTime="2026-09-29T21:00:00Z">29 September 2026</time>
+                                    <time className="js-relative" dateTime="2026-09-30T20:00:00Z">30 September 2026</time>
                                 </div>
                                 <div className="hero__stat-sub">This page auto-refreshes</div>
                             </div>
@@ -123,7 +123,7 @@ export default function StatusApp() {
                                     <span className="phase__num">Phase 2</span>
                                     <span className="phase__name">Launch product</span>
                                 </div>
-                                <div className="phase__sub">Core built. Last features, hardening and apps left.</div>
+                                <div className="phase__sub">Launch features built. Hardening and apps left.</div>
                             </div>
                             <span className="phase__status phase__status--building">Active build</span>
                         </a>
@@ -220,23 +220,26 @@ export default function StatusApp() {
                                     <div className="detail__item detail__item--done">Team, with own hours and logins</div>
                                     <div className="detail__item detail__item--done">Reviews, rebooking and insights</div>
                                     <div className="detail__item detail__item--done">Referrals with points</div>
+                                    <div className="detail__item detail__item--done">Hours: breaks, closed dates, buffer</div>
+                                    <div className="detail__item detail__item--done">Calendar: month view, block time</div>
+                                    <div className="detail__item detail__item--done">Extras added at booking</div>
+                                    <div className="detail__item detail__item--done">Insights in money, reminders saved</div>
+                                    <div className="detail__item detail__item--done">Reminders: day before and 2 hours</div>
+                                    <div className="detail__item detail__item--done">QR poster for the counter</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--active">
-                                <div className="detail__col-label">Still to build</div>
+                                <div className="detail__col-label">Building now</div>
                                 <div className="detail__list">
-                                    <div className="detail__item detail__item--active">Hours: several breaks, closed dates, buffer</div>
-                                    <div className="detail__item detail__item--active">Calendar: month view, block time</div>
-                                    <div className="detail__item detail__item--active">Services: combo bookings</div>
-                                    <div className="detail__item detail__item--active">Insights in money: lost, saved</div>
-                                    <div className="detail__item detail__item--active">The 2-hour reminder</div>
-                                    <div className="detail__item detail__item--active">QR poster for the counter</div>
+                                    <div className="detail__item detail__item--active">Spam limits on bookings and forms</div>
+                                    <div className="detail__item detail__item--active">Crash reports and recovery</div>
+                                    <div className="detail__item detail__item--active">Data kept only as long as promised</div>
+                                    <div className="detail__item detail__item--active">Demo business clearly labelled</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--next">
                                 <div className="detail__col-label">Before launch</div>
                                 <div className="detail__list">
-                                    <div className="detail__item detail__item--next">Hardening: security, speed, errors</div>
                                     <div className="detail__item detail__item--next">Android app: download, then Google Play</div>
                                     <div className="detail__item detail__item--next">iPhone app: TestFlight, then App Store</div>
                                     <div className="detail__item detail__item--next">Push notifications for owners</div>
@@ -392,7 +395,7 @@ export default function StatusApp() {
                     </div>
 
                     <div className="surfaces">
-                        <a className="surface surface--building" href="https://locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="70">
+                        <a className="surface surface--building" href="https://locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="85">
                             <div className="surface__head">
                                 <span className="surface__status surface__status--building">
                                     <span className="surface__status-dot" aria-hidden="true"></span>
@@ -401,7 +404,7 @@ export default function StatusApp() {
                                 <span className="surface__pct"></span>
                             </div>
                             <div className="surface__url">locappoint.com</div>
-                            <div className="surface__desc">The booking platform. Launch features in progress.</div>
+                            <div className="surface__desc">The booking platform. Launch features done, hardening now.</div>
                             <div className="surface__bar" aria-hidden="true">
                                 <div className="surface__bar-fill"></div>
                             </div>

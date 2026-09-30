@@ -21,7 +21,10 @@ export const PlaceResult = ({ place, from = '/client/search' }) => {
                 </span>
                 <span className="lc-cl-result__body">
                     <span className="lc-cl-result__top">
-                        <strong className="lc-cl-result__name">{place.business_name}</strong>
+                        <strong className="lc-cl-result__name">
+                            {place.business_name}
+                            {place.is_demo && <span className="lc-cl-result__demo">Demo</span>}
+                        </strong>
                         {place.fromPrice !== null && (
                             <span className="lc-cl-result__price"><small>from</small> {menuPrice(place.fromPrice)}</span>
                         )}

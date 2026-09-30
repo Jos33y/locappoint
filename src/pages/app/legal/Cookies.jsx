@@ -33,11 +33,13 @@ const ESSENTIAL_APP = [
     { name: 'i18nextLng', type: 'Local storage', purpose: 'Remembers the language you chose', kept: 'Until you clear it' },
     { name: 'locappoint_mode', type: 'Local storage', purpose: 'Opens the side you used last: Booking or My business', kept: 'Until you clear it' },
     { name: 'locappoint_tour_done', type: 'Local storage', purpose: 'Remembers that you have seen the dashboard tour', kept: 'Until you clear it' },
+    { name: 'locappoint_reloaded_at', type: 'Session storage', purpose: 'Reloads the page once after we release an update, and never twice in a row', kept: 'Until you close the tab' },
 ]
 
 const ESSENTIAL_WAITLIST = [
     { name: 'locappoint-landing-lang', type: 'Local storage', purpose: 'Remembers the language you chose', kept: 'Until you clear it' },
     { name: 'locappoint_consent', type: 'Local storage', purpose: 'Remembers your privacy choice', kept: '12 months, then we ask again' },
+    { name: 'locappoint_reloaded_at', type: 'Session storage', purpose: 'Reloads the page once after we release an update, and never twice in a row', kept: 'Until you close the tab' },
 ]
 
 const ANALYTICS_WAITLIST = [
@@ -78,6 +80,13 @@ const sections = [
                 <StorageTable rows={ANALYTICS_WAITLIST} />
                 <p>When you allow analytics, your IP address is sent once per visit to ipapi.co (or, if that fails, to country.is) to look up your approximate location. We keep the country, region, city and time zone, not the IP address. Without your consent, none of this happens.</p>
             </>
+        ),
+    },
+    {
+        id: 'page-counts',
+        label: 'Business page counts',
+        body: (
+            <p>Business pages count visits without cookies or any other storage on your device. Each open, booking started and time picked adds one to a daily total for that business, split only by source and by phone or computer. Nothing identifies you, so there is nothing to consent to.</p>
         ),
     },
     {

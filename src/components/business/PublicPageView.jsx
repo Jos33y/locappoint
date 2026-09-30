@@ -75,6 +75,9 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                 )}
 
                 <div className="lc-pub__main">
+                    {business.is_demo && !preview && (
+                        <p className="lc-pub__demo" role="note">This is a demo business that shows how Locappoint works. Please do not book it for a real visit.</p>
+                    )}
                     {business.description?.trim() && <p className="lc-pub__about">{business.description.trim()}</p>}
                     <PublicMenu services={services} name={name} whatsapp={whatsapp} preview={preview} onBook={onBook} />
                     <PublicReviews reviews={reviews} name={name} onMore={onMoreReviews} />

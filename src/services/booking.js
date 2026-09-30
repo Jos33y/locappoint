@@ -262,7 +262,7 @@ export const USER_ERRORS = ['22023', 'P0001', 'P0002', '28000', '42501']
 export const loadPlaces = async () => {
     const [places, services, hours, ratings] = await Promise.all([
         supabase.from('businesses')
-            .select('id, business_name, slug, description, category, category_detail, city, neighbourhood, timezone, banner_url, logo_url')
+            .select('id, business_name, slug, description, category, category_detail, city, neighbourhood, timezone, banner_url, logo_url, is_demo')
             .eq('is_active', true)
             .order('created_at', { ascending: false }),
         supabase.from('services').select('business_id, price, is_active').eq('is_active', true),
@@ -283,7 +283,10 @@ export const loadPlaces = async () => {
     }
     // Ratings are a nice-to-have in results: if they fail, places still list.
     const stars = new Map((ratings.error ? [] : ratings.data || []).map((r) => [r.business_id, { average: Number(r.average), count: Number(r.count) }]))
-    return (places.data || []).map((b) => ({ ...b, fromPrice: prices.get(b.id) ?? null, hourRows: rows.get(b.id) || [], rating: stars.get(b.id) || null }))
+    // Demo businesses stay findable for walkthroughs but never outrank a real one.
+    return (places.data || [])
+        .map((b) => ({ ...b, fromPrice: prices.get(b.id) ?? null, hourRows: rows.get(b.id) || [], rating: stars.get(b.id) || null }))
+        .sort((a, b) => Number(Boolean(a.is_demo)) - Number(Boolean(b.is_demo)))
 }
 
 export const clearPending = () => {

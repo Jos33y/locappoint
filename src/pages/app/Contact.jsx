@@ -235,6 +235,7 @@ const Contact = () => {
                                             value={formData.message}
                                             onChange={handleChange}
                                             rows="6"
+                                            maxLength={5000}
                                             placeholder="Tell us how we can help."
                                             required
                                         />

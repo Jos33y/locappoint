@@ -14,7 +14,7 @@ import { loadPublicReviews } from '../../services/reviews'
 import { trackPage, visitSource } from '../../services/pageStats'
 import '../../styles/public-page.css'
 
-const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url, auto_confirm'
+const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url, auto_confirm, is_demo'
 
 const PageSkeleton = () => (
     <div className="lc-pub lc-pub--skeleton" aria-hidden="true">

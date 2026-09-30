@@ -47,6 +47,12 @@ import PublicBusinessPage from '@src/pages/app/PublicBusinessPage'
 import { InboxProvider } from '@src/components/inbox/InboxContext'
 import '@src/styles/client/client-shell.css'
 import { DATA } from './fakeSupabase'
+import { RouteBoundary } from '@src/components/common/ErrorBoundary'
+import OfflineNotice from '@src/components/common/OfflineNotice'
+import ErrorsTab from '@src/pages/admin/tabs/ErrorsTab'
+import { installErrorHandlers } from '@src/services/errors'
+import QRCode from 'qrcode'
+import '@src/styles/admin/admin.css'
 
 const params = new URLSearchParams(window.location.search)
 const start = params.get('path') || '/portal'
@@ -58,6 +64,18 @@ if (params.get('lunch') === '1') DATA.availability.splice(0, DATA.availability.l
 if (params.get('noinbox') === '1') DATA.inbox.length = 0
 if (params.get('empty') === '1') Object.assign(DATA.businesses[0], { banner_url: null, logo_url: null, description: null, address: null, whatsapp: null })
 try { if (params.get('tour') !== '1') localStorage.setItem('locappoint_tour_done', '1'); else localStorage.removeItem('locappoint_tour_done') } catch { /* noop */ }
+
+window.__locaReportInDev = true
+window.__QRCode = QRCode
+installErrorHandlers('app')
+
+// A screen that fails on purpose: ?chunk=1 fails the way a stale deploy does.
+const Crash = () => {
+  if (params.get('chunk') === '1') throw new Error('Failed to fetch dynamically imported module: /assets/Calendar-old.js')
+  throw new Error('Test crash in a screen')
+}
+const fmtDate = (v) => new Date(v).toLocaleDateString('en-GB')
+const fmtTime = (v) => new Date(v).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 
 const Where = () => { const l = useLocation(); window.__path = l.pathname; return <span id="__path" hidden>{l.pathname}</span> }
 
@@ -100,6 +118,7 @@ const App = () => (
           <Route path="reviews" element={<Reviews />} />
           <Route path="invite" element={<Invite />} />
           <Route path="setup" element={<Setup />} />
+          <Route path="crash" element={<RouteBoundary><Crash /></RouteBoundary>} />
         </Route>
         <Route path="/client" element={<ClientHome />} />
         <Route path="/client/appointments" element={<ClientAppointments />} />
@@ -108,8 +127,10 @@ const App = () => (
         <Route path="/client/notifications" element={<InboxProvider audience="client"><InboxPage audience="client" /></InboxProvider>} />
         <Route path="/b/:token" element={<ManageBooking />} />
         <Route path="/team/:token" element={<TeamJoin />} />
+        <Route path="/admin-errors" element={<div className="admin"><ErrorsTab formatDate={fmtDate} formatTime={fmtTime} /></div>} />
         <Route path="/:businessSlug" element={<PublicBusinessPage />} />
       </Routes>
+      <OfflineNotice />
     </MemoryRouter>
   </Auth>
 )

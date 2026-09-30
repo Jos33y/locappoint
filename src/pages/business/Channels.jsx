@@ -86,7 +86,7 @@ const Channels = () => {
                     </Card>
                 ))}
             </div>
-            <PosterSheet open={poster} onClose={() => setPoster(false)} business={business} link={link} notify={notify} />
+            <PosterSheet open={poster} onClose={() => setPoster(false)} business={business} link={link} qrLink={pageUrl(business.slug, 'qr')} notify={notify} />
         </div>
     )
 }

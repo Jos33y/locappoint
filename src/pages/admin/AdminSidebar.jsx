@@ -9,6 +9,7 @@ import {
     ShoppingBag,
     Building2,
     Settings,
+    Bug,
     ArrowLeft,
     LogOut
 } from 'lucide-react'
@@ -98,6 +99,14 @@ const AdminSidebar = ({ activeSection, setActiveSection, counts, onClose, onLogo
                 <div>
                     <span className="admin-sidebar__group-label">System</span>
                     <nav className="admin-sidebar__nav">
+                        <button
+                            type="button"
+                            className={`admin-sidebar__item ${activeSection === 'errors' ? 'admin-sidebar__item--active' : ''}`}
+                            onClick={() => goTo('errors')}
+                        >
+                            <Bug size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
+                            <span className="admin-sidebar__item-label">App errors</span>
+                        </button>
                         <button type="button" className="admin-sidebar__item" disabled>
                             <Settings size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
                             <span className="admin-sidebar__item-label">Settings</span>

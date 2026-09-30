@@ -1,0 +1,83 @@
+/* System states: crash screen and connection notice. Prefix lc-sys. */
+
+.lc-sys-crash {
+    display: grid;
+    place-items: center;
+    padding: var(--space-8) var(--space-4);
+}
+
+.lc-sys-crash.is-full {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--lc-canvas);
+}
+
+.lc-sys-crash__box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: min(100%, 460px);
+    padding: var(--space-6) var(--space-5);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-sys-crash__title {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-sys-crash__text {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+}
+
+.lc-sys-crash__acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+}
+
+.lc-sys-net {
+    position: fixed;
+    left: 50%;
+    top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
+    z-index: var(--z-floating);
+    width: max-content;
+    max-width: calc(100vw - var(--space-8));
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.lc-sys-net:empty {
+    display: none;
+}
+
+.lc-sys-net__pill {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-overlay);
+    box-shadow: var(--lc-shadow-overlay);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-sys-net__pill svg {
+    flex: none;
+    color: var(--lc-success);
+}
+
+.lc-sys-net__pill.is-off svg {
+    color: var(--lc-warning);
+}

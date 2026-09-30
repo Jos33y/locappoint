@@ -50,7 +50,7 @@ const roundRect = (ctx, x, y, w, h, r) => {
     ctx.closePath()
 }
 
-export const drawPoster = async ({ name, link, copy }) => {
+export const drawPoster = async ({ name, link, qrLink = link, copy }) => {
     const c = {
         paper: css('--surface-0-light'),
         ink: css('--ink'),
@@ -157,7 +157,7 @@ export const drawPoster = async ({ name, link, copy }) => {
     ctx.fillStyle = c.paper
     roundRect(ctx, qx + u(0.4), y + u(0.4), qr - u(0.8), qr - u(0.8), u(1.6))
     ctx.fill()
-    const { modules } = QRCode.create(link, { errorCorrectionLevel: 'M' })
+    const { modules } = QRCode.create(qrLink, { errorCorrectionLevel: 'M' })
     const box = modules.size + QUIET * 2
     const area = qr - u(4)
     const step = area / box
@@ -188,8 +188,8 @@ export const drawPoster = async ({ name, link, copy }) => {
     return canvas
 }
 
-export const downloadPoster = async ({ name, link, copy, filename }) => {
-    const canvas = await drawPoster({ name, link, copy })
+export const downloadPoster = async ({ name, link, qrLink, copy, filename }) => {
+    const canvas = await drawPoster({ name, link, qrLink, copy })
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

@@ -279,6 +279,7 @@ const Partnership = () => {
                                         value={formData.partnershipInterest}
                                         onChange={handleChange}
                                         rows="5"
+                                        maxLength={5000}
                                         placeholder="Goals, what is broken today, what would make this a yes..."
                                     />
                                 </div>

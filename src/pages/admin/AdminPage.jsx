@@ -12,10 +12,11 @@ import '../../styles/admin/admin.css'
 const SECTION_LABELS = {
     analytics: 'Analytics',
     waitlist: 'Waitlist',
-    partnership: 'Partnerships'
-} 
+    partnership: 'Partnerships',
+    errors: 'App errors'
+}
 
-const VALID_SECTIONS = ['analytics', 'waitlist', 'partnership']
+const VALID_SECTIONS = ['analytics', 'waitlist', 'partnership', 'errors']
 const DEFAULT_SECTION = 'analytics'
 
 const getSectionFromHash = () => {
