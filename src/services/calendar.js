@@ -1,3 +1,4 @@
+import { saveFile } from './native'
 // Add a booking to a calendar: a Google Calendar link and an .ics file for Apple, Outlook and others.
 // Booking times are the business's local time, so they are placed in its time zone first.
 
@@ -19,7 +20,7 @@ export const zonedToUtc = (dateKey, minutes, timeZone) => {
 }
 
 const stamp = (d) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`
-const escapeIcs = (value) => String(value).replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n')
+const escapeIcs = (value) => String(value).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n')
 
 // { id, title, dateKey, minutes, duration, timeZone, location, details, url }
 export const calendarEvent = (e) => {
@@ -55,13 +56,4 @@ export const icsText = (e) => [
     'END:VCALENDAR',
 ].filter(Boolean).join('\r\n') + '\r\n'
 
-export const downloadIcs = (e) => {
-    const url = URL.createObjectURL(new Blob([icsText(e)], { type: 'text/calendar;charset=utf-8' }))
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'booking.ics'
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
+export const downloadIcs = (e) => saveFile(new Blob([icsText(e)], { type: 'text/calendar;charset=utf-8' }), 'booking.ics')

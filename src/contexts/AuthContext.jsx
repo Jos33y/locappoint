@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../config/supabase' 
 import { AuthContext } from '../context_definition/AuthContextDefinition'
+import { appOrigin, isNative, nativeOAuth } from '../services/native'
 
 const MODE_KEY = 'locappoint_mode'
 
@@ -94,7 +95,7 @@ export const AuthProvider = ({ children }) => {
                         user_type: userData.user_type,
                         next: userData.next || null,
                     },
-                    emailRedirectTo: `${window.location.origin}/auth?verified=true${userData.next ? `&next=${encodeURIComponent(userData.next)}` : ''}`
+                    emailRedirectTo: `${appOrigin()}/auth?verified=true${userData.next ? `&next=${encodeURIComponent(userData.next)}` : ''}`
                 }
             })
 
@@ -122,6 +123,7 @@ export const AuthProvider = ({ children }) => {
 
     const signInWithGoogle = async () => {
         try {
+            if (isNative()) return { data: await nativeOAuth(supabase, 'google'), error: null }
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
@@ -138,6 +140,7 @@ export const AuthProvider = ({ children }) => {
 
     const signInWithApple = async () => {
         try {
+            if (isNative()) return { data: await nativeOAuth(supabase, 'apple'), error: null }
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'apple',
                 options: {
@@ -180,7 +183,7 @@ export const AuthProvider = ({ children }) => {
     const resetPassword = async (email) => {
         try {
             const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/reset-password`,
+                redirectTo: `${appOrigin()}/reset-password`,
             })
 
             if (error) throw error

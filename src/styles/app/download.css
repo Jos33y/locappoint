@@ -1,0 +1,136 @@
+/* App download page. Prefix lc-dl. */
+
+.lc-dl {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+}
+
+.lc-dl__main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-8);
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--space-12) var(--space-4) var(--space-16);
+}
+
+.lc-dl__hero {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: 640px;
+}
+
+.lc-dl__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--lc-t-display);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.024em;
+    line-height: 1.05;
+}
+
+.lc-dl__lede {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
+.lc-dl__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+}
+
+.lc-dl-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-6) var(--space-5);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-dl-card__icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--lc-r-md);
+    background: var(--lc-info-tint);
+    color: var(--azure-link);
+}
+
+.lc-dl-card__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--lc-t-title);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-dl-card__text {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--lc-t-body);
+    line-height: 1.55;
+}
+
+.lc-dl-card__cta {
+    margin-top: var(--space-2);
+}
+
+.lc-dl-card__steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
+    padding-left: var(--space-5);
+    color: var(--text-secondary);
+    font-size: var(--lc-t-body);
+    list-style: decimal;
+}
+
+.lc-dl-card__steps li::marker {
+    color: var(--signal);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-dl-card__note {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--lc-t-label);
+}
+
+.lc-dl__scan {
+    display: none;
+    align-items: center;
+    gap: var(--space-4);
+    color: var(--text-secondary);
+    font-size: var(--lc-t-body);
+}
+
+.lc-dl__scan p {
+    margin: 0;
+    max-width: 320px;
+}
+
+@media (min-width: 768px) {
+    .lc-dl__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .lc-dl__scan {
+        display: flex;
+    }
+}

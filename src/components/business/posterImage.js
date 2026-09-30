@@ -1,4 +1,5 @@
 import QRCode from 'qrcode'
+import { saveFile } from '../../services/native'
 
 // The poster drawn straight onto a canvas, laid out in the same cqw units as poster.css, so the PNG matches the print.
 const W = 1240 // A4 at 150 dpi
@@ -191,10 +192,5 @@ export const drawPoster = async ({ name, link, qrLink = link, copy }) => {
 export const downloadPoster = async ({ name, link, qrLink, copy, filename }) => {
     const canvas = await drawPoster({ name, link, qrLink, copy })
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.download = filename
-    a.href = url
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 30000)
+    await saveFile(blob, filename)
 }

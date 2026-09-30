@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button, Field, Input, Sheet } from '../ui'
 import { supabase } from '../../config/supabase'
+import { appOrigin } from '../../services/native'
 import '../../styles/business/settings-page.css'
 
 const VALID = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -29,7 +30,7 @@ export const EmailSheet = ({ open, current, onClose, onSent }) => {
         if (problem) return
         setBusy(true)
         try {
-            const { error: updateError } = await supabase.auth.updateUser({ email: clean }, { emailRedirectTo: `${window.location.origin}/auth/confirm` })
+            const { error: updateError } = await supabase.auth.updateUser({ email: clean }, { emailRedirectTo: `${appOrigin()}/auth/confirm` })
             if (updateError) throw updateError
             onSent(clean)
         } catch (err) {

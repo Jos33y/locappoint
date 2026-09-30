@@ -50,6 +50,7 @@ import { DATA } from './fakeSupabase'
 import { RouteBoundary } from '@src/components/common/ErrorBoundary'
 import OfflineNotice from '@src/components/common/OfflineNotice'
 import ErrorsTab from '@src/pages/admin/tabs/ErrorsTab'
+import AppDownload from '@src/pages/app/AppDownload'
 import { installErrorHandlers } from '@src/services/errors'
 import QRCode from 'qrcode'
 import '@src/styles/admin/admin.css'
@@ -66,6 +67,9 @@ if (params.get('empty') === '1') Object.assign(DATA.businesses[0], { banner_url:
 try { if (params.get('tour') !== '1') localStorage.setItem('locappoint_tour_done', '1'); else localStorage.removeItem('locappoint_tour_done') } catch { /* noop */ }
 
 window.__locaReportInDev = true
+// ?native=1 behaves like the phone apps; ?release=none or ?release=1 fakes the Android download note.
+if (params.get('native') === '1') window.__locaNative = true
+if (params.has('release')) window.__locaRelease = params.get('release') === 'none' ? null : { version: '1.0.7', file: 'locappoint-1.0.7.apk', size: 6291456 }
 window.__QRCode = QRCode
 installErrorHandlers('app')
 
@@ -127,6 +131,7 @@ const App = () => (
         <Route path="/client/notifications" element={<InboxProvider audience="client"><InboxPage audience="client" /></InboxProvider>} />
         <Route path="/b/:token" element={<ManageBooking />} />
         <Route path="/team/:token" element={<TeamJoin />} />
+        <Route path="/app" element={<AppDownload />} />
         <Route path="/admin-errors" element={<div className="admin"><ErrorsTab formatDate={fmtDate} formatTime={fmtTime} /></div>} />
         <Route path="/:businessSlug" element={<PublicBusinessPage />} />
       </Routes>

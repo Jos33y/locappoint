@@ -1,0 +1,20 @@
+{
+  "appId": "com.locappoint.app",
+  "appName": "Locappoint",
+  "webDir": "dist",
+  "backgroundColor": "#10141D",
+  "ios": {
+    "contentInset": "always"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "native",
+      "style": "DARK"
+    },
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "backgroundColor": "#0B1530",
+      "showSpinner": false
+    }
+  }
+}

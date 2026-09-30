@@ -42,6 +42,7 @@ const AppFooter = () => {
                             <li><Link to="/businesses">Browse businesses</Link></li>
                             <li><Link to="/partnership">Become a partner</Link></li>
                             <li><Link to="/portal">Business dashboard</Link></li>
+                            <li><Link to="/app">Get the app</Link></li>
                         </ul>
                     </div>
 

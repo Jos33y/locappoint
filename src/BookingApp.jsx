@@ -6,6 +6,7 @@ import ScrollToTop from './components/common/ScrollToTop'
 import CanonicalSync from './components/common/CanonicalSync'
 import HomeRedirect from './components/common/HomeRedirect'
 import { RouteBoundary } from './components/common/ErrorBoundary'
+import { isNative } from './services/native'
 
 // Every screen loads on demand, so a client opening a business link from WhatsApp
 // only downloads the public page, never the portal or the client area.
@@ -28,6 +29,7 @@ const ResetPassword = lazy(() => import('./pages/app/auth/ResetPassword'))
 const AuthConfirm = lazy(() => import('./pages/app/auth/AuthConfirm'))
 const ManageBooking = lazy(() => import('./pages/app/ManageBooking'))
 const Join = lazy(() => import('./pages/app/Join'))
+const AppDownload = lazy(() => import('./pages/app/AppDownload'))
 const Invite = lazy(() => import('./pages/business/Invite'))
 
 const BusinessShell = lazy(() => import('./components/business/BusinessShell'))
@@ -78,7 +80,8 @@ const BookingApp = () => (
             <RouteBoundary full>
             <Suspense fallback={<Waiting />}>
                 <Routes>
-                    <Route path="/" element={<AppHome />} />
+                    {/* The apps skip the website's front page and open on the person's own home. */}
+                    <Route path="/" element={isNative() ? <Navigate to="/me" replace /> : <AppHome />} />
                     <Route path="/about" element={<Navigate to="/" replace />} />
                     <Route path="/businesses" element={<Businesses />} />
                     <Route path="/contact" element={<Contact />} />
@@ -99,6 +102,7 @@ const BookingApp = () => (
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/waitlist" element={<WaitlistRedirect />} />
+                    <Route path="/app" element={<AppDownload />} />
 
                     <Route
                         path="/portal"

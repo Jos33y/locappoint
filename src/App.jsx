@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect } from 'react'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import OfflineNotice from './components/common/OfflineNotice'
 import { installErrorHandlers } from './services/errors'
+import { startNative } from './services/native'
 
 const WaitlistApp = lazy(() => import('./WaitlistApp'))
 const BookingApp  = lazy(() => import('./BookingApp'))
@@ -11,12 +12,13 @@ const APEX = 'locappoint.com'
 const DEV_MODE_KEY = 'locappoint_dev_mode'
 const DEV_MODES = ['waitlist', 'status', 'app']
 
-// app. is reserved for the future download page, so it forwards to the apex for now.
+// www. forwards to the apex; app. lands on the download page at /app.
 function redirectToApex() {
     const host = window.location.hostname
     if (host !== `www.${APEX}` && host !== `app.${APEX}`) return false
     const { pathname, search, hash } = window.location
-    window.location.replace(`https://${APEX}${pathname}${search}${hash}`)
+    const path = host === `app.${APEX}` && pathname === '/' ? '/app' : pathname
+    window.location.replace(`https://${APEX}${path}${search}${hash}`)
     return true
 }
 
@@ -48,6 +50,7 @@ const BootDismisser = () => {
         if (typeof window !== 'undefined' && typeof window.__locaBootReady === 'function') {
             window.__locaBootReady()
         }
+        startNative()
     }, [])
     return null
 }

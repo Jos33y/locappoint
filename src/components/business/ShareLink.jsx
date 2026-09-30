@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Check, Copy, MessageCircle } from 'lucide-react'
+import { Check, Copy, MessageCircle, Share2 } from 'lucide-react'
 import { pageUrl, publicHost } from '../../services/links'
+import { isNative, shareLink } from '../../services/native'
 
 const ShareLink = ({ business }) => {
     const [copied, setCopied] = useState(false)
@@ -36,6 +37,11 @@ const ShareLink = ({ business }) => {
                 >
                     <MessageCircle size={16} aria-hidden="true" /> Send on WhatsApp
                 </a>
+                {isNative() && (
+                    <button type="button" className="btn btn--secondary" onClick={() => shareLink({ title: business.business_name, text: `Book with ${business.business_name}`, url: link }).catch(() => {})}>
+                        <Share2 size={16} aria-hidden="true" /> More
+                    </button>
+                )}
             </div>
         </div>
     )

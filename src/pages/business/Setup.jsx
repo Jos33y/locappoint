@@ -26,6 +26,7 @@ import {
 } from '../../services/setup'
 import { ABOUT_MAX, OTHER_CITY, aboutExample, cityOf, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
 import { useSlugStatus } from '../../hooks/useSlugStatus'
+import { isNative, shareLink } from '../../services/native'
 import '../../styles/business/setup.css'
 
 const STEPS = ['Your business', 'Services', 'Hours', 'Make it yours']
@@ -140,7 +141,7 @@ const LiveScreen = ({ business, strength, onDone, finishing, media, onPickImage 
     const link = pageUrl(business.slug)
     const [copied, setCopied] = useState(false)
     const percent = useCountUp(strength.percent)
-    const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+    const canShare = isNative() || (typeof navigator !== 'undefined' && typeof navigator.share === 'function')
     const nudge = !business.logo_url ? 'logo' : !business.banner_url ? 'cover' : null
     const busy = nudge && media[nudge].busy
     const error = nudge && media[nudge].error
@@ -156,7 +157,7 @@ const LiveScreen = ({ business, strength, onDone, finishing, media, onPickImage 
     }
 
     const share = async () => {
-        try { await navigator.share({ title: business.business_name, text: `Book with ${business.business_name}`, url: link }) } catch { /* noop */ }
+        try { await shareLink({ title: business.business_name, text: `Book with ${business.business_name}`, url: link }) } catch { /* noop */ }
     }
 
     return (

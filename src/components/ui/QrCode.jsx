@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import QRCode from 'qrcode'
+import { saveFile } from '../../services/native'
 import '../../styles/ui-kit.css'
 
 const QUIET = 2
@@ -56,8 +57,5 @@ export const downloadQr = (value, filename, pixels = 1024) => {
             if (matrix.dark(x, y)) ctx.fillRect((x + QUIET) * scale, (y + QUIET) * scale, scale, scale)
         }
     }
-    const link = document.createElement('a')
-    link.download = filename
-    link.href = canvas.toDataURL('image/png')
-    link.click()
+    canvas.toBlob((blob) => { if (blob) saveFile(blob, filename) }, 'image/png')
 }

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Download, Printer, QrCode as QrIcon } from 'lucide-react'
 import { Button, QrCode, Segmented, Sheet, downloadQr } from '../ui'
 import { downloadPoster } from './posterImage'
+import { isNative } from '../../services/native'
 import '../../styles/business/poster.css'
 
 const COPY = {
@@ -81,8 +82,9 @@ const PosterSheet = ({ open, onClose, business, link, qrLink = link, notify }) =
                     {business.country === 'PT' && <Segmented options={LANGS} value={lang} onChange={setLang} label="Poster language" />}
                     <div className="lc-poster-sheet__preview">{poster}</div>
                     <div className="lc-poster-sheet__acts">
-                        <Button icon={Printer} onClick={() => window.print()}>Print</Button>
-                        <Button variant="secondary" icon={Download} loading={saving} onClick={savePoster}>Download poster</Button>
+                        {/* The apps cannot print a page; the saved image prints from the share sheet instead. */}
+                        {!isNative() && <Button icon={Printer} onClick={() => window.print()}>Print</Button>}
+                        <Button variant={isNative() ? 'primary' : 'secondary'} icon={Download} loading={saving} onClick={savePoster}>{isNative() ? 'Save or print the poster' : 'Download poster'}</Button>
                     </div>
                     <Button variant="quiet" size="sm" icon={QrIcon} className="lc-poster-sheet__code" onClick={() => downloadQr(qrLink, `${business.slug}-booking-qr.png`)}>Just the QR code</Button>
                 </div>

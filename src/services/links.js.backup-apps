@@ -1,0 +1,8 @@
+const configured = (import.meta.env.VITE_PUBLIC_URL || '').trim().replace(/\/+$/, '')
+
+export const publicOrigin = () => configured || window.location.origin
+
+export const publicHost = () => publicOrigin().replace(/^https?:\/\//, '')
+
+// src tells Insights where a visit came from, for apps that hide the referrer (WhatsApp, QR codes).
+export const pageUrl = (slug, src) => `${publicOrigin()}/${slug}${src ? `?src=${src}` : ''}`
