@@ -448,7 +448,7 @@ export default function StatusApp() {
                     <div className="section__head">
                         <span className="section__eyebrow">08 / Your input</span>
                         <h2 className="section__title" id="need-title">What we need from you</h2>
-                        <p className="section__lede">Three things only Vincent can start. Each runs on an outside clock.</p>
+                        <p className="section__lede">Four things only Vincent can start. Each runs on an outside clock.</p>
                     </div>
 
                     <div className="needs">
@@ -464,7 +464,7 @@ export default function StatusApp() {
                                 <div className="need__title">App store accounts</div>
                                 <div className="need__when">This month</div>
                             </div>
-                            <p className="need__text">Apple needs a D-U-N-S number for FlowleXx. Google needs a developer account.</p>
+                            <p className="need__text">Apple needs a D-U-N-S number for Locappoint Technologies Ltd. Google needs a developer account in the same name.</p>
                         </div>
                         <div className="need">
                             <div className="need__head">
@@ -472,6 +472,13 @@ export default function StatusApp() {
                                 <div className="need__when">Start now</div>
                             </div>
                             <p className="need__text">Meta needs the company papers and a phone number only Locappoint uses. Google needs the same for the Book button.</p>
+                        </div>
+                        <div className="need">
+                            <div className="need__head">
+                                <div className="need__title">Portuguese company</div>
+                                <div className="need__when">Before launch</div>
+                            </div>
+                            <p className="need__text">A Lda in Porto, run by Vincent, for Stripe, euro invoices and EU data rules. Nigeria stays with Locappoint Technologies Ltd and Paystack. Needs a certified accountant from day one.</p>
                         </div>
                     </div>
                 </section>
