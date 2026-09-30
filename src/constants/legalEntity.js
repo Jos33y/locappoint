@@ -4,11 +4,11 @@ export const PENDING = 'Published before public launch'
 
 export const LEGAL_ENTITY = {
     tradingName: 'Locappoint',
-    legalName: null,
+    legalName: 'Locappoint Technologies Ltd',
     registeredAddress: null,
-    registry: null,
-    registrationNumber: null,
-    taxId: null,
+    registry: 'Corporate Affairs Commission, Nigeria',
+    registrationNumber: 'RC 9267124',
+    taxId: '2621483026085',
     city: 'Lisbon, Portugal',
     email: 'hello@locappoint.com',
     languages: 'English and Portuguese',
