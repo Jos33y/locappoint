@@ -45,26 +45,6 @@ export default async ({ browser, url, check }) => {
     check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
     await p.close()
 
-    // Weekly statement
-    p = await open(390, 844)
-    const stmt = () => p.evaluate(() => {
-        const s = document.querySelector('.lc-ins-stmt')
-        return s && { range: s.querySelector('.lc-ins-stmt__range')?.textContent || '', fee: s.querySelector('.is-fee s')?.textContent || '', total: s.querySelector('.lc-ins-stmt__total b')?.textContent || '', lines: s.querySelectorAll('.lc-ins-stmt__lines > div').length, next: s.querySelector('[aria-label="Week after"]')?.disabled }
-    })
-    let s = await stmt()
-    check(s && /^Last week/.test(s.range) && /Resumo semanal/.test(s.range), `the statement opens on last week, named in Portuguese too: ${s?.range}`)
-    check(s?.fee === '\u20AC10.71' && s.total === '\u20AC0' && s.lines === 3, `the fee is struck through and nothing is owed: ${s?.fee} ${s?.total}`)
-    check(s?.next === true, 'there is no week after last week')
-    await p.evaluate(() => document.querySelector('.lc-ins-stmt [aria-label="Week before"]').click())
-    await wait(400)
-    s = await stmt()
-    check(/^2 weeks ago/.test(s?.range || '') && (await p.evaluate(() => window.__calls.filter((c) => c[1] === 'week_statement').map((c) => c[2].p_weeks_back))).includes(2), 'stepping back loads the week before')
-    check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'the statement fits a phone')
-    await p.close()
-    p = await open(390, 844, '&nostatement=1')
-    check(await p.evaluate(() => !document.querySelector('.lc-ins-stmt')), 'a week with no visits shows no statement')
-    await p.close()
-
     p = await open(390, 844, '&noinsights=1')
     check(await p.evaluate(() => document.querySelector('.lc-ins-empty h2')?.textContent) === 'Your numbers land here', 'empty state for a new business')
     await p.close()

@@ -28,8 +28,6 @@ const SAMPLE = {
     manage_token: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6',
 }
 
-const WEEK = { from: '2026-09-21', to: '2026-09-27', online: { count: 12, value: 286.5 }, added: { count: 4, value: 72 }, fee: 10.71, due: 0, beta: true }
-
 const tomorrow = () => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)
 
 const CASES = [
@@ -59,9 +57,6 @@ const CASES = [
     ['review_reply', { audience: 'client', rating: 3, body: null, reply: 'Thanks for coming.', manage_token: null }],
     ['booking_request', { audience: 'business', status: 'pending' }],
     ['booking_request', { audience: 'business', status: 'pending', moved_from: '2026-09-30T11:00' }],
-    ['weekly_statement', { audience: 'business', ...WEEK }],
-    ['weekly_statement', { audience: 'business', ...WEEK, online: { count: 0, value: 0 }, fee: 0, name: null }],
-    ['weekly_statement', { audience: 'business', ...WEEK, from: '2026-09-28', to: '2026-10-04', country: 'NG', fee: null, online: { count: 1, value: 15000 }, added: { count: 0, value: 0 } }],
 ]
 
 const audit = () => {
@@ -132,16 +127,6 @@ export default async ({ browser, check, server, root }) => {
             check(ask ? /^How was/.test(msg.subject) : /^Book your next/.test(msg.subject), `${label} subject leads with the ask: ${msg.subject}`)
             check(/Stop follow-up emails/.test(msg.html) && /Stop follow-up emails/.test(msg.text), `${label} always offers a way to stop`)
             check(!extra.gap_days || !offer || /every 4 weeks/.test(msg.html), `${label} explains the suggested day`)
-            check(!msg.attachments, `${label} carries no calendar invite`)
-        }
-        if (kind === 'weekly_statement') {
-            const online = extra.online.count > 0
-            const priced = extra.fee !== null
-            check(/You pay/.test(msg.html) && /Free during the beta/.test(msg.html) && /statement, not a bill/.test(msg.text), `${label} says there is nothing to pay and that it is not a bill`)
-            check((online && priced) === /line-through;[^>]*>\s*LocAppoint fee/.test(msg.html), `${label} strikes the fee only when there is one`)
-            check(extra.added.count > 0 === /Never a fee/.test(msg.html), `${label} lists walk-ins as never carrying a fee`)
-            check(new RegExp(`/portal/insights\\?statement=${extra.from}`).test(msg.html), `${label} opens the statement in Insights`)
-            check(/to pay$/.test(msg.subject) && (extra.country === 'NG' ? /NGN|\u20A6/.test(msg.subject) : /\u20AC0 to pay/.test(msg.subject)), `${label} subject ends on what is owed: ${msg.subject}`)
             check(!msg.attachments, `${label} carries no calendar invite`)
         }
         if (kind === 'review_new') {

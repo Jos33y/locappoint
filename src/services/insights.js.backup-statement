@@ -6,13 +6,6 @@ export const loadInsights = async (businessId, days) => {
     return data
 }
 
-// The weekly statement: 1 is last week. Owner only.
-export const loadStatement = async (businessId, weeksBack = 1) => {
-    const { data, error } = await supabase.rpc('week_statement', { p_business_id: businessId, p_weeks_back: weeksBack })
-    if (error) throw error
-    return data
-}
-
 // What reminders did in the period. Owner only; the saving is an estimate and absent until there is enough to compare.
 export const loadReminderEffect = async (businessId, days) => {
     const { data, error } = await supabase.rpc('reminder_effect', { p_business_id: businessId, p_days: days })

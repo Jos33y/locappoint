@@ -43,15 +43,6 @@ const reminderEffect = () => {
   return { reminded: 24, reminded_came: 22, reminded_no_show: 1, reminded_value: 410, other: 12, other_no_show: 3, saved_estimate: 36 }
 }
 
-// Last week's statement, or ?nostatement=1 for a week with no visits.
-const weekStatement = (back) => {
-  const empty = quiet('nostatement')
-  const monday = new Date(today); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7) - 7 * (back || 1))
-  const key = (d) => new Intl.DateTimeFormat('en-CA').format(d)
-  const sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6)
-  return { from: key(monday), to: key(sunday), country: 'PT', online: { count: empty ? 0 : 12, value: empty ? 0 : 286.5 }, added: { count: empty ? 0 : 4, value: empty ? 0 : 72 }, fee: empty ? 0 : 10.71, due: 0, beta: true, weeks_back: back || 1, older: (back || 1) < 3 }
-}
-
 // A believable Insights answer for any period, or a brand-new business with ?noinsights=1.
 const insights = (days) => {
   const quiet = new URLSearchParams(window.location.search).get('noinsights') === '1'
@@ -282,7 +273,7 @@ const builder = (table) => {
 
 export const supabase = {
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

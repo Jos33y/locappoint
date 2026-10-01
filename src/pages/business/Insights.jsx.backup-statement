@@ -6,7 +6,6 @@ import { Columns } from '../../components/insights/Columns'
 import { BarList } from '../../components/insights/BarList'
 import { Funnel } from '../../components/insights/Funnel'
 import { Heatmap } from '../../components/insights/Heatmap'
-import { Statement } from '../../components/insights/Statement'
 import { SOURCE_LABEL, change, leadLabel, loadInsights, loadReminderEffect, moneyFor, moneySentence, percent } from '../../services/insights'
 import { formatDay } from '../../services/business'
 import '../../styles/business/insights.css'
@@ -165,8 +164,6 @@ const Insights = () => {
                 </div>
                 <Segmented options={PERIODS} value={days} onChange={setDays} label="Period" />
             </header>
-
-            <Statement businessId={business.id} country={business.country} money={money} />
 
             {state.status === 'loading' && (
                 <div className="lc-ins__skel" aria-hidden="true">
