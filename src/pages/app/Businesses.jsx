@@ -8,21 +8,12 @@ import { Button } from '../../components/ui'
 import { PlaceResult } from '../../components/client/find/PlaceResult'
 import { loadPlaces } from '../../services/booking'
 import { useAuth } from '../../hooks/useAuth'
+import { CITIES, COHORT_SIZE, inCity } from '../../services/cohort'
 import '../../styles/client/find-page.css'
 import '../../styles/app/businesses.css'
 
-const COHORT_SIZE = 10
 const SIGN_UP = { pathname: '/auth', state: { tab: 'signup', userType: 'business' } }
 const START = { pathname: '/portal', state: null }
-
-const fold = (text) => (text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase()
-const inCity = (place, names) => names.includes(fold(place.city))
-
-const CITIES = [
-    { name: 'Porto', match: ['porto', 'oporto'], later: 'First up' },
-    { name: 'Lisbon', match: ['lisbon', 'lisboa'], later: 'Next' },
-    { name: 'Lagos', match: ['lagos'], later: 'Later' },
-]
 
 const placesText = (n) => (n === 1 ? '1 place' : `${n} places`)
 

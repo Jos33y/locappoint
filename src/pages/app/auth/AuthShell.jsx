@@ -1,12 +1,9 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import LogoIcon from '../../../components/LogoIcon'
+import { useCohort } from '../../../hooks/useCohort'
 
 const HOME_PATH = import.meta.env.DEV ? '/?app' : '/'
-
-// Keep in step with the cohort numbers in AppHome Cta.
-const COHORT_ONBOARDED = 3
-const COHORT_TARGET = 10
 
 const AuthShell = ({
     brandTitle = 'Booking that fills your week, not your DMs.',
@@ -15,8 +12,8 @@ const AuthShell = ({
     back = null,
     children,
 }) => {
-    const pct = Math.round((COHORT_ONBOARDED / COHORT_TARGET) * 100)
     const forBusiness = audience === 'business'
+    const cohort = useCohort()
     const backLink = back || { to: HOME_PATH, label: 'Back to home' }
 
     return (
@@ -55,18 +52,18 @@ const AuthShell = ({
                     </div>
                 </div>
 
-                {forBusiness && (
+                {forBusiness && cohort && (
                     <div className="auth-brand__cohort">
                         <div className="auth-brand__cohort-head">
                             <span className="auth-brand__cohort-label">Cohort 1 in Porto</span>
                             <span className="auth-brand__cohort-count">
-                                <span className="auth-brand__cohort-num">{COHORT_ONBOARDED}</span>
+                                <span className="auth-brand__cohort-num">{cohort.count}</span>
                                 <span className="auth-brand__cohort-sep">/</span>
-                                <span className="auth-brand__cohort-target">{COHORT_TARGET}</span>
+                                <span className="auth-brand__cohort-target">{cohort.size}</span>
                             </span>
                         </div>
                         <div className="auth-brand__cohort-bar">
-                            <div className="auth-brand__cohort-fill" style={{ width: `${pct}%` }}></div>
+                            <div className="auth-brand__cohort-fill" style={{ width: `${cohort.pct}%` }}></div>
                         </div>
                     </div>
                 )}
@@ -102,9 +99,9 @@ const AuthShell = ({
                     <span>{backLink.label}</span>
                 </Link>
 
-                {forBusiness && (
+                {forBusiness && cohort && (
                     <div className="auth-cohort-strip">
-                        <span>Cohort 1: {COHORT_ONBOARDED} of {COHORT_TARGET} businesses onboarded in Porto</span>
+                        <span>Cohort 1: {cohort.count} of {cohort.size} businesses live in Porto</span>
                     </div>
                 )}
 

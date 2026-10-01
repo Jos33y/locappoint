@@ -45,8 +45,13 @@ export default async ({ check, root }) => {
     }
     check(stale.length === 0, `nothing still puts Lisbon first (${stale.join('; ')})`)
 
-    const businesses = read('src/pages/app/Businesses.jsx')
-    check(/const CITIES = \[\s*\{ name: 'Porto'/.test(businesses), 'Browse counts the first cohort in Porto')
+    const cohort = read('src/services/cohort.js')
+    check(/export const CITIES = \[\s*\{ name: 'Porto'/.test(cohort), 'the first cohort is counted in Porto')
+    check(!/is_demo/.test(cohort), 'the cohort count includes the demo business, as Browse does')
+    for (const file of ['src/pages/app/home/Cta.jsx', 'src/pages/app/auth/AuthShell.jsx']) {
+        const text = read(file)
+        check(/useCohort\(\)/.test(text) && !/COHORT_ONBOARDED/.test(text), `${file} shows the live cohort count, not a typed-in number`)
+    }
     check(/country: 'PT',\s*city: 'Porto'/.test(read('src/pages/business/Setup.jsx')), 'a new Portuguese business starts on Porto')
     check(/Portugal time/.test(read('src/constants/support.js')), 'support hours are given in Portugal time')
     check(/Porto, Lisbon and Lagos/.test(read('server/seo.mjs')), 'search titles name Porto first')

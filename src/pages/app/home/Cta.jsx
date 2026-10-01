@@ -4,17 +4,14 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { useAuth } from '../../../hooks/useAuth'
+import { useCohort } from '../../../hooks/useCohort'
 import './Cta.css'
-
-
-// Cohort progress. Update as Vincent closes Porto SMEs.
-const COHORT_ONBOARDED = 3
-const COHORT_TARGET = 10
 
 
 const Cta = () => {
     const { user, userProfile } = useAuth()
     const navigate = useNavigate()
+    const cohort = useCohort()
 
     const handlePrimary = () => {
         if (user && userProfile) {
@@ -24,8 +21,6 @@ const Cta = () => {
         }
         navigate('/auth', { state: { tab: 'signup', userType: 'business' } })
     }
-
-    const pct = Math.round((COHORT_ONBOARDED / COHORT_TARGET) * 100)
 
     return (
         <section className="loca-section loca-section--s0 cta">
@@ -80,20 +75,22 @@ const Cta = () => {
                     </div>
                 </div>
 
-                <div className="cta__cohort">
-                    <div className="cta__cohort-head">
-                        <span className="cta__cohort-label">Cohort 1 · Porto</span>
-                        <span className="cta__cohort-count">
-                            <span className="cta__cohort-count-num">{COHORT_ONBOARDED}</span>
-                            <span className="cta__cohort-count-sep">/</span>
-                            <span className="cta__cohort-count-target">{COHORT_TARGET}</span>
-                            <span className="cta__cohort-count-label">onboarded</span>
-                        </span>
+                {cohort && (
+                    <div className="cta__cohort">
+                        <div className="cta__cohort-head">
+                            <span className="cta__cohort-label">Cohort 1 · Porto</span>
+                            <span className="cta__cohort-count">
+                                <span className="cta__cohort-count-num">{cohort.count}</span>
+                                <span className="cta__cohort-count-sep">/</span>
+                                <span className="cta__cohort-count-target">{cohort.size}</span>
+                                <span className="cta__cohort-count-label">live</span>
+                            </span>
+                        </div>
+                        <div className="cta__cohort-bar" role="progressbar" aria-valuenow={cohort.pct} aria-valuemin="0" aria-valuemax="100" aria-label="Cohort 1 progress">
+                            <div className="cta__cohort-fill" style={{ width: `${cohort.pct}%` }}></div>
+                        </div>
                     </div>
-                    <div className="cta__cohort-bar" role="progressbar" aria-valuenow={pct} aria-valuemin="0" aria-valuemax="100" aria-label="Cohort 1 progress">
-                        <div className="cta__cohort-fill" style={{ width: `${pct}%` }}></div>
-                    </div>
-                </div>
+                )}
 
             </div>
         </section>
