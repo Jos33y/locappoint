@@ -469,6 +469,26 @@
     overflow-wrap: anywhere;
 }
 
+/* How the visit is paid, under the address. */
+.lc-bk-ticket__pay {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
+    color: var(--lc-ink-2);
+    font-size: 12px;
+    font-weight: var(--font-weight-medium);
+}
+
+.lc-bk-ticket__pay svg { flex: none; color: var(--lc-ink-3); }
+
+.lc-bk-paynote {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+}
+
 .lc-bk-ticket__stamp {
     position: absolute;
     top: 50%;

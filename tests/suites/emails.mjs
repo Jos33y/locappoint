@@ -38,6 +38,7 @@ const CASES = [
     ['booking_confirmed', { audience: 'client' }],
     ['booking_confirmed', { audience: 'client', has_account: true, manage_token: null }],
     ['booking_confirmed', { audience: 'client', country: 'NG', timezone: 'Africa/Lagos', price: 15000, staff_name: null, address: null, city: null, business_whatsapp: null, business_phone: null }],
+    ['booking_confirmed', { audience: 'client', price: 0 }],
     ['booking_requested', { audience: 'client', status: 'pending' }],
     ['booking_declined', { audience: 'client', status: 'cancelled' }],
     ['booking_cancelled', { audience: 'client', status: 'cancelled', cancelled_by: 'business' }],
@@ -106,6 +107,8 @@ export default async ({ browser, check, server, root }) => {
         check(!/undefined|NaN|\[object |\bnull\b/.test(all), `${label} has no undefined, null or NaN`)
         check(!/[\u2013\u2014]/.test(all), `${label} has no long dashes`)
         check(!msg.html.includes('<script>'), `${label} escapes names`)
+        check(/hello@locappoint\.com/.test(msg.html) && /hello@locappoint\.com/.test(msg.text) && !/support@/.test(all), `${label} gives hello@ as the contact, never support@`)
+        check(/41\.1579&deg;N/.test(msg.html), `${label} is stamped with Porto`)
         check(![...msg.html.matchAll(/href="([^"]+)"/g)].some(([, href]) => !/^(https:\/\/|mailto:)/.test(href)), `${label} links are https`)
         check(!/<\/?(p|span|td|tr|table|a|br|strong)\b|&[a-z]+;|&#\d+;/i.test(msg.text), `${label} plain text has no markup or entities`)
         if (['booking_confirmed', 'booking_moved'].includes(kind) && extra.audience === 'client') {
@@ -133,6 +136,12 @@ export default async ({ browser, check, server, root }) => {
         if (kind === 'review_reply') {
             check(!msg.html.includes('<Ana>') && /Stop follow-up emails/.test(msg.html), `${label} escapes the reply and offers a way to stop`)
         }
+        if (['booking_confirmed', 'booking_requested', 'booking_moved', 'booking_reminder'].includes(kind) && extra.audience === 'client') {
+            const priced = extra.price !== 0
+            check(priced === /Nothing is charged online/.test(msg.html), `${label} says the visit is paid there, and only for a priced service`)
+            check(priced === /Pay at your visit\. Nothing is charged online\./.test(msg.text), `${label} plain text says how the visit is paid`)
+        }
+        if (extra.audience === 'business') check(!/Nothing is charged online/.test(msg.html), `${label} does not tell the owner how clients pay`)
         if (kind === 'booking_confirmed' && extra.audience === 'client') {
             const guest = extra.has_account !== true
             check(guest === /\/b\/[a-f0-9]{32,}/.test(msg.html), `${label} links to the manage page when it has a link`)

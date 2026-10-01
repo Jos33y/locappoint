@@ -308,7 +308,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                     <button type="button" className="lc-bk-back" onClick={() => setStep('time')}>
                         <ArrowLeft size={16} aria-hidden="true" />Change time
                     </button>
-                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} />
+                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} pay={!owner} />
                     {was ? (
                         <p className="lc-bk-was">
                             Instead of <b>{dayLabel({ date: parseDateKey(was.dateKey) })} at {clock(was.minutes)}</b>.
@@ -325,13 +325,14 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                             onChange={(patch) => { setDetails((d) => ({ ...d, ...patch })); setErrors({}) }}
                         />
                     )}
+                    {!move && !owner && <p className="lc-bk-paynote">Booking is free. Nothing is charged online.</p>}
                     {notice && <p className="lc-bk-notice" role="alert">{notice}</p>}
                 </>
             )}
 
             {step === 'done' && minutes !== null && (
                 <>
-                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={auto ? 'success' : 'signal'} />
+                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={auto ? 'success' : 'signal'} pay={!owner} />
                     <p className="lc-bk-done">
                         {move
                             ? (auto ? 'Your booking is moved to the new time.' : `${business.business_name} will confirm the new time.`)

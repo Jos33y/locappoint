@@ -1,3 +1,4 @@
+import { Store } from 'lucide-react'
 import { DurationDial } from '../../business/DurationDial'
 import { fullAddress } from '../../business/public/PublicFind'
 import { durationLabel, menuPrice } from '../../../services/business'
@@ -7,7 +8,10 @@ import '../../../styles/client/booking-sheet.css'
 
 const hasPrice = (price) => String(price ?? '').trim() !== '' && !Number.isNaN(Number(String(price).replace(',', '.')))
 
-export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stampTone = 'signal' }) => {
+// Booking is free and nothing is charged online: a priced visit is paid at the place. Free services say nothing.
+const paidAtVisit = (price) => !hasPrice(price) || Number(String(price).replace(',', '.')) > 0
+
+export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stampTone = 'signal', pay = true }) => {
     const date = parseDateKey(dateKey)
     const duration = Number(service.duration_minutes) || 0
     const meta = [duration ? durationLabel(duration) : null, hasPrice(service.price) ? menuPrice(service.price) : null].filter(Boolean).join(', ')
@@ -34,6 +38,7 @@ export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stam
             <div className="lc-bk-ticket__stub">
                 <span className="lc-bk-ticket__biz">{business.business_name}</span>
                 {business.address?.trim() && <span className="lc-bk-ticket__addr">{fullAddress(business.address, business.city)}</span>}
+                {pay && paidAtVisit(service.price) && <span className="lc-bk-ticket__pay"><Store size={12} aria-hidden="true" />Pay at your visit</span>}
                 {stamp && <span className={`lc-bk-ticket__stamp is-${stampTone}`}>{stamp}</span>}
             </div>
         </div>
