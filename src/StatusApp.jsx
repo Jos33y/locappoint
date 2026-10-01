@@ -60,7 +60,7 @@ export default function StatusApp() {
                             Booking platform <span className="signal">running</span>. Finishing it for the <span className="azure">Lisbon beta.</span>
                         </h1>
                         <p className="hero__lede">
-                            Clients book, owners run their day. Launch features and hardening are done. Before the first businesses go live: the phone apps.
+                            Clients book, owners run their day. The Android app is live, with push notifications. Before the first businesses go live: the store listings.
                         </p>
 
                         <div className="hero__stats">
@@ -71,18 +71,18 @@ export default function StatusApp() {
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Launch ready</div>
-                                <div className="hero__stat-value"><span className="azure">90%</span></div>
-                                <div className="hero__stat-sub">Built and hardened</div>
+                                <div className="hero__stat-value"><span className="azure">95%</span></div>
+                                <div className="hero__stat-sub">Android app live</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Now building</div>
-                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>Phone apps</div>
-                                <div className="hero__stat-sub">Then the first businesses</div>
+                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>Store listings</div>
+                                <div className="hero__stat-sub">Waiting on the D-U-N-S number</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Updated</div>
                                 <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>
-                                    <time className="js-relative" dateTime="2026-09-30T20:15:00Z">30 September 2026</time>
+                                    <time className="js-relative" dateTime="2026-10-01T04:38:00Z">1 October 2026</time>
                                 </div>
                                 <div className="hero__stat-sub">This page auto-refreshes</div>
                             </div>
@@ -123,7 +123,7 @@ export default function StatusApp() {
                                     <span className="phase__num">Phase 2</span>
                                     <span className="phase__name">Launch product</span>
                                 </div>
-                                <div className="phase__sub">Built and hardened. Phone apps left.</div>
+                                <div className="phase__sub">Android app live. Store listings left.</div>
                             </div>
                             <span className="phase__status phase__status--building">Active build</span>
                         </a>
@@ -231,22 +231,27 @@ export default function StatusApp() {
                                     <div className="detail__item detail__item--done">Data kept only as long as promised</div>
                                     <div className="detail__item detail__item--done">Demo business clearly labelled</div>
                                     <div className="detail__item detail__item--done">Company details on the legal pages</div>
+                                    <div className="detail__item detail__item--done">Android app: download, Google sign-in, updates</div>
+                                    <div className="detail__item detail__item--done">Download page: locappoint.com/app</div>
+                                    <div className="detail__item detail__item--done">Push notifications on Android</div>
+                                    <div className="detail__item detail__item--done">Delete account inside the app</div>
+                                    <div className="detail__item detail__item--done">Google search: business pages, previews, sitemap</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--active">
                                 <div className="detail__col-label">Building now</div>
                                 <div className="detail__list">
-                                    <div className="detail__item detail__item--active">Phone apps built: Android and iPhone</div>
-                                    <div className="detail__item detail__item--active">Download page: locappoint.com/app</div>
-                                    <div className="detail__item detail__item--active">Delete account inside the app</div>
-                                    <div className="detail__item detail__item--active">Push notifications: Android now, iPhone with the App Store</div>
+                                    <div className="detail__item detail__item--active">D-U-N-S number for the company</div>
+                                    <div className="detail__item detail__item--active">Google Play account and listing</div>
+                                    <div className="detail__item detail__item--active">Android developer verification, Google's 2027 rule</div>
+                                    <div className="detail__item detail__item--active">Store graphics and screenshots</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--next">
                                 <div className="detail__col-label">Before launch</div>
                                 <div className="detail__list">
-                                    <div className="detail__item detail__item--next">Android: first build on the website, then Google Play</div>
-                                    <div className="detail__item detail__item--next">iPhone: TestFlight, then App Store</div>
+                                    <div className="detail__item detail__item--next">Android on Google Play</div>
+                                    <div className="detail__item detail__item--next">iPhone: TestFlight, then App Store, with push</div>
                                     <div className="detail__item detail__item--next">"Join Beta" on the waitlist</div>
                                     <div className="detail__item detail__item--next">First five businesses live in Lisbon</div>
                                 </div>
@@ -254,7 +259,7 @@ export default function StatusApp() {
                         </div>
                         <div className="detail__target">
                             <span className="detail__target-label">Waiting on</span>
-                            <span className="detail__target-value">App review and owners saying yes.</span>
+                            <span className="detail__target-value">The D-U-N-S number, store reviews, and owners saying yes.</span>
                         </div>
                     </article>
                 </section>
@@ -399,7 +404,7 @@ export default function StatusApp() {
                     </div>
 
                     <div className="surfaces">
-                        <a className="surface surface--building" href="https://locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="90">
+                        <a className="surface surface--building" href="https://locappoint.com" target="_blank" rel="noopener noreferrer" data-pct="95">
                             <div className="surface__head">
                                 <span className="surface__status surface__status--building">
                                     <span className="surface__status-dot" aria-hidden="true"></span>
@@ -408,13 +413,13 @@ export default function StatusApp() {
                                 <span className="surface__pct"></span>
                             </div>
                             <div className="surface__url">locappoint.com</div>
-                            <div className="surface__desc">The booking platform. Built and hardened.</div>
+                            <div className="surface__desc">The booking platform. Built, hardened, and findable on Google.</div>
                             <div className="surface__bar" aria-hidden="true">
                                 <div className="surface__bar-fill"></div>
                             </div>
                         </a>
 
-                        <a className="surface surface--building" href="https://locappoint.com/app" target="_blank" rel="noopener noreferrer" data-pct="50">
+                        <a className="surface surface--building" href="https://locappoint.com/app" target="_blank" rel="noopener noreferrer" data-pct="75">
                             <div className="surface__head">
                                 <span className="surface__status surface__status--building">
                                     <span className="surface__status-dot" aria-hidden="true"></span>
@@ -423,7 +428,7 @@ export default function StatusApp() {
                                 <span className="surface__pct"></span>
                             </div>
                             <div className="surface__url">locappoint.com/app</div>
-                            <div className="surface__desc">The phone apps. Android download here first, iPhone by invite.</div>
+                            <div className="surface__desc">The phone apps. Android live here now, Google Play next, iPhone by invite.</div>
                             <div className="surface__bar" aria-hidden="true">
                                 <div className="surface__bar-fill"></div>
                             </div>
@@ -481,9 +486,9 @@ export default function StatusApp() {
                         <div className="need">
                             <div className="need__head">
                                 <div className="need__title">App store accounts</div>
-                                <div className="need__when">This month</div>
+                                <div className="need__when">In progress</div>
                             </div>
-                            <p className="need__text">Apple needs a D-U-N-S number for Locappoint Technologies Ltd. Google needs a developer account in the same name.</p>
+                            <p className="need__text">D-U-N-S number for Locappoint Technologies Ltd, free through Apple, about a week. The same number opens Google Play (USD 25 once), Apple (USD 99 a year) and Google's check for apps installed from our website. Needs the CAC certificate.</p>
                         </div>
                         <div className="need">
                             <div className="need__head">
@@ -521,7 +526,7 @@ export default function StatusApp() {
                     <div>
                         <div className="footer__col-label">Meta</div>
                         <div className="footer__meta">
-                            Status page v1.1<br />
+                            Status page v1.2<br />
                             status.locappoint.com
                         </div>
                     </div>
