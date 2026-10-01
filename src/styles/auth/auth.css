@@ -832,6 +832,11 @@
     gap: 10px;
 }
 
+/* Apple devices see Apple first; everyone else sees Google first. */
+.auth-oauth-stack.is-google-first {
+    flex-direction: column-reverse;
+}
+
 .auth-oauth {
     display: inline-flex;
     align-items: center;

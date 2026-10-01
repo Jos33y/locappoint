@@ -26,6 +26,9 @@ workflows:
         script: npm ci
       - name: Build the web app
         script: npm run build
+      - name: Stamp the version into the app's user agent
+        script: |
+          node -e "const f='capacitor.config.json',fs=require('fs'),c=JSON.parse(fs.readFileSync(f));c.appendUserAgent='LocappointApp/1.0.'+process.env.BUILD_NUMBER;fs.writeFileSync(f,JSON.stringify(c,null,2))"
       - name: Copy it into the Android project
         script: npx cap sync android
       - name: Build signed APK and AAB
@@ -72,6 +75,9 @@ workflows:
         script: npm ci
       - name: Build the web app
         script: npm run build
+      - name: Stamp the version into the app's user agent
+        script: |
+          node -e "const f='capacitor.config.json',fs=require('fs'),c=JSON.parse(fs.readFileSync(f));c.appendUserAgent='LocappointApp/1.0.'+process.env.BUILD_NUMBER;fs.writeFileSync(f,JSON.stringify(c,null,2))"
       - name: Copy it into the iPhone project
         script: npx cap sync ios
       - name: Signing profiles

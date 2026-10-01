@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import OfflineNotice from './components/common/OfflineNotice'
+import UpdateNotice from './components/common/UpdateNotice'
 import { installErrorHandlers } from './services/errors'
 import { startNative } from './services/native'
 
@@ -72,6 +73,7 @@ const App = () => {
                 {chunk}
             </Suspense>
             {mode === 'app' && <OfflineNotice />}
+            {mode === 'app' && <UpdateNotice />}
         </ErrorBoundary>
     )
 }

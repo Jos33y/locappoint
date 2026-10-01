@@ -3,10 +3,13 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
 import { User, Building2, AlertCircle, CheckCircle2, ArrowRight, MailCheck, CalendarCheck } from 'lucide-react'
 import AuthShell from './AuthShell'
+import { isNative, platform } from '../../../services/native'
+import { rememberNext } from '../../../services/nextPath'
 import '../../../styles/auth/auth.css'
 
-// Off until Google and Apple sign-in are set up in Supabase.
-const OAUTH_READY = false
+// Google is set up in Supabase. Apple waits for the Apple developer account; VITE_APPLE_SIGNIN=true turns it on.
+const GOOGLE_READY = true
+const APPLE_READY = import.meta.env.VITE_APPLE_SIGNIN === 'true'
 const HOME_PATHS = ['/', '/?app']
 
 const safePath = (path) =>
@@ -185,9 +188,13 @@ const AuthPage = () => {
         }
     }
 
+    // Sign-in leaves the page for Google or Apple; where the person was going is kept for when they return.
+    const keepGoing = () => rememberNext(returnTo || (activeTab === 'signup' && userType === 'business' ? '/portal' : null))
+
     const handleGoogleSignIn = async () => {
         setError('')
         setLoading(true)
+        keepGoing()
         try {
             const { error: googleErr } = await signInWithGoogle()
             if (googleErr) {
@@ -203,6 +210,7 @@ const AuthPage = () => {
     const handleAppleSignIn = async () => {
         setError('')
         setLoading(true)
+        keepGoing()
         try {
             const { error: appleErr } = await signInWithApple()
             if (appleErr) {
@@ -218,6 +226,8 @@ const AuthPage = () => {
     // Apple devices see Apple first. macOS Safari and all iOS variants.
     const isApplePlatform = typeof navigator !== 'undefined' &&
         /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)
+    // Apple requires Sign in with Apple in any iPhone app that offers Google, so the iPhone app shows Google only alongside Apple.
+    const showGoogle = GOOGLE_READY && !(isNative() && platform() === 'ios' && !APPLE_READY)
 
     const signin = activeTab === 'signin'
     const clientSide = Boolean(booking) || (!signin && userType === 'client')
@@ -433,35 +443,24 @@ const AuthPage = () => {
                 </button>
             </form>
 
-            {OAUTH_READY && (
+            {(showGoogle || APPLE_READY) && (
                 <>
                     <div className="auth-divider">
                         <span>or</span>
                     </div>
 
-                    <div className="auth-oauth-stack">
-                        {isApplePlatform ? (
-                            <>
-                                <button type="button" onClick={handleAppleSignIn} className="auth-oauth auth-oauth--apple" disabled={loading}>
-                                    <AppleLogo />
-                                    <span>Continue with Apple</span>
-                                </button>
-                                <button type="button" onClick={handleGoogleSignIn} className="auth-oauth auth-oauth--google" disabled={loading}>
-                                    <GoogleG />
-                                    <span>Continue with Google</span>
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button type="button" onClick={handleGoogleSignIn} className="auth-oauth auth-oauth--google" disabled={loading}>
-                                    <GoogleG />
-                                    <span>Continue with Google</span>
-                                </button>
-                                <button type="button" onClick={handleAppleSignIn} className="auth-oauth auth-oauth--apple" disabled={loading}>
-                                    <AppleLogo />
-                                    <span>Continue with Apple</span>
-                                </button>
-                            </>
+                    <div className={`auth-oauth-stack${isApplePlatform ? '' : ' is-google-first'}`}>
+                        {APPLE_READY && (
+                            <button type="button" onClick={handleAppleSignIn} className="auth-oauth auth-oauth--apple" disabled={loading}>
+                                <AppleLogo />
+                                <span>Continue with Apple</span>
+                            </button>
+                        )}
+                        {showGoogle && (
+                            <button type="button" onClick={handleGoogleSignIn} className="auth-oauth auth-oauth--google" disabled={loading}>
+                                <GoogleG />
+                                <span>Continue with Google</span>
+                            </button>
                         )}
                     </div>
                 </>

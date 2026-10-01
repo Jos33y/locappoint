@@ -81,3 +81,57 @@
 .lc-sys-net__pill.is-off svg {
     color: var(--lc-warning);
 }
+
+/* Update ready, Android app only */
+.lc-sys-update {
+    position: fixed;
+    left: var(--space-3);
+    right: var(--space-3);
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    z-index: var(--z-floating);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 480px;
+    margin: 0 auto;
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-overlay);
+    box-shadow: var(--lc-shadow-overlay);
+}
+
+.lc-sys-update__text {
+    flex: 1;
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-sys-update__go,
+.lc-sys-update__x {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    min-height: 40px;
+    border: 0;
+    border-radius: var(--lc-r-md);
+    font: inherit;
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+}
+
+.lc-sys-update__go {
+    padding: 0 var(--space-3);
+    background: var(--lc-azure-button);
+    color: var(--lc-on-accent);
+}
+
+.lc-sys-update__x {
+    width: 40px;
+    background: transparent;
+    color: var(--lc-ink-3);
+}

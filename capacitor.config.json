@@ -3,6 +3,7 @@
   "appName": "Locappoint",
   "webDir": "dist",
   "backgroundColor": "#10141D",
+  "appendUserAgent": "LocappointApp/dev",
   "ios": {
     "contentInset": "always"
   },

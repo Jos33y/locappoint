@@ -7,6 +7,12 @@ export const AUTH_CALLBACK = 'locappoint://auth/callback'
 
 export const isNative = () => (typeof window !== 'undefined' && Boolean(window.__locaNative)) || Capacitor.isNativePlatform()
 
+export const platform = () => {
+    const forced = typeof window !== 'undefined' ? window.__locaNative : null
+    if (forced) return typeof forced === 'string' ? forced : 'android'
+    return Capacitor.getPlatform()
+}
+
 export const appOrigin = () => (isNative() ? WEB_ORIGIN : window.location.origin)
 
 // Google and Apple refuse sign-in inside an embedded web view, so the app opens the system browser

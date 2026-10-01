@@ -29,6 +29,13 @@ export const DATA = {
   ],
 }
 
+// Account deletion: an owner, an owner with clients still to come (?deleteblock=1), or a client (?nobiz=1).
+const deletionCheck = () => ({
+  businesses: quiet('nobiz') ? [] : [{ id: 'b1', name: 'Femtos Barbearia', upcoming: quiet('deleteblock') ? 3 : 0 }],
+  client_upcoming: quiet('nobiz') ? 1 : 0,
+  staff_of: [],
+})
+
 // What reminders did: ?noreminders=1 for a business before its first reminded visit, ?fewreminders=1 for too few to compare.
 const reminderEffect = () => {
   if (quiet('noreminders')) return { reminded: 0, reminded_came: 0, reminded_no_show: 0, reminded_value: 0, other: 0, other_no_show: 0, saved_estimate: null }
@@ -224,7 +231,7 @@ const builder = (table) => {
 
 export const supabase = {
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

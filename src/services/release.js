@@ -15,3 +15,13 @@ export const loadRelease = async () => {
         return null
     }
 }
+
+// Newer than the installed one? Compares 1.0.12 style versions part by part.
+export const isNewer = (latest, current) => {
+    const a = String(latest || '').split('.').map(Number)
+    const b = String(current || '').split('.').map(Number)
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+        if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0)
+    }
+    return false
+}

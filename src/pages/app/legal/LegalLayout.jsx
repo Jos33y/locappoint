@@ -13,6 +13,7 @@ export const LEGAL_PAGES = [
     { to: '/legal/dpa', label: 'Data Processing Agreement' },
     { to: '/legal/subprocessors', label: 'Sub-processors' },
     { to: '/legal/ranking', label: 'How Browse ranks businesses' },
+    { to: '/legal/delete-account', label: 'Delete your account' },
 ]
 
 const LegalLayout = ({ title, lede, sections }) => {

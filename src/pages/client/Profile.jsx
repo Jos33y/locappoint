@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeftRight, ChevronRight, KeyRound, LogOut, Mail, Store } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight, KeyRound, LogOut, Mail, Store, Trash2 } from 'lucide-react'
 import { Button, Field } from '../../components/ui'
 import { PhoneField, parsePhone } from '../../components/ui/PhoneField'
 import { supabase } from '../../config/supabase'
@@ -9,7 +9,7 @@ import { initials } from '../../components/business/Brand'
 import StreetGridCover from '../../components/business/StreetGridCover'
 import SaveState from '../../components/business/SaveState'
 import { useAutosave } from '../../components/business/useAutosave'
-import { PasswordSheet, SettingsRow as Row, SettingsSection as Section, SignOutSheet } from '../../components/business/AccountSheets'
+import { DeleteAccountSheet, PasswordSheet, SettingsRow as Row, SettingsSection as Section, SignOutSheet } from '../../components/business/AccountSheets'
 import { EmailSheet } from '../../components/client/EmailSheet'
 import { BookingToast } from '../../components/client/bookings/BookingToast'
 import { SUPPORT } from '../../constants/support'
@@ -32,6 +32,7 @@ const ClientProfile = () => {
     const [phoneTouched, setPhoneTouched] = useState(false)
     const [passwordOpen, setPasswordOpen] = useState(false)
     const [signOutOpen, setSignOutOpen] = useState(false)
+    const [deleteOpen, setDeleteOpen] = useState(false)
     const [emailOpen, setEmailOpen] = useState(false)
     const [toast, setToast] = useState(null)
 
@@ -62,7 +63,6 @@ const ClientProfile = () => {
         setTimeout(() => setToast(null), 3200)
     }
 
-    const closeLink = `mailto:${SUPPORT.email}?subject=${encodeURIComponent('Close my Locappoint account')}&body=${encodeURIComponent(`Please close the Locappoint account for ${email}.`)}`
 
     return (
         <div className="biz-page biz-st lc-cl-profile">
@@ -153,8 +153,8 @@ const ClientProfile = () => {
                         <ChevronRight size={18} aria-hidden="true" className="biz-st__chevron" />
                     </Link>
                     <div className="biz-st__rule" />
-                    <Row title="Close your account" detail="Tell us and we close it for you. We let you know first if you still have bookings coming up.">
-                        <Button variant="secondary" size="sm" className="biz-st__danger" href={closeLink}>Ask us to close it</Button>
+                    <Row title="Delete your account" detail="Deletes your sign-in and profile, and a business you own with everything in it. We show you exactly what goes before anything happens.">
+                        <Button variant="secondary" size="sm" className="biz-st__danger" icon={Trash2} onClick={() => setDeleteOpen(true)}>Delete account</Button>
                     </Row>
                 </Section>
 
@@ -174,6 +174,7 @@ const ClientProfile = () => {
                 onDone={() => { setPasswordOpen(false); say('Password changed') }}
             />
             <SignOutSheet open={signOutOpen} onClose={() => setSignOutOpen(false)} />
+            <DeleteAccountSheet open={deleteOpen} onClose={() => setDeleteOpen(false)} />
             <EmailSheet
                 open={emailOpen}
                 current={email}

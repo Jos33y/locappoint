@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeftRight, ChevronRight, KeyRound, LogOut, Mail } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight, KeyRound, LogOut, Mail, Trash2 } from 'lucide-react'
 import { Button, Field } from '../../components/ui'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
@@ -8,7 +8,7 @@ import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { initials } from '../../components/business/Brand'
 import StreetGridCover from '../../components/business/StreetGridCover'
 import SaveState from '../../components/business/SaveState'
-import { PasswordSheet, SettingsRow as Row, SettingsSection as Section, SignOutSheet } from '../../components/business/AccountSheets'
+import { DeleteAccountSheet, PasswordSheet, SettingsRow as Row, SettingsSection as Section, SignOutSheet } from '../../components/business/AccountSheets'
 import { useAutosave } from '../../components/business/useAutosave'
 import { SUPPORT } from '../../constants/support'
 import { EmailSheet } from '../../components/client/EmailSheet'
@@ -29,6 +29,7 @@ const SettingsPage = () => {
     const [savedName, setSavedName] = useState(userProfile?.full_name || '')
     const [passwordOpen, setPasswordOpen] = useState(false)
     const [signOutOpen, setSignOutOpen] = useState(false)
+    const [deleteOpen, setDeleteOpen] = useState(false)
     const [emailOpen, setEmailOpen] = useState(false)
 
     const trimmed = name.trim()
@@ -48,7 +49,6 @@ const SettingsPage = () => {
         },
     })
 
-    const closeLink = `mailto:${SUPPORT.email}?subject=${encodeURIComponent('Close my Locappoint account')}&body=${encodeURIComponent(`Please close the Locappoint account for ${email}.`)}`
 
     return (
         <div className="biz-page biz-st">
@@ -122,8 +122,8 @@ const SettingsPage = () => {
                         <ChevronRight size={18} aria-hidden="true" className="biz-st__chevron" />
                     </Link>
                     <div className="biz-st__rule" />
-                    <Row title="Close your account" detail="Tell us and we close it for you. If you run a business, we talk you through what happens to your page and bookings first.">
-                        <Button variant="secondary" size="sm" className="biz-st__danger" href={closeLink}>Ask us to close it</Button>
+                    <Row title="Delete your account" detail="Deletes your sign-in and profile, and a business you own with everything in it. We show you exactly what goes before anything happens.">
+                        <Button variant="secondary" size="sm" className="biz-st__danger" icon={Trash2} onClick={() => setDeleteOpen(true)}>Delete account</Button>
                     </Row>
                 </Section>
 
@@ -145,6 +145,7 @@ const SettingsPage = () => {
                 onDone={() => { setPasswordOpen(false); notify('Password changed') }}
             />
             <SignOutSheet open={signOutOpen} onClose={() => setSignOutOpen(false)} />
+            <DeleteAccountSheet open={deleteOpen} onClose={() => setDeleteOpen(false)} />
             <EmailSheet
                 open={emailOpen}
                 current={email}

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Eye, EyeOff, LogOut } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Eye, EyeOff, LogOut, Trash2 } from 'lucide-react'
 import { Button, Card, Field, Sheet } from '../ui'
 import { supabase } from '../../config/supabase'
+import { checkDeletion, deleteAccount } from '../../services/account'
 import '../../styles/business/settings-page.css'
 
 const PASSWORD_MIN = 8
@@ -157,3 +159,90 @@ export const SignOutSheet = ({ open, onClose }) => {
         </Sheet>
     )
 }
+
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
+
+// Delete account: says plainly what goes and what stays, stops an owner who still has clients coming,
+// and asks for DELETE typed out so it never happens by accident.
+export const DeleteAccountSheet = ({ open, onClose }) => {
+    const [facts, setFacts] = useState(null)
+    const [word, setWord] = useState('')
+    const [busy, setBusy] = useState(false)
+    const [error, setError] = useState('')
+
+    useEffect(() => {
+        if (!open) return undefined
+        let cancelled = false
+        setFacts(null)
+        setWord('')
+        setError('')
+        checkDeletion()
+            .then((f) => { if (!cancelled) setFacts(f) })
+            .catch((err) => {
+                console.error('Deletion check failed:', err)
+                if (!cancelled) setError('We could not check your account. Check your connection and try again.')
+            })
+        return () => { cancelled = true }
+    }, [open])
+
+    const owned = facts?.businesses || []
+    const blocking = owned.filter((b) => Number(b.upcoming) > 0)
+    const ready = facts && blocking.length === 0
+    const typed = word.trim().toUpperCase() === 'DELETE'
+
+    const confirm = async () => {
+        setBusy(true)
+        setError('')
+        try {
+            await deleteAccount()
+            window.location.replace('/legal/delete-account?done=1')
+        } catch (err) {
+            console.error('Delete account failed:', err)
+            setError(err?.code === 'P0001' ? err.message : 'Your account was not deleted. Check your connection and try again.')
+            setBusy(false)
+        }
+    }
+
+    return (
+        <Sheet
+            open={open}
+            onClose={onClose}
+            title="Delete your account?"
+            footer={ready ? (
+                <div className="biz-st__sheetactions">
+                    <Button variant="quiet" onClick={onClose}>Keep my account</Button>
+                    <Button variant="secondary" className="biz-st__danger" icon={Trash2} loading={busy} disabled={!typed} onClick={confirm}>Delete for good</Button>
+                </div>
+            ) : null}
+        >
+            <div className="biz-st__form">
+                {!facts && !error && <p className="biz-st__sheetbody">Checking your account.</p>}
+                {blocking.length > 0 && (
+                    <>
+                        {blocking.map((b) => (
+                            <p key={b.id} className="biz-st__error" role="alert">{`${b.name} still has ${plural(Number(b.upcoming), 'upcoming booking', 'upcoming bookings')}. Cancel or move them first, so your clients are told.`}</p>
+                        ))}
+                        <Link to="/portal/calendar" className="biz-st__delete-link" onClick={onClose}>Open the calendar</Link>
+                    </>
+                )}
+                {ready && (
+                    <>
+                        <ul className="biz-st__delete-list">
+                            <li>Your sign-in, your profile and your notifications are deleted straight away.</li>
+                            {owned.map((b) => <li key={b.id}>{`${b.name}: its page, services, hours, past bookings and reviews are deleted with it.`}</li>)}
+                            {facts.client_upcoming > 0 && <li>{Number(facts.client_upcoming) === 1 ? 'Your booking coming up stays booked. Change or cancel it from the link in its confirmation email.' : `Your ${facts.client_upcoming} bookings coming up stay booked. Change or cancel them from the links in their confirmation emails.`}</li>}
+                            {(facts.staff_of || []).map((name) => <li key={name}>{`You leave the team at ${name}. Your past work there stays on their calendar.`}</li>)}
+                            <li>Bookings you made stay with the businesses you visited; they need them for their own records.</li>
+                        </ul>
+                        <Field label="Type DELETE to confirm">
+                            <input className="ui-input" value={word} onChange={(e) => setWord(e.target.value)} autoComplete="off" autoCapitalize="characters" spellCheck="false" />
+                        </Field>
+                        <p className="biz-st__sheetbody">This cannot be undone.</p>
+                    </>
+                )}
+                {error && <p className="biz-st__error" role="alert">{error}</p>}
+            </div>
+        </Sheet>
+    )
+}
+

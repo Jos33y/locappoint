@@ -65,7 +65,7 @@ export default async ({ browser, url, check }) => {
     await clickText(p, '.ui-sheet button', 'Sign out everywhere')
     await wait(400)
     check((await calls(p, 'signOut')).slice(-1)[0]?.scope === 'global', 'global sign out')
-    check(await p.evaluate(() => document.querySelector('a[href^="mailto:support@locappoint.com?subject=Close"]') !== null), 'close account goes to support')
+    check(await p.evaluate(() => [...document.querySelectorAll('.biz-st .ui-btn')].some((b) => /Delete account/.test(b.textContent))), 'the account can be deleted from settings')
     check(p.errors.length === 0, `errors ${p.errors}`)
     await p.close()
 

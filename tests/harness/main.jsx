@@ -49,8 +49,11 @@ import '@src/styles/client/client-shell.css'
 import { DATA } from './fakeSupabase'
 import { RouteBoundary } from '@src/components/common/ErrorBoundary'
 import OfflineNotice from '@src/components/common/OfflineNotice'
+import UpdateNotice from '@src/components/common/UpdateNotice'
+import DeleteAccount from '@src/pages/app/legal/DeleteAccount'
 import ErrorsTab from '@src/pages/admin/tabs/ErrorsTab'
 import AppDownload from '@src/pages/app/AppDownload'
+import AuthPage from '@src/pages/app/auth/AuthPage'
 import { installErrorHandlers } from '@src/services/errors'
 import QRCode from 'qrcode'
 import '@src/styles/admin/admin.css'
@@ -68,7 +71,9 @@ try { if (params.get('tour') !== '1') localStorage.setItem('locappoint_tour_done
 
 window.__locaReportInDev = true
 // ?native=1 behaves like the phone apps; ?release=none or ?release=1 fakes the Android download note.
-if (params.get('native') === '1') window.__locaNative = true
+if (params.get('native')) window.__locaNative = params.get('native') === '1' ? true : params.get('native')
+if (params.get('device')) window.__locaDevice = params.get('device')
+if (params.has('installed')) window.__locaAppVersion = params.get('installed')
 if (params.has('release')) window.__locaRelease = params.get('release') === 'none' ? null : { version: '1.0.7', file: 'locappoint-1.0.7.apk', size: 6291456 }
 window.__QRCode = QRCode
 installErrorHandlers('app')
@@ -93,6 +98,11 @@ const Auth = ({ children }) => {
     mode, setMode,
     signOut: () => { window.__signedOut = true },
     refreshProfile: () => { window.__refreshed = (window.__refreshed || 0) + 1 },
+    signInWithGoogle: async () => { window.__oauth = 'google'; return { data: {}, error: null } },
+    signInWithApple: async () => { window.__oauth = 'apple'; return { data: {}, error: null } },
+    signIn: async () => ({ data: null, error: null }),
+    signUp: async () => ({ data: null, error: null }),
+    resendConfirmation: async () => ({ error: null }),
   }), [mode])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
@@ -132,10 +142,13 @@ const App = () => (
         <Route path="/b/:token" element={<ManageBooking />} />
         <Route path="/team/:token" element={<TeamJoin />} />
         <Route path="/app" element={<AppDownload />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/legal/delete-account" element={<DeleteAccount />} />
         <Route path="/admin-errors" element={<div className="admin"><ErrorsTab formatDate={fmtDate} formatTime={fmtTime} /></div>} />
         <Route path="/:businessSlug" element={<PublicBusinessPage />} />
       </Routes>
       <OfflineNotice />
+      <UpdateNotice />
     </MemoryRouter>
   </Auth>
 )

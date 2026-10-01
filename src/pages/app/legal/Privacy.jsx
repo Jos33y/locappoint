@@ -91,7 +91,7 @@ const sections = [
         label: 'How long we keep data',
         body: (
             <ul className="legal__list">
-                <li><strong>Accounts.</strong> While the account is open. After you close it, we delete it within 90 days, except records the law requires us to keep longer, such as billing records (10 years under Portuguese tax law).</li>
+                <li><strong>Accounts.</strong> While the account is open. You can delete it yourself in the app or on the website, and it is deleted straight away; <Link to="/legal/delete-account">how it works</Link>. Records the law requires us to keep longer, such as billing records (10 years under Portuguese tax law), are kept for that period.</li>
                 <li><strong>Bookings.</strong> While the business account is open, or until the business deletes them.</li>
                 <li><strong>Waitlist signups.</strong> 24 months from signup, unless you create an account.</li>
                 <li><strong>Partnership and contact messages.</strong> 24 months from your last message.</li>

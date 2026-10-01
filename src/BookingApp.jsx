@@ -22,6 +22,7 @@ const LegalNotice = lazy(() => import('./pages/app/legal/LegalNotice'))
 const Dpa = lazy(() => import('./pages/app/legal/Dpa'))
 const Subprocessors = lazy(() => import('./pages/app/legal/Subprocessors'))
 const Ranking = lazy(() => import('./pages/app/legal/Ranking'))
+const DeleteAccount = lazy(() => import('./pages/app/legal/DeleteAccount'))
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 const AuthPage = lazy(() => import('./pages/app/auth/AuthPage'))
 const ForgotPassword = lazy(() => import('./pages/app/auth/ForgotPassword'))
@@ -94,6 +95,7 @@ const BookingApp = () => (
                     <Route path="/legal/dpa" element={<Dpa />} />
                     <Route path="/legal/subprocessors" element={<Subprocessors />} />
                     <Route path="/legal/ranking" element={<Ranking />} />
+                    <Route path="/legal/delete-account" element={<DeleteAccount />} />
                     <Route path="/admin" element={<AdminPage />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/auth/confirm" element={<AuthConfirm />} />
