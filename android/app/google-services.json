@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "206819284161",
+    "project_id": "locappoint-1e27f",
+    "storage_bucket": "locappoint-1e27f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:206819284161:android:25d1ba36c1177ac250b040",
+        "android_client_info": {
+          "package_name": "com.locappoint.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGKxoIga50wDPHygC-TOP6mOzvzT7-59k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
