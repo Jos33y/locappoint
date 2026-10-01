@@ -1,0 +1,4 @@
+# Coolify builds this repo with Nixpacks. Without a start command it serves dist/ as plain files;
+# server/index.mjs serves the same files and gives every page its own title, preview card and structured data.
+[start]
+cmd = "node server/index.mjs"

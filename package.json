@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "start": "node server/index.mjs",
     "test": "node tests/run.mjs quick",
     "test:full": "node tests/run.mjs all",
     "test:flows": "node tests/run.mjs flows",
