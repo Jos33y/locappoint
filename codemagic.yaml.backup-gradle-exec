@@ -31,8 +31,6 @@ workflows:
       - name: Build signed APK and AAB
         script: |
           cd android
-          # Windows commits drop the executable bit, so set it here every time.
-          chmod +x gradlew
           ./gradlew assembleRelease bundleRelease -PversionCode=$BUILD_NUMBER -PversionName=1.0.$BUILD_NUMBER
       - name: Publish the APK to locappoint.com/app
         script: |
