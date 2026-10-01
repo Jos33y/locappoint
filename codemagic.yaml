@@ -2,7 +2,8 @@
 #
 # Set up once in Codemagic (Team settings):
 #   Code signing identities > Android keystores: upload the upload keystore, reference name "locappoint_upload"
-#   Environment variables, group "locappoint_web": VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_PUBLIC_URL=https://locappoint.com
+#   Environment variables, group "locappoint_web": VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_PUBLIC_URL=https://locappoint.com,
+#     GOOGLE_SERVICES_JSON (secret): android/app/google-services.json as base64
 #   Environment variables, group "supabase_upload": SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (secret)
 #   Integrations > Developer Portal: App Store Connect API key named "locappoint" (once the Apple account exists)
 
@@ -22,8 +23,11 @@ workflows:
     scripts:
       - name: Firebase file for notifications
         script: |
-          # Without it the app has no Firebase and notifications cannot start. Firebase console, Project settings, Your apps.
-          test -f android/app/google-services.json || { echo "android/app/google-services.json is missing. Download it from Firebase and commit it."; exit 1; }
+          # Kept out of git so scanners stay quiet. GOOGLE_SERVICES_JSON (group locappoint_web) holds the file as base64.
+          # Without it the app has no Firebase and notifications cannot start.
+          test -n "$GOOGLE_SERVICES_JSON" || { echo "GOOGLE_SERVICES_JSON is not set in Codemagic (group locappoint_web)."; exit 1; }
+          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > android/app/google-services.json
+          grep -q '"package_name": "com.locappoint.app"' android/app/google-services.json || { echo "GOOGLE_SERVICES_JSON is not the Locappoint Android file."; exit 1; }
       - name: Android SDK location
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
       - name: Install
