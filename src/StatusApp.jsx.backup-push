@@ -239,7 +239,7 @@ export default function StatusApp() {
                                     <div className="detail__item detail__item--active">Phone apps built: Android and iPhone</div>
                                     <div className="detail__item detail__item--active">Download page: locappoint.com/app</div>
                                     <div className="detail__item detail__item--active">Delete account inside the app</div>
-                                    <div className="detail__item detail__item--active">Push notifications: Android now, iPhone with the App Store</div>
+                                    <div className="detail__item detail__item--active">Push notifications</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--next">

@@ -20,10 +20,6 @@ workflows:
         - locappoint_web
         - supabase_upload
     scripts:
-      - name: Firebase file for notifications
-        script: |
-          # Without it the app has no Firebase and notifications cannot start. Firebase console, Project settings, Your apps.
-          test -f android/app/google-services.json || { echo "android/app/google-services.json is missing. Download it from Firebase and commit it."; exit 1; }
       - name: Android SDK location
         script: echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
       - name: Install

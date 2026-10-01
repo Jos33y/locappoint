@@ -1,19 +1,17 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeftRight, ChevronRight, KeyRound, LogOut, Mail, Store, Trash2 } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight, KeyRound, LogOut, Mail, Trash2 } from 'lucide-react'
 import { Button, Field } from '../../components/ui'
-import { PhoneField, parsePhone } from '../../components/ui/PhoneField'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { initials } from '../../components/business/Brand'
 import StreetGridCover from '../../components/business/StreetGridCover'
 import SaveState from '../../components/business/SaveState'
-import { useAutosave } from '../../components/business/useAutosave'
 import { DeleteAccountSheet, PasswordSheet, SettingsRow as Row, SettingsSection as Section, SignOutSheet } from '../../components/business/AccountSheets'
-import { EmailSheet } from '../../components/client/EmailSheet'
-import { BookingToast } from '../../components/client/bookings/BookingToast'
+import { useAutosave } from '../../components/business/useAutosave'
 import { SUPPORT } from '../../constants/support'
-import { PushRow } from '../../components/common/PushSetup'
+import { EmailSheet } from '../../components/client/EmailSheet'
 import '../../styles/business/settings-page.css'
 import '../../styles/client/profile-page.css'
 
@@ -23,54 +21,41 @@ const memberSince = (value) => {
     return date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 }
 
-const ClientProfile = () => {
-    const { user, userProfile, refreshProfile, hasBusiness } = useAuth()
+const SettingsPage = () => {
+    const { user, userProfile, refreshProfile } = useAuth()
+    const { notify } = useWorkspace()
     const email = user?.email || userProfile?.email || ''
-    const startPhone = parsePhone(userProfile?.phone || '', 'PT')
     const [name, setName] = useState(userProfile?.full_name || '')
-    const [phone, setPhone] = useState({ e164: startPhone.e164 || '', valid: startPhone.valid, country: startPhone.country || 'PT' })
-    const [saved, setSaved] = useState({ name: userProfile?.full_name || '', phone: startPhone.e164 || '' })
-    const [phoneTouched, setPhoneTouched] = useState(false)
+    const [savedName, setSavedName] = useState(userProfile?.full_name || '')
     const [passwordOpen, setPasswordOpen] = useState(false)
     const [signOutOpen, setSignOutOpen] = useState(false)
     const [deleteOpen, setDeleteOpen] = useState(false)
     const [emailOpen, setEmailOpen] = useState(false)
-    const [toast, setToast] = useState(null)
 
     const trimmed = name.trim()
-    const nameProblem = trimmed ? null : 'Enter the name businesses should expect'
-    const phoneProblem = phone.e164 && !phone.valid ? 'Enter a full phone number' : null
+    const nameProblem = trimmed ? null : 'Enter the name people know you by'
     const since = useMemo(() => memberSince(userProfile?.created_at || user?.created_at), [userProfile?.created_at, user?.created_at])
 
-    const changed = trimmed !== saved.name.trim() || (phone.valid ? phone.e164 : '') !== saved.phone
-    const blocked = Boolean(nameProblem || phoneProblem)
-
     const autosave = useAutosave({
-        pending: !blocked && changed ? JSON.stringify({ full_name: trimmed, phone: phone.valid ? phone.e164 : null }) : '',
+        pending: !nameProblem && trimmed !== savedName.trim() ? trimmed : '',
         ready: Boolean(user?.id),
-        blocked,
+        blocked: Boolean(nameProblem),
         save: async (value) => {
-            const row = JSON.parse(value)
-            const { data, error } = await supabase.from('users').update(row).eq('id', user.id).select('id')
+            const { data, error } = await supabase.from('users').update({ full_name: value }).eq('id', user.id).select('id')
             if (error) throw error
             if (!data || data.length === 0) throw new Error('Update returned 0 rows for user ' + user.id)
-            setSaved({ name: row.full_name, phone: row.phone || '' })
+            setSavedName(value)
             refreshProfile?.()
         },
     })
 
-    const say = (message) => {
-        setToast(message)
-        setTimeout(() => setToast(null), 3200)
-    }
-
 
     return (
-        <div className="biz-page biz-st lc-cl-profile">
+        <div className="biz-page biz-st">
             <header className="biz-page__head biz-st__head">
                 <div>
-                    <h1 className="biz-page__title">Profile</h1>
-                    <p className="biz-page__sub">Your details, sign-in and security.</p>
+                    <h1 className="biz-page__title">Settings</h1>
+                    <p className="biz-page__sub">Your account, sign-in and security.</p>
                 </div>
             </header>
 
@@ -90,25 +75,14 @@ const ClientProfile = () => {
                         </div>
                     </div>
                     <div className="biz-st__idbody">
-                        <div className="biz-st__namefield lc-cl-profile__fields">
-                            <Field label="Your name" error={trimmed !== saved.name ? nameProblem : undefined} hint="Shown to businesses on your bookings">
+                        <div className="biz-st__namefield">
+                            <Field label="Your name" error={name !== savedName ? nameProblem : undefined} hint="Your own name, not the business name">
                                 <input className="ui-input" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" />
                             </Field>
-                            <div onBlur={() => setPhoneTouched(true)}>
-                                <Field label="Phone" error={phoneTouched ? phoneProblem : undefined} hint="Filled in for you when you book, so a business can reach you">
-                                    <PhoneField
-                                        value={phone.e164}
-                                        country={phone.country}
-                                        popular={['PT', 'NG', 'GB', 'BR']}
-                                        onCountryChange={(country) => setPhone((p) => ({ ...p, country }))}
-                                        onChange={({ e164, valid }) => setPhone((p) => ({ ...p, e164, valid }))}
-                                    />
-                                </Field>
-                            </div>
-                            <SaveState state={autosave.state} onRetry={autosave.retry} blockedText={nameProblem || phoneTouched ? 'Not saved yet' : 'Saves when the phone number is complete'} />
+                            <SaveState state={autosave.state} onRetry={autosave.retry} blockedText="Enter your name to save it" />
                         </div>
                         <div className="biz-st__rule" />
-                        <Row title="Sign-in email" detail={<>You sign in with <b>{email}</b>, and booking emails go there.</>}>
+                        <Row title="Sign-in email" detail="Used to sign in and for booking emails.">
                             <Button variant="secondary" size="sm" icon={Mail} onClick={() => setEmailOpen(true)}>Change email</Button>
                         </Row>
                     </div>
@@ -125,33 +99,25 @@ const ClientProfile = () => {
                 </Section>
 
                 <Section id="alerts" title="Notifications">
-                    <Row title="Booking emails" detail="When you book, when a business confirms, moves or cancels, and reminders the day before and two hours before. They always send. Each one has a link to add it to your calendar or change it.">
-                        <span className="lc-cl-on">On</span>
-                    </Row>
-                    <div className="biz-st__rule" />
-                    <Row title="After a visit" detail="The morning after, one email to rate it and book the next one. Each has a one-tap link to stop them.">
-                        <span className="lc-cl-on">On</span>
+                    <Row title="Booking emails" detail={<>Every new booking, request, move and cancellation goes to <b>{email}</b>. They always send, so nothing slips past you.</>}>
+                        <span className="lc-cl-on">Always on</span>
                     </Row>
                     <div className="biz-st__rule" />
                     <Row title="In the app" detail="The bell at the top shows the same news, the moment it happens.">
                         <span className="lc-cl-on">On</span>
                     </Row>
                     <div className="biz-st__rule" />
-                    <PushRow Row={Row} />
-                    <div className="biz-st__rule" />
-                    <Row title="WhatsApp reminders" detail="The same reminders on WhatsApp, for people who live there more than in email.">
+                    <Row title="WhatsApp alerts" detail="The same alerts on WhatsApp, once Locappoint is on WhatsApp.">
                         <span className="biz-soon">Soon</span>
                     </Row>
                 </Section>
 
                 <Section id="account" title="Your account">
-                    <Link to="/portal" className="biz-st__linkrow">
-                        {hasBusiness ? <ArrowLeftRight size={18} aria-hidden="true" /> : <Store size={18} aria-hidden="true" />}
+                    <Link to="/client" className="biz-st__linkrow">
+                        <ArrowLeftRight size={18} aria-hidden="true" />
                         <span className="biz-st__rowtext">
-                            <span className="biz-st__rowtitle">{hasBusiness ? 'Switch to my business' : 'Start a business'}</span>
-                            <span className="biz-st__rowdetail">
-                                {hasBusiness ? 'Your calendar, services and hours, with the same account.' : 'Take bookings for your own business with the same account.'}
-                            </span>
+                            <span className="biz-st__rowtitle">Switch to Booking</span>
+                            <span className="biz-st__rowdetail">Book with other businesses using the same account.</span>
                         </span>
                         <ChevronRight size={18} aria-hidden="true" className="biz-st__chevron" />
                     </Link>
@@ -166,6 +132,8 @@ const ClientProfile = () => {
                     <span aria-hidden="true">·</span>
                     <Link to="/terms">Terms</Link>
                     <span aria-hidden="true">·</span>
+                    <Link to="/legal/dpa">Data processing agreement</Link>
+                    <span aria-hidden="true">·</span>
                     <span>Support: <a href={`mailto:${SUPPORT.email}`}>{SUPPORT.email}</a></span>
                 </p>
             </div>
@@ -174,7 +142,7 @@ const ClientProfile = () => {
                 open={passwordOpen}
                 email={email}
                 onClose={() => setPasswordOpen(false)}
-                onDone={() => { setPasswordOpen(false); say('Password changed') }}
+                onDone={() => { setPasswordOpen(false); notify('Password changed') }}
             />
             <SignOutSheet open={signOutOpen} onClose={() => setSignOutOpen(false)} />
             <DeleteAccountSheet open={deleteOpen} onClose={() => setDeleteOpen(false)} />
@@ -182,11 +150,10 @@ const ClientProfile = () => {
                 open={emailOpen}
                 current={email}
                 onClose={() => setEmailOpen(false)}
-                onSent={(next) => { setEmailOpen(false); say(`Check ${next} to confirm the change`) }}
+                onSent={(next) => { setEmailOpen(false); notify(`Check ${next} to confirm the change`) }}
             />
-            <BookingToast message={toast} />
         </div>
     )
 }
 
-export default ClientProfile
+export default SettingsPage

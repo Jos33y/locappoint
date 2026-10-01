@@ -12,6 +12,7 @@ import { DeleteAccountSheet, PasswordSheet, SettingsRow as Row, SettingsSection 
 import { useAutosave } from '../../components/business/useAutosave'
 import { SUPPORT } from '../../constants/support'
 import { EmailSheet } from '../../components/client/EmailSheet'
+import { PushRow } from '../../components/common/PushSetup'
 import '../../styles/business/settings-page.css'
 import '../../styles/client/profile-page.css'
 
@@ -106,6 +107,8 @@ const SettingsPage = () => {
                     <Row title="In the app" detail="The bell at the top shows the same news, the moment it happens.">
                         <span className="lc-cl-on">On</span>
                     </Row>
+                    <div className="biz-st__rule" />
+                    <PushRow Row={Row} />
                     <div className="biz-st__rule" />
                     <Row title="WhatsApp alerts" detail="The same alerts on WhatsApp, once Locappoint is on WhatsApp.">
                         <span className="biz-soon">Soon</span>

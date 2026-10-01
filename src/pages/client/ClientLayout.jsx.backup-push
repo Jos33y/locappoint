@@ -9,7 +9,6 @@ import { Sheet } from '../../components/ui'
 import { InboxProvider } from '../../components/inbox/InboxContext'
 import { InboxBell } from '../../components/inbox/InboxBell'
 import { loadNextBooking } from '../../services/booking'
-import PushSetup from '../../components/common/PushSetup'
 import '../../styles/business/shell.css'
 import '../../styles/client/client-shell.css'
 
@@ -150,7 +149,6 @@ const ClientLayout = () => {
                     </div>
                 </Sheet>
             </div>
-            <PushSetup audience="client" />
         </InboxProvider>
     )
 }

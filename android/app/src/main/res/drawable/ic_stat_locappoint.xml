@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status bar icon: the Locappoint pin with the appointment slot cut out. Android draws it in white. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M50,4C30,4 14,20 14,40C14,51 18,60 24,68L50,98L76,68C82,60 86,51 86,40C86,20 70,4 50,4ZM28,22L72,22L72,54L28,54ZM34,30L54,30L54,35L34,35ZM34,40L62,40L62,45L34,45Z" />
+</vector>

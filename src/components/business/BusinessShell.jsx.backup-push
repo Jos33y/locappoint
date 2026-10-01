@@ -16,7 +16,6 @@ import ShareLink from './ShareLink'
 import Tour from './Tour'
 import CommandPalette from './CommandPalette'
 import HubNav from './HubNav'
-import PushSetup from '../common/PushSetup'
 import AccountMenu from './AccountMenu'
 import '../../styles/business/shell.css'
 
@@ -394,7 +393,6 @@ const BusinessShell = () => {
                         <NewBookingSheet open={Boolean(newBooking)} prefill={newBooking} onClose={closeNewBooking} />
                         <BookingDetailSheet booking={openBookingRow} onClose={closeBooking} />
                         <Tour open={tourOpen} onClose={closeTour} />
-                        <PushSetup audience="business" hold={tourOpen || (!staffOnly && !tourSeen())} />
                         <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} actions={paletteActions} businessId={businessId} staff={staffOnly} />
                     </WorkspaceContext.Provider>
                 )}

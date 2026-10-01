@@ -13,7 +13,6 @@ import { DeleteAccountSheet, PasswordSheet, SettingsRow as Row, SettingsSection 
 import { EmailSheet } from '../../components/client/EmailSheet'
 import { BookingToast } from '../../components/client/bookings/BookingToast'
 import { SUPPORT } from '../../constants/support'
-import { PushRow } from '../../components/common/PushSetup'
 import '../../styles/business/settings-page.css'
 import '../../styles/client/profile-page.css'
 
@@ -136,8 +135,6 @@ const ClientProfile = () => {
                     <Row title="In the app" detail="The bell at the top shows the same news, the moment it happens.">
                         <span className="lc-cl-on">On</span>
                     </Row>
-                    <div className="biz-st__rule" />
-                    <PushRow Row={Row} />
                     <div className="biz-st__rule" />
                     <Row title="WhatsApp reminders" detail="The same reminders on WhatsApp, for people who live there more than in email.">
                         <span className="biz-soon">Soon</span>

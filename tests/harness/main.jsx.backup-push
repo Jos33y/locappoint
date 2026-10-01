@@ -19,7 +19,6 @@ import '@src/styles/forms.css'
 import '@src/styles/ui.css'
 import { AuthContext } from '@src/context_definition/AuthContextDefinition'
 import BusinessShell from '@src/components/business/BusinessShell'
-import PushSetup from '@src/components/common/PushSetup'
 import Today from '@src/pages/business/Today'
 import Calendar from '@src/pages/business/Calendar'
 import Planned from '@src/pages/business/Planned'
@@ -74,21 +73,6 @@ window.__locaReportInDev = true
 // ?native=1 behaves like the phone apps; ?release=none or ?release=1 fakes the Android download note.
 if (params.get('native')) window.__locaNative = params.get('native') === '1' ? true : params.get('native')
 if (params.get('device')) window.__locaDevice = params.get('device')
-// ?push=prompt|granted|denied stands in for the phone's notification permission; ?pushanswer= is what the person picks.
-if (params.get('push')) {
-  const handlers = {}
-  let state = params.get('push')
-  window.__pushCalls = []
-  window.__locaPush = {
-    checkPermissions: async () => ({ receive: state }),
-    requestPermissions: async () => { window.__pushCalls.push('request'); state = params.get('pushanswer') || 'granted'; return { receive: state } },
-    register: async () => { window.__pushCalls.push('register'); handlers.registration?.({ value: 'fake-fcm-token-0123456789abcdef' }) },
-    createChannel: async (c) => { window.__pushCalls.push(`channel:${c.id}`) },
-    addListener: async (name, fn) => { handlers[name] = fn; return { remove() {} } },
-  }
-  window.__pushTap = (link) => handlers.pushNotificationActionPerformed?.({ notification: { data: { link } } })
-  try { if (params.get('asked') === '1') localStorage.setItem('locappoint_push_asked', '1'); else localStorage.removeItem('locappoint_push_asked') } catch { /* noop */ }
-}
 if (params.has('installed')) window.__locaAppVersion = params.get('installed')
 if (params.has('release')) window.__locaRelease = params.get('release') === 'none' ? null : { version: '1.0.7', file: 'locappoint-1.0.7.apk', size: 6291456 }
 window.__QRCode = QRCode
@@ -108,7 +92,7 @@ const Auth = ({ children }) => {
   const [mode, setMode] = useState('business')
   const value = useMemo(() => ({
     user: params.has('guest') ? null : { id: 'u1', email: params.get('email') || 'milesfarra@gmail.com' },
-    userProfile: params.has('guest') ? null : { id: 'u1', email: params.get('email') || 'milesfarra@gmail.com', full_name: params.has('noname') ? '' : 'Miles Farra', created_at: '2026-03-14T10:00:00Z', ...(params.get('pushoff') === '1' ? { push_enabled: false } : {}) },
+    userProfile: params.has('guest') ? null : { id: 'u1', email: params.get('email') || 'milesfarra@gmail.com', full_name: params.has('noname') ? '' : 'Miles Farra', created_at: '2026-03-14T10:00:00Z' },
     business: params.has('nobiz') ? null : params.get('staff') === '1' ? { ...DATA.businesses[0], staff: true } : DATA.businesses[0],
     loading: false,
     mode, setMode,
@@ -150,7 +134,7 @@ const App = () => (
           <Route path="setup" element={<Setup />} />
           <Route path="crash" element={<RouteBoundary><Crash /></RouteBoundary>} />
         </Route>
-        <Route path="/client" element={<><ClientHome /><PushSetup audience="client" /></>} />
+        <Route path="/client" element={<ClientHome />} />
         <Route path="/client/appointments" element={<ClientAppointments />} />
         <Route path="/client/search" element={<ClientSearch />} />
         <Route path="/client/profile" element={<ClientProfile />} />
