@@ -10,6 +10,7 @@ import {
     Building2,
     Settings,
     Bug,
+    Gauge,
     ArrowLeft,
     LogOut
 } from 'lucide-react'
@@ -47,6 +48,14 @@ const AdminSidebar = ({ activeSection, setActiveSection, counts, onClose, onLogo
                     <nav className="admin-sidebar__nav">
                         <button
                             type="button"
+                            className={`admin-sidebar__item ${activeSection === 'overview' ? 'admin-sidebar__item--active' : ''}`}
+                            onClick={() => goTo('overview')}
+                        >
+                            <Gauge size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
+                            <span className="admin-sidebar__item-label">Overview</span>
+                        </button>
+                        <button
+                            type="button"
                             className={`admin-sidebar__item ${activeSection === 'analytics' ? 'admin-sidebar__item--active' : ''}`}
                             onClick={() => goTo('analytics')}
                         >
@@ -78,21 +87,17 @@ const AdminSidebar = ({ activeSection, setActiveSection, counts, onClose, onLogo
                 <div>
                     <span className="admin-sidebar__group-label">Operations</span>
                     <nav className="admin-sidebar__nav">
-                        <button type="button" className="admin-sidebar__item" disabled>
-                            <UserCog size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
-                            <span className="admin-sidebar__item-label">Beta Users</span>
-                            <span className="admin-sidebar__item-soon">Soon</span>
-                        </button>
-                        <button type="button" className="admin-sidebar__item" disabled>
-                            <ShoppingBag size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
-                            <span className="admin-sidebar__item-label">Bookings</span>
-                            <span className="admin-sidebar__item-soon">Soon</span>
-                        </button>
-                        <button type="button" className="admin-sidebar__item" disabled>
-                            <Building2 size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
-                            <span className="admin-sidebar__item-label">Businesses</span>
-                            <span className="admin-sidebar__item-soon">Soon</span>
-                        </button>
+                        {[['businesses', Building2, 'Businesses'], ['bookings', ShoppingBag, 'Bookings'], ['people', UserCog, 'People']].map(([key, Icon, label]) => (
+                            <button
+                                key={key}
+                                type="button"
+                                className={`admin-sidebar__item ${activeSection === key ? 'admin-sidebar__item--active' : ''}`}
+                                onClick={() => goTo(key)}
+                            >
+                                <Icon size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
+                                <span className="admin-sidebar__item-label">{label}</span>
+                            </button>
+                        ))}
                     </nav>
                 </div>
 

@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client'
 import { useMemo, useState } from 'react'
-import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, useLocation, useParams } from 'react-router-dom'
 import '@fontsource/inter/latin-400.css'
 import '@fontsource/inter/latin-500.css'
 import '@fontsource/inter/latin-600.css'
@@ -53,6 +53,7 @@ import OfflineNotice from '@src/components/common/OfflineNotice'
 import UpdateNotice from '@src/components/common/UpdateNotice'
 import DeleteAccount from '@src/pages/app/legal/DeleteAccount'
 import ErrorsTab from '@src/pages/admin/tabs/ErrorsTab'
+import AdminDash from '@src/pages/admin/AdminDash'
 import AppDownload from '@src/pages/app/AppDownload'
 import AuthPage from '@src/pages/app/auth/AuthPage'
 import { installErrorHandlers } from '@src/services/errors'
@@ -101,6 +102,13 @@ const Crash = () => {
 }
 const fmtDate = (v) => new Date(v).toLocaleDateString('en-GB')
 const fmtTime = (v) => new Date(v).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+
+// One admin section on its own, for tests: /admin-view/overview, /admin-view/bookings and so on.
+const AdminView = () => {
+  const { section } = useParams()
+  const [active, setActive] = useState(section)
+  return <div className="admin"><main className="admin__content"><AdminDash activeSection={active} setActiveSection={setActive} loading={false} formatDate={fmtDate} formatTime={fmtTime} /></main><span id="__admin" hidden>{active}</span></div>
+}
 
 const Where = () => { const l = useLocation(); window.__path = l.pathname; return <span id="__path" hidden>{l.pathname}</span> }
 
@@ -160,6 +168,7 @@ const App = () => (
         <Route path="/app" element={<AppDownload />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/legal/delete-account" element={<DeleteAccount />} />
+        <Route path="/admin-view/:section" element={<AdminView />} />
         <Route path="/admin-errors" element={<div className="admin"><ErrorsTab formatDate={fmtDate} formatTime={fmtTime} /></div>} />
         <Route path="/:businessSlug" element={<PublicBusinessPage />} />
       </Routes>

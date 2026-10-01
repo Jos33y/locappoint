@@ -28,10 +28,11 @@ import apps from './suites/apps.mjs'
 import account from './suites/account.mjs'
 import push from './suites/push.mjs'
 import seo from './suites/seo.mjs'
+import admin from './suites/admin.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const [target = 'quick', filter] = process.argv.slice(2)
-const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage], ['services and hours', servicesHours], ['settings', settings], ['notifications', notifications], ['insights', insights], ['rebooking', rebook], ['reviews', reviews], ['business audit', audit], ['overview', overview], ['client home', clientHome], ['referrals', referrals], ['clients', clients], ['team', team], ['time', time], ['addons', addons], ['money', money], ['hardening', hardening], ['apps', apps], ['account', account], ['push', push], ['seo', seo]] }
+const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage], ['services and hours', servicesHours], ['settings', settings], ['notifications', notifications], ['insights', insights], ['rebooking', rebook], ['reviews', reviews], ['business audit', audit], ['overview', overview], ['client home', clientHome], ['referrals', referrals], ['clients', clients], ['team', team], ['time', time], ['addons', addons], ['money', money], ['hardening', hardening], ['apps', apps], ['account', account], ['push', push], ['seo', seo], ['admin', admin]] }
 SUITES.emails = [['emails', emails]]
 SUITES.all = [...SUITES.flows, ...SUITES.emails, ...SUITES.layout]
 SUITES.quick = [...SUITES.flows, ...SUITES.emails, ['layout, 4 key screens', layout]]

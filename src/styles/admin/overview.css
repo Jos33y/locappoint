@@ -1,0 +1,291 @@
+/* Admin overview, businesses, bookings and people. Prefix adm. */
+
+.adm-quiet {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.adm-empty,
+.adm-pad {
+    padding: var(--space-6) var(--space-4);
+}
+
+.adm-sub {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.adm-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--azure-link);
+    font: inherit;
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+}
+
+.adm-bad {
+    color: var(--danger);
+    font-family: var(--font-mono);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Needs a look */
+.adm-attention {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.adm-attention li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--signal);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.adm-attention li svg {
+    flex: none;
+    color: var(--signal);
+}
+
+.adm-attention li span {
+    flex: 1;
+}
+
+.adm-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Label and value pairs inside panels */
+.adm-facts {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+.adm-facts > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.adm-facts > div:last-child {
+    border-bottom: 0;
+}
+
+.adm-facts dt {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.adm-facts dd {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    text-align: right;
+}
+
+.adm-facts--row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3) var(--space-6);
+}
+
+.adm-facts--row > div {
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: 0;
+    border: 0;
+}
+
+.adm-facts--row dd {
+    font-family: var(--font-body);
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.adm-messages {
+    margin-top: var(--space-3);
+}
+
+/* Filters and search */
+.adm-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.adm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.adm-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 32px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full);
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.adm-chip span {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+}
+
+.adm-chip.is-on {
+    border-color: var(--azure);
+    color: var(--text-primary);
+}
+
+.adm-chip:focus-visible,
+.adm-search:focus-within {
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+}
+
+.adm-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: min(100%, 300px);
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    color: var(--text-muted);
+}
+
+.adm-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.85rem;
+}
+
+/* Tables */
+.adm-scroll {
+    overflow-x: auto;
+}
+
+.adm-table {
+    min-width: 760px;
+    table-layout: auto;
+}
+
+.adm-table td,
+.adm-table th {
+    white-space: nowrap;
+}
+
+.adm-w-wide {
+    width: 22%;
+}
+
+.adm-table .cell-user__name,
+.adm-table .cell-user__email {
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.adm-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 var(--space-2);
+    border: 1px solid currentColor;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: var(--font-weight-semibold);
+}
+
+.adm-pill--success { color: var(--success); }
+.adm-pill--warning { color: var(--signal); }
+.adm-pill--danger { color: var(--danger); }
+.adm-pill--info { color: var(--azure-link); }
+.adm-pill--muted { color: var(--text-muted); }
+
+.adm-steps {
+    color: var(--signal);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+}
+
+.adm-steps.is-done {
+    color: var(--success);
+}
+
+.adm-detail td {
+    padding: var(--space-4) var(--space-4) var(--space-5);
+    background: var(--surface-2);
+    white-space: normal;
+}
+
+.adm-pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+@media (max-width: 1100px) {
+    .adm-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .adm-facts--row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .adm-kpis {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .adm-search {
+        width: 100%;
+    }
+}
+
+/* Labels here are written as sentences already. */
+.adm-panels .bar-list__label-text {
+    text-transform: none;
+}

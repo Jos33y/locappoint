@@ -1,5 +1,5 @@
 // AdminPage - Auth gate, data layer, layout assembly. Single source of truth for admin state.
-// Section persisted in URL hash. /admin#waitlist, /admin#partnership. Analytics is default (no hash).
+// Section persisted in URL hash. /admin#waitlist, /admin#bookings. Overview is default (no hash).
 
 import { useState, useEffect, useCallback } from 'react'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
@@ -10,14 +10,18 @@ import AdminDash from './AdminDash'
 import '../../styles/admin/admin.css'
 
 const SECTION_LABELS = {
+    overview: 'Overview',
+    businesses: 'Businesses',
+    bookings: 'Bookings',
+    people: 'People',
     analytics: 'Analytics',
     waitlist: 'Waitlist',
     partnership: 'Partnerships',
     errors: 'App errors'
 }
 
-const VALID_SECTIONS = ['analytics', 'waitlist', 'partnership', 'errors']
-const DEFAULT_SECTION = 'analytics'
+const VALID_SECTIONS = ['overview', 'businesses', 'bookings', 'people', 'analytics', 'waitlist', 'partnership', 'errors']
+const DEFAULT_SECTION = 'overview'
 
 const getSectionFromHash = () => {
     if (typeof window === 'undefined') return DEFAULT_SECTION
@@ -567,6 +571,7 @@ const AdminPage = () => {
                 <main className="admin__content">
                     <AdminDash
                         activeSection={activeSection}
+                        setActiveSection={setActiveSection}
                         loading={dataLoading}
                         error={dataError}
                         onRetry={fetchAllData}

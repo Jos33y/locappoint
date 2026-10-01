@@ -185,6 +185,48 @@ const clientRpc = {
   book_appointment: () => 'new-booking',
 }
 
+// Admin views (admin.sql). ?adminempty=1 shows a brand-new platform.
+const adminEmpty = () => new URLSearchParams(window.location.search).get('adminempty') === '1'
+const adminDays = () => Array.from({ length: 30 }, (_, i) => ({ day: new Date(Date.now() - (29 - i) * 86400000).toISOString().slice(0, 10), bookings: i % 5, signups: i % 3 }))
+const ADMIN_BIZ = [
+  { id: 'b1', name: 'Femtos Barbearia', slug: 'femtos-barbearia', category: 'barbershop', category_detail: null, city: 'Lisbon', country: 'PT', is_active: true, is_demo: true, created_at: '2026-08-01T10:00:00Z', launched_at: '2026-08-02T10:00:00Z', owner_name: 'Miles Farra', owner_email: 'milesfarra@gmail.com', owner_phone: '+351 912 345 678', has_logo: true, has_description: true, services: 6, has_hours: true, team: 2, bookings: 40, bookings_30d: 12, upcoming: 3, last_booking_at: '2026-09-30T10:00:00Z', rating: 4.8, reviews: 12, owner_last_seen: '2026-09-30T10:00:00Z' },
+  { id: 'b2', name: 'Nove Nails', slug: 'nove-nails', category: 'nails', category_detail: null, city: 'Porto', country: 'PT', is_active: true, is_demo: false, created_at: '2026-09-28T10:00:00Z', launched_at: null, owner_name: 'Ines Costa', owner_email: 'ines@nove.pt', owner_phone: null, has_logo: false, has_description: false, services: 2, has_hours: true, team: 1, bookings: 0, bookings_30d: 0, upcoming: 0, last_booking_at: null, rating: null, reviews: 0, owner_last_seen: null },
+  { id: 'b3', name: 'Lekki Cuts', slug: 'lekki-cuts', category: 'barbershop', category_detail: null, city: 'Lagos', country: 'NG', is_active: true, is_demo: false, created_at: '2026-09-10T10:00:00Z', launched_at: '2026-09-12T10:00:00Z', owner_name: 'Tunde Bello', owner_email: 'tunde@lekki.ng', owner_phone: '+234 800 000 0000', has_logo: true, has_description: true, services: 4, has_hours: true, team: 3, bookings: 9, bookings_30d: 9, upcoming: 2, last_booking_at: '2026-09-29T10:00:00Z', rating: null, reviews: 0, owner_last_seen: '2026-09-29T10:00:00Z' },
+]
+const ADMIN_BOOKINGS = Array.from({ length: 63 }, (_, i) => ({
+  id: `ab${i}`, business: i % 2 ? 'Lekki Cuts' : 'Femtos Barbearia', slug: 'x', is_demo: i % 2 === 0, service: 'Haircut',
+  client_name: i === 0 ? 'Ana Ferreira' : `Client ${i}`, client_email: i === 0 ? 'ana@mail.pt' : `c${i}@mail.com`, has_account: i % 3 === 0,
+  date: '2026-10-02', time: '10:30', status: ['confirmed', 'pending', 'completed', 'no_show', 'cancelled'][i % 5], source: i % 4 ? 'web' : 'manual',
+  price: i % 2 ? 15000 : 18, currency: i % 2 ? 'NGN' : 'EUR', cancelled_by: i % 5 === 4 ? 'client' : null, created_at: '2026-09-30T10:00:00Z',
+}))
+const ADMIN_PEOPLE = [
+  { id: 'u1', name: 'Miles Farra', email: 'milesfarra@gmail.com', type: 'business', is_admin: true, joined_at: '2026-03-14T10:00:00Z', last_sign_in_at: '2026-09-30T10:00:00Z', providers: ['email', 'google'], business: 'Femtos Barbearia', bookings: 0, app: { platform: 'android', version: '1.0.7', seen_at: '2026-09-30T10:00:00Z' }, push_phones: 1 },
+  { id: 'u2', name: 'Ana Ferreira', email: 'ana@mail.pt', type: 'client', is_admin: false, joined_at: '2026-09-20T10:00:00Z', last_sign_in_at: null, providers: ['email'], business: null, bookings: 3, app: null, push_phones: 0 },
+]
+const page = (rows, a) => {
+  const q = (a.p_search || '').toLowerCase()
+  const hit = rows.filter((r) => (!q || JSON.stringify(r).toLowerCase().includes(q)) && (!a.p_status || r.status === a.p_status) && (!a.p_type || r.type === a.p_type))
+  return { total: hit.length, rows: hit.slice(a.p_offset || 0, (a.p_offset || 0) + (a.p_limit || 50)) }
+}
+export const adminRpc = {
+  admin_overview: () => (adminEmpty() ? {
+    businesses: { live: 0, setup: 0, paused: 0, new_7d: 0, by_city: [] },
+    bookings: { today: 0, next_7d: 0, waiting: 0, made_7d: 0, made_30d: 0, completed_30d: 0, no_show_30d: 0, cancelled_30d: 0, value_30d: {}, by_source_30d: [] },
+    people: { owners: 0, clients: 0, new_7d: 0, new_30d: 0, deleted_30d: 0 },
+    apps: { people_30d: [], phones_with_push: {} }, messages_7d: {}, errors_7d: { distinct: 0, times: 0 }, waitlist: 0, daily: adminDays().map((d) => ({ ...d, bookings: 0, signups: 0 })),
+  } : {
+    businesses: { live: 1, setup: 1, paused: 0, new_7d: 1, by_city: [{ city: 'Lisbon', count: 1 }, { city: 'Porto', count: 1 }, { city: 'Lagos', count: 1 }] },
+    bookings: { today: 4, next_7d: 11, waiting: 2, made_7d: 9, made_30d: 31, completed_30d: 18, no_show_30d: 2, cancelled_30d: 3, value_30d: { EUR: 540, NGN: 135000 }, by_source_30d: [{ source: 'web', count: 26 }, { source: 'manual', count: 5 }] },
+    people: { owners: 3, clients: 21, new_7d: 4, new_30d: 12, deleted_30d: 1 },
+    apps: { people_30d: [{ platform: 'android', version: '1.0.7', people: 5 }, { platform: 'android', version: '1.0.2', people: 1 }], phones_with_push: { android: 4 } },
+    messages_7d: { email: { sent: 40, failed: 1 }, push: { sent: 12, skipped: 3 } },
+    errors_7d: { distinct: 2, times: 16 }, waitlist: 214, daily: adminDays(),
+  }),
+  admin_businesses: () => (adminEmpty() ? [] : ADMIN_BIZ),
+  admin_bookings: (a) => page(adminEmpty() ? [] : ADMIN_BOOKINGS, a),
+  admin_people: (a) => page(adminEmpty() ? [] : ADMIN_PEOPLE, a),
+}
+
 export const calls = []
 window.__calls = calls
 
@@ -231,7 +273,7 @@ const builder = (table) => {
 
 export const supabase = {
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),
