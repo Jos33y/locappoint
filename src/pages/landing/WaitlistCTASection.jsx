@@ -60,7 +60,7 @@ const WaitlistCTASection = ({ onWaitlistClick }) => {
                     </form>
 
                     <ul className="cta__trust">
-                        <li>{t('cta.trust1', 'Free for 12 months for first 100 Lisbon businesses')}</li>
+                        <li>{t('cta.trust1', 'Free for 12 months for first 100 Porto businesses')}</li>
                         <li>{t('cta.trust2', 'No credit card, no commission')}</li>
                         <li>{t('cta.trust3', 'GDPR compliant, your data stays in the EU')}</li>
                     </ul>

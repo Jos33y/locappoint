@@ -1,7 +1,7 @@
 {
   "name": "Locappoint",
   "short_name": "Locappoint",
-  "description": "The booking platform for local businesses in Lisbon, Porto, and Lagos.",
+  "description": "The booking platform for local businesses in Porto, Lisbon, and Lagos.",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

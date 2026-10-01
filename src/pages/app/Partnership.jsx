@@ -245,7 +245,7 @@ const Partnership = () => {
                                             name="city"
                                             value={formData.city}
                                             onChange={handleChange}
-                                            placeholder="Lisbon, Porto, Lagos..."
+                                            placeholder="Porto, Lisbon, Lagos..."
                                         />
                                     </div>
                                     <div className="form-field">

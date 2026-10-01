@@ -739,7 +739,7 @@ const BusinessPage = () => {
                                 <Field label="Country">
                                     <Picker
                                         value={form.country}
-                                        onChange={(country) => set({ country, city: country === 'PT' ? 'Lisbon' : country === 'NG' ? 'Lagos' : '', cityOther: '' })}
+                                        onChange={(country) => set({ country, city: country === 'PT' ? 'Porto' : country === 'NG' ? 'Lagos' : '', cityOther: '' })}
                                         options={COUNTRY_OPTIONS}
                                         popular={POPULAR_COUNTRIES}
                                         searchable
@@ -777,7 +777,7 @@ const BusinessPage = () => {
                             </div>
                             {city && !inLaunchArea(form.country, city) && (
                                 <p className="biz-bp__note" role="note">
-                                    We are opening in Greater Lisbon first. Your page works anywhere, and we will be in touch as we grow into {city}.
+                                    We are opening in Porto and Lisbon first. Your page works anywhere, and we will be in touch as we grow into {city}.
                                 </p>
                             )}
                             <Field label="Neighbourhood" optional hint={form.neighbourhood.trim() ? undefined : 'Like Anjos or Baixa'}>

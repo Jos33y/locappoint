@@ -38,7 +38,7 @@ const emptyDetails = {
     category: '',
     categoryDetail: '',
     country: 'PT',
-    city: 'Lisbon',
+    city: 'Porto',
     cityOther: '',
     neighbourhood: '',
     phone: '',
@@ -563,7 +563,7 @@ const Setup = () => {
                                             value={details.country}
                                             onChange={(country) => setDetail({
                                                 country,
-                                                city: country === 'PT' ? 'Lisbon' : country === 'NG' ? 'Lagos' : '',
+                                                city: country === 'PT' ? 'Porto' : country === 'NG' ? 'Lagos' : '',
                                                 cityOther: '',
                                                 ...(details.phone ? {} : { phoneCountry: country }),
                                             })}
@@ -620,7 +620,7 @@ const Setup = () => {
                                 </div>
                                 {cityOf(details) && !inLaunchArea(details.country, cityOf(details)) && (
                                     <p className="lc-setup__note" role="note">
-                                        We are opening in Greater Lisbon first. Your page works anywhere, and we will be in touch as we grow into {cityOf(details)}.
+                                        We are opening in Porto and Lisbon first. Your page works anywhere, and we will be in touch as we grow into {cityOf(details)}.
                                     </p>
                                 )}
 

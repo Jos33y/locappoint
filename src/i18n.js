@@ -163,7 +163,7 @@ const resources = {
                 becomePartner: 'Become a Partner',
                 businessDashboard: 'Business Dashboard',
                 contact: 'Contact',
-                location: 'Lisbon, Portugal',
+                location: 'Porto, Portugal',
                 allRights: 'All rights reserved.',
                 privacy: 'Privacy Policy',
                 terms: 'Terms of Service'
@@ -330,7 +330,7 @@ const resources = {
                 becomePartner: 'Tornar-se Parceiro',
                 businessDashboard: 'Painel de Negócios',
                 contact: 'Contacto',
-                location: 'Lisboa, Portugal',
+                location: 'Porto, Portugal',
                 allRights: 'Todos os direitos reservados.',
                 privacy: 'Política de Privacidade',
                 terms: 'Termos de Serviço'

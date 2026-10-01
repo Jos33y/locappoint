@@ -11,7 +11,7 @@ const sections = [
                 <ul className="legal__list">
                     <li><strong>Active pages only.</strong> A business appears only while its page is active.</li>
                     <li><strong>Join date.</strong> Businesses appear in the order they joined Locappoint, earliest first.</li>
-                    <li><strong>Launch cohort.</strong> Browse currently shows our first Lisbon cohort, up to ten businesses.</li>
+                    <li><strong>Launch cohort.</strong> Browse currently shows our first Porto cohort, up to ten businesses.</li>
                 </ul>
             </>
         ),

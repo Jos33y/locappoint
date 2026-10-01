@@ -48,7 +48,7 @@ const FounderNote = () => {
                                 {t('founder.name', 'Vincent Onu')}
                             </div>
                             <div className="founder__role">
-                                {t('founder.role', 'Co-founder, Locappoint \u00B7 CEO, FlowleXx Group \u00B7 Lisbon')}
+                                {t('founder.role', 'Co-founder, Locappoint \u00B7 CEO, FlowleXx Group \u00B7 Porto')}
                             </div>
                         </div>
                     </footer>

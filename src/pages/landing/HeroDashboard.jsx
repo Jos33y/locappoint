@@ -49,7 +49,7 @@ const HeroDashboard = () => {
                             <span className="hero-dashboard__business-name">{t('heroDashboard.businessName', 'Beauty Studio')}</span>
                             <span className="hero-dashboard__business-location">
                                 <MapPin size={10} />
-                                {t('heroDashboard.location', 'Lisbon, PT')}
+                                {t('heroDashboard.location', 'Porto, PT')}
                             </span>
                         </div>
                     </div>

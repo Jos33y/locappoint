@@ -19,8 +19,8 @@ const fold = (text) => (text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').tri
 const inCity = (place, names) => names.includes(fold(place.city))
 
 const CITIES = [
-    { name: 'Lisbon', match: ['lisbon', 'lisboa'], later: 'First up' },
-    { name: 'Porto', match: ['porto', 'oporto'], later: 'Next' },
+    { name: 'Porto', match: ['porto', 'oporto'], later: 'First up' },
+    { name: 'Lisbon', match: ['lisbon', 'lisboa'], later: 'Next' },
     { name: 'Lagos', match: ['lagos'], later: 'Later' },
 ]
 
@@ -79,8 +79,8 @@ const Businesses = () => {
     const ready = state.status === 'ready'
     const places = state.places
     const counts = useMemo(() => CITIES.map((c) => places.filter((p) => inCity(p, c.match)).length), [places])
-    const lisbon = counts[0]
-    const cohortOpen = lisbon < COHORT_SIZE
+    const first = counts[0]
+    const cohortOpen = first < COHORT_SIZE
 
     return (
         <div className="lc-br">
@@ -89,10 +89,10 @@ const Businesses = () => {
             <main className="lc-br__main">
                 <section className="lc-br-hero">
                     <div className="lc-br-hero__text">
-                        <p className="lc-br-hero__kicker">Lisbon, first cohort</p>
-                        <h1 className="lc-br-hero__title">Book Lisbon's first businesses on Locappoint.</h1>
+                        <p className="lc-br-hero__kicker">Porto, first cohort</p>
+                        <h1 className="lc-br-hero__title">Book Porto's first businesses on Locappoint.</h1>
                         <p className="lc-br-hero__lede">
-                            A first group of ten Lisbon businesses taking bookings through Locappoint. Pick a place, choose a time and you are booked in under a minute.
+                            A first group of ten Porto businesses taking bookings through Locappoint. Pick a place, choose a time and you are booked in under a minute.
                         </p>
                     </div>
 
@@ -100,15 +100,15 @@ const Businesses = () => {
                         {ready ? (
                             <>
                                 <p className="lc-br-count__figure">
-                                    <b>{lisbon}</b>
+                                    <b>{first}</b>
                                     {cohortOpen && <span>of {COHORT_SIZE}</span>}
                                 </p>
                                 <p className="lc-br-count__label">
                                     {cohortOpen
-                                        ? `${lisbon === 1 ? 'place' : 'places'} taking bookings in Lisbon`
-                                        : 'places taking bookings in Lisbon. The first cohort is full.'}
+                                        ? `${first === 1 ? 'place' : 'places'} taking bookings in Porto`
+                                        : 'places taking bookings in Porto. The first cohort is full.'}
                                 </p>
-                                {cohortOpen && <CohortSlots filled={lisbon} />}
+                                {cohortOpen && <CohortSlots filled={first} />}
                             </>
                         ) : (
                             <>
@@ -170,7 +170,7 @@ const Businesses = () => {
 
                 {!hasBusiness && !(ready && places.length === 0) && (
                     <section className="lc-br-cta">
-                        <h2>Run a business in Lisbon?</h2>
+                        <h2>Run a business in Porto?</h2>
                         <p>Get your own booking page on Locappoint. Free for the first twelve months.</p>
                         <div className="lc-br-cta__buttons">
                             <Button to={join.pathname} state={join.state} iconRight={ArrowRight}>Get your booking page</Button>

@@ -7,7 +7,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import './Cta.css'
 
 
-// Cohort progress. Update as Vincent closes Lisbon SMEs.
+// Cohort progress. Update as Vincent closes Porto SMEs.
 const COHORT_ONBOARDED = 3
 const COHORT_TARGET = 10
 
@@ -38,7 +38,7 @@ const Cta = () => {
                             <span className="cta__city-dot cta__city-dot--live"></span>
                             Live
                         </span>
-                        <span className="cta__city-name">Lisbon</span>
+                        <span className="cta__city-name">Porto</span>
                         <span className="cta__city-note">Onboarding cohort 1</span>
                     </div>
 
@@ -47,8 +47,8 @@ const Cta = () => {
                             <span className="cta__city-dot cta__city-dot--next"></span>
                             Next
                         </span>
-                        <span className="cta__city-name">Porto</span>
-                        <span className="cta__city-note">After 10 Lisbon businesses live</span>
+                        <span className="cta__city-name">Lisbon</span>
+                        <span className="cta__city-note">After 10 Porto businesses live</span>
                     </div>
 
                     <div className="cta__city">
@@ -57,13 +57,13 @@ const Cta = () => {
                             Soon
                         </span>
                         <span className="cta__city-name">Lagos</span>
-                        <span className="cta__city-note">Q4 2026</span>
+                        <span className="cta__city-note">After Lisbon</span>
                     </div>
                 </div>
 
                 <div className="cta__core">
                     <h2 className="cta__title">
-                        Be one of the <span className="cta__title-accent">first ten</span> in Lisbon.
+                        Be one of the <span className="cta__title-accent">first ten</span> in Porto.
                     </h2>
                     <p className="cta__lede">
                         First cohort is open. Twelve months free. Nineteen euros a month flat after. Set up in ten minutes.
@@ -82,7 +82,7 @@ const Cta = () => {
 
                 <div className="cta__cohort">
                     <div className="cta__cohort-head">
-                        <span className="cta__cohort-label">Cohort 1 · Lisbon</span>
+                        <span className="cta__cohort-label">Cohort 1 · Porto</span>
                         <span className="cta__cohort-count">
                             <span className="cta__cohort-count-num">{COHORT_ONBOARDED}</span>
                             <span className="cta__cohort-count-sep">/</span>

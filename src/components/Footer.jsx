@@ -55,13 +55,13 @@ const Footer = ({ onPartnershipClick }) => {
                         </a>
 
                         <p className="footer__tagline">
-                            {t('footer.tagline', 'The booking platform for local businesses. Built for Lisbon, then Porto and Lagos.')}
+                            {t('footer.tagline', 'The booking platform for local businesses. Built for Porto, then Lisbon and Lagos.')}
                         </p>
 
                         <div className="footer__cities">
-                            <span>LISBON</span>
-                            <span className="footer__cities-dot" />
                             <span>PORTO</span>
+                            <span className="footer__cities-dot" />
+                            <span>LISBON</span>
                             <span className="footer__cities-dot" />
                             <span>LAGOS</span>
                         </div>

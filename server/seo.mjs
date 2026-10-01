@@ -18,17 +18,17 @@ const clip = (text, n) => {
 const ldJson = (data) => JSON.stringify(data).replace(/</g, '\\u003c')
 
 const HOME = {
-    title: 'Locappoint: book local businesses in Lisbon, Porto and Lagos',
+    title: 'Locappoint: book local businesses in Porto, Lisbon and Lagos',
     description: 'Find barbers, salons, clinics and studios near you and book in seconds. Businesses get a free booking page, reminders that cut no-shows, and their day in one app.',
 }
 
 // Public pages that are not a business.
 export const PAGES = {
     '/': HOME,
-    '/businesses': { title: 'Book local businesses in Lisbon, Porto and Lagos | Locappoint', description: 'Barbers, hair and nail salons, clinics, studios and more. See prices, open times and reviews, and book online in seconds.' },
+    '/businesses': { title: 'Book local businesses in Porto, Lisbon and Lagos | Locappoint', description: 'Barbers, hair and nail salons, clinics, studios and more. See prices, open times and reviews, and book online in seconds.' },
     '/app': { title: 'Get the Locappoint app for Android and iPhone', description: 'Your bookings, your calendar and your reminders, one tap away. Free to download, on the same account as the website.' },
     '/contact': { title: 'Contact Locappoint', description: 'Questions, help with a booking, or a business that wants to join. Write to us and a person replies.' },
-    '/partnership': { title: 'Partner with Locappoint', description: 'Bring Locappoint to the businesses you work with in Lisbon, Porto and Lagos.' },
+    '/partnership': { title: 'Partner with Locappoint', description: 'Bring Locappoint to the businesses you work with in Porto, Lisbon and Lagos.' },
     '/privacy': { title: 'Privacy Policy | Locappoint', description: 'What Locappoint collects, why, how long we keep it, and how to get it deleted.' },
     '/terms': { title: 'Terms of Service | Locappoint', description: 'The terms for booking with, and taking bookings on, Locappoint.' },
     '/legal/notice': { title: 'Legal notice | Locappoint', description: 'The company behind Locappoint and how to reach it.' },

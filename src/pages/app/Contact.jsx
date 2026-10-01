@@ -143,14 +143,14 @@ const Contact = () => {
                                     </span>
                                     <div className="info-card__copy">
                                         <div className="info-card__label">Based in</div>
-                                        <div className="info-card__value">Lisbon, Portugal</div>
+                                        <div className="info-card__value">Porto, Portugal</div>
                                         <div className="info-card__note">Lagos team building remotely</div>
                                     </div>
                                 </article>
 
                                 <div className="info-card__meta">
                                     <span className="info-card__meta-dot"></span>
-                                    <span>Cohort 1 open in Lisbon</span>
+                                    <span>Cohort 1 open in Porto</span>
                                 </div>
                             </aside>
 

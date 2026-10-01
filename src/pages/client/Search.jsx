@@ -144,7 +144,7 @@ const ClientSearch = () => {
 
             {state.status === 'ready' && (
                 state.places.length === 0 ? (
-                    <NoMatch title="No places yet" body="Businesses in Lisbon are setting up their pages. Check back soon." />
+                    <NoMatch title="No places yet" body="Businesses in Porto are setting up their pages. Check back soon." />
                 ) : results.length === 0 ? (
                     <NoMatch
                         title={q ? `Nothing matches "${q}"` : 'Nothing matches these filters'}

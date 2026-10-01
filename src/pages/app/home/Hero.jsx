@@ -32,7 +32,7 @@ const Hero = () => {
                     <div className="loca-hero__content">
                         <span className="loca-eyebrow">
                             <span className="loca-eyebrow__dot" aria-hidden="true"></span>
-                            Beta · Lisbon first
+                            Beta · Porto first
                         </span>
 
                         <h1 className="loca-hero__title">
@@ -41,7 +41,7 @@ const Hero = () => {
                         </h1>
 
                         <p className="loca-hero__lede">
-                            The booking platform for local businesses in Lisbon, Porto, and Lagos. Set your hours, share your link, fill your calendar. Free for the first twelve months.
+                            The booking platform for local businesses in Porto, Lisbon, and Lagos. Set your hours, share your link, fill your calendar. Free for the first twelve months.
                         </p>
 
                         <div className="loca-hero__cta">

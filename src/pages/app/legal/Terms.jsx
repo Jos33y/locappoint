@@ -120,7 +120,7 @@ const sections = [
         label: 'Businesses: pricing and payment',
         body: (
             <>
-                <p><strong>Cohort 1 (current).</strong> Free for the first twelve (12) months from account creation, for the first 100 businesses in our launch cities (Lisbon, Porto, Lagos).</p>
+                <p><strong>Cohort 1 (current).</strong> Free for the first twelve (12) months from account creation, for the first 100 businesses in our launch cities (Porto, Lisbon, Lagos).</p>
                 <p><strong>After the free period.</strong> Nineteen euros (€19) per month per business, flat. We do not charge commission on bookings. Payment is processed monthly in advance. We will tell you before billing starts and confirm whether VAT applies.</p>
                 <p><strong>Cancellation.</strong> You can cancel your subscription at any time. Cancellation takes effect at the end of the current billing period. No refunds for partial months unless required by law.</p>
                 <p><strong>Price changes.</strong> We will notify you at least 30 days before any price changes take effect. You can cancel before the new price applies.</p>

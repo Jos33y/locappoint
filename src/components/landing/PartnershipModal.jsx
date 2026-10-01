@@ -300,7 +300,7 @@ const PartnershipModal = ({ isOpen, onClose }) => {
                                             name="city"
                                             value={formData.city}
                                             onChange={handleChange}
-                                            placeholder={t('partnershipModal.cityPlaceholder', 'Lisbon')}
+                                            placeholder={t('partnershipModal.cityPlaceholder', 'Porto')}
                                             disabled={loading}
                                         />
                                     </div>

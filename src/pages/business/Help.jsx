@@ -107,7 +107,7 @@ const Help = () => {
                     <div>
                         <h2 id="desk-title" className="lc-help__deskname">{status?.open ? 'We are online' : 'We are away'}</h2>
                         <p className="lc-help__deskline">
-                            {status?.open ? `${status.text} Lisbon time. Tickets are answered within one working day.` : `${status?.text.replace(/^Opens/, 'Back')} Lisbon time. Leave a ticket and it is first in line.`}
+                            {status?.open ? `${status.text} Portugal time. Tickets are answered within one working day.` : `${status?.text.replace(/^Opens/, 'Back')} Portugal time. Leave a ticket and it is first in line.`}
                         </p>
                         <p className="lc-help__deskhours">{SUPPORT.hours}</p>
                     </div>

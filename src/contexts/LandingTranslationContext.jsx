@@ -40,7 +40,7 @@ const translations = {
         // ========== HERO DASHBOARD ==========
         heroDashboard: {
             businessName: 'Beauty Studio',
-            location: 'Lisbon, PT',
+            location: 'Porto, PT',
             today: 'Today',
             revenue: 'Revenue',
             rating: 'Rating',
@@ -507,7 +507,7 @@ const translations = {
             orgName: 'Organization Name',
             orgNamePlaceholder: 'Your business name',
             city: 'City',
-            cityPlaceholder: 'Lisbon, Porto, Lagos...',
+            cityPlaceholder: 'Porto, Lisbon, Lagos...',
             country: 'Country',
             countryPlaceholder: 'Select country...',
             interest: 'Why partner with us?',
@@ -587,7 +587,7 @@ const translations = {
         // ========== HERO DASHBOARD ==========
         heroDashboard: {
             businessName: 'Estúdio de Beleza',
-            location: 'Lisboa, PT',
+            location: 'Porto, PT',
             today: 'Hoje',
             revenue: 'Receita',
             rating: 'Avaliação',
@@ -1054,7 +1054,7 @@ const translations = {
             orgName: 'Nome da Organização',
             orgNamePlaceholder: 'Nome do seu negócio',
             city: 'Cidade',
-            cityPlaceholder: 'Lisboa, Porto, Faro...',
+            cityPlaceholder: 'Porto, Lisboa, Faro...',
             country: 'País',
             countryPlaceholder: 'Selecione o país...',
             interest: 'Porquê ser nosso parceiro?',

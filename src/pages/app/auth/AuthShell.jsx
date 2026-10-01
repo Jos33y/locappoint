@@ -10,7 +10,7 @@ const COHORT_TARGET = 10
 
 const AuthShell = ({
     brandTitle = 'Booking that fills your week, not your DMs.',
-    brandSub = 'Local businesses in Lisbon, Porto, and Lagos. Free for the first twelve months.',
+    brandSub = 'Local businesses in Porto, Lisbon, and Lagos. Free for the first twelve months.',
     audience = 'business',
     back = null,
     children,
@@ -45,20 +45,20 @@ const AuthShell = ({
                             <div className="auth-brand__pin-ring auth-brand__pin-ring--outer"></div>
                             <LogoIcon size={56} className="auth-brand__pin-mark" />
                         </div>
-                        <span className="auth-brand__tick auth-brand__tick--tl">38.74° N</span>
-                        <span className="auth-brand__tick auth-brand__tick--tr">9.13° W</span>
+                        <span className="auth-brand__tick auth-brand__tick--tl">41.16° N</span>
+                        <span className="auth-brand__tick auth-brand__tick--tr">8.63° W</span>
                     </div>
                     <div className="auth-brand__coords">
-                        <span className="auth-brand__coords-geo">38.7223° N · 9.1393° W</span>
+                        <span className="auth-brand__coords-geo">41.1579° N · 8.6291° W</span>
                         <span className="auth-brand__coords-sep">·</span>
-                        <span className="auth-brand__coords-place">Lisbon</span>
+                        <span className="auth-brand__coords-place">Porto</span>
                     </div>
                 </div>
 
                 {forBusiness && (
                     <div className="auth-brand__cohort">
                         <div className="auth-brand__cohort-head">
-                            <span className="auth-brand__cohort-label">Cohort 1 in Lisbon</span>
+                            <span className="auth-brand__cohort-label">Cohort 1 in Porto</span>
                             <span className="auth-brand__cohort-count">
                                 <span className="auth-brand__cohort-num">{COHORT_ONBOARDED}</span>
                                 <span className="auth-brand__cohort-sep">/</span>
@@ -74,11 +74,11 @@ const AuthShell = ({
                 <div className="auth-brand__cities">
                     <span className="auth-brand__city">
                         <span className="auth-brand__city-dot auth-brand__city-dot--live"></span>
-                        Lisbon
+                        Porto
                     </span>
                     <span className="auth-brand__city auth-brand__city--muted">
                         <span className="auth-brand__city-dot auth-brand__city-dot--next"></span>
-                        Porto next
+                        Lisbon next
                     </span>
                     <span className="auth-brand__city auth-brand__city--muted">
                         <span className="auth-brand__city-dot"></span>
@@ -104,7 +104,7 @@ const AuthShell = ({
 
                 {forBusiness && (
                     <div className="auth-cohort-strip">
-                        <span>Cohort 1: {COHORT_ONBOARDED} of {COHORT_TARGET} businesses onboarded in Lisbon</span>
+                        <span>Cohort 1: {COHORT_ONBOARDED} of {COHORT_TARGET} businesses onboarded in Porto</span>
                     </div>
                 )}
 

@@ -1,7 +1,7 @@
 export const SUPPORT = {
     email: 'support@locappoint.com',
     whatsapp: '',
-    hours: 'Monday to Friday, 09:00 to 18:00 Lisbon time',
+    hours: 'Monday to Friday, 09:00 to 18:00 Portugal time',
     schedule: { days: [1, 2, 3, 4, 5], open: 9 * 60, close: 18 * 60, timeZone: 'Europe/Lisbon' },
 }
 

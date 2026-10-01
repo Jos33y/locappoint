@@ -10,11 +10,11 @@ const EASE = [0.22, 1, 0.36, 1]
 const FALLBACK_FAQS = [
     {
         question: 'When does Locappoint launch in my city?',
-        answer: 'We are launching in Lisbon first. Porto follows once we have 10 Lisbon businesses live. Lagos comes third. Join the waitlist and we will notify you when it opens in your area.'
+        answer: 'We are launching in Porto first. Lisbon follows once we have 10 Porto businesses live. Lagos comes third. Join the waitlist and we will notify you when it opens in your area.'
     },
     {
         question: 'How much will Locappoint cost?',
-        answer: 'The first 100 businesses in Lisbon get 12 months free. After that, it is 19 euro per month flat. No commission on bookings, ever.'
+        answer: 'The first 100 businesses in Porto get 12 months free. After that, it is 19 euro per month flat. No commission on bookings, ever.'
     },
     {
         question: 'Do I need technical skills to use it?',

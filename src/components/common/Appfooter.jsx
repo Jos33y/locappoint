@@ -25,9 +25,9 @@ const AppFooter = () => {
                             </span>
                         </Link>
                         <p className="loca-app-footer__desc">
-                            The booking platform built for local businesses in Lisbon, Porto, and Lagos. Twelve months free, then nineteen euros a month flat.
+                            The booking platform built for local businesses in Porto, Lisbon, and Lagos. Twelve months free, then nineteen euros a month flat.
                         </p>
-                        <div className="loca-app-footer__cities">Lisbon · Porto · Lagos</div>
+                        <div className="loca-app-footer__cities">Porto · Lisbon · Lagos</div>
                     </div>
 
                     <div className="loca-app-footer__col">
@@ -45,7 +45,7 @@ const AppFooter = () => {
                         <ul className="loca-app-footer__list">
                             <li><a href="mailto:hello@locappoint.com">hello@locappoint.com</a></li>
                             <li><a href="tel:+351912345678">+351 912 345 678</a></li>
-                            <li><span>Lisbon, Portugal</span></li>
+                            <li><span>Porto, Portugal</span></li>
                         </ul>
                     </div>
 

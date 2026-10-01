@@ -1,4 +1,4 @@
-export const PT_GROUPS = ["Greater Lisbon", "Greater Porto", "Aveiro", "Beja", "Braga", "Bragança", "Castelo Branco", "Coimbra", "Faro", "Guarda", "Leiria", "Lisboa", "Portalegre", "Porto", "Santarém", "Setúbal", "Viana do Castelo", "Vila Real", "Viseu", "Évora", "Madeira", "Azores"]
+export const PT_GROUPS = ["Greater Porto", "Greater Lisbon", "Aveiro", "Beja", "Braga", "Bragança", "Castelo Branco", "Coimbra", "Faro", "Guarda", "Leiria", "Lisboa", "Portalegre", "Porto", "Santarém", "Setúbal", "Viana do Castelo", "Vila Real", "Viseu", "Évora", "Madeira", "Azores"]
 
 const m = (label, group, district, keywords = '') => ({ value: label, label, group, district, keywords: `${district} ${keywords}`.trim() })
 
@@ -313,6 +313,7 @@ export const PT_MUNICIPALITIES = [
     m("Vila do Porto", "Azores", "Azores"),
 ]
 
+export const GREATER_PORTO = new Set(PT_MUNICIPALITIES.filter((c) => c.group === 'Greater Porto').map((c) => c.value))
 export const GREATER_LISBON = new Set(PT_MUNICIPALITIES.filter((c) => c.group === 'Greater Lisbon').map((c) => c.value))
 
 const ZONES = { Madeira: 'Atlantic/Madeira', Azores: 'Atlantic/Azores' }
@@ -334,4 +335,4 @@ export const timezoneForPlace = (country, city) => {
     return deviceZone()
 }
 
-export const inLaunchArea = (country, city) => country === 'PT' && GREATER_LISBON.has(city)
+export const inLaunchArea = (country, city) => country === 'PT' && (GREATER_PORTO.has(city) || GREATER_LISBON.has(city))

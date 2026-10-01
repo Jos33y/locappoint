@@ -190,7 +190,7 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
                                 <CheckCircle size={40} />
                             </div>
                             <h2>{t('waitlistModal.successTitle', 'You are on the list')}</h2>
-                            <p>{t('waitlistModal.successMessage', 'We will email you the moment Lisbon launches. Until then, expect build updates if you want them.')}</p>
+                            <p>{t('waitlistModal.successMessage', 'We will email you the moment Porto launches. Until then, expect build updates if you want them.')}</p>
                             <button type="button" className="modal__submit" onClick={handleClose}>
                                 {t('waitlistModal.successBtn', 'Done')}
                             </button>
@@ -206,7 +206,7 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
                                 </h2>
                                 <p className="modal__subtitle">
                                     {step === 1
-                                        ? t('waitlistModal.subtitle1', 'First 100 Lisbon businesses get 12 months free, then €19/mo. No commission.')
+                                        ? t('waitlistModal.subtitle1', 'First 100 Porto businesses get 12 months free, then €19/mo. No commission.')
                                         : t('waitlistModal.subtitle2', 'Optional but helpful. Skip what you do not want to answer.')}
                                 </p>
                             </div>
