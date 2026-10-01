@@ -430,18 +430,14 @@ ol, ul { list-style: none; }
 .phase__status--planned { color: var(--text-muted); }
 
 /* The mark inside the pin tile, color-tinted by phase state */
-.phase__pin--filled .mark-pin { fill: var(--azure); }
-.phase__pin--filled .mark-slot { fill: var(--ink); }
-.phase__pin--filled .mark-dot { fill: var(--signal); }
+.phase__pin--half .mark-ring,
+.phase__pin--half .mark-head,
+.phase__pin--half .mark-body { opacity: 0.55; }
 
-.phase__pin--half .mark-pin { fill: var(--azure); opacity: 0.55; }
-.phase__pin--half .mark-slot { fill: var(--ink); opacity: 0.85; }
-.phase__pin--half .mark-dot { fill: var(--signal); opacity: 0.55; }
-
-.phase__pin--outline .mark-pin { fill: none; stroke: var(--text-subtle); stroke-width: 2; }
-.phase__pin--outline .mark-slot { fill: none; stroke: var(--text-subtle); stroke-width: 1.5; }
-.phase__pin--outline .mark-dot { fill: none; stroke: var(--text-subtle); stroke-width: 1.5; }
-.phase__pin--outline .mark-bar { display: none; }
+/* Stroke widths are in the mark's 264-unit drawing, about 0.7px at the tile's 36px. */
+.phase__pin--outline .mark-ring { fill: none; stroke: var(--text-subtle); stroke-width: 5; }
+.phase__pin--outline .mark-head,
+.phase__pin--outline .mark-body { fill: none; stroke: var(--text-subtle); stroke-width: 4; }
 
 @media (max-width: 600px) {
     .phase { grid-template-columns: 48px 1fr; }

@@ -34,7 +34,7 @@ const Poster = ({ name, link, qrLink, lang }) => {
             <article className="lc-poster" lang={lang}>
                 <header className="lc-poster__brand">
                     <img src="/brand/loca-mark.svg" alt="" className="lc-poster__mark" />
-                    <span>Locappoint</span>
+                    <span>Loc<span className="lc-poster__accent">Appoint</span></span>
                 </header>
                 <div className="lc-poster__main">
                     <h2 className="lc-poster__head">{t.head}</h2>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-34 -2 268 268" role="img" aria-label="LocAppoint">
+  <g transform="translate(0 0) scale(1)">
+    <path d="M 100.00 262.00 L 21.64 160.50 A 99 99 0 1 1 185.13 150.54 L 163.23 122.17 A 67 67 0 1 0 80.68 164.15 L 129.65 227.58 Z" fill="#2D7FF0"/>
+    <circle cx="100" cy="100" r="31" fill="#E89A3E"/>
+    <path d="M 118.20 164.48 A 67 67 0 0 0 150.46 144.08 L 174.62 175.38 L 149.30 204.77 Z" fill="#2D7FF0"/>
+  </g>
+</svg>

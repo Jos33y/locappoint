@@ -66,6 +66,10 @@
     height: 7cqw;
 }
 
+.lc-poster__accent {
+    color: var(--azure);
+}
+
 .lc-poster__main {
     display: flex;
     flex: 1;

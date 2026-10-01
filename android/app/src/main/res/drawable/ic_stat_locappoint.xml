@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Status bar icon: the Locappoint pin with the appointment slot cut out. Android draws it in white. -->
+<!-- Status bar icon: the pin, its head and body in one colour. Android draws it in white; 12 units of air keep it inside the 20dp live area. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="100"
-    android:viewportHeight="100">
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:fillType="evenOdd"
-        android:pathData="M50,4C30,4 14,20 14,40C14,51 18,60 24,68L50,98L76,68C82,60 86,51 86,40C86,20 70,4 50,4ZM28,22L72,22L72,54L28,54ZM34,30L54,30L54,35L34,35ZM34,40L62,40L62,45L34,45Z" />
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+    <group android:translateX="44" android:translateY="12">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M 100 262 L 21.64 160.5 A 99 99 0 1 1 185.13 150.54 L 163.23 122.17 A 67 67 0 1 0 80.68 164.15 L 129.65 227.58 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M 131 100 A 31 31 0 1 1 69 100 A 31 31 0 1 1 131 100 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M 118.2 164.48 A 67 67 0 0 0 150.46 144.08 L 174.62 175.38 L 149.3 204.77 Z" />
+    </group>
 </vector>

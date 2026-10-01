@@ -85,7 +85,10 @@ export const drawPoster = async ({ name, link, qrLink = link, copy }) => {
     ctx.fillStyle = c.ink
     ctx.font = font(u(3.4), f.display)
     ctx.textBaseline = 'middle'
-    ctx.fillText('Locappoint', left + markSize + u(2), u(7) + markSize / 2)
+    const wordX = left + markSize + u(2)
+    ctx.fillText('Loc', wordX, u(7) + markSize / 2)
+    ctx.fillStyle = c.azure
+    ctx.fillText('Appoint', wordX + ctx.measureText('Loc').width, u(7) + markSize / 2)
     ctx.textBaseline = 'top'
     const top = u(7) + markSize
 

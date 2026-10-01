@@ -4,6 +4,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Bell, Calendar, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../../../hooks/useAuth'
+import PinMark from '../../../components/common/PinMark'
 import './Hero.css'
 
 
@@ -142,10 +143,7 @@ const Hero = () => {
                             </div>
                             <div className="hero-confirm__divider"></div>
                             <div className="hero-confirm__foot">
-                                <svg width="11" height="11" viewBox="0 0 100 100" aria-hidden="true">
-                                    <path d="M 42 6 C 22 6, 6 22, 6 42 C 6 53, 10 62, 16 70 L 42 100 L 68 70 C 74 62, 78 53, 78 42 C 78 22, 62 6, 42 6 Z" fill="var(--azure)" transform="translate(14.3 4.9) scale(0.85)" />
-                                    <circle cx="62" cy="29" r="3.5" fill="var(--signal)" transform="translate(14.3 4.9) scale(0.85)" />
-                                </svg>
+                                <PinMark width="11" height="11" />
                                 <span>Booked via locappoint.com</span>
                             </div>
                         </div>

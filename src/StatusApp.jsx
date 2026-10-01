@@ -3,6 +3,7 @@
 // Markup only. All side effects live in ./pages/status/useStatusEffects.
 
 import { useStatusEffects } from './hooks/useStatusEffects'
+import { PIN_BODY, PIN_RING, PIN_VIEWBOX } from './components/common/PinMark'
 import './styles/status/status.css'
 
 
@@ -14,15 +15,10 @@ export default function StatusApp() {
             {/* SVG defs reused across the page */}
             <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
                 <defs>
-                    <symbol id="loca-mark" viewBox="0 0 100 100">
-                        <g transform="translate(14.3 4.9) scale(0.85)">
-                            <path className="mark-pin" d="M 42 6 C 22 6, 6 22, 6 42 C 6 53, 10 62, 16 70 L 42 100 L 68 70 C 74 62, 78 53, 78 42 C 78 22, 62 6, 42 6 Z" fill="#2D7FF0" />
-                            <rect className="mark-slot" x="16" y="22" width="52" height="36" rx="4" fill="#0B1530" />
-                            <rect className="mark-bar" x="22" y="30" width="22" height="4" rx="1" fill="#5BA0FF" />
-                            <rect className="mark-bar" x="22" y="40" width="32" height="4" rx="1" fill="#5BA0FF" opacity="0.32" />
-                            <rect className="mark-bar" x="22" y="50" width="18" height="3" rx="1" fill="#5BA0FF" opacity="0.2" />
-                            <circle className="mark-dot" cx="62" cy="29" r="3.5" fill="#E89A3E" />
-                        </g>
+                    <symbol id="loca-mark" viewBox={PIN_VIEWBOX}>
+                        <path className="mark-ring" d={PIN_RING} fill="var(--azure)" />
+                        <circle className="mark-head" cx="100" cy="100" r="31" fill="var(--signal)" />
+                        <path className="mark-body" d={PIN_BODY} fill="var(--azure)" />
                     </symbol>
                 </defs>
             </svg>
