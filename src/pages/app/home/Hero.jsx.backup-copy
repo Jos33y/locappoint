@@ -41,7 +41,7 @@ const Hero = () => {
                         </h1>
 
                         <p className="loca-hero__lede">
-                            The booking platform for local businesses in Porto, Lisbon, and Lagos. Set your hours, share your link, fill your calendar. Free during the beta.
+                            The booking platform for local businesses in Porto, Lisbon, and Lagos. Set your hours, share your link, fill your calendar. Free for the first twelve months.
                         </p>
 
                         <div className="loca-hero__cta">
@@ -56,18 +56,18 @@ const Hero = () => {
 
                         <div className="loca-hero__metrics">
                             <div className="loca-hero__metric">
-                                <div className="loca-hero__metric-num">€0</div>
-                                <div className="loca-hero__metric-label">During the beta</div>
+                                <div className="loca-hero__metric-num">12 mo</div>
+                                <div className="loca-hero__metric-label">Free trial</div>
                             </div>
                             <div className="loca-hero__metric-sep" aria-hidden="true"></div>
                             <div className="loca-hero__metric">
-                                <div className="loca-hero__metric-num">10<span className="loca-hero__metric-sub">min</span></div>
-                                <div className="loca-hero__metric-label">To go live</div>
+                                <div className="loca-hero__metric-num">€19<span className="loca-hero__metric-sub">/mo</span></div>
+                                <div className="loca-hero__metric-label">Flat, after</div>
                             </div>
                             <div className="loca-hero__metric-sep" aria-hidden="true"></div>
                             <div className="loca-hero__metric">
-                                <div className="loca-hero__metric-num">2</div>
-                                <div className="loca-hero__metric-label">Reminders per booking</div>
+                                <div className="loca-hero__metric-num">0%</div>
+                                <div className="loca-hero__metric-label">Commission</div>
                             </div>
                         </div>
                     </div>

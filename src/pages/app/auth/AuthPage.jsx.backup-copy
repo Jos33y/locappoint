@@ -244,7 +244,7 @@ const AuthPage = () => {
         ? ['Your next booking, without the phone calls.', 'See the real free times at local barbers, salons and clinics, and pick one.']
         : signin
             ? ['Pick up where you left off.', 'Your bookings, reminders and hours in one place.']
-            : ['Booking that fills your week, not your DMs.', 'Local businesses in Porto, Lisbon, and Lagos. Free during the beta.']
+            : ['Booking that fills your week, not your DMs.', 'Local businesses in Porto, Lisbon, and Lagos. Free for the first twelve months.']
 
     return (
         <AuthShell

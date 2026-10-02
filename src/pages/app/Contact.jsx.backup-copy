@@ -11,7 +11,7 @@ import '../../styles/app/contact.css'
 
 
 // WhatsApp Business number for direct chat. Pre-fills opening message.
-const WHATSAPP_URL = 'https://wa.me/351934695914?text=' + encodeURIComponent("Hi Locappoint, I'd like to chat about ")
+const WHATSAPP_URL = 'https://wa.me/351912345678?text=' + encodeURIComponent("Hi Locappoint, I'd like to chat about ")
 
 
 const Contact = () => {
@@ -115,8 +115,8 @@ const Contact = () => {
                                     </span>
                                     <div className="info-card__copy">
                                         <div className="info-card__label">Phone</div>
-                                        <a href="tel:+351934695914" className="info-card__value">+351 934 695 914</a>
-                                        <div className="info-card__note">Mon to Fri, 09:00 to 18:00 Portugal time</div>
+                                        <a href="tel:+351912345678" className="info-card__value">+351 912 345 678</a>
+                                        <div className="info-card__note">Mon to Fri, 09:00 to 18:00 WET</div>
                                     </div>
                                 </article>
 

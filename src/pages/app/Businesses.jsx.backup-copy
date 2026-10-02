@@ -42,7 +42,7 @@ const JoinCard = ({ join, wide = false }) => (
             </span>
             <span className="lc-br-join__body">
                 <strong>{wide ? 'Be the first place people can book here' : 'Your business here'}</strong>
-                <span>Free during the beta. Set up takes about ten minutes.</span>
+                <span>Free for the first twelve months. Set up takes about ten minutes.</span>
                 <span className="lc-br-join__cta">Get your booking page <ArrowRight size={14} aria-hidden="true" /></span>
             </span>
         </Link>
@@ -162,7 +162,7 @@ const Businesses = () => {
                 {!hasBusiness && !(ready && places.length === 0) && (
                     <section className="lc-br-cta">
                         <h2>Run a business in Porto?</h2>
-                        <p>Get your own booking page on Locappoint. Free during the beta.</p>
+                        <p>Get your own booking page on Locappoint. Free for the first twelve months.</p>
                         <div className="lc-br-cta__buttons">
                             <Button to={join.pathname} state={join.state} iconRight={ArrowRight}>Get your booking page</Button>
                             <Button to="/partnership" variant="secondary">Apply as a partner</Button>

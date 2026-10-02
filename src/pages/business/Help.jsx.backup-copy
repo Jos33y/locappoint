@@ -16,7 +16,7 @@ const ANSWERS = [
     { id: 'share', icon: Share2, q: 'How do clients find and book me?', a: 'Share your link from the share button at the top, or from Channels. Clients open it, choose a service and a time, and the booking lands on your Today screen.' },
     { id: 'hours', icon: Clock, q: 'How do I change my hours or take a day off?', a: 'Open Hours to change your weekly opening times. Closed dates for holidays and sick days arrive with the next Hours update; until then, write to us and we will block the day for you.' },
     { id: 'pause', icon: CirclePause, q: 'Can I stop taking bookings for a while?', a: 'Yes. Open Business page and turn off taking bookings. Your page stays, but clients cannot book until you turn it back on.' },
-    { id: 'price', icon: Euro, q: 'What does Locappoint cost?', a: 'Nothing during the beta. When online payments arrive, a small fee applies only to bookings clients pay for on Locappoint, and your first month of it is free. Walk-ins and bookings you add yourself are always free. We tell you at least 30 days before any fee applies, and your weekly statement in Insights shows what it would be.' },
+    { id: 'price', icon: Euro, q: 'What does Locappoint cost?', a: 'Your first twelve months are free. After that it is nineteen euros a month, flat, with no commission on your bookings.' },
 ]
 
 const supportWeek = () => {

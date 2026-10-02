@@ -11,7 +11,6 @@ const LISBON_FIRST = [
     /(?<!and )Lisbon first|Lisbon beta|Greater Lisbon first/,
     /first ten in Lisbon|Cohort 1 (in|·) Lisbon|Lisbon cohort|Lisbon, first cohort/,
     /Lisbon time/,
-    /LISBON BUSINESSES|FIRST \d+ LISBON/,
 ]
 
 const walk = (dir, out = []) => {

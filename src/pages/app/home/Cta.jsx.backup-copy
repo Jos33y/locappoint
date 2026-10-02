@@ -61,7 +61,7 @@ const Cta = () => {
                         Be one of the <span className="cta__title-accent">first ten</span> in Porto.
                     </h2>
                     <p className="cta__lede">
-                        First cohort is open. Free during the beta. Set up in ten minutes.
+                        First cohort is open. Twelve months free. Nineteen euros a month flat after. Set up in ten minutes.
                     </p>
 
                     <div className="cta__buttons">

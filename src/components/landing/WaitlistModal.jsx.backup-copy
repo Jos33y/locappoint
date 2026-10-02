@@ -206,7 +206,7 @@ const WaitlistModal = ({ isOpen, onClose, initialEmail = '' }) => {
                                 </h2>
                                 <p className="modal__subtitle">
                                     {step === 1
-                                        ? t('waitlistModal.subtitle1', 'Free for businesses during the beta. Be first to hear when we open near you.')
+                                        ? t('waitlistModal.subtitle1', 'First 100 Porto businesses get 12 months free, then €19/mo. No commission.')
                                         : t('waitlistModal.subtitle2', 'Optional but helpful. Skip what you do not want to answer.')}
                                 </p>
                             </div>

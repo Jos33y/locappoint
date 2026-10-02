@@ -120,11 +120,10 @@ const sections = [
         label: 'Businesses: pricing and payment',
         body: (
             <>
-                <p><strong>During the beta.</strong> Locappoint is free for businesses. There is no subscription and nothing to pay.</p>
-                <p><strong>When online payments arrive.</strong> Clients will be able to pay for bookings on Locappoint. From then on, clients pay a small service fee on bookings they pay online, and businesses pay a small fee on each booking a client pays through Locappoint. The first month after online payments start for your account carries no business fee. Walk-ins and bookings you add yourself never carry a fee.</p>
-                <p><strong>Notice.</strong> We will tell you the exact fees, and whether VAT applies, at least 30 days before any fee applies to your account. You can stop using Locappoint before then at no cost.</p>
-                <p><strong>Weekly statement.</strong> Each week we send you a statement of the bookings made on Locappoint. During the beta it shows what a fee would have been and that nothing is owed. It is not an invoice.</p>
-                <p><strong>Fee changes.</strong> We will tell you at least 30 days before any fee changes take effect. You can stop using Locappoint before the new fee applies.</p>
+                <p><strong>Cohort 1 (current).</strong> Free for the first twelve (12) months from account creation, for the first 100 businesses in our launch cities (Porto, Lisbon, Lagos).</p>
+                <p><strong>After the free period.</strong> Nineteen euros (€19) per month per business, flat. We do not charge commission on bookings. Payment is processed monthly in advance. We will tell you before billing starts and confirm whether VAT applies.</p>
+                <p><strong>Cancellation.</strong> You can cancel your subscription at any time. Cancellation takes effect at the end of the current billing period. No refunds for partial months unless required by law.</p>
+                <p><strong>Price changes.</strong> We will notify you at least 30 days before any price changes take effect. You can cancel before the new price applies.</p>
             </>
         ),
     },

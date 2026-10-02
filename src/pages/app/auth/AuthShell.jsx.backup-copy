@@ -7,7 +7,7 @@ const HOME_PATH = import.meta.env.DEV ? '/?app' : '/'
 
 const AuthShell = ({
     brandTitle = 'Booking that fills your week, not your DMs.',
-    brandSub = 'Local businesses in Porto, Lisbon, and Lagos. Free during the beta.',
+    brandSub = 'Local businesses in Porto, Lisbon, and Lagos. Free for the first twelve months.',
     audience = 'business',
     back = null,
     children,

@@ -67,7 +67,7 @@ const Welcome = ({ onStart, onLater }) => (
         <h1 id="lc-setup-welcome" className="lc-setup__hero">Let's get you booked.</h1>
         <p className="lc-setup__lede lc-setup__lede--lg">
             <span>Set up your booking page in a few minutes.</span>
-            <span>Free during the beta.</span>
+            <span>Free for your first 12 months.</span>
         </p>
         <ol className="lc-setup__promise">
             {WELCOME_STEPS.map(([title, body], i) => (

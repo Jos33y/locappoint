@@ -14,7 +14,7 @@ const FALLBACK_FAQS = [
     },
     {
         question: 'How much will Locappoint cost?',
-        answer: 'Nothing during the beta. When online payments arrive, clients pay a small service fee and businesses a small fee on bookings paid through Locappoint, and the first month of it is free. Walk-ins are always free, and there is no subscription.'
+        answer: 'The first 100 businesses in Porto get 12 months free. After that, it is 19 euro per month flat. No commission on bookings, ever.'
     },
     {
         question: 'Do I need technical skills to use it?',

@@ -173,7 +173,7 @@ export default function StatusApp() {
                                 <div className="detail__col-label">Done</div>
                                 <div className="detail__list">
                                     <div className="detail__item detail__item--done">Brand locked: colours, type, logo</div>
-                                    <div className="detail__item detail__item--done">Pricing set: free during the beta, fees only on bookings paid online</div>
+                                    <div className="detail__item detail__item--done">Pricing locked: 12 months free, then €19 a month</div>
                                     <div className="detail__item detail__item--done">Landing page rebuilt on the brand</div>
                                     <div className="detail__item detail__item--done">Waitlist for businesses and clients</div>
                                     <div className="detail__item detail__item--done">Admin dashboard with conversion tracking</div>

@@ -1,4 +1,4 @@
-/* Pricing: what is free now, what is free when online payments arrive, and what is never charged. */
+/* Pricing - centerpiece card with split, zero-commission band, includes grid */
 
 .pr__card {
     max-width: 880px;
@@ -11,7 +11,7 @@
 }
 
 
-/* Top strata: the two free periods */
+/* Top strata - €0 / €19 split */
 
 .pr__split {
     display: grid;
@@ -69,9 +69,9 @@
 }
 
 
-/* Middle strata: never a fee */
+/* Middle strata - zero commission band */
 
-.pr__band {
+.pr__commission {
     display: flex;
     align-items: center;
     gap: 22px;
@@ -81,7 +81,7 @@
     border-bottom: 1px solid var(--border-subtle);
 }
 
-.pr__band-num {
+.pr__commission-num {
     font-family: var(--font-display);
     font-size: 44px;
     font-weight: 600;
@@ -91,14 +91,14 @@
     flex-shrink: 0;
 }
 
-.pr__band-copy {
+.pr__commission-copy {
     display: flex;
     flex-direction: column;
     gap: 4px;
     min-width: 0;
 }
 
-.pr__band-title {
+.pr__commission-title {
     font-family: var(--font-display);
     font-size: 16px;
     font-weight: 600;
@@ -106,14 +106,14 @@
     letter-spacing: -0.01em;
 }
 
-.pr__band-sub {
+.pr__commission-sub {
     font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.5;
 }
 
 
-/* Bottom strata: everything included */
+/* Bottom strata - includes grid */
 
 .pr__includes {
     padding: 28px 32px 32px;
@@ -170,12 +170,12 @@
         font-size: 48px;
     }
 
-    .pr__band {
+    .pr__commission {
         padding: 20px 24px;
         gap: 16px;
     }
 
-    .pr__band-num {
+    .pr__commission-num {
         font-size: 36px;
     }
 

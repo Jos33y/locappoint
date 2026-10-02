@@ -28,7 +28,7 @@ const device = () => {
 const FAQ = [
     ['Is it safe to install outside Google Play?', 'Yes, when it comes from this page. Every Android build is signed with Locappoint\'s own key, and your phone only accepts updates signed the same way. Google Play is reviewing the app. Everything lives in your account, so moving to the Play version later loses nothing.'],
     ['Why is iPhone invite only for now?', 'The iPhone app is in Apple\'s TestFlight while the App Store listing is prepared. Ask for an invite and we send it to your email. Until then, locappoint.com in Safari does everything the app does.'],
-    ['Does it cost anything?', 'The app is free to download. Clients book for free, and Locappoint is free for businesses during the beta.'],
+    ['Does it cost anything?', 'The app is free to download. Clients book for free. Businesses are on the same plan as the website: twelve months free, then nineteen euros a month, flat.'],
     ['Do I need a new account?', 'No. Sign in with the email or Google account you already use on locappoint.com. Your bookings, clients and settings are already there.'],
     ['How do updates work?', 'On Android the app tells you when a new version is ready, and one tap gets it. On iPhone, TestFlight brings new versions to you.'],
     ['Which phones does it run on?', 'Android 7.0 and newer, and iPhone with iOS 15 and newer.'],
@@ -194,7 +194,7 @@ const AppDownload = () => {
                     <div>
                         <Gift size={22} aria-hidden="true" />
                         <h3>Free to download</h3>
-                        <p>Clients book free. Businesses are free during the beta.</p>
+                        <p>Clients book free. Businesses get twelve months free.</p>
                     </div>
                 </section>
 

@@ -111,7 +111,7 @@ const Partnership = () => {
                                 Help us build the booking platform <span className="loca-section__title-accent">for your industry.</span>
                             </h1>
                             <p className="part__hero-lede">
-                                Founding partners get direct input on features, early access to what we build next, and a co-marketing slot when we open their city. Apply below.
+                                Founding partners get direct input on features, founder-tier pricing locked for life, and a co-marketing slot when we open their city. Apply below.
                             </p>
                         </div>
                     </div>
