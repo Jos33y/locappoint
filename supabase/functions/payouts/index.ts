@@ -1,0 +1,180 @@
+// Payouts: lets a business owner connect where their money goes. Stripe (Portugal) through Stripe's
+// own onboarding page; Paystack (Nigeria) with a bank and account number on our screen. The only
+// writer of public.business_payouts. Locappoint never stores an ID, an IBAN or a full account number.
+//
+// Deploy: npx supabase functions deploy payouts
+// Secrets: STRIPE_SECRET_KEY, PAYSTACK_SECRET_KEY, and optionally SITE_URL.
+
+import { createClient } from 'npm:@supabase/supabase-js@2'
+import { ProviderError, bankCode, newStripeAccount, nigerianAccount, paystackCall, stripeCall, stripeState } from './providers.ts'
+
+const SITE = (Deno.env.get('SITE_URL') || 'https://locappoint.com').replace(/\/$/, '')
+const STRIPE = Deno.env.get('STRIPE_SECRET_KEY') || ''
+const PAYSTACK = Deno.env.get('PAYSTACK_SECRET_KEY') || ''
+
+const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } })
+
+const CORS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
+const reply = (status: number, body: unknown) =>
+    new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
+
+let banksCache: { at: number; banks: { code: string; name: string }[] } | null = null
+
+const loadBanks = async () => {
+    if (banksCache && Date.now() - banksCache.at < 6 * 3_600_000) return banksCache.banks
+    const banks: { code: string; name: string }[] = []
+    let next = ''
+    for (let page = 0; page < 10; page++) {
+        const out = await paystackCall(PAYSTACK, `bank?country=nigeria&currency=NGN&perPage=100&use_cursor=true${next ? `&next=${encodeURIComponent(next)}` : ''}`)
+        for (const b of out.data || []) if (b.active !== false && b.code) banks.push({ code: String(b.code), name: String(b.name) })
+        next = out.meta?.next || ''
+        if (!next) break
+    }
+    const seen = new Set<string>()
+    const unique = banks.filter((b) => !seen.has(b.code) && seen.add(b.code)).sort((a, b) => a.name.localeCompare(b.name))
+    banksCache = { at: Date.now(), banks: unique }
+    return unique
+}
+
+const save = async (businessId: string, patch: Record<string, unknown>) => {
+    const { data, error } = await db.from('business_payouts')
+        .upsert({ business_id: businessId, ...patch }, { onConflict: 'business_id' })
+        .select('provider, status, bank_name, account_last4, details_due, ready_at')
+        .single()
+    if (error) throw error
+    return data
+}
+
+const view = (row: Record<string, any> | null, provider: string) => ({
+    provider,
+    status: row?.status || 'not_started',
+    bank_name: row?.bank_name || null,
+    account_last4: row?.account_last4 || null,
+    details_due: row?.details_due || [],
+    ready_at: row?.ready_at || null,
+    test: provider === 'stripe' ? STRIPE.startsWith('sk_test_') : PAYSTACK.startsWith('sk_test_'),
+})
+
+const returnUrls = (target: unknown) => target === 'app'
+    ? { return_url: `${SITE}/payouts/done`, refresh_url: `${SITE}/payouts/done?expired=1` }
+    : { return_url: `${SITE}/portal/settings?payouts=return`, refresh_url: `${SITE}/portal/settings?payouts=expired` }
+
+Deno.serve(async (req) => {
+    if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
+    if (req.method !== 'POST') return reply(405, { error: 'Use POST' })
+
+    try {
+        const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
+        const { data: auth } = await db.auth.getUser(token)
+        const user = auth?.user
+        if (!user) return reply(401, { error: 'Sign in again to set up payouts' })
+
+        const input = await req.json().catch(() => ({}))
+        const action = String(input.action || '')
+
+        const { data: business } = await db.from('businesses')
+            .select('id, business_name, slug, country, market, markets(payment_provider, country)')
+            .eq('user_id', user.id)
+            .maybeSingle()
+        if (!business) return reply(403, { error: 'Only the owner of a business can set up payouts' })
+        const market = (business as any).markets
+        if (!market) return reply(409, { error: 'Payouts open for businesses in Porto, Lisbon and Lagos' })
+        const provider = market.payment_provider as 'stripe' | 'paystack'
+
+        const { data: current } = await db.from('business_payouts')
+            .select('provider, account_ref, status, bank_name, account_last4, details_due, ready_at')
+            .eq('business_id', business.id)
+            .maybeSingle()
+
+        if (provider === 'stripe') {
+            if (!STRIPE) return reply(503, { error: 'Payouts are not switched on yet' })
+
+            if (action === 'status') {
+                if (!current?.account_ref) return reply(200, view(current, provider))
+                const account = await stripeCall(STRIPE, `accounts/${current.account_ref}`)
+                const state = stripeState(account)
+                const row = await save(business.id, {
+                    provider, ...state,
+                    ready_at: state.status === 'active' ? current.ready_at || new Date().toISOString() : current.ready_at,
+                })
+                return reply(200, view(row, provider))
+            }
+
+            if (action === 'start') {
+                let ref = current?.account_ref as string | null
+                if (!ref) {
+                    const account = await stripeCall(STRIPE, 'accounts', newStripeAccount({
+                        country: market.country, email: user.email ?? null, name: business.business_name,
+                        url: `${SITE}/${business.slug}`, businessId: business.id,
+                    }), `payout-account-${business.id}`)
+                    ref = account.id
+                    await save(business.id, { provider, account_ref: ref, status: 'pending' })
+                }
+                const link = await stripeCall(STRIPE, 'account_links', {
+                    account: ref!, type: 'account_onboarding', 'collection_options[fields]': 'eventually_due', ...returnUrls(input.target),
+                })
+                return reply(200, { url: link.url })
+            }
+
+            if (action === 'manage') {
+                if (!current?.account_ref || current.status === 'not_started') return reply(409, { error: 'Set up payouts first' })
+                const link = await stripeCall(STRIPE, `accounts/${current.account_ref}/login_links`, {})
+                return reply(200, { url: link.url })
+            }
+
+            return reply(400, { error: 'Unknown action' })
+        }
+
+        if (!PAYSTACK) return reply(503, { error: 'Payouts are not switched on yet' })
+
+        if (action === 'status') return reply(200, view(current, provider))
+
+        if (action === 'banks') return reply(200, { banks: await loadBanks() })
+
+        if (action === 'resolve' || action === 'connect') {
+            const account = nigerianAccount(input.account_number)
+            const code = bankCode(input.bank_code)
+            if (!account || !code) return reply(400, { error: 'Enter your 10-digit account number and pick your bank' })
+            const resolved = await paystackCall(PAYSTACK, `bank/resolve?account_number=${account}&bank_code=${encodeURIComponent(code)}`)
+            const accountName = String(resolved.data?.account_name || '').trim()
+            if (!accountName) return reply(400, { error: 'We could not find that account. Check the number and the bank.' })
+            if (action === 'resolve') return reply(200, { account_name: accountName })
+
+            const bank = (await loadBanks()).find((b) => b.code === code)
+            const fields = {
+                business_name: business.business_name.slice(0, 100),
+                settlement_bank: code,
+                bank_code: code,
+                account_number: account,
+                percentage_charge: 0,
+                description: `Locappoint business ${business.id}`,
+                primary_contact_email: user.email ?? undefined,
+                metadata: JSON.stringify({ business_id: business.id }),
+            }
+            const out = current?.account_ref
+                ? await paystackCall(PAYSTACK, `subaccount/${encodeURIComponent(current.account_ref)}`, fields, 'PUT')
+                : await paystackCall(PAYSTACK, 'subaccount', fields)
+            const row = await save(business.id, {
+                provider,
+                account_ref: out.data?.subaccount_code || current?.account_ref,
+                status: 'active',
+                bank_name: bank?.name || out.data?.settlement_bank || null,
+                account_last4: account.slice(-4),
+                details_due: [],
+                ready_at: current?.ready_at || new Date().toISOString(),
+            })
+            return reply(200, { ...view(row, provider), account_name: accountName })
+        }
+
+        return reply(400, { error: 'Unknown action' })
+    } catch (err) {
+        const status = err instanceof ProviderError ? err.status : 500
+        console.error('payouts failed:', err)
+        return reply(status, { error: status === 500 ? 'Something went wrong. Try again in a moment.' : (err as Error).message })
+    }
+})

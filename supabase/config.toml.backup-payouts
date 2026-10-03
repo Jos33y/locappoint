@@ -6,6 +6,3 @@ project_id = "locappoint"
 
 [functions.notify]
 verify_jwt = false
-
-[functions.payouts]
-verify_jwt = true

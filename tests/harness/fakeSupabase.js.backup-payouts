@@ -280,31 +280,7 @@ const builder = (table) => {
   return api
 }
 
-// Payouts server function: ?payoutstate=not_started|pending|waiting|restricted|active|error|paystack|paystack-active
-const PAYOUT_ROWS = {
-  not_started: { provider: 'stripe', status: 'not_started', details_due: [] },
-  pending: { provider: 'stripe', status: 'pending', details_due: ['individual.dob.day'] },
-  waiting: { provider: 'stripe', status: 'pending', details_due: [] },
-  restricted: { provider: 'stripe', status: 'restricted', details_due: ['external_account'] },
-  active: { provider: 'stripe', status: 'active', bank_name: 'Millennium BCP', account_last4: '6789', details_due: [] },
-  paystack: { provider: 'paystack', status: 'not_started', details_due: [] },
-  'paystack-active': { provider: 'paystack', status: 'active', bank_name: 'Access Bank', account_last4: '6789', details_due: [] },
-}
-const failed = (message) => ({ data: null, error: { context: { json: async () => ({ error: message }) } } })
-const payouts = (body) => {
-  const state = new URLSearchParams(window.location.search).get('payoutstate') || 'not_started'
-  if (state === 'error') return failed('Payouts are not switched on yet')
-  const row = { test: true, ...(PAYOUT_ROWS[state] || PAYOUT_ROWS.not_started) }
-  if (body.action === 'status') return { data: row, error: null }
-  if (body.action === 'start' || body.action === 'manage') return { data: { url: `/?path=${encodeURIComponent('/portal/settings')}&payouts=return&payoutstate=active` }, error: null }
-  if (body.action === 'banks') return { data: { banks: [{ code: '044', name: 'Access Bank' }, { code: '058', name: 'GTBank' }] }, error: null }
-  if (body.action === 'resolve') return body.account_number === '0123456789' ? { data: { account_name: 'ADEBAYO OLUWASEUN' }, error: null } : failed('We could not find that account. Check the number and the bank.')
-  if (body.action === 'connect') return { data: { ...PAYOUT_ROWS['paystack-active'], test: true, account_name: 'ADEBAYO OLUWASEUN' }, error: null }
-  return failed('Unknown action')
-}
-
 export const supabase = {
-  functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
   from: builder,
   rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
