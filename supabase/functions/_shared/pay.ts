@@ -63,12 +63,25 @@ export type Booking = {
     email: string
 }
 
-export const stripeSession = (b: Booking, site: string, app: boolean): Params => {
+// A signed-in client pays as a customer of the business's own Stripe account, so Stripe's page can
+// offer to remember the card for next time (the client ticks it) and shows it, with a way to remove
+// it, on the next booking there. Guests pay as today. Link, when switched on, remembers a card
+// across every business through Stripe's own sign-in.
+export type SessionOptions = { customer?: string | null; link?: boolean }
+
+export const stripeSession = (b: Booking, site: string, app: boolean, o: SessionOptions = {}): Params => {
     const tail = app ? '&app=1' : ''
     const params: Params = {
         mode: 'payment',
         'payment_method_types[0]': 'card',
-        customer_email: b.email || undefined,
+        ...(o.link ? { 'payment_method_types[1]': 'link' } : {}),
+        ...(o.customer
+            ? {
+                customer: o.customer,
+                'saved_payment_method_options[payment_method_save]': 'enabled',
+                'saved_payment_method_options[payment_method_remove]': 'enabled',
+            }
+            : { customer_email: b.email || undefined }),
         locale: 'auto',
         'line_items[0][quantity]': 1,
         'line_items[0][price_data][currency]': b.currency.toLowerCase(),

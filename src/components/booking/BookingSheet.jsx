@@ -439,6 +439,9 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                             <span>Already paid, nothing more to pay. {policyLine({ policy: move.policy, dateKey: dayKey, minutes, nowKey: zonedNow(timeZone).dateKey, nowMinutes })}</span>
                         </p>
                     )}
+                    {!move && !owner && online && user && quote.data?.provider === 'stripe' && (
+                        <p className="lc-bk-paynote">On Stripe's page you can save your card, so paying here next time is one tap.</p>
+                    )}
                     {!move && !owner && quote.state === 'ready' && !online && <p className="lc-bk-paynote">Booking is free. Nothing is charged online.</p>}
                     {!move && !owner && quote.state === 'error' && (
                         <p className="lc-bk-notice" role="alert">

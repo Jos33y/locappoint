@@ -3,8 +3,13 @@
 // through Paystack (Nigeria). Amounts come only from the held booking in the database, never from
 // the browser. Whether it was paid is decided by payments-webhook, never here.
 //
+// A signed-in client booking for themselves pays as a customer of the business's Stripe account,
+// so Stripe can remember their card for that business (only if they tick it on Stripe's page).
+// Never for guests: anyone can type an email, and a saved card must only ever show to its owner.
+//
 // Deploy: npx supabase functions deploy checkout
-// Secrets: STRIPE_SECRET_KEY, PAYSTACK_SECRET_KEY, and optionally SITE_URL.
+// Secrets: STRIPE_SECRET_KEY, PAYSTACK_SECRET_KEY, and optionally SITE_URL and STRIPE_CHECKOUT_LINK
+// (set to on once Link is turned on for connected accounts in the Stripe dashboard).
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { ProviderError, paystackCall, paystackInit, paystackReference, stripeCall, stripeSession, type Booking } from '../_shared/pay.ts'
@@ -12,6 +17,7 @@ import { ProviderError, paystackCall, paystackInit, paystackReference, stripeCal
 const SITE = (Deno.env.get('SITE_URL') || 'https://locappoint.com').replace(/\/$/, '')
 const STRIPE = Deno.env.get('STRIPE_SECRET_KEY') || ''
 const PAYSTACK = Deno.env.get('PAYSTACK_SECRET_KEY') || ''
+const LINK = Deno.env.get('STRIPE_CHECKOUT_LINK') === 'on'
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } })
 
@@ -25,6 +31,33 @@ const reply = (status: number, body: unknown) =>
     new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// The signed-in person behind the request, or null for a guest (the anon key carries no user).
+const signedIn = async (req: Request) => {
+    const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
+    if (!token) return null
+    const { data } = await db.auth.getUser(token).catch(() => ({ data: null as any }))
+    return data?.user || null
+}
+
+// The client as a customer of this business's Stripe account: made once, kept per account.
+const stripeCustomer = async (o: { userId: string; businessId: string; account: string; email: string; name: string }) => {
+    const { data: known } = await db.from('payment_customers')
+        .select('customer_ref, account_ref')
+        .eq('user_id', o.userId).eq('business_id', o.businessId).eq('provider', 'stripe')
+        .maybeSingle()
+    if (known?.customer_ref && known.account_ref === o.account) return known.customer_ref as string
+    const customer = await stripeCall(STRIPE, 'customers', {
+        email: o.email || undefined,
+        name: o.name.slice(0, 200) || undefined,
+        'metadata[locappoint_user]': o.userId,
+    }, o.account)
+    const { error } = await db.from('payment_customers').upsert({
+        user_id: o.userId, business_id: o.businessId, provider: 'stripe', account_ref: o.account, customer_ref: customer.id,
+    }, { onConflict: 'user_id,business_id,provider' })
+    if (error) throw error
+    return customer.id as string
+}
 
 const whenLabel = (date: string, time: string) => {
     const d = new Date(`${date}T12:00:00Z`)
@@ -44,7 +77,7 @@ Deno.serve(async (req) => {
         const app = input.target === 'app'
 
         const { data: a } = await db.from('appointments')
-            .select('id, business_id, payment_status, hold_until, price, client_fee, business_fee, total, currency, client_email, addons, appointment_date, appointment_time, services(service_name), businesses(business_name, market)')
+            .select('id, business_id, client_id, client_name, payment_status, hold_until, price, client_fee, business_fee, total, currency, client_email, addons, appointment_date, appointment_time, services(service_name), businesses(business_name, market)')
             .eq('id', id)
             .maybeSingle()
         if (!a || a.payment_status !== 'awaiting' || !a.hold_until || new Date(a.hold_until).getTime() <= Date.now() + 60_000) {
@@ -91,7 +124,23 @@ Deno.serve(async (req) => {
 
         if (payout.provider === 'stripe') {
             if (!STRIPE) return reply(503, { error: 'Payments are not switched on yet' })
-            const session = await stripeCall(STRIPE, 'checkout/sessions', stripeSession(booking, SITE, app), payout.account_ref, `checkout-${id}-${count || 0}`)
+            const user = (a as any).client_id ? await signedIn(req) : null
+            let customer: string | null = null
+            if (user && user.id === (a as any).client_id) {
+                customer = await stripeCustomer({
+                    userId: user.id, businessId: a.business_id, account: payout.account_ref,
+                    email: String(a.client_email || user.email || ''), name: String((a as any).client_name || ''),
+                }).catch((err) => { console.error('customer failed, paying without a saved card:', err); return null })
+            }
+            // Remembering the card is a convenience: if Stripe refuses any part of it, the client
+            // still gets today's payment page.
+            const session = await stripeCall(STRIPE, 'checkout/sessions', stripeSession(booking, SITE, app, { customer, link: LINK }), payout.account_ref, `checkout-${id}-${count || 0}${customer ? '-c' : ''}`)
+                .catch(async (err) => {
+                    if (!customer || !(err instanceof ProviderError) || err.status !== 400) throw err
+                    console.error('saved card refused, plain checkout:', err.code, err.message)
+                    if (err.code === 'resource_missing') await db.from('payment_customers').delete().eq('customer_ref', customer)
+                    return stripeCall(STRIPE, 'checkout/sessions', stripeSession(booking, SITE, app, { link: LINK }), payout.account_ref, `checkout-${id}-${count || 0}`)
+                })
             ref = session.id
             url = session.url
             expires = new Date((session.expires_at || Math.floor(Date.now() / 1000) + 1800) * 1000).toISOString()
