@@ -283,7 +283,7 @@ const builder = (table) => {
 // Payouts server function: ?payoutstate=not_started|pending|waiting|restricted|active|error|paystack|paystack-active
 const PAYOUT_ROWS = {
   not_started: { provider: 'stripe', status: 'not_started', details_due: [] },
-  pending: { provider: 'stripe', status: 'pending', details_due: ['individual.dob.day'] },
+  pending: { provider: 'stripe', status: 'pending', details_due: ['identity.individual.date_of_birth.day', 'identity.individual.date_of_birth.month', 'identity.individual.address.city', 'identity.individual.phone'] },
   waiting: { provider: 'stripe', status: 'pending', details_due: [] },
   restricted: { provider: 'stripe', status: 'restricted', details_due: ['external_account'] },
   active: { provider: 'stripe', status: 'active', bank_name: 'Millennium BCP', account_last4: '6789', details_due: [] },

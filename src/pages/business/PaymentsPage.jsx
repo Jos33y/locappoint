@@ -129,6 +129,44 @@ const PaidTo = ({ payout }) => (
     </div>
 )
 
+// What Stripe is waiting for, in the owner's words. Stripe reports field paths
+// (identity.individual.date_of_birth.day); owners need "Date of birth".
+const NEEDS = [
+    [/given_name|surname|first_name|last_name|\.name$/, 'Your name'],
+    [/date_of_birth|\.dob/, 'Date of birth'],
+    [/individual\.address|representative\.address|person.*address/, 'Home address'],
+    [/address/, 'Business address'],
+    [/phone/, 'Phone number'],
+    [/email/, 'Email'],
+    [/id_number|tax_id|nif/, 'Tax or ID number'],
+    [/document|verification|selfie/, 'Photo of your ID'],
+    [/external_account|bank_account|payout_method/, 'Bank account'],
+    [/url|website|profile/, 'Business website'],
+    [/terms_of_service|tos_acceptance|attestation/, "Accept Stripe's terms"],
+]
+export const needsFrom = (due = []) => {
+    const out = []
+    for (const field of due) {
+        const hit = NEEDS.find(([pattern]) => pattern.test(field))
+        const label = hit ? hit[1] : 'A few other details'
+        if (!out.includes(label)) out.push(label)
+    }
+    return out
+}
+
+const Needs = ({ due }) => {
+    const items = needsFrom(due)
+    if (!items.length) return null
+    return (
+        <div className="biz-pay__needs">
+            <h3 className="biz-pay__label">Stripe is waiting for</h3>
+            <ul className="biz-pay__needlist">
+                {items.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+        </div>
+    )
+}
+
 const Ready = () => (
     <div className="biz-pay__prep">
         <h3 className="biz-pay__label">Have these ready</h3>
@@ -286,7 +324,15 @@ const PaymentsPage = () => {
         })
         let off = () => {}
         onAppReturn(() => load()).then((stop) => { off = stop })
-        return () => off()
+        // On the web, owners often finish Stripe in another tab: look again when they come back.
+        let last = Date.now()
+        const onShow = () => {
+            if (document.visibilityState !== 'visible' || Date.now() - last < 3000) return
+            last = Date.now()
+            load()
+        }
+        document.addEventListener('visibilitychange', onShow)
+        return () => { off(); document.removeEventListener('visibilitychange', onShow) }
     }, [load, go, notify])
 
     // While Stripe reviews, look again a few times so the page turns ready on its own.
@@ -366,9 +412,12 @@ const PaymentsPage = () => {
         title = 'Finish setting up with Stripe'
         lede = 'Stripe still needs a few details before it can pay you. It picks up where you left off.'
         action = (
+            <>
+            <Needs due={p.details_due} />
             <div className="biz-pay__act">
                 <Button loading={busy} iconRight={ArrowUpRight} onClick={() => go('start')}>Continue to Stripe</Button>
             </div>
+            </>
         )
     } else if (at === 'checking') {
         title = 'Stripe is checking your details'
@@ -382,9 +431,12 @@ const PaymentsPage = () => {
         title = 'Payouts are paused'
         lede = 'Stripe needs more details before it can pay you again. Money from bookings waits safely until then.'
         action = (
+            <>
+            <Needs due={p.details_due} />
             <div className="biz-pay__act">
                 <Button loading={busy} iconRight={ArrowUpRight} onClick={() => go('start')}>Fix it on Stripe</Button>
             </div>
+            </>
         )
     } else {
         title = 'Payouts are on'

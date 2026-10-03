@@ -235,6 +235,37 @@
     vertical-align: -4px;
 }
 
+.biz-pay__needs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.biz-pay__needlist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.biz-pay__needlist li {
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    background: var(--lc-warning-tint);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lc-warning) 45%, transparent);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-medium);
+}
+
+.biz-card.is-paused .biz-pay__needlist li,
+.biz-pay__card.is-paused .biz-pay__needlist li {
+    background: var(--lc-danger-tint);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lc-danger) 45%, transparent);
+}
+
 /* What to have at hand before Stripe's page, so nobody stops halfway to find their IBAN. */
 .biz-pay__prep {
     display: flex;

@@ -80,6 +80,7 @@ export default async ({ browser, url, check, server, root }) => {
 
     p = await open('pending')
     v = await view(p)
+    check(/Stripe is waiting for/.test(v.text) && /Date of birth/.test(v.text), 'an unfinished setup says what Stripe is waiting for, in plain words')
     check(v.title === 'Finish setting up with Stripe' && v.badge === 'Unfinished' && v.buttons.includes('Continue to Stripe') && /is-unfinished/.test(v.route), 'an unfinished setup says so and continues')
     await p.close()
 
