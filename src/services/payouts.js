@@ -16,6 +16,9 @@ export const callPayouts = async (action, body = {}) => {
     return data
 }
 
+// What is on its way to the bank, this month, recent payouts and paid bookings (Payments page).
+export const loadMoney = () => callPayouts('money')
+
 // Stripe's page is a one-time visit. In the app it opens in the browser and the app checks again when the owner comes back.
 export const openPayoutLink = async (url) => {
     if (isNative()) {

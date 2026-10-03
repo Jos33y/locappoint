@@ -74,6 +74,31 @@ export default async ({ browser, url, check, server, root }) => {
     check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
     await p.close()
 
+    // Money once payouts are on: what is on its way and the day it lands, the month, bookings and payouts.
+    p = await open('active', 390, 844, '&money=full')
+    const m = await p.evaluate(() => ({
+        total: document.querySelector('.biz-money__total')?.textContent || '',
+        next: document.querySelector('.biz-money__next')?.textContent || '',
+        lands: document.querySelectorAll('.biz-money__day.is-lands').length,
+        due: document.querySelectorAll('.biz-money__day.is-due').length,
+        stats: [...document.querySelectorAll('.biz-money__stats dt')].map((d) => d.textContent),
+        rows: [...document.querySelectorAll('.biz-money__row')].map((r) => r.textContent),
+        fits: document.documentElement.scrollWidth <= window.innerWidth,
+    }))
+    check(/34[.,]62/.test(m.total) && /Next/.test(m.next) && /11[.,]38/.test(m.next), `the headline is what is on its way, then the next payout: ${m.total} / ${m.next}`)
+    check(m.lands === 1 && m.due === 1, `the strip marks the day sent money lands, and the expected day, differently: ${m.lands} / ${m.due}`)
+    check(m.stats.includes('Into your bank') && m.stats.includes('From bookings, after fees') && m.stats.includes('Paid bookings'), `the month in plain words: ${m.stats.join(', ')}`)
+    check(m.rows.some((r) => /Joseey John/.test(r) && /You get/.test(r) && /11[.,]38/.test(r)) && m.rows.some((r) => /Ana Guest/.test(r) && /refunded/.test(r)), `paid bookings say what the owner gets, or the refund: ${JSON.stringify(m.rows)}`)
+    await p.evaluate(() => [...document.querySelectorAll('.ui-seg__btn')].find((b) => /Payouts/.test(b.textContent))?.click())
+    await wait(200)
+    const po = await p.evaluate(() => [...document.querySelectorAll('.biz-money__row')].map((r) => r.textContent))
+    check(po.some((r) => /In your bank/.test(r) && /46[.,]10/.test(r)) && po.some((r) => /On its way/.test(r)) && po.every((r) => /ending 6789/.test(r)), `payouts with their state and the account: ${JSON.stringify(po)}`)
+    check(m.fits && p.errors.length === 0, `money fits a phone with no errors: ${p.errors.join(' | ')}`)
+    await p.close()
+    p = await open('active', 390, 844, '&money=error')
+    check(/balance could not load/.test(await p.evaluate(() => document.querySelector('.biz-pay')?.textContent || '')) && /Paid to/.test(await p.evaluate(() => document.querySelector('.biz-pay__paidto')?.textContent || '')), 'money that cannot load says so, and the bank card still shows')
+    await p.close()
+
     p = await open('active-nobank')
     v = await view(p)
     check(!v.live && !v.paidTo && v.badge === 'Being checked', 'never "on" without a bank the owner can see')
@@ -175,4 +200,39 @@ export default async ({ browser, url, check, server, root }) => {
     const link = prov.onboardingLink('acct_1', { return_url: 'https://x/r', refresh_url: 'https://x/e' })
     check(link.use_case.type === 'account_onboarding' && !('configurations' in link.use_case.account_onboarding) && link.use_case.account_onboarding.collection_options.fields === 'eventually_due', 'onboarding asks for everything once and sends no configurations list (Stripe rejects it)')
     check(prov.includeQuery(['a', 'b.c']) === 'include[0]=a&include[1]=b.c', 'v2 include fields are encoded as Stripe expects')
+
+    // Money: Stripe's and Paystack's answers into one view.
+    const money = await server.ssrLoadModule(path.join(root, 'supabase', 'functions', 'payouts', 'money.ts'))
+    const now = new Date('2026-10-07T10:00:00Z')
+    const secs = (iso) => Math.floor(new Date(iso).getTime() / 1000)
+    const row = (id, ref, amount, fee, refunded, paid) => ({ id, appointment_id: `a-${id}`, amount, platform_fee: fee, refunded, payment_ref: ref, paid_at: paid, appointments: { client_name: 'Ana', appointment_date: '2026-10-09', appointment_time: '10:00:00', services: { service_name: 'Haircut' } } })
+    const sm = money.stripeMoney({
+        timeZone: 'Europe/Lisbon', now, refundedThisMonth: 6,
+        balance: { available: [{ currency: 'eur', amount: 500 }], pending: [{ currency: 'eur', amount: 1138 }] },
+        payouts: [
+            { id: 'po_3', currency: 'eur', amount: 2000, status: 'in_transit', arrival_date: secs('2026-10-08T00:00:00Z') },
+            { id: 'po_2', currency: 'eur', amount: 4610, status: 'paid', arrival_date: secs('2026-10-02T00:00:00Z') },
+            { id: 'po_1', currency: 'eur', amount: 999, status: 'paid', arrival_date: secs('2026-09-28T00:00:00Z') },
+        ],
+        txns: [
+            { type: 'charge', currency: 'eur', status: 'pending', net: 1138, available_on: secs('2026-10-09T00:00:00Z'), created: secs('2026-10-06T09:00:00Z'), source: { payment_intent: 'pi_a' } },
+            { type: 'charge', currency: 'eur', status: 'available', net: 2000, available_on: secs('2026-10-05T00:00:00Z'), created: secs('2026-10-03T09:00:00Z'), source: { payment_intent: 'pi_b' } },
+            { type: 'payout', currency: 'eur', status: 'available', net: -4610, available_on: secs('2026-10-02T00:00:00Z'), created: secs('2026-10-01T09:00:00Z') },
+            { type: 'charge', currency: 'eur', status: 'available', net: 999, available_on: secs('2026-09-25T00:00:00Z'), created: secs('2026-09-24T09:00:00Z'), source: { payment_intent: 'pi_c' } },
+        ],
+        rows: [row('p1', 'pi_a', 12.49, 1.11, 0, '2026-10-06T09:00:00Z'), row('p2', 'pi_b', 21, 1.2, 21, '2026-10-03T09:00:00Z'), row('p3', 'pi_c', 11, 1, 0, '2026-09-24T09:00:00Z')],
+    })
+    check(sm.on_way.days.map((d) => `${d.date}:${d.amount}:${d.exact}`).join(' ') === '2026-10-08:25:false 2026-10-09:11.38:false', `on its way: a payout in transit on its arrival day, available money with the next payout, settling money when Stripe frees it: ${JSON.stringify(sm.on_way.days)}`)
+    check(sm.on_way.total === 36.38, `the total is all of it: ${sm.on_way.total}`)
+    check(sm.month.paid_out === 46.1 && sm.month.earned === 31.38 && sm.month.bookings === 2, `this month: payouts that arrived, booking money after fees, paid bookings: ${JSON.stringify(sm.month)}`)
+    check(sm.payments[0].net === 11.38 && sm.payments[1].net === null && sm.payments[1].refunded === 21, 'each booking says what the owner gets, unless it was refunded')
+    check(sm.payouts.map((p) => p.status).join(',') === 'on_way,paid,paid', 'payout states in plain words')
+    const pm = money.paystackMoney({
+        timeZone: 'Africa/Lagos', now, refundedThisMonth: 0,
+        settlements: [{ id: 9, status: 'success', total_amount: 1500000, settlement_date: '2026-10-06T08:00:00Z' }],
+        rows: [row('n1', '1', 15300, 835, 0, '2026-10-06T15:00:00Z'), row('n2', '2', 15300, 835, 0, '2026-10-05T15:00:00Z')],
+    })
+    check(pm.on_way.total === 14465 && pm.on_way.days[0].date === '2026-10-07' && !pm.net_exact, `Paystack: paid since the last settlement lands the next working day, before Paystack's fee: ${JSON.stringify(pm.on_way)}`)
+    check(pm.month.paid_out === 15000 && pm.payouts[0].status === 'paid', 'Paystack settlements are the payouts, in naira')
+    check(money.nextWorkingDay('2026-10-09') === '2026-10-12', 'Friday money moves on Monday')
 }

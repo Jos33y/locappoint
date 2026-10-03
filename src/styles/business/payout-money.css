@@ -1,0 +1,220 @@
+/* Money on the Payments page: what is on its way and the day it lands, the month, and the
+   bookings and payouts behind it. Builds on the week strip in payouts.css. */
+
+.biz-money__way {
+    gap: var(--space-4);
+}
+
+.biz-money__head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.biz-money__total {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-figure);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.biz-money__next {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.biz-money__next b {
+    color: var(--lc-ink-1);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The strip: each landing day carries its amount under the date. Two weeks wrap to two rows. */
+.biz-money__strip {
+    row-gap: var(--space-3);
+}
+
+.biz-money__day.is-today:not(.is-lands):not(.is-due) .biz-pay__daynum {
+    box-shadow: inset 0 0 0 1.5px var(--lc-line-strong);
+    color: var(--lc-ink-1);
+}
+
+.biz-money__day.is-due .biz-pay__daynum {
+    border: 1.5px dashed var(--azure);
+    color: var(--azure);
+}
+
+.biz-money__amt {
+    min-height: 15px;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-micro);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.biz-money__day.is-due .biz-money__amt {
+    color: var(--lc-ink-2);
+}
+
+.biz-money__key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-micro);
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-money__key span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.biz-money__key i {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+}
+
+.biz-money__key i.is-lands { background: var(--lc-azure-button); }
+.biz-money__key i.is-due { border: 1.5px dashed var(--azure); }
+
+/* The month in four figures. */
+.biz-money__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4) var(--space-3);
+    margin: 0;
+}
+
+.biz-money__stats div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.biz-money__stats dt {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-money__stats dd {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+}
+
+.biz-money__stats .is-quiet dd { color: var(--lc-ink-3); }
+
+@media (min-width: 560px) {
+    .biz-money__stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Paid bookings and payouts. */
+.biz-money__list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.biz-money__list > li + li {
+    border-top: 1px solid var(--lc-line);
+}
+
+.biz-money__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 56px;
+    padding: var(--space-3) 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+a.biz-money__row {
+    margin: 0 calc(var(--space-2) * -1);
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--lc-r-md);
+}
+
+a.biz-money__row:hover { background: var(--lc-well); }
+
+a.biz-money__row:focus-visible {
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+}
+
+.biz-money__main,
+.biz-money__fig {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.biz-money__main { min-width: 0; }
+
+.biz-money__main b {
+    overflow: hidden;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.biz-money__main span {
+    overflow: hidden;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.biz-money__fig {
+    flex: none;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.biz-money__fig b {
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+}
+
+.biz-money__fig span {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.biz-money__fig .is-refund { color: var(--lc-info); }
+
+.biz-money__state.is-paid { color: var(--lc-success); }
+.biz-money__state.is-on_way { color: var(--lc-info); }
+.biz-money__state.is-failed { color: var(--lc-danger); }
+
+.biz-money__none {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}

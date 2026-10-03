@@ -324,6 +324,23 @@ const PAYOUT_ROWS = {
   paystack: { provider: 'paystack', status: 'not_started', details_due: [] },
   'paystack-active': { provider: 'paystack', status: 'active', bank_name: 'Access Bank', account_last4: '6789', details_due: [] },
 }
+// Money on the Payments page: ?money=full (Stripe, paid bookings and payouts), ?money=error; empty by default.
+const MONEY_EMPTY = { provider: 'stripe', currency: 'EUR', net_exact: true, on_way: { total: 0, days: [] }, month: { paid_out: 0, earned: 0, bookings: 0, refunded: 0 }, payouts: [], payments: [] }
+const money = () => {
+  const mode = new URLSearchParams(window.location.search).get('money')
+  if (mode === 'error') return failed('Stripe test mode: the balance could not load')
+  if (mode !== 'full') return { data: MONEY_EMPTY, error: null }
+  return { data: {
+    ...MONEY_EMPTY,
+    on_way: { total: 34.62, days: [{ date: dk(1), amount: 11.38, exact: true }, { date: dk(3), amount: 23.24, exact: false }] },
+    month: { paid_out: 46.1, earned: 80.48, bookings: 7, refunded: 6 },
+    payouts: [{ id: 'po_2', amount: 11.38, date: dk(1), status: 'on_way' }, { id: 'po_1', amount: 46.1, date: dk(-2), status: 'paid' }],
+    payments: [
+      { id: 'pay_2', appointment_id: 'p1', paid_at: new Date().toISOString(), client: 'Joseey John', service: 'Barba com toalha quente', date: dk(3), time: '11:00', paid: 12.49, net: 11.38, refunded: 0 },
+      { id: 'pay_1', appointment_id: 'p2', paid_at: new Date().toISOString(), client: 'Ana Guest', service: 'Haircut', date: dk(-3), time: '10:00', paid: 18.49, net: null, refunded: 18.49 },
+    ],
+  }, error: null }
+}
 const failed = (message) => ({ data: null, error: { context: { json: async () => ({ error: message }) } } })
 const payouts = (body) => {
   const state = new URLSearchParams(window.location.search).get('payoutstate') || 'not_started'
@@ -331,6 +348,7 @@ const payouts = (body) => {
   const row = { test: true, ...(PAYOUT_ROWS[state] || PAYOUT_ROWS.not_started) }
   if (body.action === 'status') return { data: row, error: null }
   if (body.action === 'start' || body.action === 'manage') return { data: { url: `/?path=${encodeURIComponent('/portal/payments')}&payouts=return&payoutstate=active` }, error: null }
+  if (body.action === 'money') return money()
   if (body.action === 'banks') return { data: { banks: [{ code: '044', name: 'Access Bank' }, { code: '058', name: 'GTBank' }] }, error: null }
   if (body.action === 'resolve') return body.account_number === '0123456789' ? { data: { account_name: 'ADEBAYO OLUWASEUN' }, error: null } : failed('We could not find that account. Check the number and the bank.')
   if (body.action === 'connect') return { data: { ...PAYOUT_ROWS['paystack-active'], test: true, account_name: 'ADEBAYO OLUWASEUN' }, error: null }

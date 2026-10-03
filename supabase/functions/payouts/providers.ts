@@ -39,12 +39,14 @@ const fail = (body: any, status: number, who: string) => {
     return new ProviderError(err.message || `${who} ${status}`, status >= 500 ? 502 : 400, String(err.code || ''))
 }
 
-// v1: form-encoded. Used only for the bank summary and the Express login link.
-export const stripeCall = async (key: string, path: string, params?: Record<string, string | number | boolean | undefined>) => {
+// v1: form-encoded. The bank summary, the Express login link, and (on the business's own account,
+// with `account`) its balance, payouts and balance transactions for the Payments page.
+export const stripeCall = async (key: string, path: string, params?: Record<string, string | number | boolean | undefined>, account?: string) => {
     const res = await fetch(`https://api.stripe.com/v1/${path}`, {
         method: params ? 'POST' : 'GET',
         headers: {
             Authorization: `Bearer ${key}`,
+            ...(account ? { 'Stripe-Account': account } : {}),
             ...(params ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}),
         },
         body: params ? form(params) : undefined,

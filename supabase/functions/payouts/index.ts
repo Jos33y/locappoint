@@ -12,6 +12,7 @@ import {
     ProviderError, STRIPE_PREVIEW_VERSION, STRIPE_VERSION, bankCode, bankSummary, includeQuery, newStripeAccount, nigerianAccount, onboardingLink,
     paystackCall, stripeCall, stripeState, stripeV2,
 } from './providers.ts'
+import { type PaymentRow, paystackMoney, stripeMoney } from './money.ts'
 
 const SITE = (Deno.env.get('SITE_URL') || 'https://locappoint.com').replace(/\/$/, '')
 const STRIPE = Deno.env.get('STRIPE_SECRET_KEY') || ''
@@ -81,6 +82,39 @@ const stripeProblem = (err: unknown) => {
         : 'Payouts cannot be set up right now. We have been told and are on it.', 503)
 }
 
+// The business's paid bookings and refunds from our own rows, for the money view. Since 40 days
+// back: this month plus the last payouts' bookings.
+const moneyRows = async (businessId: string) => {
+    const since = new Date(Date.now() - 40 * 86_400_000).toISOString()
+    const { data: rows, error } = await db.from('payments')
+        .select('id, appointment_id, amount, platform_fee, refunded, payment_ref, paid_at, appointments(client_name, appointment_date, appointment_time, services(service_name))')
+        .eq('business_id', businessId)
+        .in('status', ['paid', 'refunded', 'partly_refunded'])
+        .gte('paid_at', since)
+        .order('paid_at', { ascending: false })
+        .limit(500)
+    if (error) throw error
+    const { data: refunds, error: refundError } = await db.from('payment_refunds')
+        .select('amount, sent_at, payments!inner(business_id)')
+        .eq('payments.business_id', businessId)
+        .eq('status', 'sent')
+        .gte('sent_at', since)
+    if (refundError) throw refundError
+    return { rows: (rows || []) as unknown as PaymentRow[], refunds: (refunds || []) as { amount: number; sent_at: string }[] }
+}
+
+const refundedIn = (refunds: { amount: number; sent_at: string }[], timeZone: string) => {
+    const month = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit' }).format(new Date())
+    return refunds
+        .filter((r) => new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit' }).format(new Date(r.sent_at)) === month)
+        .reduce((s, r) => s + Number(r.amount || 0), 0)
+}
+
+const emptyMoney = (provider: 'stripe' | 'paystack') => ({
+    provider, currency: provider === 'stripe' ? 'EUR' : 'NGN', net_exact: provider === 'stripe',
+    on_way: { total: 0, days: [] }, month: { paid_out: 0, earned: 0, bookings: 0, refunded: 0 }, payouts: [], payments: [],
+})
+
 const stripeAccount = (ref: string) => stripeV2(STRIPE, `core/accounts/${encodeURIComponent(ref)}?${includeQuery()}`, undefined, undefined, VERSION)
 
 const stripeBank = async (ref: string) => {
@@ -106,7 +140,7 @@ Deno.serve(async (req) => {
         const action = String(input.action || '')
 
         const { data: business } = await db.from('businesses')
-            .select('id, business_name, slug, country, currency, market, markets(payment_provider, country)')
+            .select('id, business_name, slug, country, currency, market, timezone, markets(payment_provider, country)')
             .eq('user_id', user.id)
             .maybeSingle()
         if (!business) return reply(403, { error: 'Only the owner of a business can set up payouts' })
@@ -158,6 +192,23 @@ Deno.serve(async (req) => {
                 }
             }
 
+            if (action === 'money') {
+                if (!current?.account_ref || current.status !== 'active') return reply(200, emptyMoney(provider))
+                const ref = current.account_ref
+                const since = Math.floor(Date.now() / 1000) - 40 * 86_400
+                const [balance, payouts, txns, own] = await Promise.all([
+                    stripeCall(STRIPE, 'balance', undefined, ref),
+                    stripeCall(STRIPE, 'payouts?limit=20', undefined, ref),
+                    stripeCall(STRIPE, `balance_transactions?limit=100&created[gte]=${since}&expand[]=data.source`, undefined, ref),
+                    moneyRows(business.id),
+                ]).catch((err) => { throw stripeProblem(err) })
+                const timeZone = (business as any).timezone || 'Europe/Lisbon'
+                return reply(200, stripeMoney({
+                    balance, payouts: payouts.data || [], txns: txns.data || [], rows: own.rows,
+                    refundedThisMonth: refundedIn(own.refunds, timeZone), timeZone,
+                }))
+            }
+
             if (action === 'manage') {
                 if (!current?.account_ref || current.status === 'not_started') return reply(409, { error: 'Set up payouts first' })
                 const link = await stripeCall(STRIPE, `accounts/${encodeURIComponent(current.account_ref)}/login_links`, {}).catch((err) => { throw stripeProblem(err) })
@@ -170,6 +221,17 @@ Deno.serve(async (req) => {
         if (!PAYSTACK) return reply(503, { error: 'Payouts are not switched on yet' })
 
         if (action === 'status') return reply(200, view(current, provider))
+
+        if (action === 'money') {
+            if (!current?.account_ref || current.status !== 'active') return reply(200, emptyMoney(provider))
+            const from = new Date(Date.now() - 40 * 86_400_000).toISOString()
+            const [settled, own] = await Promise.all([
+                paystackCall(PAYSTACK, `settlement?subaccount=${encodeURIComponent(current.account_ref)}&perPage=20&from=${encodeURIComponent(from)}`),
+                moneyRows(business.id),
+            ])
+            const timeZone = (business as any).timezone || 'Africa/Lagos'
+            return reply(200, paystackMoney({ settlements: settled.data || [], rows: own.rows, refundedThisMonth: refundedIn(own.refunds, timeZone), timeZone }))
+        }
 
         if (action === 'banks') return reply(200, { banks: await loadBanks() })
 
