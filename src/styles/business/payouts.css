@@ -221,6 +221,20 @@
     letter-spacing: 0.06em;
 }
 
+.biz-pay__logo {
+    display: block;
+    width: auto;
+    height: 20px;
+    margin: 1px 0 -1px;
+}
+
+.biz-pay__logo--inline {
+    display: inline-block;
+    height: 17px;
+    margin: 0 1px;
+    vertical-align: -4px;
+}
+
 /* What to have at hand before Stripe's page, so nobody stops halfway to find their IBAN. */
 .biz-pay__prep {
     display: flex;

@@ -113,12 +113,13 @@ export const newStripeAccount = (o: { country: string; currency: string; email: 
     }
 }
 
+// Stripe works out what to collect from the account's own configuration; the 2026-09-30 API
+// version rejects a configurations list here.
 export const onboardingLink = (account: string, urls: { return_url: string; refresh_url: string }) => ({
     account,
     use_case: {
         type: 'account_onboarding',
         account_onboarding: {
-            configurations: ['merchant'],
             collection_options: { fields: 'eventually_due' },
             ...urls,
         },

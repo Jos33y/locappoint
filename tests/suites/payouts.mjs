@@ -48,6 +48,8 @@ export default async ({ browser, url, check, server, root }) => {
     check(v.title === 'Get paid for bookings online' && v.badge === 'Not set up', `the page says what this is for: ${v.title} / ${v.badge}`)
     check(/is-missing/.test(v.route) && /Not set yet/.test(v.bank), 'the route shows the bank as the missing stop')
     check(/Client pays/.test(v.text) && /Stripe/.test(v.text) && /Keeps it safe/.test(v.text), 'the route reads client, Stripe, your bank')
+    const marks = await p.evaluate(() => [...document.querySelectorAll('.biz-pay img.biz-pay__logo')].map((i) => [i.getAttribute('src'), i.alt, i.complete && i.naturalWidth > 0]))
+    check(marks.length === 2 && marks.every(([src, alt]) => src === '/brand/partners/stripe.svg' && alt === 'Stripe'), `the official Stripe mark sits on the route and by the button: ${JSON.stringify(marks)}`)
     check(/Have these ready/.test(v.text) && /ID card or passport/.test(v.text) && /IBAN/.test(v.text) && /3 minutes/.test(v.text), 'it says what to have at hand before leaving for Stripe')
     check(v.buttons.filter((b) => b === 'Continue to Stripe').length === 1 && !v.buttons.includes('Set up payouts'), 'one action, said once')
     check(/When the money lands/.test(v.text) && /3 working days/.test(v.text) && /every working day/.test(v.text), 'it says when the money arrives')
@@ -169,6 +171,6 @@ export default async ({ browser, url, check, server, root }) => {
     check(acct.configuration.merchant.capabilities.card_payments.requested === true && !acct.configuration.recipient, 'the business takes cards directly; no transfers through Locappoint')
     check(prov.STRIPE_PREVIEW_VERSION.endsWith('.preview'), 'account creation uses the preview version Express with Managed Risk needs')
     const link = prov.onboardingLink('acct_1', { return_url: 'https://x/r', refresh_url: 'https://x/e' })
-    check(link.use_case.type === 'account_onboarding' && link.use_case.account_onboarding.configurations.join() === 'merchant' && link.use_case.account_onboarding.collection_options.fields === 'eventually_due', 'onboarding asks for everything once, for the merchant configuration')
+    check(link.use_case.type === 'account_onboarding' && !('configurations' in link.use_case.account_onboarding) && link.use_case.account_onboarding.collection_options.fields === 'eventually_due', 'onboarding asks for everything once and sends no configurations list (Stripe rejects it)')
     check(prov.includeQuery(['a', 'b.c']) === 'include[0]=a&include[1]=b.c', 'v2 include fields are encoded as Stripe expects')
 }

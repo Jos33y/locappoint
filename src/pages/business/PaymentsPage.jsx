@@ -11,6 +11,7 @@ import '../../styles/business/payouts.css'
 const PARTNER = {
     stripe: {
         name: 'Stripe',
+        logo: '/brand/partners/stripe.svg',
         client: 'By card when they book',
         days: 3,
         note: 'Paid out every working day, automatically. Your very first payout takes about a week.',
@@ -104,7 +105,7 @@ const MoneyRoute = ({ payout, partner }) => {
             </li>
             <li className="biz-pay__stop is-on">
                 <span className="biz-pay__dot" aria-hidden="true"><ShieldCheck size={18} /></span>
-                <span className="biz-pay__stopname">{partner.name}</span>
+                <span className="biz-pay__stopname">{partner.logo ? <img className="biz-pay__logo" src={partner.logo} alt={partner.name} width="52" height="22" /> : partner.name}</span>
                 <span className="biz-pay__stopsub">Keeps it safe</span>
             </li>
             <li className={`biz-pay__stop biz-pay__stop--bank is-${at}`}>
@@ -357,7 +358,7 @@ const PaymentsPage = () => {
                 <Ready />
                 <div className="biz-pay__act">
                     <Button loading={busy} iconRight={ArrowUpRight} onClick={() => go('start')}>Continue to Stripe</Button>
-                    <span className="biz-pay__actnote">Stripe is our payments partner. You come straight back here.</span>
+                    <span className="biz-pay__actnote">Payments run on <img className="biz-pay__logo biz-pay__logo--inline" src={partner.logo} alt="Stripe" width="52" height="22" />. You come straight back here.</span>
                 </div>
             </>
         )
