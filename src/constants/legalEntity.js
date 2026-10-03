@@ -9,7 +9,7 @@ export const LEGAL_ENTITY = {
     registry: 'Corporate Affairs Commission, Nigeria',
     registrationNumber: 'RC 9267124',
     taxId: '2621483026085',
-    city: 'Lisbon, Portugal',
+    city: 'Porto, Portugal',
     email: 'hello@locappoint.com',
     languages: 'English and Portuguese',
 }

@@ -1,0 +1,8 @@
+# Supabase CLI settings. Used only for deploying Edge Functions:
+#   npm run deploy:notify
+# after a one-time: npx supabase login, then npx supabase link --project-ref YOUR-PROJECT-REF
+
+project_id = "locappoint"
+
+[functions.notify]
+verify_jwt = false
