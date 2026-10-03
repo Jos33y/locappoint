@@ -123,12 +123,16 @@ Deno.serve(async (req) => {
             if (action === 'status') {
                 if (!current?.account_ref) return reply(200, view(current, provider))
                 const account = await stripeAccount(current.account_ref).catch((err) => { throw stripeProblem(err) })
-                const state = stripeState(account, Boolean(current.ready_at))
-                const bank = state.status === 'not_started' ? null : await stripeBank(current.account_ref)
+                let state = stripeState(account, Boolean(current.ready_at))
+                const bank = await stripeBank(current.account_ref)
+                const bankName = bank.bank_name ?? current.bank_name ?? null
+                const last4 = bank.account_last4 ?? current.account_last4 ?? null
+                // Never say payouts are on until the owner can see which account the money goes to.
+                if (state.status === 'active' && !last4) state = { status: 'pending', details_due: [] }
                 const row = await save(business.id, {
                     provider, ...state,
-                    bank_name: bank?.bank_name ?? current.bank_name ?? null,
-                    account_last4: bank?.account_last4 ?? current.account_last4 ?? null,
+                    bank_name: bankName,
+                    account_last4: last4,
                     ready_at: state.status === 'active' ? current.ready_at || new Date().toISOString() : current.ready_at,
                 })
                 return reply(200, view(row, provider))

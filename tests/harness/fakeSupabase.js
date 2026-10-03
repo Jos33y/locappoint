@@ -287,6 +287,7 @@ const PAYOUT_ROWS = {
   waiting: { provider: 'stripe', status: 'pending', details_due: [] },
   restricted: { provider: 'stripe', status: 'restricted', details_due: ['external_account'] },
   active: { provider: 'stripe', status: 'active', bank_name: 'Millennium BCP', account_last4: '6789', details_due: [] },
+  'active-nobank': { provider: 'stripe', status: 'active', details_due: [] },
   paystack: { provider: 'paystack', status: 'not_started', details_due: [] },
   'paystack-active': { provider: 'paystack', status: 'active', bank_name: 'Access Bank', account_last4: '6789', details_due: [] },
 }

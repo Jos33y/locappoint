@@ -296,7 +296,7 @@ const payouts = (body) => {
   if (state === 'error') return failed('Payouts are not switched on yet')
   const row = { test: true, ...(PAYOUT_ROWS[state] || PAYOUT_ROWS.not_started) }
   if (body.action === 'status') return { data: row, error: null }
-  if (body.action === 'start' || body.action === 'manage') return { data: { url: `/?path=${encodeURIComponent('/portal/settings')}&payouts=return&payoutstate=active` }, error: null }
+  if (body.action === 'start' || body.action === 'manage') return { data: { url: `/?path=${encodeURIComponent('/portal/payments')}&payouts=return&payoutstate=active` }, error: null }
   if (body.action === 'banks') return { data: { banks: [{ code: '044', name: 'Access Bank' }, { code: '058', name: 'GTBank' }] }, error: null }
   if (body.action === 'resolve') return body.account_number === '0123456789' ? { data: { account_name: 'ADEBAYO OLUWASEUN' }, error: null } : failed('We could not find that account. Check the number and the bank.')
   if (body.action === 'connect') return { data: { ...PAYOUT_ROWS['paystack-active'], test: true, account_name: 'ADEBAYO OLUWASEUN' }, error: null }

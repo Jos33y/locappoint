@@ -165,62 +165,6 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* Paid to: the bank the money goes to, big enough to check at a glance. */
-.biz-pay__paidto {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    padding: var(--space-4) var(--space-5);
-    border-radius: var(--lc-r-lg);
-    background: var(--lc-raised);
-    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
-}
-
-.biz-pay__paidicon {
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 48px;
-    height: 48px;
-    border-radius: var(--lc-r-md);
-    background: var(--lc-azure-button);
-    color: var(--lc-on-accent);
-}
-
-.biz-pay__paidtext {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.biz-pay__paidlabel {
-    color: var(--lc-ink-3);
-    font-size: var(--lc-t-label);
-}
-
-.biz-pay__paidbank {
-    color: var(--lc-ink-1);
-    font-family: var(--lc-font-display);
-    font-size: var(--lc-t-heading);
-    font-weight: var(--font-weight-semibold);
-    line-height: var(--lc-lh-tight);
-    overflow-wrap: anywhere;
-}
-
-.biz-pay__paidnum {
-    color: var(--lc-ink-2);
-    font-size: var(--lc-t-body);
-}
-
-.biz-pay__paidnum b {
-    color: var(--lc-ink-1);
-    font-family: var(--lc-font-mono);
-    font-variant-numeric: tabular-nums;
-    font-weight: var(--font-weight-medium);
-    letter-spacing: 0.06em;
-}
-
 /* What to have at hand before Stripe's page, so nobody stops halfway to find their IBAN. */
 .biz-pay__prep {
     display: flex;
