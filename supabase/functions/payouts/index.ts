@@ -4,11 +4,12 @@
 // full account number.
 //
 // Deploy: npx supabase functions deploy payouts
-// Secrets: STRIPE_SECRET_KEY, PAYSTACK_SECRET_KEY, optionally SITE_URL and STRIPE_API_VERSION.
+// Secrets: STRIPE_SECRET_KEY, PAYSTACK_SECRET_KEY, optionally SITE_URL, STRIPE_API_VERSION and
+// STRIPE_PREVIEW_VERSION (account creation only: Express with Managed Risk is in preview).
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import {
-    ProviderError, STRIPE_VERSION, bankCode, bankSummary, includeQuery, newStripeAccount, nigerianAccount, onboardingLink,
+    ProviderError, STRIPE_PREVIEW_VERSION, STRIPE_VERSION, bankCode, bankSummary, includeQuery, newStripeAccount, nigerianAccount, onboardingLink,
     paystackCall, stripeCall, stripeState, stripeV2,
 } from './providers.ts'
 
@@ -16,6 +17,7 @@ const SITE = (Deno.env.get('SITE_URL') || 'https://locappoint.com').replace(/\/$
 const STRIPE = Deno.env.get('STRIPE_SECRET_KEY') || ''
 const PAYSTACK = Deno.env.get('PAYSTACK_SECRET_KEY') || ''
 const VERSION = Deno.env.get('STRIPE_API_VERSION') || STRIPE_VERSION
+const PREVIEW = Deno.env.get('STRIPE_PREVIEW_VERSION') || STRIPE_PREVIEW_VERSION
 const STRIPE_TEST = STRIPE.startsWith('sk_test_') || STRIPE.startsWith('rk_test_')
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } })
@@ -145,7 +147,7 @@ Deno.serve(async (req) => {
                         const account = await stripeV2(STRIPE, 'core/accounts', newStripeAccount({
                             country: market.country, currency: (business as any).currency || 'eur', email: user.email ?? null,
                             name: business.business_name, url: `${SITE}/${business.slug}`, businessId: business.id,
-                        }), `payout-account-v2-${business.id}`, VERSION)
+                        }), `payout-account-managed-${business.id}`, PREVIEW)
                         ref = account.id
                         await save(business.id, { provider, account_ref: ref, status: 'pending' })
                     }

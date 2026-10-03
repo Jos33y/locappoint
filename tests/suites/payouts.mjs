@@ -50,7 +50,14 @@ export default async ({ browser, url, check, server, root }) => {
     check(/Client pays/.test(v.text) && /Stripe/.test(v.text) && /Keeps it safe/.test(v.text), 'the route reads client, Stripe, your bank')
     check(/Have these ready/.test(v.text) && /ID card or passport/.test(v.text) && /IBAN/.test(v.text) && /3 minutes/.test(v.text), 'it says what to have at hand before leaving for Stripe')
     check(v.buttons.filter((b) => b === 'Continue to Stripe').length === 1 && !v.buttons.includes('Set up payouts'), 'one action, said once')
-    check(/Every day, automatically/.test(v.text) && /3 working days/.test(v.text), 'it says when the money arrives')
+    check(/When the money lands/.test(v.text) && /3 working days/.test(v.text) && /every working day/.test(v.text), 'it says when the money arrives')
+    const week = await p.evaluate(() => ({
+        days: document.querySelectorAll('.biz-pay__day').length,
+        paid: document.querySelectorAll('.biz-pay__day.is-paid').length,
+        lands: document.querySelectorAll('.biz-pay__day.is-lands').length,
+        label: document.querySelector('.biz-pay__days')?.getAttribute('aria-label') || '',
+    }))
+    check(week.days >= 7 && week.paid === 1 && week.lands === 1 && /reaches your bank on/.test(week.label), `the week strip shows today and the landing day, and reads aloud: ${week.label}`)
     check(/Locappoint only sees your bank name and the last four digits/.test(v.text), 'it says what Locappoint keeps')
     check(await p.evaluate(() => document.querySelector('.biz-pay__head .ui-status')?.textContent === 'Test mode'), 'test mode is marked by the title, not inside a sentence')
     await click(p, 'Continue to Stripe')
@@ -102,7 +109,7 @@ export default async ({ browser, url, check, server, root }) => {
     p = await open('paystack')
     v = await view(p)
     check(v.title === 'Where should we pay you?' && /Paystack/.test(v.text) && /By transfer or card/.test(v.text), 'a Lagos owner sees the Paystack route')
-    check(/Bank/.test(v.text) && /Account number/.test(v.text) && /next working day/.test(v.text), 'bank and account number on our screen, and when money arrives')
+    check(/Bank/.test(v.text) && /Account number/.test(v.text) && /Next working day/.test(v.text), 'bank and account number on our screen, and when money arrives')
     check(await p.evaluate(() => [...document.querySelectorAll('.biz-pay button')].find((b) => /Pay me here/.test(b.textContent))?.disabled), 'nothing can be saved before the bank confirms the name')
     await p.evaluate(() => document.querySelector('.biz-pay__form button[aria-haspopup]')?.click())
     await wait(300)
@@ -141,14 +148,12 @@ export default async ({ browser, url, check, server, root }) => {
 
     // Server rules
     const prov = await server.ssrLoadModule(path.join(root, 'supabase', 'functions', 'payouts', 'providers.ts'))
-    const caps = (card, transfers, payouts = 'active') => ({
-        configuration: {
-            merchant: { capabilities: { card_payments: { status: card } } },
-            recipient: { capabilities: { stripe_balance: { stripe_transfers: { status: transfers }, payouts: { status: payouts } } } },
-        },
+    const caps = (card, payouts) => ({
+        configuration: { merchant: { capabilities: { card_payments: { status: card }, stripe_balance: { payouts: { status: payouts } } } } },
     })
     const due = (status, from = 'user') => ({ requirements: { entries: [{ description: 'representative.dob', awaiting_action_from: from, minimum_deadline: { status } }] } })
-    check(prov.stripeState({ ...caps('active', 'active') }).status === 'active', 'cards, transfers and payouts on means ready')
+    check(prov.stripeState({ ...caps('active', 'active') }).status === 'active', 'cards and payouts on means ready')
+    check(prov.stripeState({ ...caps('active', 'pending') }).status === 'pending', 'cards on but payouts not yet is not ready')
     check(prov.stripeState({ ...caps('restricted', 'restricted'), ...due('past_due') }).status === 'pending', 'a new account still waiting for the owner is unfinished, not paused')
     check(prov.stripeState({ ...caps('restricted', 'restricted'), ...due('past_due') }, true).status === 'restricted', 'a ready account that now needs details is paused')
     const review = prov.stripeState({ ...caps('pending', 'pending'), ...due('currently_due', 'stripe') })
@@ -160,9 +165,10 @@ export default async ({ browser, url, check, server, root }) => {
     check(prov.bankCode('044') === '044' && prov.bankCode('044; drop') === null, 'bank codes are checked before use')
     const acct = prov.newStripeAccount({ country: 'PT', currency: 'EUR', email: 'a@b.pt', name: 'Femtos', url: 'https://locappoint.com/femtos', businessId: 'b1' })
     check(acct.dashboard === 'express' && acct.identity.country === 'pt' && acct.defaults.currency === 'eur', 'a v2 account: Express dashboard, Portugal, euros')
-    check(acct.defaults.responsibilities.fees_collector === 'application' && acct.defaults.responsibilities.losses_collector === 'application', 'Express needs Locappoint to collect fees and carry losses')
-    check(acct.configuration.merchant.capabilities.card_payments.requested === true && acct.configuration.recipient.capabilities.stripe_balance.stripe_transfers.requested === true, 'the account can take cards in its name and receive transfers')
+    check(acct.defaults.responsibilities.fees_collector === 'stripe' && acct.defaults.responsibilities.losses_collector === 'stripe', 'Managed Risk: Stripe collects its fees and carries losses')
+    check(acct.configuration.merchant.capabilities.card_payments.requested === true && !acct.configuration.recipient, 'the business takes cards directly; no transfers through Locappoint')
+    check(prov.STRIPE_PREVIEW_VERSION.endsWith('.preview'), 'account creation uses the preview version Express with Managed Risk needs')
     const link = prov.onboardingLink('acct_1', { return_url: 'https://x/r', refresh_url: 'https://x/e' })
-    check(link.use_case.type === 'account_onboarding' && link.use_case.account_onboarding.configurations.join() === 'merchant,recipient' && link.use_case.account_onboarding.collection_options.fields === 'eventually_due', 'onboarding asks for everything once, for both configurations')
+    check(link.use_case.type === 'account_onboarding' && link.use_case.account_onboarding.configurations.join() === 'merchant' && link.use_case.account_onboarding.collection_options.fields === 'eventually_due', 'onboarding asks for everything once, for the merchant configuration')
     check(prov.includeQuery(['a', 'b.c']) === 'include[0]=a&include[1]=b.c', 'v2 include fields are encoded as Stripe expects')
 }

@@ -12,21 +12,68 @@ const PARTNER = {
     stripe: {
         name: 'Stripe',
         client: 'By card when they book',
-        timing: [
-            ['Paid out', 'Every day, automatically'],
-            ['Reaches your bank', '3 working days after a payment. The first one takes about a week.'],
-        ],
+        days: 3,
+        note: 'Paid out every working day, automatically. Your very first payout takes about a week.',
         privacy: 'Stripe keeps your ID and bank details. Locappoint only sees your bank name and the last four digits.',
     },
     paystack: {
         name: 'Paystack',
         client: 'By transfer or card',
-        timing: [
-            ['Paid out', 'The next working day, automatically'],
-            ['Reaches your bank', 'Straight to your account, in naira'],
-        ],
+        days: 1,
+        note: 'Paid out every working day, automatically, in naira.',
         privacy: 'Paystack pays you. Locappoint keeps only your bank name and the last four digits.',
     },
+}
+
+// When the money lands, on the owner's own calendar: today's payment, the working days it waits,
+// the day it reaches the bank. Weekends are shown as days the money does not move.
+const DAY = 86_400_000
+const atNoon = (d) => { const x = new Date(d); x.setHours(12, 0, 0, 0); return x }
+const isWeekend = (d) => d.getDay() === 0 || d.getDay() === 6
+const addWorkingDays = (from, n) => {
+    const d = atNoon(from)
+    let left = n
+    while (left > 0) {
+        d.setDate(d.getDate() + 1)
+        if (!isWeekend(d)) left -= 1
+    }
+    return d
+}
+const short = (d) => d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+const long = (d) => d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+
+const PayoutWeek = ({ partner, today = new Date() }) => {
+    const start = atNoon(today)
+    const lands = addWorkingDays(start, partner.days)
+    const gap = Math.round((lands - start) / DAY)
+    const days = Array.from({ length: Math.max(7, gap + 1) }, (_, i) => new Date(start.getTime() + i * DAY))
+    const kindOf = (i) => (i === 0 ? 'paid' : i === gap ? 'lands' : i < gap ? 'between' : 'after')
+    return (
+        <section className="biz-pay__week" aria-labelledby="payout-week-title">
+            <h3 id="payout-week-title" className="biz-pay__label">When the money lands</h3>
+            <div className="biz-pay__ends">
+                <span className="biz-pay__end">
+                    <span className="biz-pay__endlabel"><i className="biz-pay__pip is-paid" aria-hidden="true" />A client pays</span>
+                    <span className="biz-pay__endday">{short(start)}</span>
+                </span>
+                <span className="biz-pay__gap">{partner.days === 1 ? 'Next working day' : `${partner.days} working days`}</span>
+                <span className="biz-pay__end biz-pay__end--lands">
+                    <span className="biz-pay__endlabel"><i className="biz-pay__pip is-lands" aria-hidden="true" />In your bank</span>
+                    <span className="biz-pay__endday">{short(lands)}</span>
+                </span>
+            </div>
+            <ol className="biz-pay__days" aria-label={`If a client pays on ${long(start)}, the money usually reaches your bank on ${long(lands)}.`}>
+                {days.map((d, i) => (
+                    <li key={d.toISOString()} className={`biz-pay__day is-${kindOf(i)}${isWeekend(d) ? ' is-weekend' : ''}`} aria-hidden="true">
+                        <span className="biz-pay__dayname">{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</span>
+                        <span className="biz-pay__daynum">{i === gap ? <Landmark size={14} /> : d.getDate()}</span>
+                        <span className="biz-pay__daytrack" />
+                    </li>
+                ))}
+            </ol>
+            <p className="biz-pay__weeknote">{partner.note}</p>
+        </section>
+    )
 }
 
 const stage = (p) => {
@@ -364,14 +411,7 @@ const PaymentsPage = () => {
                 </Card>
 
                 <Card padding="lg" className="biz-pay__card biz-pay__facts" aria-label="When you get paid">
-                    <dl className="biz-pay__timing">
-                        {partner.timing.map(([term, detail]) => (
-                            <div key={term}>
-                                <dt>{term}</dt>
-                                <dd>{detail}</dd>
-                            </div>
-                        ))}
-                    </dl>
+                    <PayoutWeek partner={partner} />
                     <p className="biz-pay__private">
                         <Lock size={14} aria-hidden="true" />
                         {partner.privacy}

@@ -3,6 +3,11 @@
 //
 // Stripe: Accounts v2 (/v2/core/accounts). Accounts v1 creation is closed to new Connect platforms.
 // v2 account IDs still work on v1 endpoints, so the bank summary and the Express login link use v1.
+//
+// Managed Risk: Stripe carries fraud and negative-balance risk, so each payment is a direct charge
+// on the business's own account (the business is the seller; client money never sits with
+// Locappoint) and Locappoint takes an application fee. Express plus Managed Risk is in public
+// preview, so account creation pins the preview version.
 
 export type Payout = {
     provider: 'stripe' | 'paystack'
@@ -14,6 +19,7 @@ export type Payout = {
 }
 
 export const STRIPE_VERSION = '2026-09-30.endive'
+export const STRIPE_PREVIEW_VERSION = '2026-09-30.preview'
 
 export class ProviderError extends Error {
     status: number
@@ -65,7 +71,7 @@ export const stripeV2 = async (key: string, path: string, body?: Record<string, 
     return out
 }
 
-export const ACCOUNT_INCLUDE = ['configuration.merchant', 'configuration.recipient', 'requirements']
+export const ACCOUNT_INCLUDE = ['configuration.merchant', 'requirements']
 export const includeQuery = (fields = ACCOUNT_INCLUDE) => fields.map((f, i) => `include[${i}]=${encodeURIComponent(f)}`).join('&')
 
 export const paystackCall = async (key: string, path: string, body?: Record<string, unknown>, method = body ? 'POST' : 'GET') => {
@@ -79,9 +85,9 @@ export const paystackCall = async (key: string, path: string, body?: Record<stri
     return out
 }
 
-// A marketplace account. Express dashboard, so Stripe collects and keeps the identity and bank
-// details; Locappoint collects fees and carries losses, which Express requires. Merchant lets a
-// charge name the business as the seller (on_behalf_of); recipient lets it receive the money.
+// A business account. Express dashboard, so Stripe collects and keeps the identity and bank
+// details. Stripe collects its processing fees and carries losses (Managed Risk); the merchant
+// configuration lets the business take card payments directly, paid out to its own bank.
 export const newStripeAccount = (o: { country: string; currency: string; email: string | null; name: string; url: string; businessId: string }) => {
     const country = o.country.toLowerCase()
     return {
@@ -97,11 +103,10 @@ export const newStripeAccount = (o: { country: string; currency: string; email: 
                 doing_business_as: o.name.slice(0, 100),
                 product_description: 'Appointments booked and paid through Locappoint',
             },
-            responsibilities: { fees_collector: 'application', losses_collector: 'application' },
+            responsibilities: { fees_collector: 'stripe', losses_collector: 'stripe' },
         },
         configuration: {
             merchant: { capabilities: { card_payments: { requested: true } } },
-            recipient: { capabilities: { stripe_balance: { stripe_transfers: { requested: true } } } },
         },
         metadata: { business_id: o.businessId },
         include: ACCOUNT_INCLUDE,
@@ -113,7 +118,7 @@ export const onboardingLink = (account: string, urls: { return_url: string; refr
     use_case: {
         type: 'account_onboarding',
         account_onboarding: {
-            configurations: ['merchant', 'recipient'],
+            configurations: ['merchant'],
             collection_options: { fields: 'eventually_due' },
             ...urls,
         },
@@ -124,12 +129,7 @@ export const onboardingLink = (account: string, urls: { return_url: string; refr
 // before and now needs details is paused (restricted); one that never was ready is unfinished (pending).
 export const stripeState = (account: Record<string, any>, wasReady = false): Omit<Payout, 'provider' | 'account_ref' | 'bank_name' | 'account_last4'> => {
     const merchant = account.configuration?.merchant?.capabilities || {}
-    const recipient = account.configuration?.recipient?.capabilities || {}
-    const caps = [
-        merchant.card_payments?.status,
-        recipient.stripe_balance?.stripe_transfers?.status,
-        recipient.stripe_balance?.payouts?.status ?? merchant.stripe_balance?.payouts?.status,
-    ].filter(Boolean) as string[]
+    const caps = [merchant.card_payments?.status, merchant.stripe_balance?.payouts?.status].filter(Boolean) as string[]
 
     const entries: any[] = account.requirements?.entries || []
     const due = entries
@@ -137,7 +137,8 @@ export const stripeState = (account: Record<string, any>, wasReady = false): Omi
         .map((e) => String(e.description || 'details'))
     const unique = [...new Set(due)].slice(0, 20)
 
-    if (caps.length >= 2 && caps.every((s) => s === 'active') && unique.length === 0) return { status: 'active', details_due: [] }
+    // Ready means the business can take cards and Stripe can pay its bank.
+    if (merchant.card_payments?.status === 'active' && caps.length >= 2 && caps.every((s) => s === 'active') && unique.length === 0) return { status: 'active', details_due: [] }
     if (caps.some((s) => s === 'rejected')) return { status: 'restricted', details_due: unique }
     if (unique.length === 0) return { status: 'pending', details_due: [] }
     return { status: wasReady ? 'restricted' : 'pending', details_due: unique }

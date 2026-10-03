@@ -296,29 +296,185 @@
     line-height: var(--lc-lh-snug);
 }
 
-/* When the money arrives, and who keeps what. */
-.biz-pay__timing {
-    display: grid;
-    gap: var(--space-4);
-    margin: 0;
-}
-
-.biz-pay__timing div {
+/* When the money lands: today's payment, the working days it waits, the day it reaches the bank. */
+.biz-pay__week {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-4);
 }
 
-.biz-pay__timing dt {
+.biz-pay__ends {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: end;
+    gap: var(--space-3);
+}
+
+.biz-pay__end {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.biz-pay__end--lands {
+    align-items: flex-end;
+    text-align: right;
+}
+
+.biz-pay__endlabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: var(--lc-ink-3);
     font-size: var(--lc-t-label);
 }
 
-.biz-pay__timing dd {
-    margin: 0;
+.biz-pay__pip {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+}
+
+.biz-pay__pip.is-paid { background: var(--signal); }
+.biz-pay__pip.is-lands { background: var(--azure); }
+
+.biz-pay__endday {
     color: var(--lc-ink-1);
-    font-size: var(--lc-t-body);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--lc-track-title);
+    white-space: nowrap;
+}
+
+.biz-pay__end--lands .biz-pay__endday {
+    color: var(--lc-info);
+}
+
+.biz-pay__gap {
+    margin-bottom: 3px;
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-micro);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+}
+
+.biz-pay__days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    margin: 0;
+    padding: var(--space-3) 0 var(--space-2);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+    list-style: none;
+}
+
+.biz-pay__day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.biz-pay__dayname {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-micro);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-pay__daynum {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    color: var(--lc-ink-2);
+    font-family: var(--lc-font-mono);
+    font-size: var(--lc-t-label);
+    font-variant-numeric: tabular-nums;
+}
+
+.biz-pay__day.is-weekend .biz-pay__dayname,
+.biz-pay__day.is-weekend .biz-pay__daynum {
+    color: var(--lc-ink-4);
+}
+
+.biz-pay__day.is-after .biz-pay__daynum {
+    color: var(--lc-ink-4);
+}
+
+.biz-pay__day.is-paid .biz-pay__daynum {
+    background: color-mix(in srgb, var(--signal) 18%, transparent);
+    box-shadow: inset 0 0 0 1.5px var(--signal);
+    color: var(--lc-ink-1);
+}
+
+.biz-pay__day.is-lands .biz-pay__daynum {
+    background: var(--lc-azure-button);
+    color: var(--lc-on-accent);
+}
+
+/* The track: the money's path from the day it is paid to the day it lands. */
+.biz-pay__daytrack {
+    align-self: stretch;
+    height: 4px;
+}
+
+.biz-pay__day.is-paid .biz-pay__daytrack {
+    margin-left: 50%;
+    border-radius: 4px 0 0 4px;
+    background: var(--signal);
+}
+
+.biz-pay__day.is-between .biz-pay__daytrack {
+    background: var(--azure);
+}
+
+.biz-pay__day.is-between.is-weekend .biz-pay__daytrack {
+    height: 0;
+    margin-top: 1px;
+    border-top: 2px dashed var(--lc-ink-4);
+    background: none;
+}
+
+.biz-pay__day.is-lands .biz-pay__daytrack {
+    margin-right: 50%;
+    border-radius: 0 4px 4px 0;
+    background: var(--azure);
+}
+
+.biz-pay__weeknote {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
     line-height: var(--lc-lh-snug);
+}
+
+@media (max-width: 479px) {
+    .biz-pay__ends {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        row-gap: var(--space-2);
+    }
+
+    .biz-pay__gap {
+        grid-row: 2;
+        grid-column: 1 / -1;
+        justify-self: center;
+    }
+}
+
+@media (max-width: 380px) {
+    .biz-pay__daynum {
+        width: 28px;
+        height: 28px;
+    }
 }
 
 .biz-pay__private {
@@ -401,10 +557,6 @@
 @media (min-width: 560px) {
     .biz-pay__preplist {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .biz-pay__timing {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .biz-pay__fields {
