@@ -102,42 +102,78 @@
     gap: var(--space-2);
 }
 
-/* The page a client lands on after paying (or turning back). */
+/* The page a client lands on after paying (or turning back). One centred column: the outcome said
+   once, the ticket as the receipt, then the next thing to do. */
 .lc-paid {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     min-height: 100vh;
     min-height: 100dvh;
-    padding: var(--space-8) var(--space-4) var(--space-6);
+    padding: 0 var(--space-4) var(--space-8);
     background: var(--lc-canvas);
     color: var(--lc-ink-1);
+}
+
+.lc-paid__top {
+    display: flex;
+    width: 100%;
+    max-width: 1120px;
+    padding: var(--space-5) 0;
+}
+
+.lc-paid__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: 1.125rem;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.01em;
+    text-decoration: none;
+}
+
+.lc-paid__brand b {
+    color: var(--azure);
+    font-weight: inherit;
+}
+
+.lc-paid__mark {
+    width: 26px;
+    height: auto;
 }
 
 .lc-paid__column {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-5);
     width: 100%;
-    max-width: 460px;
+    max-width: 520px;
+    margin-top: clamp(var(--space-4), 6vh, var(--space-8));
 }
 
-.lc-paid__mark {
-    width: 40px;
-    height: auto;
+.lc-paid__hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    text-align: center;
 }
 
 .lc-paid__badge {
     display: grid;
     place-items: center;
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: var(--space-1);
     border-radius: var(--radius-full);
 }
 
 .lc-paid__badge.is-paid {
-    background: var(--lc-success-tint);
-    box-shadow: inset 0 0 0 1.5px var(--lc-success);
-    color: var(--lc-success);
+    background: var(--lc-success);
+    box-shadow: 0 0 0 8px var(--lc-success-tint);
+    color: var(--lc-canvas);
 }
 
 .lc-paid__badge.is-waiting {
@@ -155,17 +191,20 @@
 .lc-paid__title {
     margin: 0;
     font-family: var(--lc-font-display);
-    font-size: clamp(1.5rem, 1.3rem + 1vw, 1.875rem);
+    font-size: clamp(1.75rem, 1.5rem + 1.2vw, 2.25rem);
     font-weight: var(--font-weight-semibold);
     letter-spacing: var(--lc-track-title);
     line-height: var(--lc-lh-tight);
+    text-wrap: balance;
 }
 
 .lc-paid__text {
-    margin: calc(var(--space-2) * -1) 0 0;
+    max-width: 42ch;
+    margin: 0;
     color: var(--lc-ink-2);
     font-size: var(--lc-t-body);
     line-height: var(--lc-lh-body);
+    text-wrap: pretty;
 }
 
 .lc-paid__text b {
@@ -174,14 +213,53 @@
     overflow-wrap: anywhere;
 }
 
+.lc-paid__app {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    text-align: center;
+}
+
 .lc-paid__actions {
     display: flex;
-    flex-wrap: wrap;
+    justify-content: center;
     gap: var(--space-2);
 }
 
+.lc-paid__actions.is-pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+
+.lc-paid__actions > .ui-btn {
+    min-width: 0;
+}
+
+/* The paid ticket arrives once, the way the day ring draws: once, never looping. */
+@media (prefers-reduced-motion: no-preference) {
+    .lc-paid.is-paid .lc-paid__badge,
+    .lc-paid.is-paid .lc-paid__ticket {
+        animation: lc-paid-in var(--lc-base, 280ms) var(--lc-ease, ease-out) both;
+    }
+
+    .lc-paid.is-paid .lc-paid__ticket {
+        animation-delay: 120ms;
+    }
+}
+
+@keyframes lc-paid-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+}
+
 @media (max-width: 479px) {
-    .lc-paid__actions > .ui-btn {
-        flex: 1 1 100%;
+    .lc-paid__actions,
+    .lc-paid__actions.is-pair {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .lc-paid__top {
+        padding: var(--space-4) 0;
     }
 }

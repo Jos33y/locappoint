@@ -55,7 +55,8 @@ export default async ({ browser, url, check, server, root }) => {
     const landed = await p.evaluate(() => window.location.search)
     check(landed.includes('pay%2Freturn') || landed.includes('/pay/return') || calls.some(([n]) => n === 'checkout'), `paying opens the payment page: ${landed}`)
     await wait(1200)
-    check(/Paid\. You are booked\./.test(await text(p, '.lc-paid__title')), `back from paying, the page confirms it: ${await text(p, '.lc-paid__title')}`)
+    check(/You are booked/.test(await text(p, '.lc-paid__title')) && /25[.,]50/.test(await text(p, '.lc-paid__text')), `back from paying, the page confirms it and what was paid: ${await text(p, '.lc-paid__title')}`)
+    check(Boolean(await p.$('.lc-paid__hero')) && Boolean(await p.$('.lc-cal')), 'one centred column, with add to calendar')
     check(/Paid online/.test(await text(p, '.lc-bk-ticket')) && /Paid/.test(await text(p, '.lc-bk-ticket__stamp')), 'the ticket comes back stamped Paid')
     check(await p.evaluate(() => [...document.querySelectorAll('.lc-paid__actions a, .lc-paid__actions .ui-btn')].some((a) => /Manage booking/.test(a.textContent))), 'with the manage link')
     check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
@@ -86,7 +87,7 @@ export default async ({ browser, url, check, server, root }) => {
     const ref = `cs_test_${'a'.repeat(24)}`
     const back = async (state, extra = '') => open('/pay/return', `&ref=${ref}&paystate=${state}${extra}`)
     p = await back('pending')
-    check(/Paid\. Request sent\./.test(await text(p, '.lc-paid__title')) && /get it all back/.test(await text(p, '.lc-paid__text')), 'a paid request says it is refunded in full if declined')
+    check(/Request sent/.test(await text(p, '.lc-paid__title')) && /get it all back/.test(await text(p, '.lc-paid__text')), 'a paid request says it is refunded in full if declined')
     await p.close()
     p = await back('released')
     check(/Payment not completed/.test(await text(p, '.lc-paid__title')) && /Nothing was charged/.test(await text(p, '.lc-paid__text')), 'an unfinished payment says nothing was charged')
