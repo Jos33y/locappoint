@@ -172,6 +172,13 @@ export default async ({ browser, url, check, server, root }) => {
     check(saved.customer === 'cus_123' && !('customer_email' in saved) && saved['saved_payment_method_options[payment_method_save]'] === 'enabled' && saved['saved_payment_method_options[payment_method_remove]'] === 'enabled', 'a signed-in client pays as a customer of the business, and Stripe offers to remember the card, and to forget it')
     check(s.customer === undefined && s.customer_email === 'ana@guest.pt' && !Object.keys(s).some((k) => k.startsWith('saved_payment_method_options')), 'a guest never gets a saved card: anyone can type an email')
     check(pay.stripeSession(b, 'https://locappoint.com', false, { link: true })['payment_method_types[1]'] === 'link' && s['payment_method_types[1]'] === undefined, 'Link only when it is switched on')
+    const realFetch = globalThis.fetch
+    const seen = []
+    globalThis.fetch = async (u, o) => { seen.push([u, o.method, o.headers['Stripe-Account']]); return { ok: false, status: 404, json: async () => ({ error: { code: 'resource_missing', message: 'No such customer' } }) } }
+    check(await pay.stripeDelete('sk_test_x', 'customers/cus_A', 'acct_1') === true && seen[0][1] === 'DELETE' && seen[0][2] === 'acct_1', "a deleted account's Stripe customer is deleted on the business's account; one already gone counts as done")
+    globalThis.fetch = async () => ({ ok: false, status: 500, json: async () => ({ error: { message: 'down' } }) })
+    check(await pay.stripeDelete('sk_test_x', 'customers/cus_A', 'acct_1').then(() => false, () => true), 'Stripe being down leaves it queued to retry')
+    globalThis.fetch = realFetch
     const ref2 = pay.paystackReference()
     const init = pay.paystackInit({ ...b, currency: 'NGN', price: 15000, clientFee: 300, businessFee: 535, total: 15300 }, 'ACCT_x', ref2, 'https://locappoint.com', false)
     check(init.amount === 1530000 && init.transaction_charge === 83500 && init.subaccount === 'ACCT_x' && init.channels.includes('bank_transfer'), 'Paystack: split to the business, transfer and card, amounts in kobo')

@@ -37,6 +37,17 @@ export const stripeCall = async (key: string, path: string, params?: Params, acc
     return body
 }
 
+// Stripe v1 DELETE on a connected account. A customer already gone counts as done.
+export const stripeDelete = async (key: string, path: string, account: string) => {
+    const res = await fetch(`https://api.stripe.com/v1/${path}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${key}`, 'Stripe-Account': account },
+    })
+    const body = await res.json().catch(() => ({}))
+    if (res.ok || body?.error?.code === 'resource_missing') return true
+    throw new ProviderError(body?.error?.message || `Stripe ${res.status}`, res.status >= 500 ? 502 : 400, String(body?.error?.code || ''))
+}
+
 export const paystackCall = async (key: string, path: string, body?: Record<string, unknown>, method = body ? 'POST' : 'GET') => {
     const res = await fetch(`https://api.paystack.co/${path}`, {
         method,

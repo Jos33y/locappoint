@@ -5,14 +5,15 @@
 //   the booking paid; checkout.session.expired lets the held time go.
 // - Paystack (x-paystack-signature, signed with PAYSTACK_SECRET_KEY): charge.success, checked again
 //   with Paystack's verify endpoint before the booking is marked paid.
-// - The database (x-notify-secret, same NOTIFY_SECRET as the notify function): sends queued refunds.
+// - The database (x-notify-secret, same NOTIFY_SECRET as the notify function): sends queued refunds,
+//   and deletes the Stripe customers (with their saved cards) of deleted accounts.
 //
 // JWT verification is off because Stripe and Paystack cannot send one; the signatures replace it.
 // Deploy: npx supabase functions deploy payments-webhook --no-verify-jwt
 // Secrets: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PAYSTACK_SECRET_KEY, NOTIFY_SECRET.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { minor, paystackCall, paystackSigned, stripeCall, stripeSigned } from '../_shared/pay.ts'
+import { minor, paystackCall, paystackSigned, stripeCall, stripeDelete, stripeSigned } from '../_shared/pay.ts'
 
 const STRIPE = Deno.env.get('STRIPE_SECRET_KEY') || ''
 const STRIPE_HOOK = Deno.env.get('STRIPE_WEBHOOK_SECRET') || ''
@@ -111,8 +112,31 @@ const sendRefunds = async () => {
             await rpc('refund_done', { p_refund: r.id, p_ok: false, p_provider_ref: null, p_error: String((err as Error)?.message || err).slice(0, 500) })
         }
     }
-    return json(200, { claimed: claims?.length || 0, sent })
+    return { claimed: claims?.length || 0, sent }
 }
+
+// ---------- Saved cards of deleted accounts ----------
+
+type Cleanup = { id: string; provider: string; account_ref: string; customer_ref: string }
+
+const sendCleanups = async () => {
+    const claims = (await rpc('claim_cleanups', { p_limit: 10 })) as Cleanup[] | null
+    let done = 0
+    for (const c of claims || []) {
+        try {
+            if (c.provider !== 'stripe') throw new Error('Only Stripe customers are kept')
+            await stripeDelete(STRIPE, `customers/${encodeURIComponent(c.customer_ref)}`, c.account_ref)
+            await rpc('cleanup_done', { p_id: c.id, p_ok: true, p_error: null })
+            done++
+        } catch (err) {
+            console.error('cleanup failed:', c.id, err)
+            await rpc('cleanup_done', { p_id: c.id, p_ok: false, p_error: String((err as Error)?.message || err).slice(0, 500) })
+        }
+    }
+    return { claimed: claims?.length || 0, done }
+}
+
+const sendQueued = async () => json(200, { refunds: await sendRefunds(), cleanups: await sendCleanups() })
 
 Deno.serve(async (req) => {
     if (req.method !== 'POST') return json(405, { error: 'Use POST' })
@@ -121,7 +145,7 @@ Deno.serve(async (req) => {
         if (req.headers.get('stripe-signature')) return await onStripe(raw, req.headers.get('stripe-signature'))
         if (req.headers.get('x-paystack-signature')) return await onPaystack(raw, req.headers.get('x-paystack-signature'))
         const secret = req.headers.get('x-notify-secret')
-        if (NOTIFY && secret && secret === NOTIFY) return await sendRefunds()
+        if (NOTIFY && secret && secret === NOTIFY) return await sendQueued()
         return json(401, { error: 'Not allowed' })
     } catch (err) {
         // A 500 makes Stripe and Paystack retry, which is what we want if the database hiccuped.
