@@ -112,6 +112,7 @@ export const loadNextBooking = async (email) => {
         .or(await mine(email))
         .gte('appointment_date', todayKey())
         .in('status', ['pending', 'confirmed'])
+        .neq('payment_status', 'awaiting')
         .order('appointment_date', { ascending: true })
         .order('appointment_time', { ascending: true })
         .limit(1)
@@ -126,6 +127,7 @@ export const loadMyBookings = async (email) => {
         .from('appointments')
         .select(BOOKING_FIELDS)
         .or(await mine(email))
+        .neq('payment_status', 'awaiting')
         .order('appointment_date', { ascending: true })
         .order('appointment_time', { ascending: true })
     if (error) throw error

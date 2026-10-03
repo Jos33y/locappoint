@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, CalendarClock, Clock, CreditCard } from 'lucide-react'
 import { Button, Chip, ChipGroup, Sheet } from '../ui'
 import { DurationDial } from '../business/DurationDial'
 import { useNow } from '../business/ShopClock'
 import { useAuth } from '../../hooks/useAuth'
-import { durationLabel, menuPrice } from '../../services/business'
+import { durationLabel, menuPrice, zonedNow } from '../../services/business'
 import { trackPage } from '../../services/pageStats'
 import { USER_ERRORS, bookingDays, clearPending, firstOnOrAfter, hasTimeLeft, loadExtras, loadSlots, monthShort, requestBooking, rescheduleMyBooking, savePending, windowsFor } from '../../services/booking'
 import { parsePhone } from '../ui/PhoneField'
 import { clock } from '../../services/hours'
 import { parseDateKey, toMinutes } from '../../services/dates'
+import { abandonPayment, loadQuote, payMoney, paymentState, policyLine, providerName, startCheckout } from '../../services/payments'
+import { onAppReturn, openPayoutLink } from '../../services/payouts'
 import { DayStrip } from './sheet/DayStrip'
 import { TimeGrid } from './sheet/TimeGrid'
 import { BookingTicket } from './sheet/BookingTicket'
@@ -20,7 +22,7 @@ import { OwnerNote } from './sheet/OwnerNote'
 import { RebookNote } from './sheet/RebookNote'
 import '../../styles/client/booking-sheet.css'
 
-const TITLES = { time: 'Pick a time', review: 'Check and confirm', done: 'Booking requested' }
+const TITLES = { time: 'Pick a time', review: 'Check and confirm', paying: 'Finish paying', done: 'Booking requested' }
 const AGAIN_TITLES = { ...TITLES, time: 'Book again' }
 const MOVE_TITLES = { time: 'Pick a new time', review: 'Check the new time', done: 'Booking moved' }
 const TAKEN = ['23P01']
@@ -79,6 +81,13 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     const [notice, setNotice] = useState('')
     const [sending, setSending] = useState(false)
     const [errors, setErrors] = useState({})
+    // Paid online once the business has payouts on. The database decides and prices it; the sheet shows it.
+    const [quote, setQuote] = useState({ state: 'idle', data: null, key: '' })
+    const [quoteTry, setQuoteTry] = useState(0)
+    const [heldId, setHeldId] = useState(null)
+    const [payRef, setPayRef] = useState(null)
+    const [paid, setPaid] = useState(false)
+    const [reopening, setReopening] = useState(false)
     const [details, setDetails] = useState(() => {
         const last = rebook?.client || {}
         const phone = parsePhone(userProfile?.phone || last.phone || '', business.country || 'PT')
@@ -95,6 +104,22 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     useEffect(() => {
         if (counts && step === 'review') trackPage(business.id, 'time')
     }, [counts, step, business.id])
+
+    const quoting = !move && !owner && step === 'review'
+    const quoteKey = `${business.id}:${baseService.id}:${addonKey}:${quoteTry}`
+    useEffect(() => {
+        if (!quoting) return undefined
+        let cancelled = false
+        setQuote((q) => (q.key === quoteKey && q.state === 'ready' ? q : { state: 'loading', data: null, key: quoteKey }))
+        loadQuote({ businessId: business.id, serviceId: baseService.id, addonIds })
+            .then((data) => { if (!cancelled) setQuote({ state: 'ready', data, key: quoteKey }) })
+            .catch((err) => {
+                console.error('Quote failed:', err)
+                if (!cancelled) setQuote({ state: 'error', data: null, key: quoteKey })
+            })
+        return () => { cancelled = true }
+    }, [quoting, quoteKey])
+    const online = quote.state === 'ready' && quote.data?.online === true
 
     const fetchDay = useCallback(async (key) => {
         setBusy((b) => ({ ...b, [key]: { state: 'loading' } }))
@@ -167,7 +192,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
         setSending(true)
         setNotice('')
         try {
-            await requestBooking({
+            const id = await requestBooking({
                 businessId: business.id,
                 serviceId: service.id,
                 staffId,
@@ -180,6 +205,10 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                 addonIds,
             })
             clearPending()
+            if (online) {
+                await pay(id)
+                return
+            }
             setStep('done')
         } catch (err) {
             failed(err, 'We could not send the booking. Try again.')
@@ -187,6 +216,73 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
             setSending(false)
         }
     }
+
+    // The time is held; the payment page opens. In a browser it takes over this page and the client
+    // comes back to /pay/return. In the app it opens on top, and this sheet waits for it.
+    const pay = async (id) => {
+        setHeldId(id)
+        try {
+            const { url, ref } = await startCheckout(id)
+            setPayRef(ref)
+            setStep('paying')
+            await openPayoutLink(url)
+        } catch (err) {
+            await abandonPayment(id).catch(() => {})
+            setHeldId(null)
+            setNotice(err.message || 'The payment page could not open. Try again.')
+        }
+    }
+
+    const reopen = async () => {
+        setReopening(true)
+        setNotice('')
+        try {
+            const { url, ref } = await startCheckout(heldId)
+            setPayRef(ref)
+            await openPayoutLink(url)
+        } catch (err) {
+            setNotice(err.message)
+        } finally {
+            setReopening(false)
+        }
+    }
+
+    const letGo = async () => {
+        if (payRef || heldId) await abandonPayment(payRef || heldId).catch(() => {})
+        setPayRef(null)
+        setHeldId(null)
+        setStep('review')
+    }
+
+    // Only the payment provider's word counts: the page asks the database until it is paid or let go.
+    useEffect(() => {
+        if (step !== 'paying' || !payRef) return undefined
+        let stopped = false
+        const check = async () => {
+            try {
+                const s = await paymentState(payRef)
+                if (stopped || !s) return
+                if (s.state === 'paid') {
+                    setPaid(true)
+                    setStep('done')
+                } else if (s.state === 'released' || s.state === 'refunding') {
+                    setMinutes(null)
+                    setBusy({})
+                    setStep('time')
+                    setNotice(s.state === 'refunding'
+                        ? 'Your payment arrived after the time was let go. It is being refunded in full.'
+                        : 'The payment did not finish, so the time was let go. Pick a time again.')
+                }
+            } catch (err) {
+                console.error('Payment check failed:', err)
+            }
+        }
+        check()
+        const timer = setInterval(check, 4000)
+        let off = () => {}
+        onAppReturn(check).then((stop) => { off = stop })
+        return () => { stopped = true; clearInterval(timer); off() }
+    }, [step, payRef])
 
     const failed = (err, fallback) => {
         console.error('Booking failed:', err)
@@ -217,7 +313,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
 
     const unchanged = was && dayKey === was.dateKey && minutes === was.minutes
     const titles = move ? MOVE_TITLES : rebook ? AGAIN_TITLES : TITLES
-    const stamp = auto ? 'Confirmed' : 'Requested'
+    const stamp = paid ? 'Paid' : auto ? 'Confirmed' : 'Requested'
 
     const close = () => {
         if (step === 'done') clearPending()
@@ -242,7 +338,11 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     } else if (step === 'review' && owner) {
         footer = <Button full to="/portal/calendar">Open my calendar</Button>
     } else if (step === 'review') {
-        footer = <Button full loading={sending} onClick={confirm}>Confirm booking</Button>
+        footer = online
+            ? <Button full loading={sending} icon={CreditCard} onClick={confirm}>{`Pay ${payMoney(quote.data.total, quote.data.currency)}`}</Button>
+            : <Button full loading={sending} disabled={quote.state !== 'ready'} onClick={confirm}>Confirm booking</Button>
+    } else if (step === 'paying') {
+        footer = <Button full variant="quiet" onClick={letGo}>Cancel and let the time go</Button>
     } else {
         footer = (
             <div className="lc-bk-foot lc-bk-foot--gate">
@@ -308,7 +408,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                     <button type="button" className="lc-bk-back" onClick={() => setStep('time')}>
                         <ArrowLeft size={16} aria-hidden="true" />Change time
                     </button>
-                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} pay={!owner} />
+                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} pay={!owner} quote={online ? quote.data : null} />
                     {was ? (
                         <p className="lc-bk-was">
                             Instead of <b>{dayLabel({ date: parseDateKey(was.dateKey) })} at {clock(was.minutes)}</b>.
@@ -325,14 +425,45 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                             onChange={(patch) => { setDetails((d) => ({ ...d, ...patch })); setErrors({}) }}
                         />
                     )}
-                    {!move && !owner && <p className="lc-bk-paynote">Booking is free. Nothing is charged online.</p>}
+                    {!move && !owner && online && (
+                        <p className="lc-bk-policy">
+                            <CalendarClock size={16} aria-hidden="true" />
+                            <span>{policyLine({ policy: quote.data.policy, dateKey: dayKey, minutes, nowKey: zonedNow(timeZone).dateKey, nowMinutes })}</span>
+                        </p>
+                    )}
+                    {!move && !owner && quote.state === 'ready' && !online && <p className="lc-bk-paynote">Booking is free. Nothing is charged online.</p>}
+                    {!move && !owner && quote.state === 'error' && (
+                        <p className="lc-bk-notice" role="alert">
+                            We could not check how this booking is paid. <button type="button" className="lc-bk-link" onClick={() => setQuoteTry((n) => n + 1)}>Try again</button>
+                        </p>
+                    )}
                     {notice && <p className="lc-bk-notice" role="alert">{notice}</p>}
                 </>
             )}
 
+            {step === 'paying' && (
+                <div className="lc-bk-paying">
+                    <span className="lc-bk-paying__ring" aria-hidden="true"><Clock size={24} /></span>
+                    <p className="lc-bk-paying__title">Finish paying on {providerName(quote.data?.provider)}</p>
+                    <p className="lc-bk-paying__text">
+                        Your time is held for {quote.data?.hold_minutes || 35} minutes. This updates by itself the moment the payment arrives.
+                    </p>
+                    <div className="lc-bk-paying__actions">
+                        <Button variant="secondary" loading={reopening} onClick={reopen}>Open the payment page again</Button>
+                    </div>
+                    {notice && <p className="lc-bk-notice" role="alert">{notice}</p>}
+                </div>
+            )}
+
             {step === 'done' && minutes !== null && (
                 <>
-                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={auto ? 'success' : 'signal'} pay={!owner} />
+                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={paid || auto ? 'success' : 'signal'} pay={!owner} quote={paid ? quote.data : null} paid={paid} />
+                    {paid && (
+                        <p className="lc-bk-done">
+                            <b>Paid {payMoney(quote.data?.total, quote.data?.currency)}.</b>
+                            {auto ? '' : ' If they cannot take it, you get it all back.'}
+                        </p>
+                    )}
                     <p className="lc-bk-done">
                         {move
                             ? (auto ? 'Your booking is moved to the new time.' : `${business.business_name} will confirm the new time.`)

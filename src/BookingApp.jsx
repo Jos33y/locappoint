@@ -32,6 +32,7 @@ const ManageBooking = lazy(() => import('./pages/app/ManageBooking'))
 const Join = lazy(() => import('./pages/app/Join'))
 const AppDownload = lazy(() => import('./pages/app/AppDownload'))
 const PayoutsDone = lazy(() => import('./pages/app/PayoutsDone'))
+const PayReturn = lazy(() => import('./pages/app/PayReturn'))
 const Invite = lazy(() => import('./pages/business/Invite'))
 
 const BusinessShell = lazy(() => import('./components/business/BusinessShell'))
@@ -108,6 +109,7 @@ const BookingApp = () => (
                     <Route path="/waitlist" element={<WaitlistRedirect />} />
                     <Route path="/app" element={<AppDownload />} />
                     <Route path="/payouts/done" element={<PayoutsDone />} />
+                    <Route path="/pay/return" element={<PayReturn />} />
 
                     <Route
                         path="/portal"

@@ -95,7 +95,19 @@ const LINK = 'color:#1A50AD; text-decoration:underline;'
 // Booking is free and nothing is charged online. A free service gets no pay row.
 const PAY = 'At your visit. Nothing is charged online.'
 const PAY_TEXT = 'Pay at your visit. Nothing is charged online.'
-const payRow = (f: Facts) => (priceText(f.p.price, f.p.country) === 'Free' ? undefined : PAY)
+const paidOnline = (f: Facts) => ['paid', 'partly_refunded', 'refunded'].includes(String(f.p.payment_status || ''))
+const payRow = (f: Facts) => {
+    if (paidOnline(f)) return `Paid online, ${priceText(f.p.total, f.p.country)}.`
+    return priceText(f.p.price, f.p.country) === 'Free' ? undefined : PAY
+}
+
+// A paid booking that is cancelled says what comes back, and where.
+const refundNote = (f: Facts) => {
+    const amount = Number(f.p.refund) || 0
+    return amount > 0
+        ? `Your ${priceText(amount, f.p.country)} refund is on its way to the card or account you paid with. Banks usually show it within 5 to 10 working days.`
+        : ''
+}
 
 // The calendar invite rides along as an attachment; Google users get a one-tap link too.
 const calendarNote = (f: Facts) =>
@@ -127,7 +139,7 @@ const bookingMessage = (row: Row, f: Facts, forClient: boolean, subject: string,
         plainText(o.h1),
         '',
         ...lines,
-        ...(o.pay ? [PAY_TEXT] : []),
+        ...(o.pay ? [o.pay === PAY ? PAY_TEXT : plainText(o.pay)] : []),
         '',
         ...(o.slot?.button ? [`${o.slot.button.label}: ${o.slot.button.href}`, ''] : []),
         ...(withInvite && f.event ? [`Add to Google Calendar: ${googleLink(f.event)}`, 'Apple and Outlook: open the attached booking.ics', ''] : []),
@@ -206,7 +218,7 @@ export const BOOKING: Record<string, Render> = {
             day: f.dayLabel,
             place: f.biz,
             slot: { state: 'cancelled', time: f.time, flag: 'Not accepted', title: f.service, sub: f.clientDetails, button: BOOK_AGAIN(f) },
-            small: clientSmall(f, 'There is nothing else you need to do.'),
+            small: clientSmall(f, refundNote(f) || 'There is nothing else you need to do.'),
         }
         return bookingMessage(row, f, true, `${f.bizRaw} could not take your booking for ${f.short}`, o,
             [`${f.bizRaw} could not take your booking for ${f.long}.`, `Other times: ${f.page}`])
@@ -223,7 +235,7 @@ export const BOOKING: Record<string, Render> = {
                 day: f.dayLabel,
                 place: f.biz,
                 slot: { state: 'cancelled', time: f.time, flag: `Cancelled by ${f.biz}`, title: f.service, sub: f.clientDetails, button: BOOK_AGAIN(f) },
-                small: clientSmall(f, 'There is nothing else you need to do.'),
+                small: clientSmall(f, refundNote(f) || 'There is nothing else you need to do.'),
             }
             return bookingMessage(row, f, true, `${f.bizRaw} cancelled your booking for ${f.short}`, o,
                 [`${f.bizRaw} cancelled your booking for ${f.long}.`, `Pick a new time: ${f.page}`])

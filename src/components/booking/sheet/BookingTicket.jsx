@@ -1,19 +1,40 @@
-import { Store } from 'lucide-react'
+import { CreditCard, Store } from 'lucide-react'
 import { DurationDial } from '../../business/DurationDial'
 import { fullAddress } from '../../business/public/PublicFind'
 import { durationLabel, menuPrice } from '../../../services/business'
 import { parseDateKey } from '../../../services/dates'
 import { clock } from '../../../services/hours'
+import { payMoney, payWith } from '../../../services/payments'
 import '../../../styles/client/booking-sheet.css'
+import '../../../styles/client/pay.css'
 
 const hasPrice = (price) => String(price ?? '').trim() !== '' && !Number.isNaN(Number(String(price).replace(',', '.')))
 
-export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stampTone = 'signal', pay = true }) => {
+// The total line says how the booking is paid. Paid online, it is a small receipt: the price, the
+// service fee, then the total as the loudest figure after the time.
+const OnlineTotal = ({ quote, paid }) => (
+    <>
+        <dl className="lc-bk-quote">
+            <div><dt>Price</dt><dd>{payMoney(quote.price, quote.currency, true)}</dd></div>
+            {Number(quote.client_fee) > 0 && <div><dt>Service fee</dt><dd>{payMoney(quote.client_fee, quote.currency, true)}</dd></div>}
+        </dl>
+        <div className="lc-bk-ticket__total">
+            <span className="lc-bk-ticket__how">
+                <CreditCard size={14} aria-hidden="true" />
+                {paid ? 'Paid online' : `Pay now ${payWith(quote)}`}
+            </span>
+            <b className="lc-bk-ticket__price">{payMoney(quote.total, quote.currency, true)}</b>
+        </div>
+    </>
+)
+
+export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stampTone = 'signal', pay = true, quote = null, paid = false }) => {
     const date = parseDateKey(dateKey)
     const duration = Number(service.duration_minutes) || 0
     const priced = hasPrice(service.price)
     const owed = !priced || Number(String(service.price).replace(',', '.')) > 0
     const payHere = pay && owed
+    const online = pay && quote?.online
     return (
         <div className={`lc-bk-ticket${stamp ? ' is-stamped' : ''}`}>
             <div className="lc-bk-ticket__main">
@@ -41,7 +62,7 @@ export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stam
                 {business.address?.trim() && <span className="lc-bk-ticket__addr">{fullAddress(business.address, business.city)}</span>}
                 {stamp && <span className={`lc-bk-ticket__stamp is-${stampTone}`}>{stamp}</span>}
             </div>
-            {(priced || payHere) && (
+            {online ? <OnlineTotal quote={quote} paid={paid} /> : (priced || payHere) && (
                 <div className="lc-bk-ticket__total">
                     <span className="lc-bk-ticket__how">
                         {payHere ? <><Store size={14} aria-hidden="true" />Pay at your visit</> : 'Price'}

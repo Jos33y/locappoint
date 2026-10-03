@@ -266,6 +266,126 @@
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lc-danger) 45%, transparent);
 }
 
+/* Payouts on: the account, said once, then what is on its way. */
+.biz-pay__home {
+    gap: var(--space-5);
+}
+
+.biz-pay__homerow {
+    padding: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.biz-pay__homerow .biz-pay__paidbank {
+    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+}
+
+.biz-pay__live {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    margin-left: auto;
+    padding: 4px 12px 4px 10px;
+    border-radius: var(--radius-full);
+    background: var(--lc-success-tint);
+    color: var(--lc-success);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+}
+
+.biz-pay__live i {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: currentColor;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lc-success) 25%, transparent);
+}
+
+.biz-pay__homefoot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--lc-line);
+}
+
+.biz-pay__via {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+.biz-pay__via b {
+    color: var(--lc-ink-1);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-pay__soon {
+    gap: var(--space-4);
+}
+
+.biz-pay__days.is-ghost .biz-pay__dayname,
+.biz-pay__days.is-ghost .biz-pay__daynum {
+    color: var(--lc-ink-4);
+}
+
+.biz-pay__days.is-ghost .biz-pay__day:first-child .biz-pay__daynum {
+    box-shadow: inset 0 0 0 1.5px var(--lc-line-strong);
+    color: var(--lc-ink-2);
+}
+
+.biz-pay__days.is-ghost .biz-pay__daytrack {
+    height: 0;
+    margin-top: 1px;
+    border-top: 2px dashed var(--lc-line-strong);
+}
+
+.biz-pay__empty {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.biz-pay__emptytitle {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-pay__emptytext {
+    max-width: 60ch;
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+@media (max-width: 479px) {
+    .biz-pay__homerow {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        row-gap: var(--space-4);
+    }
+
+    .biz-pay__live {
+        grid-row: 1;
+        grid-column: 1 / -1;
+        justify-self: start;
+        margin-left: 0;
+    }
+
+    .biz-pay__homefoot > .ui-btn {
+        flex: 1 1 100%;
+    }
+}
+
 /* What to have at hand before Stripe's page, so nobody stops halfway to find their IBAN. */
 .biz-pay__prep {
     display: flex;

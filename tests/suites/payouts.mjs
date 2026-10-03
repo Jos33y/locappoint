@@ -25,6 +25,7 @@ export default async ({ browser, url, check, server, root }) => {
             route: route ? route.className : '',
             bank: document.querySelector('.biz-pay__stop--bank')?.textContent || '',
             paidTo: document.querySelector('.biz-pay__paidto')?.textContent || '',
+            live: document.querySelector('.biz-pay__live')?.textContent || '',
             buttons: [...document.querySelectorAll('.biz-pay button')].map((b) => b.textContent.trim()).filter(Boolean),
         }
     })
@@ -66,16 +67,16 @@ export default async ({ browser, url, check, server, root }) => {
     await wait(1400)
     v = await view(p)
     check(!(await p.evaluate(() => window.location.search)).includes('payouts='), 'the return flag is cleared from the address')
-    check(v.title === 'Payouts are on' && v.badge === 'Ready' && /is-ready/.test(v.route), `back from Stripe, payouts show as on: ${v.title}`)
+    check(v.live === 'Payouts on' && !v.route && !v.badge, `back from Stripe, payouts show as on, said once, with no setup route: ${v.live}`)
     check(/Paid to/.test(v.paidTo) && /Millennium BCP/.test(v.paidTo) && /Account ending 6789/.test(v.paidTo), 'ready shows which account the money goes to, bank name and last four digits')
-    check(await p.evaluate(() => { const t = document.querySelector('.biz-pay__paidto'); const r = document.querySelector('.biz-pay__route'); return t && r && (t.compareDocumentPosition(r) & Node.DOCUMENT_POSITION_FOLLOWING) }), 'the account comes before the route, right under the title')
+    check(/On its way to your bank/.test(v.text) && /Nothing on its way yet/.test(v.text) && /first card booking/.test(v.text), 'ready shows what is on its way, and an honest empty state before the first booking')
     check(v.buttons.includes('Manage on Stripe'), 'a ready account can be managed on Stripe')
     check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
     await p.close()
 
     p = await open('active-nobank')
     v = await view(p)
-    check(v.title !== 'Payouts are on' && !v.paidTo && v.badge === 'Being checked', 'never "on" without a bank the owner can see')
+    check(!v.live && !v.paidTo && v.badge === 'Being checked', 'never "on" without a bank the owner can see')
     await p.close()
 
     p = await open('pending')
@@ -100,7 +101,7 @@ export default async ({ browser, url, check, server, root }) => {
     p = await open('not_started', 390, 844, '&payouts=expired')
     await wait(1400)
     v = await view(p)
-    check(v.title === 'Payouts are on' && (await p.evaluate(() => window.location.search)).includes('payoutstate=active'), 'an expired Stripe link is replaced with a fresh one, no dead end')
+    check(v.live === 'Payouts on' && (await p.evaluate(() => window.location.search)).includes('payoutstate=active'), 'an expired Stripe link is replaced with a fresh one, no dead end')
     await p.close()
 
     p = await open('error')
@@ -125,7 +126,7 @@ export default async ({ browser, url, check, server, root }) => {
     await click(p, 'Yes, pay me here')
     await wait(600)
     v = await view(p)
-    check(v.title === 'Payouts are on' && /Access Bank/.test(v.paidTo) && /Account ending 6789/.test(v.paidTo) && v.buttons.includes('Change bank'), 'saved: the bank name and last four digits show as Paid to')
+    check(v.live === 'Payouts on' && /Access Bank/.test(v.paidTo) && /Account ending 6789/.test(v.paidTo) && v.buttons.includes('Change bank') && /first paid booking/.test(v.text), 'saved: the bank name and last four digits show as Paid to')
     check(JSON.stringify(await fn(p)) === JSON.stringify(['status', 'banks', 'resolve', 'connect']), `calls in order: ${(await fn(p)).join(', ')}`)
     await click(p, 'Change bank')
     await wait(300)

@@ -1,0 +1,187 @@
+/* Pay at booking: the ticket's receipt lines, the cancellation rule, the wait while the client
+   pays, and the page they come back to. Same slip language as the ticket and the statement. */
+
+.lc-bk-quote {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: var(--space-4) var(--space-5) var(--space-3);
+    border-top: 1px solid var(--lc-line);
+}
+
+.lc-bk-quote div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.lc-bk-quote dt,
+.lc-bk-quote dd {
+    margin: 0;
+}
+
+.lc-bk-quote dd {
+    color: var(--lc-ink-1);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-bk-quote + .lc-bk-ticket__total {
+    border-top: 1.5px dashed var(--lc-line-strong);
+}
+
+/* The rule, said once, with the exact time it changes. */
+.lc-bk-policy {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-bk-policy > svg {
+    flex: none;
+    margin-top: 1px;
+    color: var(--lc-ink-3);
+}
+
+.lc-bk-policy b {
+    color: var(--lc-ink-1);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Waiting while the client pays on Stripe or Paystack (the app keeps the sheet open). */
+.lc-bk-paying {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-5) var(--space-2);
+    text-align: center;
+}
+
+.lc-bk-paying__ring {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    background: var(--lc-info-tint);
+    box-shadow: inset 0 0 0 1.5px var(--lc-info);
+    color: var(--lc-info);
+}
+
+.lc-bk-paying__title {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-bk-paying__text {
+    max-width: 38ch;
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-bk-paying__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+/* The page a client lands on after paying (or turning back). */
+.lc-paid {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: var(--space-8) var(--space-4) var(--space-6);
+    background: var(--lc-canvas);
+    color: var(--lc-ink-1);
+}
+
+.lc-paid__column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    width: 100%;
+    max-width: 460px;
+}
+
+.lc-paid__mark {
+    width: 40px;
+    height: auto;
+}
+
+.lc-paid__badge {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+}
+
+.lc-paid__badge.is-paid {
+    background: var(--lc-success-tint);
+    box-shadow: inset 0 0 0 1.5px var(--lc-success);
+    color: var(--lc-success);
+}
+
+.lc-paid__badge.is-waiting {
+    background: var(--lc-info-tint);
+    box-shadow: inset 0 0 0 1.5px var(--lc-info);
+    color: var(--lc-info);
+}
+
+.lc-paid__badge.is-off {
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1.5px var(--lc-line-strong);
+    color: var(--lc-ink-2);
+}
+
+.lc-paid__title {
+    margin: 0;
+    font-family: var(--lc-font-display);
+    font-size: clamp(1.5rem, 1.3rem + 1vw, 1.875rem);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--lc-track-title);
+    line-height: var(--lc-lh-tight);
+}
+
+.lc-paid__text {
+    margin: calc(var(--space-2) * -1) 0 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-paid__text b {
+    color: var(--lc-ink-1);
+    font-weight: var(--font-weight-semibold);
+    overflow-wrap: anywhere;
+}
+
+.lc-paid__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+@media (max-width: 479px) {
+    .lc-paid__actions > .ui-btn {
+        flex: 1 1 100%;
+    }
+}

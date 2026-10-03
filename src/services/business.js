@@ -111,6 +111,7 @@ export const loadBookings = async (businessId, fromKey, toKey) => {
         .from('appointments')
         .select('id, staff_id, service_id, appointment_date, appointment_time, duration_minutes, status, source, client_name, client_phone, client_email, notes, price, cancelled_by, rescheduled_from, addons, services(service_name, price)')
         .eq('business_id', businessId)
+        .neq('payment_status', 'awaiting')
         .gte('appointment_date', fromKey)
         .lte('appointment_date', toKey)
         .order('appointment_date')

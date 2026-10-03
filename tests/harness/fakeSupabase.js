@@ -304,10 +304,35 @@ const payouts = (body) => {
   return failed('Unknown action')
 }
 
+// Pay at booking: ?payquote=online|lagos|error turns online payment on; ?paystate=paid|pending|waiting|released|refunding.
+const payParam = (k) => new URLSearchParams(window.location.search).get(k)
+const PAY_POLICY = { free_hours: 24, keep_pct: 50, no_show_keep_pct: 50 }
+const PAY_REF = `cs_test_${'a'.repeat(24)}`
+const payRpc = (name) => {
+  const mode = payParam('payquote')
+  if (name === 'payment_quote') {
+    if (mode === 'error') return { data: null, error: { message: 'down' } }
+    if (mode === 'lagos') return { data: { online: true, provider: 'paystack', currency: 'NGN', price: 15000, client_fee: 300, total: 15300, methods: ['transfer', 'card'], hold_minutes: 35, policy: PAY_POLICY }, error: null }
+    if (mode === 'online') return { data: { online: true, provider: 'stripe', currency: 'EUR', price: 25, client_fee: 0.5, total: 25.5, methods: ['card'], hold_minutes: 35, policy: PAY_POLICY }, error: null }
+    return { data: { online: false }, error: null }
+  }
+  if (name === 'book_appointment' && mode && mode !== 'error') return { data: '00000000-0000-4000-8000-0000000000aa', error: null }
+  if (name === 'payment_state') {
+    const s = payParam('paystate') || 'paid'
+    const paid = s === 'paid' || s === 'pending'
+    return { data: { state: paid ? 'paid' : s, status: s === 'pending' ? 'pending' : 'confirmed', business_name: 'Femtos Barbearia', slug: 'femtos-barbearia', address: 'Rua de Cedofeita 120', city: 'Porto', auto_confirm: s !== 'pending', service_name: 'Haircut', date: '2026-10-09', time: '10:00', duration_minutes: 30, price: 25, client_fee: 0.5, amount: 25.5, currency: 'EUR', provider: 'stripe', email: paid ? 'ana@guest.pt' : null, manage_token: paid ? 'tok-1234567890abcdef1234567890abcdef' : null }, error: null }
+  }
+  if (name === 'payment_abandon') return { data: 'released', error: null }
+  return null
+}
+const checkoutFn = (body) => (body.action === 'start' && body.appointment_id
+  ? { data: { url: `/?path=${encodeURIComponent('/pay/return')}&ref=${PAY_REF}&paystate=paid`, ref: PAY_REF, test: true }, error: null }
+  : failed('Unknown action'))
+
 export const supabase = {
-  functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
+  functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); if (name === 'checkout') return checkoutFn(body || {}); return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); const paying = payRpc(name); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

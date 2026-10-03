@@ -9,3 +9,10 @@ verify_jwt = false
 
 [functions.payouts]
 verify_jwt = true
+
+[functions.checkout]
+verify_jwt = true
+
+# Stripe and Paystack cannot send a JWT; the function checks their signatures instead.
+[functions.payments-webhook]
+verify_jwt = false

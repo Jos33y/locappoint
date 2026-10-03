@@ -33,10 +33,11 @@ import brand from './suites/brand.mjs'
 import cities from './suites/cities.mjs'
 import pricing from './suites/pricing.mjs'
 import payouts from './suites/payouts.mjs'
+import pay from './suites/pay.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const [target = 'quick', filter] = process.argv.slice(2)
-const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage], ['services and hours', servicesHours], ['settings', settings], ['notifications', notifications], ['insights', insights], ['rebooking', rebook], ['reviews', reviews], ['business audit', audit], ['overview', overview], ['client home', clientHome], ['referrals', referrals], ['clients', clients], ['team', team], ['time', time], ['addons', addons], ['money', money], ['hardening', hardening], ['apps', apps], ['account', account], ['push', push], ['seo', seo], ['admin', admin], ['brand', brand], ['cities', cities], ['pricing', pricing], ['payouts', payouts]] }
+const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage], ['services and hours', servicesHours], ['settings', settings], ['notifications', notifications], ['insights', insights], ['rebooking', rebook], ['reviews', reviews], ['business audit', audit], ['overview', overview], ['client home', clientHome], ['referrals', referrals], ['clients', clients], ['team', team], ['time', time], ['addons', addons], ['money', money], ['hardening', hardening], ['apps', apps], ['account', account], ['push', push], ['seo', seo], ['admin', admin], ['brand', brand], ['cities', cities], ['pricing', pricing], ['payouts', payouts], ['pay at booking', pay]] }
 SUITES.emails = [['emails', emails]]
 SUITES.all = [...SUITES.flows, ...SUITES.emails, ...SUITES.layout]
 SUITES.quick = [...SUITES.flows, ...SUITES.emails, ['layout, 4 key screens', layout]]

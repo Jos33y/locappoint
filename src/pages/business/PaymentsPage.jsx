@@ -265,6 +265,63 @@ const BankForm = ({ onSaved, onCancel }) => {
     )
 }
 
+// Once payouts are on, setup is over: one card for where the money goes, one for what is on its
+// way. The route, the badge and the headline all said "ready"; this says it once.
+const GHOST_DAYS = 7
+const ReadyView = ({ payout, partner, paystack, busy, notice, onManage, onChangeBank }) => {
+    const start = atNoon(new Date())
+    const days = Array.from({ length: GHOST_DAYS }, (_, i) => new Date(start.getTime() + i * DAY))
+    return (
+        <div className="biz-pay__column">
+            <Card padding="lg" className="biz-pay__card biz-pay__home" aria-labelledby="payments-title">
+                <div className="biz-pay__paidto biz-pay__homerow">
+                    <span className="biz-pay__paidicon" aria-hidden="true"><Landmark size={22} /></span>
+                    <span className="biz-pay__paidtext">
+                        <span id="payments-title" className="biz-pay__paidlabel">Paid to</span>
+                        <span className="biz-pay__paidbank">{payout.bank_name || 'Your bank account'}</span>
+                        <span className="biz-pay__paidnum">Account ending <b>{payout.account_last4}</b></span>
+                    </span>
+                    <span className="biz-pay__live"><i aria-hidden="true" />Payouts on</span>
+                </div>
+                <div className="biz-pay__homefoot">
+                    <span className="biz-pay__via">
+                        Paid out by {partner.logo
+                            ? <img className="biz-pay__logo biz-pay__logo--inline" src={partner.logo} alt={partner.name} width="52" height="22" />
+                            : <b>{partner.name}</b>}
+                    </span>
+                    {paystack
+                        ? <Button variant="secondary" size="sm" icon={Landmark} onClick={onChangeBank}>Change bank</Button>
+                        : <Button variant="secondary" size="sm" loading={busy} iconRight={ArrowUpRight} onClick={onManage}>Manage on Stripe</Button>}
+                </div>
+                {notice && <p className="biz-pay__alert" role="alert">{notice}</p>}
+            </Card>
+
+            <Card padding="lg" className="biz-pay__card biz-pay__soon" aria-labelledby="payout-soon-title">
+                <h2 id="payout-soon-title" className="biz-pay__label">On its way to your bank</h2>
+                <ol className="biz-pay__days is-ghost" aria-hidden="true">
+                    {days.map((d) => (
+                        <li key={d.toISOString()} className={`biz-pay__day${isWeekend(d) ? ' is-weekend' : ''}`}>
+                            <span className="biz-pay__dayname">{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</span>
+                            <span className="biz-pay__daynum">{d.getDate()}</span>
+                            <span className="biz-pay__daytrack" />
+                        </li>
+                    ))}
+                </ol>
+                <div className="biz-pay__empty">
+                    <p className="biz-pay__emptytitle">Nothing on its way yet</p>
+                    <p className="biz-pay__emptytext">
+                        {paystack ? 'Your first paid booking appears here, with the day it lands.' : 'Your first card booking appears here, with the day it lands.'} {partner.note}
+                    </p>
+                </div>
+                <p className="biz-pay__private">
+                    <Lock size={14} aria-hidden="true" />
+                    {partner.privacy}
+                </p>
+            </Card>
+        </div>
+    )
+}
+
 const LoadingState = () => (
     <div className="biz-pay__column" aria-busy="true">
         <Skeleton height={340} radius={16} />
@@ -377,6 +434,23 @@ const PaymentsPage = () => {
     const paystack = p.provider === 'paystack'
     const look = COPY[at]
     const formOpen = paystack && (at !== 'ready' || editing)
+
+    if (at === 'ready' && !formOpen) {
+        return (
+            <div className="biz-page biz-pay">
+                {head}
+                <ReadyView
+                    payout={p}
+                    partner={partner}
+                    paystack={paystack}
+                    busy={busy}
+                    notice={notice}
+                    onManage={() => go('manage')}
+                    onChangeBank={() => setEditing(true)}
+                />
+            </div>
+        )
+    }
 
     let title
     let lede
