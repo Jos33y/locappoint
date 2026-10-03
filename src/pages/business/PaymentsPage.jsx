@@ -1,0 +1,374 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ArrowUpRight, Check, Clock, CreditCard, IdCard, Landmark, Lock, RotateCw, ShieldCheck } from 'lucide-react'
+import { Button, Card, Field, Picker, Skeleton, Status } from '../../components/ui'
+import { useWorkspace } from '../../components/business/WorkspaceContext'
+import { callPayouts, onAppReturn, openPayoutLink, payoutTarget } from '../../services/payouts'
+import '../../styles/business/payouts.css'
+
+// Payments: where an owner's money goes. One page, one job: show the route from the client to the
+// owner's bank, say plainly what is missing, and offer the one action that fixes it.
+
+const PARTNER = {
+    stripe: {
+        name: 'Stripe',
+        client: 'By card when they book',
+        timing: [
+            ['Paid out', 'Every day, automatically'],
+            ['Reaches your bank', '3 working days after a payment. The first one takes about a week.'],
+        ],
+        privacy: 'Stripe keeps your ID and bank details. Locappoint only sees your bank name and the last four digits.',
+    },
+    paystack: {
+        name: 'Paystack',
+        client: 'By transfer or card',
+        timing: [
+            ['Paid out', 'The next working day, automatically'],
+            ['Reaches your bank', 'Straight to your account, in naira'],
+        ],
+        privacy: 'Paystack pays you. Locappoint keeps only your bank name and the last four digits.',
+    },
+}
+
+const stage = (p) => {
+    if (p.status === 'active') return 'ready'
+    if (p.status === 'restricted') return 'paused'
+    if (p.status === 'pending') return p.details_due?.length ? 'unfinished' : 'checking'
+    return 'missing'
+}
+
+const COPY = {
+    missing: { tone: 'neutral', badge: 'Not set up', bank: 'Not set yet' },
+    unfinished: { tone: 'warning', badge: 'Unfinished', bank: 'Waiting for your details' },
+    checking: { tone: 'info', badge: 'Being checked', bank: 'Being checked' },
+    paused: { tone: 'danger', badge: 'Paused', bank: 'Paused' },
+    ready: { tone: 'success', badge: 'Ready', bank: '' },
+}
+
+// The route the money takes. The last stop is the only one the owner controls, so it carries the state.
+const MoneyRoute = ({ payout, partner }) => {
+    const at = stage(payout)
+    const bankSub = at === 'ready'
+        ? (payout.account_last4 ? `Account ending ${payout.account_last4}` : 'On file')
+        : COPY[at].bank
+    return (
+        <ol className={`biz-pay__route is-${at}`} aria-label="How your money gets to you">
+            <li className="biz-pay__stop is-on">
+                <span className="biz-pay__dot" aria-hidden="true"><CreditCard size={18} /></span>
+                <span className="biz-pay__stopname">Client pays</span>
+                <span className="biz-pay__stopsub">{partner.client}</span>
+            </li>
+            <li className="biz-pay__stop is-on">
+                <span className="biz-pay__dot" aria-hidden="true"><ShieldCheck size={18} /></span>
+                <span className="biz-pay__stopname">{partner.name}</span>
+                <span className="biz-pay__stopsub">Keeps it safe</span>
+            </li>
+            <li className={`biz-pay__stop biz-pay__stop--bank is-${at}`}>
+                <span className="biz-pay__dot" aria-hidden="true">{at === 'ready' ? <Check size={18} /> : <Landmark size={18} />}</span>
+                <span className="biz-pay__stopname">{at === 'ready' && payout.bank_name ? payout.bank_name : 'Your bank'}</span>
+                <span className="biz-pay__stopsub">{bankSub}</span>
+            </li>
+        </ol>
+    )
+}
+
+const Ready = () => (
+    <div className="biz-pay__prep">
+        <h3 className="biz-pay__label">Have these ready</h3>
+        <ul className="biz-pay__preplist">
+            <li><span className="biz-pay__prepicon" aria-hidden="true"><IdCard size={18} /></span>Your ID card or passport</li>
+            <li><span className="biz-pay__prepicon" aria-hidden="true"><Landmark size={18} /></span>Your IBAN</li>
+            <li><span className="biz-pay__prepicon" aria-hidden="true"><Clock size={18} /></span>About 3 minutes</li>
+        </ul>
+    </div>
+)
+
+// Nigeria: bank and account number on our own screen; Paystack confirms the name before anything is saved.
+const BankForm = ({ onSaved, onCancel }) => {
+    const [banks, setBanks] = useState(null)
+    const [bankError, setBankError] = useState('')
+    const [bank, setBank] = useState('')
+    const [number, setNumber] = useState('')
+    const [name, setName] = useState('')
+    const [checking, setChecking] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const [error, setError] = useState('')
+    const asked = useRef('')
+
+    const loadBanks = useCallback(() => {
+        setBankError('')
+        callPayouts('banks').then((r) => setBanks(r.banks || [])).catch((err) => setBankError(err.message))
+    }, [])
+    useEffect(() => { loadBanks() }, [loadBanks])
+
+    useEffect(() => {
+        setName('')
+        setError('')
+        if (!bank || number.length !== 10) return
+        const key = `${bank}:${number}`
+        asked.current = key
+        setChecking(true)
+        callPayouts('resolve', { bank_code: bank, account_number: number })
+            .then((r) => { if (asked.current === key) setName(r.account_name) })
+            .catch((err) => { if (asked.current === key) setError(err.message) })
+            .finally(() => { if (asked.current === key) setChecking(false) })
+    }, [bank, number])
+
+    const save = async () => {
+        setSaving(true)
+        setError('')
+        try {
+            onSaved(await callPayouts('connect', { bank_code: bank, account_number: number }))
+        } catch (err) {
+            setError(err.message)
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    return (
+        <div className="biz-pay__form">
+            <div className="biz-pay__fields">
+                {bankError ? (
+                    <div className="biz-pay__alert" role="alert">
+                        <span>{bankError}</span>
+                        <Button variant="quiet" size="sm" icon={RotateCw} onClick={loadBanks}>Try again</Button>
+                    </div>
+                ) : (
+                    <Field label="Bank">
+                        {banks
+                            ? <Picker value={bank} onChange={setBank} searchable title="Your bank" placeholder="Choose your bank" searchPlaceholder="Search banks" options={banks.map((b) => ({ value: b.code, label: b.name }))} />
+                            : <Skeleton height={44} radius={10} />}
+                    </Field>
+                )}
+                <Field label="Account number" hint="The 10-digit number on your bank app">
+                    <input
+                        className="ui-input biz-pay__nuban"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        maxLength={10}
+                        value={number}
+                        onChange={(e) => setNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    />
+                </Field>
+            </div>
+            <div className="biz-pay__confirm" aria-live="polite">
+                {checking && <span className="biz-pay__checking">Checking the account with your bank</span>}
+                {name && (
+                    <span className="biz-pay__name">
+                        <Check size={18} aria-hidden="true" />
+                        <span><span className="biz-pay__namelabel">Account name</span><b>{name}</b></span>
+                    </span>
+                )}
+            </div>
+            {error && <p className="biz-pay__alert" role="alert">{error}</p>}
+            <div className="biz-pay__act">
+                <Button onClick={save} disabled={!name || checking} loading={saving}>{name ? 'Yes, pay me here' : 'Pay me here'}</Button>
+                {onCancel && <Button variant="quiet" onClick={onCancel}>Cancel</Button>}
+            </div>
+        </div>
+    )
+}
+
+const LoadingState = () => (
+    <div className="biz-pay__column" aria-busy="true">
+        <Skeleton height={340} radius={16} />
+        <Skeleton height={120} radius={16} />
+    </div>
+)
+
+const clearFlag = () => {
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has('payouts')) return
+    url.searchParams.delete('payouts')
+    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const PaymentsPage = () => {
+    const { notify } = useWorkspace()
+    const [state, setState] = useState({ status: 'loading', payout: null, error: '' })
+    const [busy, setBusy] = useState(false)
+    const [editing, setEditing] = useState(false)
+    const [notice, setNotice] = useState('')
+    const flag = useRef(new URLSearchParams(window.location.search).get('payouts'))
+    const checks = useRef(0)
+
+    const load = useCallback(async () => {
+        try {
+            const payout = await callPayouts('status')
+            setState({ status: 'ready', payout, error: '' })
+            return payout
+        } catch (err) {
+            setState((prev) => ({ status: prev.payout ? 'ready' : 'error', payout: prev.payout, error: err.message }))
+            return null
+        }
+    }, [])
+
+    const go = useCallback(async (action) => {
+        setBusy(true)
+        setNotice('')
+        try {
+            const { url } = await callPayouts(action, { target: payoutTarget() })
+            await openPayoutLink(url)
+        } catch (err) {
+            setNotice(err.message)
+        } finally {
+            setBusy(false)
+        }
+    }, [])
+
+    useEffect(() => {
+        load().then((payout) => {
+            const came = flag.current
+            flag.current = null
+            clearFlag()
+            if (!payout || payout.provider !== 'stripe') return
+            if (came === 'return' && payout.status === 'active') notify?.('Payouts are on')
+            // An expired Stripe link: make a fresh one and carry on, as Stripe asks platforms to.
+            if (came === 'expired' && payout.status !== 'active') go('start')
+        })
+        let off = () => {}
+        onAppReturn(() => load()).then((stop) => { off = stop })
+        return () => off()
+    }, [load, go, notify])
+
+    // While Stripe reviews, look again a few times so the page turns ready on its own.
+    const p = state.payout
+    const at = p ? stage(p) : null
+    useEffect(() => {
+        if (at !== 'checking' || checks.current >= 4) return undefined
+        const timer = setTimeout(() => { checks.current += 1; load() }, 6000 * (checks.current + 1))
+        return () => clearTimeout(timer)
+    }, [at, load, p])
+
+    const head = (
+        <header className="biz-page__head biz-pay__head">
+            <div>
+                <h1 className="biz-page__title">Payments</h1>
+                <p className="biz-page__sub">Where your money goes when clients pay on Locappoint.</p>
+            </div>
+            {p?.test && <Status tone="warning" size="sm">Test mode</Status>}
+        </header>
+    )
+
+    if (state.status === 'loading') return <div className="biz-page biz-pay">{head}<LoadingState /></div>
+
+    if (state.status === 'error') {
+        return (
+            <div className="biz-page biz-pay">
+                {head}
+                <div className="biz-pay__column">
+                    <Card padding="lg" className="biz-pay__card">
+                        <h2 className="biz-pay__title">Payments could not load</h2>
+                        <p className="biz-pay__lede">{state.error}</p>
+                        <div className="biz-pay__act">
+                            <Button variant="secondary" icon={RotateCw} onClick={load}>Try again</Button>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        )
+    }
+
+    const partner = PARTNER[p.provider] || PARTNER.stripe
+    const paystack = p.provider === 'paystack'
+    const look = COPY[at]
+    const formOpen = paystack && (at !== 'ready' || editing)
+
+    let title
+    let lede
+    let action = null
+    if (paystack) {
+        title = formOpen ? (at === 'ready' ? 'Change where we pay you' : 'Where should we pay you?') : 'Payouts are on'
+        lede = formOpen
+            ? 'Pick your bank and type your account number. Your bank confirms the name before anything is saved.'
+            : 'When clients pay on Locappoint, the money goes straight to this account.'
+        action = formOpen ? (
+            <BankForm
+                onCancel={at === 'ready' ? () => setEditing(false) : null}
+                onSaved={(next) => { setState({ status: 'ready', payout: next, error: '' }); setEditing(false); notify?.('Payouts are on') }}
+            />
+        ) : (
+            <div className="biz-pay__act">
+                <Button variant="secondary" icon={Landmark} onClick={() => setEditing(true)}>Change bank</Button>
+            </div>
+        )
+    } else if (at === 'missing') {
+        title = 'Get paid for bookings online'
+        lede = 'Set this up once and clients can pay when they book. The money goes to your bank, not to us.'
+        action = (
+            <>
+                <Ready />
+                <div className="biz-pay__act">
+                    <Button loading={busy} iconRight={ArrowUpRight} onClick={() => go('start')}>Continue to Stripe</Button>
+                    <span className="biz-pay__actnote">Stripe is our payments partner. You come straight back here.</span>
+                </div>
+            </>
+        )
+    } else if (at === 'unfinished') {
+        title = 'Finish setting up with Stripe'
+        lede = 'Stripe still needs a few details before it can pay you. It picks up where you left off.'
+        action = (
+            <div className="biz-pay__act">
+                <Button loading={busy} iconRight={ArrowUpRight} onClick={() => go('start')}>Continue to Stripe</Button>
+            </div>
+        )
+    } else if (at === 'checking') {
+        title = 'Stripe is checking your details'
+        lede = 'This usually takes a few minutes. You do not need to do anything; this page updates by itself.'
+        action = (
+            <div className="biz-pay__act">
+                <Button variant="secondary" icon={RotateCw} onClick={() => { checks.current = 0; load() }}>Check again</Button>
+            </div>
+        )
+    } else if (at === 'paused') {
+        title = 'Payouts are paused'
+        lede = 'Stripe needs more details before it can pay you again. Money from bookings waits safely until then.'
+        action = (
+            <div className="biz-pay__act">
+                <Button loading={busy} iconRight={ArrowUpRight} onClick={() => go('start')}>Fix it on Stripe</Button>
+            </div>
+        )
+    } else {
+        title = 'Payouts are on'
+        lede = 'When clients pay on Locappoint, the money goes straight to this account.'
+        action = (
+            <div className="biz-pay__act">
+                <Button variant="secondary" loading={busy} iconRight={ArrowUpRight} onClick={() => go('manage')}>Manage on Stripe</Button>
+                <span className="biz-pay__actnote">Change your bank or see every payout.</span>
+            </div>
+        )
+    }
+
+    return (
+        <div className="biz-page biz-pay">
+            {head}
+            <div className="biz-pay__column">
+                <Card padding="lg" className={`biz-pay__card is-${at}`} aria-labelledby="payments-title">
+                    <Status tone={look.tone} size="sm">{look.badge}</Status>
+                    <h2 id="payments-title" className="biz-pay__title">{title}</h2>
+                    <p className="biz-pay__lede">{lede}</p>
+                    <MoneyRoute payout={p} partner={partner} />
+                    {action}
+                    {notice && <p className="biz-pay__alert" role="alert">{notice}</p>}
+                </Card>
+
+                <Card padding="lg" className="biz-pay__card biz-pay__facts" aria-label="When you get paid">
+                    <dl className="biz-pay__timing">
+                        {partner.timing.map(([term, detail]) => (
+                            <div key={term}>
+                                <dt>{term}</dt>
+                                <dd>{detail}</dd>
+                            </div>
+                        ))}
+                    </dl>
+                    <p className="biz-pay__private">
+                        <Lock size={14} aria-hidden="true" />
+                        {partner.privacy}
+                    </p>
+                </Card>
+            </div>
+        </div>
+    )
+}
+
+export default PaymentsPage

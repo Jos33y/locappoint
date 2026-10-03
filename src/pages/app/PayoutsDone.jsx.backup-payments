@@ -10,8 +10,8 @@ const PayoutsDone = () => {
             <h1>{expired ? 'This link has expired' : 'Your details are with Stripe'}</h1>
             <p>
                 {expired
-                    ? 'Close this window and tap Continue to Stripe again in the Locappoint app, under Your business, Payments.'
-                    : 'Close this window to go back to the Locappoint app. Payments, under Your business, shows when your payouts are on.'}
+                    ? 'Go back to the Locappoint app and tap Continue in Settings to carry on.'
+                    : 'Close this window to go back to the Locappoint app. Settings shows when your payouts are ready.'}
             </p>
         </main>
     )

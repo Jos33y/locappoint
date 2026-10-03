@@ -1,68 +1,296 @@
-.biz-pay__intro {
+/* Payments: the route the money takes, the one thing missing, the one action that fixes it. */
+
+.biz-pay__head {
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 760px;
+}
+
+.biz-pay__column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    width: 100%;
+    max-width: 760px;
+}
+
+.biz-pay__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.biz-pay__card > .ui-status {
+    align-self: flex-start;
+}
+
+.biz-pay__title {
+    margin: calc(var(--space-1) * -1) 0 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.625rem);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--lc-track-title);
+    line-height: var(--lc-lh-tight);
+    text-wrap: balance;
+}
+
+.biz-pay__lede {
+    max-width: 58ch;
+    margin: calc(var(--space-2) * -1) 0 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+    text-wrap: pretty;
+}
+
+/* The route: client, partner, your bank. Lines join the stops; the last line and stop carry the state. */
+.biz-pay__route {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: var(--space-1) 0 0;
+    padding: var(--space-5) var(--space-2) var(--space-4);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+    list-style: none;
+}
+
+.biz-pay__stop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    padding: 0 var(--space-1);
+    text-align: center;
+}
+
+.biz-pay__stop + .biz-pay__stop::before {
+    position: absolute;
+    top: 19px;
+    right: calc(50% + 28px);
+    left: calc(-50% + 28px);
+    height: 2px;
+    border-radius: 2px;
+    background: var(--azure);
+    content: '';
+}
+
+.biz-pay__dot {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: var(--space-2);
+    border-radius: var(--radius-full);
+    background: var(--lc-info-tint);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--azure) 45%, transparent);
+    color: var(--lc-info);
+}
+
+.biz-pay__stopname {
+    display: -webkit-box;
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--lc-lh-snug);
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.biz-pay__stopsub {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-micro);
+    line-height: var(--lc-lh-snug);
+    overflow-wrap: anywhere;
+}
+
+.biz-pay__stop--bank.is-missing::before,
+.biz-pay__stop--bank.is-unfinished::before,
+.biz-pay__stop--bank.is-checking::before,
+.biz-pay__stop--bank.is-paused::before {
+    height: 0;
+    background: none;
+    border-top: 2px dashed var(--lc-ink-4);
+}
+
+.biz-pay__stop--bank.is-missing .biz-pay__dot {
+    background: transparent;
+    box-shadow: none;
+    outline: 1.5px dashed var(--lc-ink-4);
+    outline-offset: -1.5px;
+    color: var(--lc-ink-3);
+}
+
+.biz-pay__stop--bank.is-unfinished::before { border-top-color: var(--lc-warning); }
+
+.biz-pay__stop--bank.is-unfinished .biz-pay__dot {
+    background: var(--lc-warning-tint);
+    box-shadow: inset 0 0 0 1px var(--lc-warning);
+    color: var(--lc-warning);
+}
+
+.biz-pay__stop--bank.is-checking::before { border-top-color: var(--lc-info); }
+
+.biz-pay__stop--bank.is-checking .biz-pay__dot {
+    box-shadow: none;
+    outline: 1.5px dashed var(--lc-info);
+    outline-offset: -1.5px;
+}
+
+.biz-pay__stop--bank.is-paused::before { border-top-color: var(--lc-danger); }
+
+.biz-pay__stop--bank.is-paused .biz-pay__dot {
+    background: var(--lc-danger-tint);
+    box-shadow: inset 0 0 0 1px var(--lc-danger);
+    color: var(--lc-danger);
+}
+
+.biz-pay__stop--bank.is-unfinished .biz-pay__stopsub { color: var(--lc-warning); }
+.biz-pay__stop--bank.is-paused .biz-pay__stopsub { color: var(--lc-danger); }
+
+.biz-pay__stop--bank.is-ready .biz-pay__dot {
+    background: var(--lc-azure-button);
+    box-shadow: none;
+    color: var(--lc-on-accent);
+}
+
+.biz-pay__stop--bank.is-ready .biz-pay__stopsub {
+    color: var(--lc-ink-2);
+    font-variant-numeric: tabular-nums;
+}
+
+/* What to have at hand before Stripe's page, so nobody stops halfway to find their IBAN. */
+.biz-pay__prep {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.biz-pay__label {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-family: var(--lc-font-body);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-pay__preplist {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.biz-pay__preplist li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--lc-r-md);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-medium);
+}
+
+.biz-pay__prepicon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--lc-r-sm);
+    background: var(--lc-well);
+    color: var(--lc-ink-2);
+}
+
+.biz-pay__act {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    gap: var(--space-3);
+}
+
+.biz-pay__actnote {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-pay__alert {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
     gap: var(--space-2);
-    margin: calc(var(--space-2) * -1) 0 0;
-    color: var(--lc-ink-2);
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-danger-tint);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+/* When the money arrives, and who keeps what. */
+.biz-pay__timing {
+    display: grid;
+    gap: var(--space-4);
+    margin: 0;
+}
+
+.biz-pay__timing div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.biz-pay__timing dt {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+.biz-pay__timing dd {
+    margin: 0;
+    color: var(--lc-ink-1);
     font-size: var(--lc-t-body);
     line-height: var(--lc-lh-snug);
 }
 
-.biz-pay__test {
-    color: var(--lc-warning);
-}
-
-/* Where the money goes: the bank is the loudest thing in the section. */
-.biz-pay__bank {
+.biz-pay__private {
     display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    border-radius: var(--lc-r-lg);
-    background: var(--lc-well);
-    box-shadow: inset 0 0 0 1px var(--lc-line);
-}
-
-.biz-pay__bankicon {
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 44px;
-    height: 44px;
-    border-radius: var(--lc-r-md);
-    background: var(--lc-card);
-    box-shadow: inset 0 0 0 1px var(--lc-line);
-    color: var(--lc-ink-1);
-}
-
-.biz-pay__banktext {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.biz-pay__bankname {
-    overflow: hidden;
-    color: var(--lc-ink-1);
-    font-family: var(--lc-font-display);
-    font-size: 17px;
-    font-weight: var(--font-weight-semibold);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.biz-pay__banknum {
-    color: var(--lc-ink-2);
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin: 0;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--lc-line);
+    color: var(--lc-ink-3);
     font-size: var(--lc-t-label);
-    font-variant-numeric: tabular-nums;
+    line-height: var(--lc-lh-snug);
 }
 
+.biz-pay__private > svg {
+    flex: none;
+    margin-top: 2px;
+}
+
+/* Nigeria: the bank form, on our own screen. */
 .biz-pay__form {
     display: flex;
     flex-direction: column;
+    gap: var(--space-4);
+}
+
+.biz-pay__fields {
+    display: grid;
     gap: var(--space-4);
 }
 
@@ -114,23 +342,62 @@
     overflow-wrap: anywhere;
 }
 
-.biz-pay__notice {
-    margin: 0;
-    color: var(--lc-ink-2);
-    font-size: var(--lc-t-label);
+@media (min-width: 560px) {
+    .biz-pay__preplist {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .biz-pay__timing {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .biz-pay__fields {
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .biz-pay__route {
+        padding: var(--space-6) var(--space-4) var(--space-5);
+    }
+
+    .biz-pay__dot {
+        width: 44px;
+        height: 44px;
+    }
+
+    .biz-pay__stop + .biz-pay__stop::before {
+        top: 21px;
+        right: calc(50% + 30px);
+        left: calc(-50% + 30px);
+    }
 }
 
-.biz-pay__private {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-2);
-    margin: 0;
-    color: var(--lc-ink-3);
-    font-size: var(--lc-t-label);
-    line-height: var(--lc-lh-snug);
+@media (max-width: 559px) {
+    .biz-pay__preplist {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .biz-pay__preplist li {
+        flex-direction: column;
+        gap: var(--space-2);
+        padding: var(--space-3) var(--space-2);
+        font-size: var(--lc-t-micro);
+        line-height: var(--lc-lh-snug);
+        text-align: center;
+    }
+
+    .biz-pay__act > .ui-btn {
+        flex: 1 1 100%;
+    }
+
+    .biz-pay__actnote {
+        width: 100%;
+        text-align: center;
+    }
 }
 
-.biz-pay__private > svg {
-    flex: none;
-    margin-top: 2px;
+@media (max-width: 359px) {
+    .biz-pay__stopsub {
+        font-size: 10px;
+    }
 }

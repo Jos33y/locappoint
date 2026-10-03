@@ -1,22 +1,16 @@
 // Payouts: lets a business owner connect where their money goes. Stripe (Portugal) through Stripe's
-// own onboarding page, on Accounts v2; Paystack (Nigeria) with a bank and account number on our
-// screen. The only writer of public.business_payouts. Locappoint never stores an ID, an IBAN or a
-// full account number.
+// own onboarding page; Paystack (Nigeria) with a bank and account number on our screen. The only
+// writer of public.business_payouts. Locappoint never stores an ID, an IBAN or a full account number.
 //
 // Deploy: npx supabase functions deploy payouts
-// Secrets: STRIPE_SECRET_KEY, PAYSTACK_SECRET_KEY, optionally SITE_URL and STRIPE_API_VERSION.
+// Secrets: STRIPE_SECRET_KEY, PAYSTACK_SECRET_KEY, and optionally SITE_URL.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import {
-    ProviderError, STRIPE_VERSION, bankCode, bankSummary, includeQuery, newStripeAccount, nigerianAccount, onboardingLink,
-    paystackCall, stripeCall, stripeState, stripeV2,
-} from './providers.ts'
+import { ProviderError, bankCode, newStripeAccount, nigerianAccount, paystackCall, stripeCall, stripeState } from './providers.ts'
 
 const SITE = (Deno.env.get('SITE_URL') || 'https://locappoint.com').replace(/\/$/, '')
 const STRIPE = Deno.env.get('STRIPE_SECRET_KEY') || ''
 const PAYSTACK = Deno.env.get('PAYSTACK_SECRET_KEY') || ''
-const VERSION = Deno.env.get('STRIPE_API_VERSION') || STRIPE_VERSION
-const STRIPE_TEST = STRIPE.startsWith('sk_test_') || STRIPE.startsWith('rk_test_')
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } })
 
@@ -63,32 +57,12 @@ const view = (row: Record<string, any> | null, provider: string) => ({
     account_last4: row?.account_last4 || null,
     details_due: row?.details_due || [],
     ready_at: row?.ready_at || null,
-    test: provider === 'stripe' ? STRIPE_TEST : PAYSTACK.startsWith('sk_test_'),
+    test: provider === 'stripe' ? STRIPE.startsWith('sk_test_') : PAYSTACK.startsWith('sk_test_'),
 })
 
 const returnUrls = (target: unknown) => target === 'app'
     ? { return_url: `${SITE}/payouts/done`, refresh_url: `${SITE}/payouts/done?expired=1` }
-    : { return_url: `${SITE}/portal/payments?payouts=return`, refresh_url: `${SITE}/portal/payments?payouts=expired` }
-
-// Stripe's own wording helps while testing; owners in live mode get a plain sentence and we get the log.
-const stripeProblem = (err: unknown) => {
-    if (!(err instanceof ProviderError) || err.status !== 400) return err
-    console.error('stripe refused:', err.code, err.message)
-    return new ProviderError(STRIPE_TEST
-        ? `Stripe test mode: ${err.message}${err.code ? ` (${err.code})` : ''}`
-        : 'Payouts cannot be set up right now. We have been told and are on it.', 503)
-}
-
-const stripeAccount = (ref: string) => stripeV2(STRIPE, `core/accounts/${encodeURIComponent(ref)}?${includeQuery()}`, undefined, undefined, VERSION)
-
-const stripeBank = async (ref: string) => {
-    try {
-        return bankSummary(await stripeCall(STRIPE, `accounts/${encodeURIComponent(ref)}/external_accounts?object=bank_account&limit=1`))
-    } catch (err) {
-        console.error('bank summary failed:', (err as Error).message)
-        return { bank_name: null, account_last4: null }
-    }
-}
+    : { return_url: `${SITE}/portal/settings?payouts=return`, refresh_url: `${SITE}/portal/settings?payouts=expired` }
 
 Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
@@ -104,7 +78,7 @@ Deno.serve(async (req) => {
         const action = String(input.action || '')
 
         const { data: business } = await db.from('businesses')
-            .select('id, business_name, slug, country, currency, market, markets(payment_provider, country)')
+            .select('id, business_name, slug, country, market, markets(payment_provider, country)')
             .eq('user_id', user.id)
             .maybeSingle()
         if (!business) return reply(403, { error: 'Only the owner of a business can set up payouts' })
@@ -122,39 +96,34 @@ Deno.serve(async (req) => {
 
             if (action === 'status') {
                 if (!current?.account_ref) return reply(200, view(current, provider))
-                const account = await stripeAccount(current.account_ref).catch((err) => { throw stripeProblem(err) })
-                const state = stripeState(account, Boolean(current.ready_at))
-                const bank = state.status === 'not_started' ? null : await stripeBank(current.account_ref)
+                const account = await stripeCall(STRIPE, `accounts/${current.account_ref}`)
+                const state = stripeState(account)
                 const row = await save(business.id, {
                     provider, ...state,
-                    bank_name: bank?.bank_name ?? current.bank_name ?? null,
-                    account_last4: bank?.account_last4 ?? current.account_last4 ?? null,
                     ready_at: state.status === 'active' ? current.ready_at || new Date().toISOString() : current.ready_at,
                 })
                 return reply(200, view(row, provider))
             }
 
             if (action === 'start') {
-                try {
-                    let ref = current?.account_ref as string | null
-                    if (!ref) {
-                        const account = await stripeV2(STRIPE, 'core/accounts', newStripeAccount({
-                            country: market.country, currency: (business as any).currency || 'eur', email: user.email ?? null,
-                            name: business.business_name, url: `${SITE}/${business.slug}`, businessId: business.id,
-                        }), `payout-account-v2-${business.id}`, VERSION)
-                        ref = account.id
-                        await save(business.id, { provider, account_ref: ref, status: 'pending' })
-                    }
-                    const link = await stripeV2(STRIPE, 'core/account_links', onboardingLink(ref!, returnUrls(input.target)), undefined, VERSION)
-                    return reply(200, { url: link.url })
-                } catch (err) {
-                    throw stripeProblem(err)
+                let ref = current?.account_ref as string | null
+                if (!ref) {
+                    const account = await stripeCall(STRIPE, 'accounts', newStripeAccount({
+                        country: market.country, email: user.email ?? null, name: business.business_name,
+                        url: `${SITE}/${business.slug}`, businessId: business.id,
+                    }), `payout-account-${business.id}`)
+                    ref = account.id
+                    await save(business.id, { provider, account_ref: ref, status: 'pending' })
                 }
+                const link = await stripeCall(STRIPE, 'account_links', {
+                    account: ref!, type: 'account_onboarding', 'collection_options[fields]': 'eventually_due', ...returnUrls(input.target),
+                })
+                return reply(200, { url: link.url })
             }
 
             if (action === 'manage') {
                 if (!current?.account_ref || current.status === 'not_started') return reply(409, { error: 'Set up payouts first' })
-                const link = await stripeCall(STRIPE, `accounts/${encodeURIComponent(current.account_ref)}/login_links`, {}).catch((err) => { throw stripeProblem(err) })
+                const link = await stripeCall(STRIPE, `accounts/${current.account_ref}/login_links`, {})
                 return reply(200, { url: link.url })
             }
 

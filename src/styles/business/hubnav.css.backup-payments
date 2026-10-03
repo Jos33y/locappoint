@@ -94,21 +94,3 @@
         min-height: 44px;
     }
 }
-
-/* Five tabs on a narrow phone: scroll sideways instead of cutting the labels. */
-@media (max-width: 639px) {
-    .biz-hubnav__track {
-        overflow-x: auto;
-        scrollbar-width: none;
-        overscroll-behavior-x: contain;
-    }
-
-    .biz-hubnav__track::-webkit-scrollbar {
-        display: none;
-    }
-
-    .biz-hubnav__tab {
-        flex: 1 0 auto;
-        padding: 0 var(--space-3);
-    }
-}

@@ -1,5 +1,8 @@
 // Stripe and Paystack calls for payouts, and how their answers map onto business_payouts.
 // No Deno APIs here, so the tests can run it under Node with a stubbed fetch.
+//
+// Stripe: Accounts v2 (/v2/core/accounts). Accounts v1 creation is closed to new Connect platforms.
+// v2 account IDs still work on v1 endpoints, so the bank summary and the Express login link use v1.
 
 export type Payout = {
     provider: 'stripe' | 'paystack'
@@ -10,31 +13,60 @@ export type Payout = {
     details_due: string[]
 }
 
+export const STRIPE_VERSION = '2026-09-30.endive'
+
 export class ProviderError extends Error {
     status: number
-    constructor(message: string, status = 502) {
+    code: string
+    constructor(message: string, status = 502, code = '') {
         super(message)
         this.status = status
+        this.code = code
     }
 }
 
 const form = (params: Record<string, string | number | boolean | undefined>) =>
     new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])).toString()
 
-export const stripeCall = async (key: string, path: string, params?: Record<string, string | number | boolean | undefined>, idempotency?: string) => {
+const fail = (body: any, status: number, who: string) => {
+    const err = body?.error || {}
+    return new ProviderError(err.message || `${who} ${status}`, status >= 500 ? 502 : 400, String(err.code || ''))
+}
+
+// v1: form-encoded. Used only for the bank summary and the Express login link.
+export const stripeCall = async (key: string, path: string, params?: Record<string, string | number | boolean | undefined>) => {
     const res = await fetch(`https://api.stripe.com/v1/${path}`, {
         method: params ? 'POST' : 'GET',
         headers: {
             Authorization: `Bearer ${key}`,
             ...(params ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}),
-            ...(idempotency ? { 'Idempotency-Key': idempotency } : {}),
         },
         body: params ? form(params) : undefined,
     })
     const body = await res.json().catch(() => ({}))
-    if (!res.ok) throw new ProviderError(body?.error?.message || `Stripe ${res.status}`, res.status >= 500 ? 502 : 400)
+    if (!res.ok) throw fail(body, res.status, 'Stripe')
     return body
 }
+
+// v2: JSON in and out, the version pinned on every call.
+export const stripeV2 = async (key: string, path: string, body?: Record<string, unknown>, idempotency?: string, version = STRIPE_VERSION) => {
+    const res = await fetch(`https://api.stripe.com/v2/${path}`, {
+        method: body ? 'POST' : 'GET',
+        headers: {
+            Authorization: `Bearer ${key}`,
+            'Stripe-Version': version,
+            ...(body ? { 'Content-Type': 'application/json' } : {}),
+            ...(idempotency ? { 'Idempotency-Key': idempotency } : {}),
+        },
+        body: body ? JSON.stringify(body) : undefined,
+    })
+    const out = await res.json().catch(() => ({}))
+    if (!res.ok) throw fail(out, res.status, 'Stripe')
+    return out
+}
+
+export const ACCOUNT_INCLUDE = ['configuration.merchant', 'configuration.recipient', 'requirements']
+export const includeQuery = (fields = ACCOUNT_INCLUDE) => fields.map((f, i) => `include[${i}]=${encodeURIComponent(f)}`).join('&')
 
 export const paystackCall = async (key: string, path: string, body?: Record<string, unknown>, method = body ? 'POST' : 'GET') => {
     const res = await fetch(`https://api.paystack.co/${path}`, {
@@ -47,35 +79,75 @@ export const paystackCall = async (key: string, path: string, body?: Record<stri
     return out
 }
 
-// A Stripe account as Locappoint sees it. Express-like: Stripe collects and keeps the identity and
-// bank details, the provider gets the light Express pages if ever needed, Locappoint takes its fee.
-export const newStripeAccount = (o: { country: string; email: string | null; name: string; url: string; businessId: string }) => ({
-    'controller[stripe_dashboard][type]': 'express',
-    'controller[fees][payer]': 'application',
-    'controller[losses][payments]': 'application',
-    'controller[requirement_collection]': 'stripe',
-    country: o.country,
-    email: o.email || undefined,
-    'capabilities[card_payments][requested]': true,
-    'capabilities[transfers][requested]': true,
-    'business_profile[name]': o.name.slice(0, 100),
-    'business_profile[url]': o.url,
-    'business_profile[product_description]': 'Appointments booked and paid through Locappoint',
-    'metadata[business_id]': o.businessId,
+// A marketplace account. Express dashboard, so Stripe collects and keeps the identity and bank
+// details; Locappoint collects fees and carries losses, which Express requires. Merchant lets a
+// charge name the business as the seller (on_behalf_of); recipient lets it receive the money.
+export const newStripeAccount = (o: { country: string; currency: string; email: string | null; name: string; url: string; businessId: string }) => {
+    const country = o.country.toLowerCase()
+    return {
+        contact_email: o.email || undefined,
+        display_name: o.name.slice(0, 100),
+        dashboard: 'express',
+        identity: { country },
+        defaults: {
+            currency: o.currency.toLowerCase(),
+            locales: country === 'pt' ? ['pt-PT', 'en-GB'] : ['en-GB'],
+            profile: {
+                business_url: o.url,
+                doing_business_as: o.name.slice(0, 100),
+                product_description: 'Appointments booked and paid through Locappoint',
+            },
+            responsibilities: { fees_collector: 'application', losses_collector: 'application' },
+        },
+        configuration: {
+            merchant: { capabilities: { card_payments: { requested: true } } },
+            recipient: { capabilities: { stripe_balance: { stripe_transfers: { requested: true } } } },
+        },
+        metadata: { business_id: o.businessId },
+        include: ACCOUNT_INCLUDE,
+    }
+}
+
+export const onboardingLink = (account: string, urls: { return_url: string; refresh_url: string }) => ({
+    account,
+    use_case: {
+        type: 'account_onboarding',
+        account_onboarding: {
+            configurations: ['merchant', 'recipient'],
+            collection_options: { fields: 'eventually_due' },
+            ...urls,
+        },
+    },
 })
 
-export const stripeState = (account: Record<string, any>): Omit<Payout, 'provider' | 'account_ref'> => {
-    const req = account.requirements || {}
-    const due = [...new Set([...(req.past_due || []), ...(req.currently_due || [])])].map(String)
-    const bank = (account.external_accounts?.data || []).find((a: any) => a.object === 'bank_account') || null
-    let status: Payout['status'] = 'pending'
-    if (account.charges_enabled && account.payouts_enabled) status = 'active'
-    else if (account.details_submitted && (req.disabled_reason || due.length > 0)) status = 'restricted'
+// What the owner should see. v2 has no "details submitted" flag, so an account that was ready
+// before and now needs details is paused (restricted); one that never was ready is unfinished (pending).
+export const stripeState = (account: Record<string, any>, wasReady = false): Omit<Payout, 'provider' | 'account_ref' | 'bank_name' | 'account_last4'> => {
+    const merchant = account.configuration?.merchant?.capabilities || {}
+    const recipient = account.configuration?.recipient?.capabilities || {}
+    const caps = [
+        merchant.card_payments?.status,
+        recipient.stripe_balance?.stripe_transfers?.status,
+        recipient.stripe_balance?.payouts?.status ?? merchant.stripe_balance?.payouts?.status,
+    ].filter(Boolean) as string[]
+
+    const entries: any[] = account.requirements?.entries || []
+    const due = entries
+        .filter((e) => e.awaiting_action_from === 'user' && ['currently_due', 'past_due'].includes(e.minimum_deadline?.status))
+        .map((e) => String(e.description || 'details'))
+    const unique = [...new Set(due)].slice(0, 20)
+
+    if (caps.length >= 2 && caps.every((s) => s === 'active') && unique.length === 0) return { status: 'active', details_due: [] }
+    if (caps.some((s) => s === 'rejected')) return { status: 'restricted', details_due: unique }
+    if (unique.length === 0) return { status: 'pending', details_due: [] }
+    return { status: wasReady ? 'restricted' : 'pending', details_due: unique }
+}
+
+export const bankSummary = (list: Record<string, any>) => {
+    const bank = (list?.data || []).find((a: any) => a.object === 'bank_account') || null
     return {
-        status,
         bank_name: bank?.bank_name ? String(bank.bank_name).slice(0, 100) : null,
         account_last4: bank?.last4 && /^\d{4}$/.test(bank.last4) ? bank.last4 : null,
-        details_due: status === 'active' ? [] : due.slice(0, 20),
     }
 }
 
