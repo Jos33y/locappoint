@@ -17,6 +17,8 @@ import '../../styles/client/manage-booking.css'
 import '../../styles/client/rebook.css'
 import { LinkReview } from '../../components/reviews/LinkReview'
 import { reviewByLink, submitReviewByLink } from '../../services/reviews'
+import { RefundCard } from '../../components/client/bookings/PaymentNote'
+import { paidOnline } from '../../services/payments'
 
 // The page behind "Manage booking" in every booking email. No sign-in: the link is the key.
 const ManageBooking = () => {
@@ -68,7 +70,7 @@ const ManageBooking = () => {
         try {
             await cancelByLink(token)
             setCancelling(false)
-            setToast('Booking cancelled')
+            setToast(paidOnline(state.booking) ? 'Booking cancelled. Your refund is on its way.' : 'Booking cancelled')
             await load()
         } catch (err) {
             setCancelError(USER_ERRORS.includes(err?.code) && err.message ? err.message : 'We could not cancel it. Check your connection and try again.')
@@ -203,6 +205,7 @@ const ManageBooking = () => {
                                 <PastBooking booking={b} />
                             </ul>
                         )}
+                        {!upcoming && <RefundCard booking={b} />}
 
                         {!upcoming && (
                             <LinkReview

@@ -1,0 +1,181 @@
+/* Money on a booking paid online, after the fact: the refund split, the refund card on the manage
+   page and the one-line state in the bookings list. Same slip language as the ticket receipt. */
+
+.lc-refund {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+/* One bar, three parts: what comes back, what the business keeps, the service fee. */
+.lc-refund__bar {
+    display: flex;
+    gap: 3px;
+    height: 10px;
+}
+
+.lc-refund__seg {
+    flex-basis: 0;
+    min-width: 6px;
+    border-radius: var(--radius-full);
+}
+
+.lc-refund__seg.is-back,
+.lc-refund__rows .is-back i { background: var(--lc-success); }
+.lc-refund__seg.is-kept,
+.lc-refund__rows .is-kept i { background: var(--lc-ink-3); }
+.lc-refund__seg.is-fee,
+.lc-refund__rows .is-fee i { background: var(--lc-ink-4); }
+
+.lc-refund__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+}
+
+.lc-refund__rows div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.lc-refund__rows dt,
+.lc-refund__rows dd { margin: 0; }
+
+.lc-refund__rows dt {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.lc-refund__rows i {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+}
+
+.lc-refund__rows dd {
+    color: var(--lc-ink-1);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.lc-refund__rows .is-back dt { color: var(--lc-ink-1); font-weight: var(--font-weight-semibold); }
+
+.lc-refund__rows .is-back dd {
+    color: var(--lc-success);
+    font-family: var(--lc-font-display);
+    font-size: 1.25rem;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.02em;
+}
+
+.lc-refund__note {
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--lc-line);
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+}
+
+/* The sentence above the split in the cancel sheet. */
+.lc-refund__lead {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-refund__lead b { color: var(--lc-ink-1); font-weight: var(--font-weight-semibold); }
+
+/* The manage page: a cancelled or missed booking that was paid. */
+.lc-refund-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.lc-refund-card__head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: 0;
+}
+
+.lc-refund-card__head > span:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.lc-refund-card__head b {
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-refund-card__head small {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-refund-card__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    background: var(--lc-info-tint);
+    color: var(--lc-info);
+}
+
+.lc-refund-card__icon.is-sent {
+    background: var(--lc-success-tint);
+    color: var(--lc-success);
+}
+
+/* The bookings list: paid, refunded, or on its way. */
+.lc-paidline,
+.lc-cl-past__text .lc-paidline {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 6px;
+    margin-top: 2px;
+    color: var(--lc-success);
+    font-size: 12px;
+    font-weight: var(--font-weight-medium);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-paidline svg { flex: none; }
+
+.lc-paidline.is-refund,
+.lc-cl-past__text .lc-paidline.is-refund { color: var(--lc-info); }
+
+.lc-paidline.is-refund.is-sent,
+.lc-cl-past__text .lc-paidline.is-refund.is-sent { color: var(--lc-success); }
+
+.lc-paidline__kept,
+.lc-cl-past__text .lc-paidline__kept {
+    color: var(--lc-ink-3);
+    font-weight: var(--font-weight-normal);
+}
+
+.lc-paidline__kept::before { content: '\00B7'; margin-right: 6px; }
+
+.lc-cl-cancel .lc-refund__lead { margin-top: var(--space-3); }

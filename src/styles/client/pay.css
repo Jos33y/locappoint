@@ -32,6 +32,8 @@
     border-top: 1.5px dashed var(--lc-line-strong);
 }
 
+.lc-bk-ticket__total.is-paid .lc-bk-ticket__how { color: var(--lc-success); }
+
 /* The rule, said once, with the exact time it changes. */
 .lc-bk-policy {
     display: flex;

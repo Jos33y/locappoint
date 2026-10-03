@@ -1,5 +1,6 @@
 import { Button, Sheet } from '../../ui'
 import { parseDateKey } from '../../../services/dates'
+import { CancelMoney } from './PaymentNote'
 import '../../../styles/client/client-bookings.css'
 
 export const CancelSheet = ({ booking, busy, error, onKeep, onConfirm }) => {
@@ -24,6 +25,7 @@ export const CancelSheet = ({ booking, busy, error, onKeep, onConfirm }) => {
                     <p className="lc-cl-cancel__when">
                         {date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {(booking.appointment_time || '').slice(0, 5)}
                     </p>
+                    <CancelMoney booking={booking} />
                     <p className="lc-cl-cancel__fine">The time goes back on the shop's calendar so someone else can book it.</p>
                     {error && <p className="lc-cl-cancel__error" role="alert">{error}</p>}
                 </div>

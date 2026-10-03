@@ -97,14 +97,47 @@ DATA.my_appointments = [
   past('c2', -29, trim, 'no_show'), past('c3', -1, haircut, 'confirmed'),
   past('c5', -40, null, 'completed', { businesses: nove }),
 ]
+// Paid online (?paidbooking=1): one ahead, paid in full; one cancelled late, half the price back.
+// ?paidbooking=soon puts the paid one three hours from now, inside the free cancellation window.
+const lisbonNow = (() => { const [h, m] = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date()).split(':').map(Number); return h * 60 + m })()
+const hhmm = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00`
+const PAID_MONEY = { payment_status: 'paid', price: 12, client_fee: 0.49, total: 12.49, currency: 'EUR' }
+const paidWhen = () => {
+  if (new URLSearchParams(window.location.search).get('paidbooking') !== 'soon') return { appointment_date: dk(3), appointment_time: '11:00:00' }
+  const at = Math.min(lisbonNow + 180, 1440 + 600)
+  return { appointment_date: at >= 1440 ? dk(1) : key, appointment_time: hhmm(at % 1440) }
+}
+const PAID_ROWS = () => [
+  past('pd1', 3, trim, 'confirmed', { ...PAID_MONEY, ...paidWhen() }),
+  past('pd2', -3, trim, 'cancelled', { ...PAID_MONEY, payment_status: 'partly_refunded', cancelled_by: 'client' }),
+]
+if (new URLSearchParams(window.location.search).get('paidbooking')) {
+  DATA.my_appointments = [...DATA.my_appointments, ...PAID_ROWS()]
+  DATA.inbox = [
+    { id: 'i6', user_id: 'u1', audience: 'client', kind: 'booking_confirmed', appointment_id: 'pd1', business_id: 'b1', read_at: null, created_at: new Date(Date.now() - 2 * 60000).toISOString(), payload: { business_name: 'Femtos Barbearia', service_name: 'Beard trim', price: 12, country: 'PT', date: dk(3), time: '11:00', payment_status: 'paid', total: 12.49, client_fee: 0.49, currency: 'EUR' } },
+    { id: 'i7', user_id: 'u1', audience: 'business', kind: 'booking_cancelled', appointment_id: 'pd2', business_id: 'b1', read_at: null, created_at: new Date(Date.now() - 3 * 60000).toISOString(), payload: { client_name: 'Ana', service_name: 'Beard trim', duration_minutes: 20, price: 12, country: 'PT', date: dk(-3), time: '10:00', payment_status: 'paid', total: 12.49, client_fee: 0.49, currency: 'EUR', refund: 6 } },
+    ...DATA.inbox,
+  ]
+}
+const PAID_REFUNDS = { pd2: 6 }
+
 const rebookPlaces = () => (new URLSearchParams(window.location.search).get('noplaces') === '1' ? [] : [
   { business: femtos(), rhythm: rhythm() },
   { business: nove, rhythm: { visits: 1, last_date: dk(-40), recent: [dk(-40)], gap_days: null, due_date: null, suggested_date: null, today: key, upcoming: null, last: { appointment_id: 'c5', date: dk(-40), service: { id: 's9', service_name: 'Gel nails', duration_minutes: 60, price: 30, active: false }, staff_id: null, staff_name: 'Joana', staff_count: 1 } } },
 ])
-const guestBooking = () => ({
+// ?guestpaid=1: the manage page of a booking paid online and still ahead; ?guestpaid=refunded: cancelled by the business, all of it back.
+const guestPaid = () => {
+  const mode = new URLSearchParams(window.location.search).get('guestpaid')
+  if (!mode) return {}
+  const money = { payment_status: 'paid', price: 18, client_fee: 0.49, total: 18.49, currency: 'EUR', policy: { free_hours: 24, keep_pct: 50 } }
+  if (mode === 'refunded') return { ...money, appointment_date: dk(2), status: 'cancelled', cancelled_by: 'business', payment_status: 'refunded', refund: 18.49 }
+  return { ...money, appointment_date: dk(3), refund: null }
+}
+const guestBooking0 = () => ({
   id: 'g1', status: 'confirmed', appointment_date: dk(-1), appointment_time: '10:00:00', duration_minutes: 30, price: 18, notes: '', client_name: 'Ana Guest', client_email: 'ana@guest.pt',
   cancelled_by: null, rescheduled_from: null, service_id: 's1', has_account: false, services: haircut, businesses: femtos(),
 })
+const guestBooking = () => ({ ...guestBooking0(), ...guestPaid() })
 const slots = (staff) => {
   const from = staff === 'm2' ? 14 * 60 : 9 * 60
   const out = []
@@ -308,7 +341,11 @@ const payouts = (body) => {
 const payParam = (k) => new URLSearchParams(window.location.search).get(k)
 const PAY_POLICY = { free_hours: 24, keep_pct: 50, no_show_keep_pct: 50 }
 const PAY_REF = `cs_test_${'a'.repeat(24)}`
-const payRpc = (name) => {
+const payRpc = (name, args) => {
+  if (name === 'booking_money') {
+    const policy = { ...PAY_POLICY }
+    return { data: (args?.p_ids || []).map((id) => ({ id, refund: PAID_REFUNDS[id] ?? null, policy })), error: null }
+  }
   const mode = payParam('payquote')
   if (name === 'payment_quote') {
     if (mode === 'error') return { data: null, error: { message: 'down' } }
@@ -332,7 +369,7 @@ const checkoutFn = (body) => (body.action === 'start' && body.appointment_id
 export const supabase = {
   functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); if (name === 'checkout') return checkoutFn(body || {}); return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); const paying = payRpc(name); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); const paying = payRpc(name, args); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

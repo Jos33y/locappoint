@@ -91,3 +91,58 @@ export const policyLine = ({ policy, dateKey, minutes, nowKey, nowMinutes }) => 
 }
 
 export const providerName = (provider) => (provider === 'paystack' ? 'Paystack' : 'Stripe')
+
+// A booking paid online, wherever it is shown afterwards: the client's bookings, the manage page,
+// the business's booking sheet. Refunds and the rule come from booking_money (or booking_by_link).
+const PAID = ['paid', 'refunded', 'partly_refunded']
+const SENT = ['refunded', 'partly_refunded']
+const cents = (n, currency) => (currency === 'NGN' ? Math.round(n) : Math.round(n * 100) / 100)
+
+export const paidOnline = (booking) => PAID.includes(booking?.payment_status) && Number(booking?.total) > 0
+
+export const paidQuote = (booking) => (paidOnline(booking)
+    ? { online: true, price: booking.price ?? booking.services?.price, client_fee: booking.client_fee, total: booking.total, currency: booking.currency || 'EUR' }
+    : null)
+
+export const loadBookingMoney = async (ids) => {
+    if (!ids.length) return new Map()
+    const { data, error } = await supabase.rpc('booking_money', { p_ids: ids })
+    if (error) throw error
+    return new Map((data || []).map((row) => [row.id, row]))
+}
+
+// What has been given back so far. Sent once the provider confirms it; on its way before that.
+export const refundOf = (booking) => {
+    const amount = Number(booking?.refund) || 0
+    if (!paidOnline(booking) || amount <= 0) return null
+    const total = Number(booking.total)
+    return { amount, kept: Math.max(cents(total - amount, booking.currency), 0), total, sent: SENT.includes(booking.payment_status), full: amount >= total }
+}
+
+// What cancelling now would give back, by the same rule as appointments_refund: everything before
+// the free cancellation cutoff, after it the price less the share the business keeps. The service
+// fee is only returned in full. "now" is the business's own time, as canChange uses it.
+export const cancelRefund = (booking, { nowKey, nowMinutes }) => {
+    const policy = booking?.policy
+    if (!paidOnline(booking) || !policy) return null
+    const currency = booking.currency || 'EUR'
+    const total = Number(booking.total)
+    const remaining = Math.max(total - (Number(booking.refund) || 0), 0)
+    const hours = Number(policy.free_hours) || 0
+    const [h = 0, m = 0] = String(booking.appointment_time || '').split(':').map(Number)
+    const start = parseDateKey(String(booking.appointment_date).slice(0, 10))
+    const today = parseDateKey(nowKey)
+    if (!start || !today) return null
+    const ahead = Math.round((start - today) / 86_400_000) * 1440 + h * 60 + m - nowMinutes
+    const free = ahead >= hours * 60
+    const price = Number(booking.price ?? booking.services?.price) || 0
+    const keepPct = Number(policy.keep_pct ?? 50)
+    const amount = Math.min(free ? remaining : cents((price * (100 - keepPct)) / 100, currency), remaining)
+    start.setHours(h, m - hours * 60, 0, 0)
+    return { amount, kept: cents(total - amount, currency), total, currency, free, keepPct, hours, cutoff: start }
+}
+
+export const cutoffLabel = (date) =>
+    `${date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}, ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+
+export const shareLabel = (pct) => (Number(pct) === 50 ? 'half the price' : `${Number(pct)}% of the price`)

@@ -1,4 +1,4 @@
-import { CreditCard, Store } from 'lucide-react'
+import { CircleCheck, CreditCard, Store } from 'lucide-react'
 import { DurationDial } from '../../business/DurationDial'
 import { fullAddress } from '../../business/public/PublicFind'
 import { durationLabel, menuPrice } from '../../../services/business'
@@ -18,9 +18,9 @@ const OnlineTotal = ({ quote, paid }) => (
             <div><dt>Price</dt><dd>{payMoney(quote.price, quote.currency, true)}</dd></div>
             {Number(quote.client_fee) > 0 && <div><dt>Service fee</dt><dd>{payMoney(quote.client_fee, quote.currency, true)}</dd></div>}
         </dl>
-        <div className="lc-bk-ticket__total">
+        <div className={`lc-bk-ticket__total${paid ? ' is-paid' : ''}`}>
             <span className="lc-bk-ticket__how">
-                <CreditCard size={14} aria-hidden="true" />
+                {paid ? <CircleCheck size={15} aria-hidden="true" /> : <CreditCard size={14} aria-hidden="true" />}
                 {paid ? 'Paid online' : `Pay now ${payWith(quote)}`}
             </span>
             <b className="lc-bk-ticket__price">{payMoney(quote.total, quote.currency, true)}</b>

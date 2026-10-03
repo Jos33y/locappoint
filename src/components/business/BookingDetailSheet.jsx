@@ -18,6 +18,8 @@ import {
 } from '../../services/business'
 import { toMinutes } from '../../services/dates'
 import { clientKey } from '../../services/clients'
+import { loadBookingMoney, paidOnline, payMoney, refundOf, shareLabel } from '../../services/payments'
+import '../../styles/business/booking-pay.css'
 
 const ACTIONS = {
     pending: [
@@ -46,6 +48,7 @@ const BookingDetailSheet = ({ booking, onClose }) => {
     const [otherTime, setOtherTime] = useState(false)
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState('')
+    const [money, setMoney] = useState(null)
 
     useEffect(() => {
         setMoving(false)
@@ -54,6 +57,17 @@ const BookingDetailSheet = ({ booking, onClose }) => {
             setMove({ date: booking.appointment_date, time: '', staffId: booking.staff_id })
             setOtherTime(!booking.service_id)
         }
+    }, [booking])
+
+    // Paid online: what was refunded and the rule, so the buttons can say what they give back.
+    useEffect(() => {
+        setMoney(null)
+        if (!paidOnline(booking)) return undefined
+        let cancelled = false
+        loadBookingMoney([booking.id])
+            .then((rows) => { if (!cancelled) setMoney(rows.get(booking.id) || null) })
+            .catch((err) => console.error('Booking money failed:', err))
+        return () => { cancelled = true }
     }, [booking])
 
     useEffect(() => {
@@ -72,6 +86,16 @@ const BookingDetailSheet = ({ booking, onClose }) => {
     const upcoming = booking.status === 'confirmed' && !started
     const actions = (ACTIONS[booking.status] || []).filter((a) => started || !['completed', 'no_show'].includes(a.status))
     const whatsapp = whatsappLink(booking.client_phone)
+    const paid = paidOnline(booking)
+    const refund = paid ? refundOf({ ...booking, refund: money?.refund }) : null
+    const currency = booking.currency || 'EUR'
+    const price = Number(booking.price ?? booking.services?.price) || 0
+    let payHint = ''
+    if (paid && booking.status === 'pending') payHint = 'Declining gives the client all they paid back.'
+    if (paid && booking.status === 'confirmed') {
+        const noShow = money?.policy ? ` A no-show keeps ${shareLabel(money.policy.no_show_keep_pct ?? 50)} for you.` : ''
+        payHint = `Cancelling gives the client all they paid back.${noShow}`
+    }
 
     const act = async (action) => {
         setBusy(true)
@@ -136,6 +160,19 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                         <dd>{staff.display_name}</dd>
                     </div>
                 )}
+                {paid && (
+                    <div>
+                        <dt>Payment</dt>
+                        <dd>
+                            <span className={`biz-paystate${refund ? ' is-refund' : ''}`}>{refund ? (refund.full ? 'Refunded' : 'Part refunded') : 'Paid online'}</span>
+                            {refund && (
+                                <span className="biz-paydetail">
+                                    {payMoney(refund.amount, currency, true)} back to the client{refund.full ? '' : `, you keep ${payMoney(Math.max(price - refund.amount, 0), currency, true)}`}
+                                </span>
+                            )}
+                        </dd>
+                    </div>
+                )}
                 <div>
                     <dt>Status</dt>
                     <dd><span className={`biz-status biz-status--${booking.status}`}>{STATUS_LABEL[booking.status]}</span></dd>
@@ -171,6 +208,7 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                 </div>
             )}
 
+            {!moving && payHint && actions.length > 0 && <p className="biz-payhint">{payHint}</p>}
             {!moving && actions.length > 0 && (
                 <div className="biz-actions">
                     {upcoming && (

@@ -11,7 +11,7 @@ import { USER_ERRORS, bookingDays, clearPending, firstOnOrAfter, hasTimeLeft, lo
 import { parsePhone } from '../ui/PhoneField'
 import { clock } from '../../services/hours'
 import { parseDateKey, toMinutes } from '../../services/dates'
-import { abandonPayment, loadQuote, payMoney, paymentState, policyLine, providerName, startCheckout } from '../../services/payments'
+import { abandonPayment, loadQuote, paidQuote, payMoney, paymentState, policyLine, providerName, startCheckout } from '../../services/payments'
 import { onAppReturn, openPayoutLink } from '../../services/payouts'
 import { DayStrip } from './sheet/DayStrip'
 import { TimeGrid } from './sheet/TimeGrid'
@@ -120,6 +120,8 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
         return () => { cancelled = true }
     }, [quoting, quoteKey])
     const online = quote.state === 'ready' && quote.data?.online === true
+    // Moving a booking already paid online keeps the payment; the ticket keeps saying so.
+    const movedPaid = paidQuote(move)
 
     const fetchDay = useCallback(async (key) => {
         setBusy((b) => ({ ...b, [key]: { state: 'loading' } }))
@@ -408,7 +410,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                     <button type="button" className="lc-bk-back" onClick={() => setStep('time')}>
                         <ArrowLeft size={16} aria-hidden="true" />Change time
                     </button>
-                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} pay={!owner} quote={online ? quote.data : null} />
+                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} pay={!owner} quote={online ? quote.data : movedPaid} paid={Boolean(movedPaid)} />
                     {was ? (
                         <p className="lc-bk-was">
                             Instead of <b>{dayLabel({ date: parseDateKey(was.dateKey) })} at {clock(was.minutes)}</b>.
@@ -429,6 +431,12 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                         <p className="lc-bk-policy">
                             <CalendarClock size={16} aria-hidden="true" />
                             <span>{policyLine({ policy: quote.data.policy, dateKey: dayKey, minutes, nowKey: zonedNow(timeZone).dateKey, nowMinutes })}</span>
+                        </p>
+                    )}
+                    {movedPaid && move.policy && (
+                        <p className="lc-bk-policy">
+                            <CalendarClock size={16} aria-hidden="true" />
+                            <span>Already paid, nothing more to pay. {policyLine({ policy: move.policy, dateKey: dayKey, minutes, nowKey: zonedNow(timeZone).dateKey, nowMinutes })}</span>
                         </p>
                     )}
                     {!move && !owner && quote.state === 'ready' && !online && <p className="lc-bk-paynote">Booking is free. Nothing is charged online.</p>}
@@ -457,7 +465,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
 
             {step === 'done' && minutes !== null && (
                 <>
-                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={paid || auto ? 'success' : 'signal'} pay={!owner} quote={paid ? quote.data : null} paid={paid} />
+                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={paid || auto ? 'success' : 'signal'} pay={!owner} quote={paid ? quote.data : movedPaid} paid={paid || Boolean(movedPaid)} />
                     {paid && (
                         <p className="lc-bk-done">
                             <b>Paid {payMoney(quote.data?.total, quote.data?.currency)}.</b>

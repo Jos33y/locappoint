@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabase'
 import { durationLabel } from './business'
 import { parseDateKey } from './dates'
+import { payMoney } from './payments'
 
 const FIELDS = 'id, kind, audience, appointment_id, business_id, payload, read_at, created_at'
 
@@ -62,6 +63,17 @@ const priceLabel = (price, country) => {
     }).format(n)
 }
 
+// Paid online, the money line says so: what the client paid, or what came back. The business sees
+// its price, marked paid.
+const PAID = ['paid', 'refunded', 'partly_refunded']
+const moneyLabel = (p, forBusiness) => {
+    const price = priceLabel(p.price, p.country)
+    if (!PAID.includes(p.payment_status) || !(Number(p.total) > 0)) return price
+    const currency = p.currency || (p.country === 'NG' ? 'NGN' : 'EUR')
+    if (Number(p.refund) > 0) return `${payMoney(p.refund, currency, true)} ${forBusiness ? 'refunded to the client' : 'back to you'}`
+    return forBusiness ? `${price}, paid online` : `Paid ${payMoney(p.total, currency, true)}`
+}
+
 const KINDS = {
     business: {
         booking_new: () => ({ label: 'New booking', tone: 'success' }),
@@ -112,7 +124,7 @@ export const describeItem = (item) => {
     const p = item.payload || {}
     const kind = KINDS[item.audience]?.[item.kind]?.(p) || { label: 'Update', tone: 'info' }
     const forBusiness = item.audience === 'business'
-    const price = priceLabel(p.price, p.country)
+    const price = moneyLabel(p, forBusiness)
     const duration = p.duration_minutes ? durationLabel(Number(p.duration_minutes)) : ''
     const movedFrom = p.moved_from && (item.kind === 'booking_moved' || item.kind === 'booking_request') ? String(p.moved_from) : ''
     return {

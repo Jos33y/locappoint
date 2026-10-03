@@ -109,7 +109,7 @@ export const loadWorkspace = async (businessId) => {
 export const loadBookings = async (businessId, fromKey, toKey) => {
     const { data, error } = await supabase
         .from('appointments')
-        .select('id, staff_id, service_id, appointment_date, appointment_time, duration_minutes, status, source, client_name, client_phone, client_email, notes, price, cancelled_by, rescheduled_from, addons, services(service_name, price)')
+        .select('id, staff_id, service_id, appointment_date, appointment_time, duration_minutes, status, source, client_name, client_phone, client_email, notes, price, payment_status, total, client_fee, currency, cancelled_by, rescheduled_from, addons, services(service_name, price)')
         .eq('business_id', businessId)
         .neq('payment_status', 'awaiting')
         .gte('appointment_date', fromKey)
@@ -123,7 +123,7 @@ export const loadBookings = async (businessId, fromKey, toKey) => {
 export const loadBooking = async (businessId, id) => {
     const { data, error } = await supabase
         .from('appointments')
-        .select('id, staff_id, service_id, appointment_date, appointment_time, duration_minutes, status, source, client_name, client_phone, client_email, notes, price, cancelled_by, rescheduled_from, addons, services(service_name, price)')
+        .select('id, staff_id, service_id, appointment_date, appointment_time, duration_minutes, status, source, client_name, client_phone, client_email, notes, price, payment_status, total, client_fee, currency, cancelled_by, rescheduled_from, addons, services(service_name, price)')
         .eq('business_id', businessId)
         .eq('id', id)
         .maybeSingle()

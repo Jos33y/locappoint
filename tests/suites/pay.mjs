@@ -110,6 +110,50 @@ export default async ({ browser, url, check, server, root }) => {
     check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'the return page fits a small phone')
     await p.close()
 
+    // After paying: every place the client sees the booking says it is paid, and what a cancel gives back.
+    p = await open('/client', '&paidbooking=1')
+    const next = await text(p, '.lc-cl-home__next .lc-bk-ticket')
+    check(/Paid online/.test(next) && /12[.,]49/.test(next) && !/Pay at your visit/.test(next), `Home shows the next booking as paid: ${next}`)
+    check(/Service fee/.test(next) && /0[.,]49/.test(next), 'with the receipt lines')
+    check(/Free cancellation until/.test(await text(p, '.lc-cl-home__next .lc-bk-policy')), `and the free cancellation cutoff: ${await text(p, '.lc-cl-home__next .lc-bk-policy')}`)
+    await click(p, '.lc-cl-home__next .ui-btn', 'Cancel booking')
+    await wait(500)
+    const back = await text(p, '.lc-refund .is-back dd')
+    check(/12[.,]49/.test(back), `cancelling before the cutoff gives all of it back: ${back}`)
+    check(/all of it comes back/.test(await text(p, '.lc-refund__lead')), 'and says so before the button')
+    check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
+    await p.close()
+
+    p = await open('/client', '&paidbooking=soon')
+    await click(p, '.lc-cl-home__next .ui-btn', 'Cancel booking')
+    await wait(500)
+    const late = await p.evaluate(() => [...document.querySelectorAll('.lc-refund__rows > div')].map((d) => d.textContent.trim()))
+    check(late.some((r) => /back to you/.test(r) && /6[.,]00/.test(r)) && late.some((r) => /Kept by Femtos/.test(r) && /6[.,]00/.test(r)) && late.some((r) => /Service fee/.test(r) && /0[.,]49/.test(r)), `inside 24 hours: half the price back, half kept, the fee kept: ${JSON.stringify(late)}`)
+    check(/within 24 hours/.test(await text(p, '.lc-refund__lead')), 'and it says why')
+    check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'the cancel sheet fits a phone')
+    await p.close()
+
+    p = await open('/client/appointments?booking=pd2', '&paidbooking=1')
+    const line = await text(p, '#booking-pd2 .lc-paidline')
+    check(/6[.,]00 refunded/.test(line) && /6[.,]49 kept/.test(line), `a cancelled paid booking says what came back: ${line}`)
+    await p.close()
+
+    p = await open('/client/notifications', '&paidbooking=1')
+    const bell = await p.evaluate(() => document.body.textContent)
+    check(/Paid €12[.,]49/.test(bell), 'the notification says what was paid, not the price')
+    await p.close()
+    p = await open('/portal/notifications', '&paidbooking=1')
+    check(/€6[.,]00 refunded to the client/.test(await p.evaluate(() => document.body.textContent)), 'the business sees what went back to the client')
+    await p.close()
+
+    p = await open('/b/tok-1234567890abcdef1234567890abcdef', '&guestpaid=1')
+    check(/Paid online/.test(await text(p, '.lc-bk-ticket')) && /18[.,]49/.test(await text(p, '.lc-bk-ticket__price')), `the manage page shows it paid: ${await text(p, '.lc-bk-ticket__price')}`)
+    await p.close()
+    p = await open('/b/tok-1234567890abcdef1234567890abcdef', '&guestpaid=refunded')
+    check(/Refunded/.test(await text(p, '.lc-refund-card__head')) && /18[.,]49/.test(await text(p, '.lc-refund .is-back dd')), `a booking the business cancelled shows the full refund: ${await text(p, '.lc-refund-card__head')}`)
+    check(!(await p.$('.lc-refund .is-kept')), 'with nothing kept')
+    await p.close()
+
     // Server rules
     const pay = await server.ssrLoadModule(path.join(root, 'supabase', 'functions', '_shared', 'pay.ts'))
     const raw = '{"type":"checkout.session.completed"}'

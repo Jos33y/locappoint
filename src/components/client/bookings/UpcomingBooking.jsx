@@ -7,6 +7,8 @@ import { parseDateKey, toMinutes } from '../../../services/dates'
 import { bookingPrice, canChange, monthShort } from '../../../services/booking'
 import { clock } from '../../../services/hours'
 import { whenLabel } from '../NextBooking'
+import { PaidRule } from './PaymentNote'
+import { paidQuote } from '../../../services/payments'
 import '../../../styles/client/client-bookings.css'
 
 const mapsLink = (address, city) =>
@@ -28,6 +30,7 @@ export const UpcomingBooking = ({ booking, lead = false, focused = false, onCanc
     const phone = business.phone?.replace(/\s+/g, '')
     const open = canChange(booking)
     const moved = booking.rescheduled_from ? movedLabel(booking.rescheduled_from) : null
+    const quote = paidQuote(booking)
 
     return (
         <article id={`booking-${booking.id}`} className={`lc-cl-bk${lead ? ' is-lead' : ''}${focused ? ' is-focus' : ''}`}>
@@ -42,7 +45,10 @@ export const UpcomingBooking = ({ booking, lead = false, focused = false, onCanc
                 minutes={minutes}
                 stamp={confirmed ? 'Confirmed' : 'Pending'}
                 stampTone={confirmed ? 'success' : 'signal'}
+                quote={quote}
+                paid={Boolean(quote)}
             />
+            <PaidRule booking={booking} />
             {moved && <p className="lc-cl-bk__moved">Moved from {moved}</p>}
             {booking.notes?.trim() && <p className="lc-cl-bk__note"><b>Your note:</b> {booking.notes.trim()}</p>}
             <div className="lc-cl-bk__actions">

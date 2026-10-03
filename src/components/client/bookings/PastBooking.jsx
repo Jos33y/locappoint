@@ -6,6 +6,7 @@ import '../../../styles/client/client-bookings.css'
 import '../../../styles/client/rebook.css'
 import { Stars } from '../../reviews/Stars'
 import { canReview, reviewOf } from '../../../services/reviews'
+import { PaidLine } from './PaymentNote'
 
 const LABEL = { cancelled: 'Cancelled', no_show: 'Missed', completed: 'Done', pending: 'Not confirmed', confirmed: 'Done' }
 const CANCELLED = { client: 'You cancelled', business: 'Cancelled by the business' }
@@ -25,6 +26,7 @@ export const PastBooking = ({ booking, focused = false, onAgain, onRate }) => {
             <span className="lc-cl-past__text">
                 <strong>{booking.services?.service_name || 'Booking'}</strong>
                 <span>{business.business_name} at {(booking.appointment_time || '').slice(0, 5)}{date.getFullYear() !== new Date().getFullYear() ? `, ${date.getFullYear()}` : ''}</span>
+                <PaidLine booking={booking} />
                 {onRate && review && (
                     <button type="button" className="lc-cl-past__rated" onClick={() => onRate(booking)}>
                         <Stars value={review.rating} size={13} label={`You gave it ${review.rating} out of 5`} />

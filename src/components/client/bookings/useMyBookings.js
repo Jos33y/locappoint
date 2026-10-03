@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { USER_ERRORS, cancelMyBooking, isAhead, loadMyBookings, loadWeek } from '../../../services/booking'
+import { paidOnline } from '../../../services/payments'
 
 const ACTIVE = ['pending', 'confirmed']
 
@@ -51,7 +52,9 @@ export const useMyBookings = (email) => {
             await cancelMyBooking(cancelling.id)
             setState((s) => ({ ...s, rows: s.rows.map((r) => (r.id === cancelling.id ? { ...r, status: 'cancelled', cancelled_by: 'client' } : r)) }))
             setCancelling(null)
-            setToast('Booking cancelled')
+            setToast(paidOnline(cancelling) ? 'Booking cancelled. Your refund is on its way.' : 'Booking cancelled')
+            // A paid booking comes back with its refund, which the database worked out on cancel.
+            if (paidOnline(cancelling)) loadMyBookings(email).then((rows) => setState({ status: 'ready', rows })).catch(() => {})
         } catch (err) {
             console.error('Cancel failed:', err)
             setCancelError(USER_ERRORS.includes(err?.code) && err.message ? err.message : 'We could not cancel it. Try again, or message the business.')

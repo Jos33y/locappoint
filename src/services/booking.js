@@ -2,6 +2,7 @@ import { supabase } from '../config/supabase'
 import { addDays, zonedNow } from './business'
 import { weekFromRows } from './hours'
 import { fromMinutes, parseDateKey, toDateKey, toMinutes, todayKey } from './dates'
+import { loadBookingMoney, paidOnline } from './payments'
 
 const STEP = 30
 const PENDING = 'pendingBooking'
@@ -120,7 +121,7 @@ export const loadNextBooking = async (email) => {
     return data?.[0] || null
 }
 
-const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, cancelled_by, rescheduled_from, addons, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price), reviews (id, rating, body, reply, replied_at, created_at, status)'
+const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, payment_status, total, client_fee, currency, cancelled_by, rescheduled_from, addons, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price), reviews (id, rating, body, reply, replied_at, created_at, status)'
 
 export const loadMyBookings = async (email) => {
     const { data, error } = await supabase
@@ -131,7 +132,21 @@ export const loadMyBookings = async (email) => {
         .order('appointment_date', { ascending: true })
         .order('appointment_time', { ascending: true })
     if (error) throw error
-    return data || []
+    return withMoney(data || [])
+}
+
+// Paid bookings carry what was refunded and the cancellation rule. Without them a paid booking
+// still shows as paid; only the refund preview waits.
+export const withMoney = async (rows) => {
+    const ids = rows.filter(paidOnline).map((r) => r.id)
+    if (!ids.length) return rows
+    try {
+        const money = await loadBookingMoney(ids)
+        return rows.map((r) => (money.has(r.id) ? { ...r, refund: money.get(r.id).refund, policy: money.get(r.id).policy } : r))
+    } catch (err) {
+        console.error('Booking money failed:', err)
+        return rows
+    }
 }
 
 export const cancelMyBooking = async (id) => {
