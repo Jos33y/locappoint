@@ -69,6 +69,7 @@ export type Booking = {
     price: number
     clientFee: number
     businessFee: number
+    travelFee?: number
     total: number
     currency: string
     email: string
@@ -108,14 +109,18 @@ export const stripeSession = (b: Booking, site: string, app: boolean, o: Session
         success_url: `${site}/pay/return?ref={CHECKOUT_SESSION_ID}${tail}`,
         cancel_url: `${site}/pay/return?ref=${b.id}&cancelled=1${tail}`,
     }
-    if (b.clientFee > 0) {
+    // Each extra line in order: the travel fee for a visit at the client's place, then the service fee.
+    const extra: [string, number][] = []
+    if ((b.travelFee || 0) > 0) extra.push(['Travel to you', b.travelFee!])
+    if (b.clientFee > 0) extra.push(['Locappoint service fee', b.clientFee])
+    extra.forEach(([name, amount], i) => {
         Object.assign(params, {
-            'line_items[1][quantity]': 1,
-            'line_items[1][price_data][currency]': b.currency.toLowerCase(),
-            'line_items[1][price_data][unit_amount]': minor(b.clientFee),
-            'line_items[1][price_data][product_data][name]': 'Locappoint service fee',
+            [`line_items[${i + 1}][quantity]`]: 1,
+            [`line_items[${i + 1}][price_data][currency]`]: b.currency.toLowerCase(),
+            [`line_items[${i + 1}][price_data][unit_amount]`]: minor(amount),
+            [`line_items[${i + 1}][price_data][product_data][name]`]: name,
         })
-    }
+    })
     return params
 }
 

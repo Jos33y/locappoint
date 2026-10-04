@@ -5,7 +5,7 @@ import { rowsFromWeek } from './hours'
 import { claimStoredReferral } from './referrals'
 
 export const BUSINESS_FIELDS =
-    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes, buffer_minutes'
+    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes, buffer_minutes, meeting_url, market, service_zones, service_radius_km, lat, lng'
 
 export const slugFrom = (name) =>
     (name || '')
@@ -28,7 +28,7 @@ export const loadSetup = async (businessId) => {
     const [business, services, hours] = await Promise.all([
         supabase.from('businesses').select(BUSINESS_FIELDS).eq('id', businessId).single(),
         supabase.from('services')
-            .select('id, service_name, duration_minutes, price, description, is_active, is_addon, sort_order')
+            .select('id, service_name, duration_minutes, price, description, is_active, is_addon, sort_order, modes, travel_fee')
             .eq('business_id', businessId)
             .order('sort_order')
             .order('service_name'),
@@ -96,6 +96,10 @@ export const serviceRow = (service, index) => ({
     description: service.description?.trim() || null,
     is_active: service.is_active !== false,
     is_addon: service.is_addon === true,
+    modes: (service.modes || []).filter((m) => ['at_business', 'at_client', 'online'].includes(m)).length
+        ? (service.modes || []).filter((m) => ['at_business', 'at_client', 'online'].includes(m))
+        : ['at_business'],
+    travel_fee: (service.modes || []).includes('at_client') ? Number(String(service.travel_fee || 0).replace(',', '.')) || 0 : 0,
     sort_order: index,
 })
 
@@ -125,6 +129,14 @@ export const saveServices = async (businessId, services, previousIds) => {
         }
     }
     return saved
+}
+
+// The areas a business can cover for visits at the client's place, in its city's order.
+export const loadZones = async (market) => {
+    if (!market) return []
+    const { data, error } = await supabase.from('market_zones').select('name').eq('market', market).order('sort_order')
+    if (error) throw error
+    return (data || []).map((z) => z.name)
 }
 
 export const serviceBookingCount = async (businessId, serviceId) => {

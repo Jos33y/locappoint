@@ -30,6 +30,18 @@ const SAMPLE = {
 
 const WEEK = { from: '2026-09-21', to: '2026-09-27', online: { count: 12, value: 286.5 }, added: { count: 4, value: 72 }, fee: 10.71, due: 0, beta: true }
 
+const RECEIPT = {
+    kind: 'payment',
+    number: 'FEM-00012',
+    token: 'a'.repeat(32),
+    business: { name: 'Femtos <Barbers>', address: 'Rua da Rosa 12', city: 'Lisbon' },
+    booking: { service: 'Skin fade & beard trim', date: '2026-10-01', time: '10:30' },
+    lines: [{ label: 'Skin fade & beard trim', amount: 18.5 }, { label: 'Locappoint service fee', amount: 0.49 }],
+    total: 18.99,
+    currency: 'EUR',
+    method: 'card',
+}
+
 const tomorrow = () => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)
 
 const CASES = [
@@ -62,6 +74,16 @@ const CASES = [
     ['weekly_statement', { audience: 'business', ...WEEK }],
     ['weekly_statement', { audience: 'business', ...WEEK, online: { count: 0, value: 0 }, fee: 0, name: null }],
     ['weekly_statement', { audience: 'business', ...WEEK, from: '2026-09-28', to: '2026-10-04', country: 'NG', fee: null, online: { count: 1, value: 15000 }, added: { count: 0, value: 0 } }],
+    ['booking_confirmed', { audience: 'client', mode: 'online', meeting_url: 'https://meet.example.com/femtos-rui' }],
+    ['booking_requested', { audience: 'client', mode: 'online', status: 'pending', meeting_url: 'https://meet.example.com/femtos-rui' }],
+    ['booking_confirmed', { audience: 'client', mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12, 2 Esq', client_landmark: 'Blue door', travel_fee: 5 }],
+    ['booking_new', { audience: 'business', mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12, 2 Esq', client_landmark: 'Blue door', travel_fee: 5 }],
+    ['booking_request', { audience: 'business', mode: 'at_client', status: 'pending', client_zone: 'Matosinhos', travel_fee: 5 }],
+    ['receipt', { audience: 'client', ...RECEIPT }],
+    ['receipt', { audience: 'client', ...RECEIPT, kind: 'refund', number: 'FEM-00013', refund_of: 'FEM-00012', lines: [{ label: 'Cancelled after free cancellation closed', amount: 9.25 }], total: 9.25 }],
+    ['receipt', { audience: 'client', ...RECEIPT, kind: 'visit', number: 'FEM-00014', method: 'at_visit', lines: [{ label: 'Skin fade', amount: 18.5 }], total: 18.5, client_name: null }],
+    ['trip_on_way', { audience: 'client', mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12, 2 Esq', minutes: 14, eta: '10:16', by: 'Rui' }],
+    ['trip_on_way', { audience: 'client', mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12, 2 Esq', minutes: 0, eta: null, by: null, manage_token: null, client_name: null }],
 ]
 
 const audit = () => {
@@ -132,6 +154,34 @@ export default async ({ browser, check, server, root }) => {
             check(ask ? /^How was/.test(msg.subject) : /^Book your next/.test(msg.subject), `${label} subject leads with the ask: ${msg.subject}`)
             check(/Stop follow-up emails/.test(msg.html) && /Stop follow-up emails/.test(msg.text), `${label} always offers a way to stop`)
             check(!extra.gap_days || !offer || /every 4 weeks/.test(msg.html), `${label} explains the suggested day`)
+            check(!msg.attachments, `${label} carries no calendar invite`)
+        }
+        if (extra.mode === 'online') {
+            const confirmed = extra.status !== 'pending'
+            check(!msg.html.includes('Rua da Rosa') && /Online/.test(msg.html), `${label} online: no address, says it is online`)
+            check(msg.html.includes('meet.example.com/femtos-rui') === confirmed && msg.text.includes('meet.example.com/femtos-rui') === confirmed, `${label} online: the join link ${confirmed ? 'is there once confirmed' : 'waits for the confirmation'}`)
+            if (confirmed) {
+                const ics = msg.attachments?.[0] ? Buffer.from(msg.attachments[0].content, 'base64').toString('utf8') : ''
+                check(/LOCATION:https:\/\/meet\.example\.com\/femtos-rui/.test(ics), `${label} online: the calendar invite opens the meeting`)
+            }
+        }
+        if (extra.mode === 'at_client') {
+            check(!msg.html.includes('Rua da Rosa') && /Matosinhos/.test(msg.html), `${label} home visit: the client's area, never the business address`)
+            check(msg.html.includes('Rua das Flores') === Boolean(extra.client_address), `${label} home visit: the address ${extra.client_address ? 'once confirmed' : 'waits for the confirmation'}`)
+        }
+        if (kind === 'receipt') {
+            check(/not a tax invoice/.test(msg.html) && /not a tax invoice/.test(msg.text), `${label} says it is proof of payment, not a tax invoice`)
+            check(msg.html.includes(`/r/${'a'.repeat(32)}`) && msg.text.includes(`/r/${'a'.repeat(32)}`), `${label} links to the receipt page`)
+            check(msg.subject.includes(extra.number), `${label} has its number in the subject: ${msg.subject}`)
+            check(!msg.html.includes('<Barbers>'), `${label} escapes the business name`)
+            if (extra.kind === 'refund') check(/Refunded/.test(msg.html) && /FEM-00012/.test(msg.html), `${label} says what it refunds`)
+        }
+        if (kind === 'trip_on_way') {
+            const linked = extra.manage_token !== null
+            check(/is on the way, about \d+ min$/.test(msg.subject), `${label} subject says how long: ${msg.subject}`)
+            check(linked ? /\/b\/[a-f0-9]{32,}/.test(msg.html) && /\/b\/[a-f0-9]{32,}/.test(msg.text) : /\/client\/appointments\?booking=appt-1/.test(msg.html), `${label} follows live on the booking`)
+            check(/never where they are/.test(msg.html) && /never where they are/.test(msg.text), `${label} says only minutes are shared`)
+            check(!extra.eta || (msg.html.includes(extra.eta) && msg.text.includes(extra.eta)), `${label} gives the arrival time`)
             check(!msg.attachments, `${label} carries no calendar invite`)
         }
         if (kind === 'weekly_statement') {

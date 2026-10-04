@@ -154,6 +154,29 @@ export default async ({ browser, url, check, server, root }) => {
     check(!(await p.$('.lc-refund .is-kept')), 'with nothing kept')
     await p.close()
 
+    // Receipts: a page that prints, a refund receipt, and links from the client's bookings.
+    p = await open(`/r/${'r'.repeat(32)}`)
+    const paper = await text(p, '.lc-rcpt__paper')
+    check(/Receipt/.test(paper) && /FEM-00012/.test(paper) && /Femtos Barbearia/.test(paper), `the receipt says what it is, its number and the business: ${paper.slice(0, 80)}`)
+    check(/Locappoint service fee/.test(paper) && /12[.,]49/.test(await text(p, '.lc-rcpt__lines tfoot')), 'with each line and the total')
+    check(/Paid by card/.test(paper) && /Not a tax invoice/.test(paper), 'how it was paid, and that it is not a tax invoice')
+    check(await p.evaluate(() => [...document.querySelectorAll('.lc-rcpt .ui-btn')].some((b) => /Print or save PDF/.test(b.textContent))), 'it prints, or saves as a PDF')
+    check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth) && p.errors.length === 0, `the receipt fits a phone with no errors: ${p.errors.join(' | ')}`)
+    await p.close()
+    p = await open(`/r/${'q'.repeat(32)}`, '&receipt=refund')
+    check(/Refund receipt/.test(await text(p, '.lc-rcpt__title')) && /FEM-00012/.test(await text(p, '.lc-rcpt__facts')) && /Back to the card/.test(await text(p, '.lc-rcpt__how')), 'a refund receipt names the receipt it refunds and where the money goes')
+    await p.close()
+    p = await open('/r/nope', '&receipt=missing')
+    check(/does not open a receipt/.test(await p.evaluate(() => document.body.textContent)), 'a wrong link says so')
+    await p.close()
+    p = await open('/client/appointments?booking=pd2', '&paidbooking=1')
+    const links = await p.evaluate(() => [...document.querySelectorAll('#booking-pd2 .lc-rcptlinks__a')].map((a) => [a.textContent.trim(), a.getAttribute('href')]))
+    check(links.length === 2 && /Refund receipt FEM-00011/.test(links[1][0]) && links[1][1] === `/r/${'q'.repeat(32)}`, `a cancelled paid booking links to its receipt and refund receipt: ${JSON.stringify(links)}`)
+    await p.close()
+    p = await open('/b/tok-1234567890abcdef1234567890abcdef', '&guestpaid=1')
+    check(await p.evaluate(() => [...document.querySelectorAll('.lc-rcptlinks__a')].some((a) => /Receipt FEM-00020/.test(a.textContent))), 'the manage page links to the receipt')
+    await p.close()
+
     // Server rules
     const pay = await server.ssrLoadModule(path.join(root, 'supabase', 'functions', '_shared', 'pay.ts'))
     const raw = '{"type":"checkout.session.completed"}'
@@ -168,6 +191,8 @@ export default async ({ browser, url, check, server, root }) => {
     const s = pay.stripeSession(b, 'https://locappoint.com', false)
     check(s['payment_intent_data[application_fee_amount]'] === 143 && s['line_items[0][price_data][unit_amount]'] === 2500 && s['line_items[1][price_data][unit_amount]'] === 50, 'Stripe: price and service fee as lines, Locappoint fee as the application fee')
     check(s['payment_method_types[0]'] === 'card' && s.success_url.includes('{CHECKOUT_SESSION_ID}'), 'card only, and the return carries the checkout reference')
+    const home = pay.stripeSession({ ...b, travelFee: 5, total: 30.5 }, 'https://locappoint.com', false)
+    check(home['line_items[1][price_data][product_data][name]'] === 'Travel to you' && home['line_items[1][price_data][unit_amount]'] === 500 && home['line_items[2][price_data][unit_amount]'] === 50, 'a home visit adds the travel fee as its own line, before the service fee')
     const saved = pay.stripeSession(b, 'https://locappoint.com', false, { customer: 'cus_123' })
     check(saved.customer === 'cus_123' && !('customer_email' in saved) && saved['saved_payment_method_options[payment_method_save]'] === 'enabled' && saved['saved_payment_method_options[payment_method_remove]'] === 'enabled', 'a signed-in client pays as a customer of the business, and Stripe offers to remember the card, and to forget it')
     check(s.customer === undefined && s.customer_email === 'ana@guest.pt' && !Object.keys(s).some((k) => k.startsWith('saved_payment_method_options')), 'a guest never gets a saved card: anyone can type an email')

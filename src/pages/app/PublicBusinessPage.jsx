@@ -14,7 +14,7 @@ import { loadPublicReviews } from '../../services/reviews'
 import { trackPage, visitSource } from '../../services/pageStats'
 import '../../styles/public-page.css'
 
-const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url, auto_confirm, is_demo'
+const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url, auto_confirm, is_demo, service_zones, service_radius_km, lat, lng'
 
 const PageSkeleton = () => (
     <div className="lc-pub lc-pub--skeleton" aria-hidden="true">
@@ -90,7 +90,7 @@ const PublicBusinessPage = () => {
                 }
                 const [services, hours] = await Promise.all([
                     supabase.from('services')
-                        .select('id, service_name, duration_minutes, price, description, is_active, is_addon, sort_order')
+                        .select('id, service_name, duration_minutes, price, description, is_active, is_addon, sort_order, modes, travel_fee')
                         .eq('business_id', business.id)
                         .eq('is_active', true)
                         .order('sort_order')

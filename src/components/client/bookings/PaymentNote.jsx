@@ -1,4 +1,5 @@
-import { CalendarClock, CircleCheck, Undo2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { CalendarClock, CircleCheck, ReceiptText, Undo2 } from 'lucide-react'
 import { cancelRefund, cutoffLabel, paidOnline, payMoney, refundOf, shareLabel } from '../../../services/payments'
 import { zonedNow } from '../../../services/business'
 import '../../../styles/client/refund.css'
@@ -114,18 +115,44 @@ export const RefundCard = ({ booking }) => {
     )
 }
 
-// One line in the list of past and cancelled bookings.
+// The booking's receipts, as small links: "Receipt FEM-00012", "Refund receipt FEM-00013".
+export const ReceiptLinks = ({ booking }) => {
+    const list = Array.isArray(booking?.receipts) ? booking.receipts.filter((r) => r?.token) : []
+    if (!list.length) return null
+    return (
+        <span className="lc-rcptlinks">
+            {list.map((r) => (
+                <Link key={r.token} to={`/r/${r.token}`} className="lc-rcptlinks__a">
+                    <ReceiptText size={13} aria-hidden="true" />
+                    {r.kind === 'refund' ? 'Refund receipt' : 'Receipt'} {r.number}
+                </Link>
+            ))}
+        </span>
+    )
+}
+
+// The lines in the list of past and cancelled bookings: how it was paid, any refund, the receipts.
 export const PaidLine = ({ booking }) => {
-    if (!paidOnline(booking)) return null
+    if (!paidOnline(booking)) return <ReceiptLinks booking={booking} />
     const refund = refundOf(booking)
     const total = payMoney(booking.total, booking.currency, true)
-    if (!refund) return <span className="lc-paidline"><CircleCheck size={13} aria-hidden="true" />Paid {total} online</span>
+    if (!refund) {
+        return (
+            <>
+                <span className="lc-paidline"><CircleCheck size={13} aria-hidden="true" />Paid {total} online</span>
+                <ReceiptLinks booking={booking} />
+            </>
+        )
+    }
     const amount = payMoney(refund.amount, booking.currency, true)
     return (
-        <span className={`lc-paidline is-refund${refund.sent ? ' is-sent' : ''}`}>
-            <Undo2 size={13} aria-hidden="true" />
-            {refund.sent ? `${amount} refunded` : `${amount} refund on its way`}
-            {!refund.full && <span className="lc-paidline__kept">{payMoney(refund.kept, booking.currency, true)} kept</span>}
-        </span>
+        <>
+            <span className={`lc-paidline is-refund${refund.sent ? ' is-sent' : ''}`}>
+                <Undo2 size={13} aria-hidden="true" />
+                {refund.sent ? `${amount} refunded` : `${amount} refund on its way`}
+                {!refund.full && <span className="lc-paidline__kept">{payMoney(refund.kept, booking.currency, true)} kept</span>}
+            </span>
+            <ReceiptLinks booking={booking} />
+        </>
     )
 }

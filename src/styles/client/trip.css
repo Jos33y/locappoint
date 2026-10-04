@@ -1,0 +1,112 @@
+/* A live trip to the client's place: who is coming, the minutes, the arrival time, and the steps.
+   Flat card, 1px border; amber marks the live state, green the arrival. No motion. */
+
+.lc-trip {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+}
+
+.lc-trip__who {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-trip__who svg { color: var(--lc-success); }
+
+.lc-trip__dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--signal);
+}
+
+.lc-trip__min {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.15;
+}
+
+.lc-trip__min b {
+    font-size: var(--lc-t-figure);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+.lc-trip__eta {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-trip__steps {
+    display: flex;
+    flex-direction: column;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lc-trip__steps li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 32px;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+/* The line between steps. */
+.lc-trip__steps li + li::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    bottom: calc(50% + 6px);
+    height: calc(100% - 12px);
+    border-left: 2px dotted var(--lc-line-strong);
+}
+
+.lc-trip__steps li.is-reached + li.is-reached::before { border-left-style: solid; border-left-color: var(--lc-info); }
+
+.lc-trip__mark {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-full);
+    box-shadow: inset 0 0 0 2px var(--lc-line-strong);
+}
+
+.lc-trip__steps li.is-reached { color: var(--lc-ink-1); }
+.lc-trip__steps li.is-reached .lc-trip__mark { background: var(--lc-info); box-shadow: none; }
+.lc-trip.is-done .lc-trip__steps li:last-child .lc-trip__mark { background: var(--lc-success); }
+
+.lc-trip__label { flex: 1 1 auto; }
+
+.lc-trip__time {
+    color: var(--lc-ink-3);
+    font-family: var(--lc-font-mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-trip__note {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: 12px;
+}

@@ -36,6 +36,14 @@ export default async ({ browser, url, check, server, root }) => {
     check(renderPush(row('booking_reminder', 'client', { date: day(0) })).title === 'Today at 10:30', 'the two-hour reminder says today')
     check(/on [A-Z][a-z]+day \d+ [A-Z]/.test(renderPush(row('booking_declined', 'client', { date: day(5) })).body), `a later day reads naturally: ${renderPush(row('booking_declined', 'client', { date: day(5) })).body}`)
     check(renderPush(row('booking_request', 'business', { moved_from: '2026-10-01T10:00' })).title === 'Moved, needs your OK', 'a move that needs approval says so')
+    const { TRIP_KINDS } = await server.ssrLoadModule(fn('push.ts'))
+    for (const kind of TRIP_KINDS) {
+        const p = renderPush(row(kind, 'client', { minutes: 12, by: 'Rui' }))
+        const all = p ? `${p.title} ${p.body}` : ''
+        check(Boolean(p?.title && p?.body) && p.title.length <= 60 && !/[\u2013\u2014]/.test(all) && !/undefined|null|NaN/.test(all), `trip ${kind} reads cleanly: ${all}`)
+    }
+    check(renderPush(row('trip_close', 'client', { minutes: 3 })).title === 'Almost there' && renderPush(row('trip_close', 'client', { minutes: 10 })).title === 'About 10 min away', 'a trip says how many minutes, then almost there')
+    check(renderPush(row('trip_on_way', 'client', { minutes: 15, by: 'Rui' })).body === 'Rui from Femtos Barbearia is on the way, about 15 min.', 'on the way says who and how long')
     check(renderPush(row('review_new', 'business')) === null && renderPush(row('booking_requested', 'client')) === null, 'kinds without a push send none')
 
     // How it reaches Firebase

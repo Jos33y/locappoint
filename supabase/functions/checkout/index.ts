@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
         const app = input.target === 'app'
 
         const { data: a } = await db.from('appointments')
-            .select('id, business_id, client_id, client_name, payment_status, hold_until, price, client_fee, business_fee, total, currency, client_email, addons, appointment_date, appointment_time, services(service_name), businesses(business_name, market)')
+            .select('id, business_id, client_id, client_name, payment_status, hold_until, price, client_fee, business_fee, travel_fee, total, currency, client_email, addons, appointment_date, appointment_time, services(service_name), businesses(business_name, market)')
             .eq('id', id)
             .maybeSingle()
         if (!a || a.payment_status !== 'awaiting' || !a.hold_until || new Date(a.hold_until).getTime() <= Date.now() + 60_000) {
@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
             price: Number(a.price) || 0,
             clientFee: Number(a.client_fee) || 0,
             businessFee: Number(a.business_fee) || 0,
+            travelFee: Number((a as any).travel_fee) || 0,
             total: Number(a.total) || 0,
             currency: String(a.currency || 'EUR'),
             email: String(a.client_email || ''),

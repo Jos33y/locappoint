@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react'
+import { Check, ChevronRight, GripVertical, House, Plus, Store, Trash2, Video } from 'lucide-react'
 import { AffixInput, Button, Chip, ChipGroup, Field, Input, Switch, Textarea } from '../ui'
 import { durationLabel, menuPrice } from '../../services/business'
 import { DurationDial } from './DurationDial'
@@ -18,6 +18,8 @@ export const blankService = (name = '', minutes = 30) => ({
     description: '',
     is_active: true,
     is_addon: false,
+    modes: ['at_business'],
+    travel_fee: '',
 })
 
 export const serviceFromRow = (row) => ({
@@ -29,7 +31,23 @@ export const serviceFromRow = (row) => ({
     description: row.description || '',
     is_active: row.is_active !== false,
     is_addon: row.is_addon === true,
+    modes: Array.isArray(row.modes) && row.modes.length ? row.modes : ['at_business'],
+    travel_fee: Number(row.travel_fee) > 0 ? String(row.travel_fee) : '',
 })
+
+// Where a service happens. Visits at the client's place come next.
+export const MODES = [
+    { value: 'at_business', label: 'At your place of business', short: 'In person', icon: Store },
+    { value: 'at_client', label: "At the client's place", short: 'Home visits', icon: House },
+    { value: 'online', label: 'Online', short: 'Online', icon: Video },
+]
+export const isOnline = (service) => (service.modes || []).includes('online')
+export const visitsClients = (service) => (service.modes || []).includes('at_client')
+export const modeTag = (service) => {
+    const modes = service.modes || ['at_business']
+    if (modes.length === 1 && modes[0] === 'at_business') return ''
+    return MODES.filter((m) => modes.includes(m.value)).map((m) => m.short).join(', ')
+}
 
 const parsePrice = (price) => Number(String(price).replace(',', '.').trim())
 
@@ -42,6 +60,8 @@ export const serviceProblems = (service) => {
     if (!Number.isInteger(minutes) || minutes < 5 || minutes > 600) problems.duration_minutes = 'Between 5 minutes and 10 hours'
     const price = String(service.price).trim()
     if (price === '' || Number.isNaN(parsePrice(price)) || parsePrice(price) < 0) problems.price = 'Enter a price, or 0 if it is free'
+    const travel = String(service.travel_fee ?? '').trim()
+    if (visitsClients(service) && travel !== '' && (Number.isNaN(parsePrice(travel)) || parsePrice(travel) < 0 || parsePrice(travel) > 500)) problems.travel_fee = 'A travel fee between 0 and 500, or leave it empty'
     return problems
 }
 
@@ -117,6 +137,41 @@ const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusFie
                     autoComplete="off"
                 />
             </Field>
+
+            <Field label="Where it happens" hint={isOnline(service) ? 'Online clients get your meeting link once the booking is confirmed.' : 'Pick more than one if clients can choose.'}>
+                <ChipGroup label="Where it happens">
+                    {MODES.map(({ value, label, icon: Icon }) => {
+                        const modes = service.modes || ['at_business']
+                        const on = modes.includes(value)
+                        return (
+                            <Chip
+                                key={value}
+                                selected={on}
+                                onClick={() => {
+                                    const next = on ? modes.filter((m) => m !== value) : [...modes, value]
+                                    if (next.length) set({ modes: MODES.map((m) => m.value).filter((m) => next.includes(m)) })
+                                }}
+                            >
+                                <Icon size={15} aria-hidden="true" />{label}
+                            </Chip>
+                        )
+                    })}
+                </ChipGroup>
+            </Field>
+
+            {visitsClients(service) && (
+                <Field label="Travel fee" optional error={problems.travel_fee} hint="Added to the price for visits at the client's place. Leave empty for none.">
+                    <AffixInput
+                        prefix="€"
+                        mono
+                        inputMode="decimal"
+                        value={service.travel_fee ?? ''}
+                        onChange={(e) => set({ travel_fee: e.target.value.replace(/[^\d.,]/g, '') })}
+                        placeholder="0"
+                        autoComplete="off"
+                    />
+                </Field>
+            )}
 
             <Field label="Description" optional hint="One line under the name on your page">
                 <Textarea
@@ -320,6 +375,7 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
                                                     <span className="biz-svc__name">{name}</span>
                                                     {hidden && <span className="biz-svc__hidden">Hidden</span>}
                                                     {service.is_addon && !hidden && <span className="biz-svc__hidden">Extra</span>}
+                                                    {modeTag(service) && !hidden && <span className="biz-svc__hidden">{modeTag(service)}</span>}
                                                     {service.description?.trim() && <span className="biz-svc__desc">{service.description.trim()}</span>}
                                                 </span>
                                                 <span className="biz-svc__time">{minutes ? durationLabel(minutes) : 'No time'}</span>

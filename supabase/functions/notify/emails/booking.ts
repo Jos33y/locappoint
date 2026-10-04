@@ -39,6 +39,15 @@ const bookingFacts = (row: Row) => {
     const price = priceText(p.price, p.country)
     const staff = oneLine(p.staff_name)
     const place = [oneLine(p.address), oneLine(p.city)].filter(Boolean)
+    // Online sessions have a meeting link instead of an address, shown once the booking is confirmed.
+    const online = p.mode === 'online'
+    const meet = online && /^https:\/\/\S+$/.test(String(p.meeting_url || '')) ? String(p.meeting_url) : ''
+    const joinable = online && meet && p.status === 'confirmed'
+    // A visit at the client's place: the area always, the address once the business has confirmed.
+    const home = p.mode === 'at_client'
+    const homePlace = home ? [oneLine(p.client_address), oneLine(p.client_zone)].filter(Boolean) : []
+    const homeNote = home ? oneLine(p.client_landmark) : ''
+    const toBusiness = p.audience === 'business'
     const contact = oneLine(p.business_whatsapp) || oneLine(p.business_phone)
     const movedFrom = p.moved_from ? String(p.moved_from) : ''
     const token = String(p.manage_token || '').replace(/[^a-f0-9]/gi, '')
@@ -52,8 +61,8 @@ const bookingFacts = (row: Row) => {
                 title: `${serviceRaw} at ${bizRaw}`,
                 start: zonedToUtc(date, time, String(p.timezone || 'Europe/Lisbon')),
                 minutes: Number(p.duration_minutes) || 30,
-                location: place.join(', '),
-                details: [manage ? `Change or cancel: ${manage}` : '', contact ? `${bizRaw}: ${contact}` : ''].filter(Boolean).join('\n'),
+                location: online ? (joinable ? meet : 'Online') : home ? homePlace.join(', ') : place.join(', '),
+                details: [joinable ? `Join online: ${meet}` : '', manage ? `Change or cancel: ${manage}` : '', contact ? `${bizRaw}: ${contact}` : ''].filter(Boolean).join('\n'),
                 url: manage || `${SITE}/${String(p.slug || '').replace(/[^a-z0-9-]/gi, '')}`,
             }
         } catch {
@@ -76,7 +85,15 @@ const bookingFacts = (row: Row) => {
         dayLabel: longDay(date),
         clientDetails: [duration(Number(p.duration_minutes) || 0), staff ? `with ${esc(staff)}` : '', price].filter(Boolean).join(' &middot; '),
         businessDetails: [esc(serviceRaw), duration(Number(p.duration_minutes) || 0), price, staff ? `with ${esc(staff)}` : ''].filter(Boolean).join(' &middot; '),
-        where: place.length ? esc(place.join(', ')) : '',
+        where: home
+            ? p.client_address
+                ? `${toBusiness ? 'At the client&rsquo;s place' : 'At your place'}: ${esc(homePlace.join(', '))}${homeNote ? `. ${esc(homeNote)}` : ''}`
+                : `${toBusiness ? `At the client&rsquo;s place${oneLine(p.client_zone) ? `, ${esc(oneLine(p.client_zone))}` : ''}. The address shows once you confirm.` : `At your place${oneLine(p.client_zone) ? `, ${esc(oneLine(p.client_zone))}` : ''}.`}`
+            : online
+            ? joinable
+                ? `Online. Join: <a href="${esc(meet)}" style="color:#B4C1DD; text-decoration:underline;">${esc(meet)}</a>`
+                : 'Online. The join link comes with the confirmation.'
+            : place.length ? esc(place.join(', ')) : '',
         was: movedFrom ? `${shortDay(movedFrom)}, ${movedFrom.slice(11, 16)}` : '',
         contact: contact ? esc(contact) : '',
         cutoff: cutoffText(Number(p.cancel_cutoff_minutes) || 0),
@@ -158,6 +175,9 @@ const changeVia = (f: Facts) => (f.manage ? 'with Manage booking' : 'from your b
 const VIEW = (f: Facts) => (f.manage ? { label: 'Manage booking', href: f.manage, width: 170 } : { label: 'View booking', href: f.mine, width: 150 })
 const CALENDAR = (f: Facts) => ({ label: 'Open calendar', href: f.calendar, width: 160 })
 const BOOK_AGAIN = (f: Facts) => ({ label: 'Pick a new time', href: f.page, width: 170 })
+
+// Business emails only say where when it is not their own place: the client's home, or online.
+const awayFromShop = (f: Facts) => (f.p.mode === 'at_client' || f.p.mode === 'online' ? f.where || undefined : undefined)
 
 const forClient = (row: Row) => row.payload.audience !== 'business'
 
@@ -401,10 +421,11 @@ export const BOOKING: Record<string, Render> = {
             day: f.dayLabel,
             place: f.biz,
             slot: { state: 'booked', time: f.time, title: f.client, sub: f.businessDetails, button: CALENDAR(f) },
+            where: awayFromShop(f),
             small: f.p.client_phone ? `Their number is ${esc(f.p.client_phone)}, if you need to reach them.` : 'You do not need to do anything.',
         }
         return bookingMessage(row, f, false, `New booking: ${f.clientRaw}, ${f.short}`, o,
-            [`${f.clientRaw} booked ${f.serviceRaw}.`, f.long, plainText(f.businessDetails)])
+            [`${f.clientRaw} booked ${f.serviceRaw}.`, f.long, plainText(f.businessDetails), awayFromShop(f) ? plainText(awayFromShop(f)!) : ''].filter(Boolean))
     },
 
     booking_request: (row) => {
@@ -421,9 +442,10 @@ export const BOOKING: Record<string, Render> = {
             place: f.biz,
             was: f.was,
             slot: { state: 'waiting', time: f.time, flag: 'Waiting for you', title: f.client, sub: f.businessDetails, button: { label: 'Confirm or decline', href: f.calendar, width: 200 } },
+            where: awayFromShop(f),
             small: 'Answer soon. Clients book elsewhere when they wait too long. You can switch to automatic confirmation in Business page, Bookings.',
         }
         return bookingMessage(row, f, false, `${moved ? 'New time to confirm' : 'Request to confirm'}: ${f.clientRaw}, ${f.short}`, o,
-            [moved ? `${f.clientRaw} moved ${f.serviceRaw} and it needs your OK.` : `${f.clientRaw} wants ${f.serviceRaw}.`, f.was ? `Was: ${f.was}` : '', f.long, `Confirm or decline: ${f.calendar}`].filter(Boolean))
+            [moved ? `${f.clientRaw} moved ${f.serviceRaw} and it needs your OK.` : `${f.clientRaw} wants ${f.serviceRaw}.`, f.was ? `Was: ${f.was}` : '', f.long, awayFromShop(f) ? plainText(awayFromShop(f)!) : '', `Confirm or decline: ${f.calendar}`].filter(Boolean))
     },
 }

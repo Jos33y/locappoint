@@ -56,7 +56,7 @@ export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null
     return [...new Set((data || []).map((row) => toMinutes(row.slot_time)))].sort((a, b) => a - b)
 }
 
-export const requestBooking = async ({ businessId, serviceId, staffId = null, dateKey, minutes, name, email, phone, notes, addonIds = [] }) => {
+export const requestBooking = async ({ businessId, serviceId, staffId = null, dateKey, minutes, name, email, phone, notes, addonIds = [], mode = null, clientAddress = null, clientLandmark = null, clientZone = null, clientLat = null, clientLng = null, clientPlaceId = null }) => {
     const { data, error } = await supabase.rpc('book_appointment', {
         p_business_id: businessId,
         p_service_id: serviceId,
@@ -68,14 +68,21 @@ export const requestBooking = async ({ businessId, serviceId, staffId = null, da
         p_notes: notes,
         p_staff_id: staffId,
         p_addon_ids: addonIds.length ? addonIds : null,
+        p_mode: mode,
+        p_client_address: clientAddress,
+        p_client_landmark: clientLandmark,
+        p_client_zone: clientZone,
+        p_client_lat: clientLat,
+        p_client_lng: clientLng,
+        p_client_place_id: clientPlaceId,
     })
     if (error) throw error
     return data
 }
 
-export const savePending = ({ slug, serviceId, dateKey, minutes, addonIds = [] }) => {
+export const savePending = ({ slug, serviceId, dateKey, minutes, addonIds = [], mode = null }) => {
     try {
-        sessionStorage.setItem(PENDING, JSON.stringify({ businessSlug: slug, serviceId, addonIds, date: dateKey, time: fromMinutes(minutes), savedAt: Date.now() }))
+        sessionStorage.setItem(PENDING, JSON.stringify({ businessSlug: slug, serviceId, addonIds, mode, date: dateKey, time: fromMinutes(minutes), savedAt: Date.now() }))
     } catch { /* storage blocked: the client picks the time again */ }
 }
 
@@ -84,7 +91,7 @@ export const readPending = (slug) => {
         const saved = JSON.parse(sessionStorage.getItem(PENDING) || 'null')
         if (!saved || saved.businessSlug !== slug || !parseDateKey(saved.date)) return null
         if (saved.savedAt && Date.now() - saved.savedAt > PENDING_TTL) return null
-        return { serviceId: saved.serviceId, addonIds: Array.isArray(saved.addonIds) ? saved.addonIds : [], dateKey: saved.date, minutes: toMinutes(saved.time) }
+        return { serviceId: saved.serviceId, addonIds: Array.isArray(saved.addonIds) ? saved.addonIds : [], mode: saved.mode || null, dateKey: saved.date, minutes: toMinutes(saved.time) }
     } catch {
         return null
     }
@@ -121,7 +128,7 @@ export const loadNextBooking = async (email) => {
     return data?.[0] || null
 }
 
-const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, payment_status, total, client_fee, currency, cancelled_by, rescheduled_from, addons, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price), reviews (id, rating, body, reply, replied_at, created_at, status)'
+const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, mode, meeting_url, client_address, client_landmark, client_zone, travel_fee, payment_status, total, client_fee, currency, cancelled_by, rescheduled_from, addons, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price, modes, travel_fee), reviews (id, rating, body, reply, replied_at, created_at, status), receipts (kind, number, token)'
 
 export const loadMyBookings = async (email) => {
     const { data, error } = await supabase

@@ -1,0 +1,66 @@
+/* On my way, in the booking sheet of a visit at the client's place. Inside .biz-facts, whose divs are
+   two-column grids, so the containers say what they are with the extra class. */
+
+.biz-trip,
+.biz-facts .biz-trip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.biz-trip__now {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-trip__now b {
+    color: var(--lc-ink-1);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-trip__hint {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: 12px;
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-trip__late,
+.biz-trip__done {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.biz-trip__late svg { color: var(--lc-warning); }
+.biz-trip__done svg { color: var(--lc-success); }
+
+.biz-trip__actions,
+.biz-facts .biz-trip__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.biz-trip__error {
+    margin: 0;
+    color: var(--lc-danger);
+    font-size: var(--lc-t-label);
+}
+
+.biz-facts .biz-trip .ui-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}

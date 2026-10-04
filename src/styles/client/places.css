@@ -1,0 +1,151 @@
+/* Address search with Google's suggestions (PlaceSearch), and the picked address with how far it is
+   (VisitAddress, Services). The list sits in the page flow, so a sheet on a phone never clips it. */
+
+.lc-place {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.lc-place__box {
+    position: relative;
+    display: block;
+}
+
+.lc-place__box .ui-input { padding-right: 40px; }
+
+.lc-place__spin {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    margin-top: -8px;
+    color: var(--lc-ink-3);
+    animation: lc-spin 0.8s linear infinite;
+}
+
+.lc-place__pop {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-1);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+}
+
+.lc-place__list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lc-place__option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 48px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--lc-r-sm);
+    color: var(--lc-ink-3);
+    cursor: pointer;
+}
+
+.lc-place__option.is-active,
+.lc-place__option:hover { background: var(--lc-info-tint); }
+
+.lc-place__option > svg { flex: none; }
+
+.lc-place__one {
+    display: block;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-medium);
+}
+
+.lc-place__two {
+    display: block;
+    color: var(--lc-ink-3);
+    font-size: 12px;
+}
+
+.lc-place__credit {
+    align-self: flex-end;
+    padding: var(--space-1) var(--space-3);
+    color: var(--lc-ink-3);
+    font-family: Roboto, Arial, sans-serif;
+    font-size: 11px;
+}
+
+.lc-place__note {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+/* The address picked: where it is, a way to change it, and whether the business goes there. */
+.lc-place-picked {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-place-picked > svg {
+    flex: none;
+    margin-top: 2px;
+    color: var(--lc-info);
+}
+
+.lc-place-picked__text {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-snug);
+    overflow-wrap: anywhere;
+}
+
+.lc-place-picked__change {
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--lc-info);
+    font: inherit;
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+}
+
+.lc-place-picked__change:focus-visible {
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.lc-place-reach {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-place-reach > svg {
+    flex: none;
+    margin-top: 1px;
+    color: var(--lc-success);
+}
+
+.lc-place-reach.is-out > svg { color: var(--lc-warning); }
+
+.lc-place-reach b {
+    color: var(--lc-ink-1);
+    font-weight: var(--font-weight-semibold);
+}

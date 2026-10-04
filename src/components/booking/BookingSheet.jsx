@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CalendarClock, Clock, CreditCard } from 'lucide-react'
-import { Button, Chip, ChipGroup, Sheet } from '../ui'
+import { ArrowLeft, CalendarClock, Clock, CreditCard, Globe2 } from 'lucide-react'
+import { Button, Chip, ChipGroup, Segmented, Sheet } from '../ui'
 import { DurationDial } from '../business/DurationDial'
 import { useNow } from '../business/ShopClock'
 import { useAuth } from '../../hooks/useAuth'
@@ -13,11 +13,14 @@ import { clock } from '../../services/hours'
 import { parseDateKey, toMinutes } from '../../services/dates'
 import { abandonPayment, loadQuote, paidQuote, payMoney, paymentState, policyLine, providerName, startCheckout } from '../../services/payments'
 import { onAppReturn, openPayoutLink } from '../../services/payouts'
+import { serviceModes, yourTime } from '../../services/formats'
+import { placesOn, takesHomeVisits, travelsByDistance } from '../../services/places'
 import { DayStrip } from './sheet/DayStrip'
 import { TimeGrid } from './sheet/TimeGrid'
 import { BookingTicket } from './sheet/BookingTicket'
 import { AddToCalendar } from './AddToCalendar'
 import { BookingDetails } from './sheet/BookingDetails'
+import { VisitAddress, needsAreaPick, visitAddressLine, visitCovered } from './sheet/VisitAddress'
 import { OwnerNote } from './sheet/OwnerNote'
 import { RebookNote } from './sheet/RebookNote'
 import '../../styles/client/booking-sheet.css'
@@ -53,6 +56,30 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     }, [givenExtras, offerExtras, business.id])
     const extras = useMemo(() => (givenExtras || loadedExtras).filter((e) => e.id !== baseService.id), [givenExtras, loadedExtras, baseService.id])
     const [chosen, setAddonIds] = useState(() => resume?.addonIds || rebook?.addonIds || [])
+    // In person or online: the client picks when the service offers both.
+    // A visit at the client's place needs areas the business covers or a distance it travels; without
+    // either it is not offered.
+    const zones = business.service_zones || []
+    const radius = travelsByDistance(business) ? Number(business.service_radius_km) : null
+    const offered = serviceModes(baseService).filter((m) => m !== 'at_client' || takesHomeVisits(business))
+    const modes = offered.length ? offered : serviceModes(baseService)
+    const [visit, setVisit] = useState({ zone: '', address: '', landmark: '', unit: '', place: null })
+    // Google's address search, when it is on: checked once the client chooses a visit at their place.
+    const [search, setSearch] = useState('checking')
+    const [mode, setMode] = useState(() => {
+        if (move?.mode) return move.mode
+        const wanted = resume?.mode || rebook?.mode
+        return wanted && modes.includes(wanted) ? wanted : modes[0]
+    })
+    const pickMode = !move && !owner && modes.length > 1
+    const askAddress = mode === 'at_client' && !move && !owner
+    useEffect(() => {
+        if (!askAddress) return undefined
+        let cancelled = false
+        placesOn().then((on) => { if (!cancelled) setSearch((s) => (s === 'checking' ? (on ? 'on' : 'off') : s)) })
+        return () => { cancelled = true }
+    }, [askAddress])
+    const travel = mode === 'at_client' ? Number(move ? move.travel_fee : baseService.travel_fee) || 0 : 0
     const addonIds = useMemo(() => chosen.filter((id) => extras.some((e) => e.id === id)), [chosen, extras])
     const addonKey = addonIds.join(',')
     const picked = extras.filter((e) => addonIds.includes(e.id))
@@ -106,12 +133,12 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     }, [counts, step, business.id])
 
     const quoting = !move && !owner && step === 'review'
-    const quoteKey = `${business.id}:${baseService.id}:${addonKey}:${quoteTry}`
+    const quoteKey = `${business.id}:${baseService.id}:${addonKey}:${mode}:${quoteTry}`
     useEffect(() => {
         if (!quoting) return undefined
         let cancelled = false
         setQuote((q) => (q.key === quoteKey && q.state === 'ready' ? q : { state: 'loading', data: null, key: quoteKey }))
-        loadQuote({ businessId: business.id, serviceId: baseService.id, addonIds })
+        loadQuote({ businessId: business.id, serviceId: baseService.id, addonIds, mode })
             .then((data) => { if (!cancelled) setQuote({ state: 'ready', data, key: quoteKey }) })
             .catch((err) => {
                 console.error('Quote failed:', err)
@@ -170,7 +197,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     }
 
     const toAuth = (tab) => {
-        savePending({ slug: business.slug, serviceId: service.id, dateKey: dayKey, minutes, addonIds })
+        savePending({ slug: business.slug, serviceId: service.id, dateKey: dayKey, minutes, addonIds, mode })
         const back = `/${business.slug}?book=${encodeURIComponent(`${service.id}.${dayKey}.${clock(minutes).replace(':', '')}`)}`
         navigate('/auth', {
             state: {
@@ -189,6 +216,18 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
         if (!details.name.trim()) problems.name = 'Add the name the business should expect'
         if (!accountEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) problems.email = 'Enter the email for your confirmation'
         if (!details.phoneValid) problems.phone = 'Enter a phone number the business can call'
+        if (mode === 'at_client') {
+            if (search === 'on') {
+                if (!visit.place) problems.address = 'Pick your address from the list'
+                else if (needsAreaPick(visit, zones) && !visit.zone) problems.zone = 'Pick your area'
+                else if (!visitCovered(visit, zones)) problems.address = 'They do not go to this address. Pick another one, or another way to book.'
+            } else if (search === 'off' && zones.length > 0) {
+                if (!visit.zone) problems.zone = 'Pick your area'
+                if (visit.address.trim().length < 5) problems.address = 'Enter the address where the visit happens'
+            } else {
+                problems.address = 'Address search is not ready. Try again in a minute.'
+            }
+        }
         setErrors(problems)
         if (Object.keys(problems).length) return
         setSending(true)
@@ -205,6 +244,13 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                 phone: details.phone,
                 notes: details.notes.trim(),
                 addonIds,
+                mode,
+                ...(mode === 'at_client' ? {
+                    clientAddress: visitAddressLine(visit),
+                    clientLandmark: visit.landmark.trim(),
+                    clientZone: (visit.place && (visit.place.zone || visit.zone)) || (visit.place ? null : visit.zone),
+                    ...(visit.place ? { clientLat: visit.place.lat, clientLng: visit.place.lng, clientPlaceId: visit.place.id } : {}),
+                } : {}),
             })
             clearPending()
             if (online) {
@@ -410,7 +456,24 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                     <button type="button" className="lc-bk-back" onClick={() => setStep('time')}>
                         <ArrowLeft size={16} aria-hidden="true" />Change time
                     </button>
-                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} pay={!owner} quote={online ? quote.data : movedPaid} paid={Boolean(movedPaid)} />
+                    {pickMode && (
+                        <div className="lc-fmt-pick">
+                            <span className="lc-fmt-pick__label">Where</span>
+                            <Segmented
+                                label="Where it happens"
+                                value={mode}
+                                onChange={setMode}
+                                options={modes.map((m) => ({ value: m, label: m === 'online' ? 'Online' : m === 'at_client' ? 'At your place' : `At ${business.business_name}` }))}
+                            />
+                        </div>
+                    )}
+                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} pay={!owner} quote={online ? quote.data : movedPaid} paid={Boolean(movedPaid)} mode={mode} travel={travel} zone={move?.client_zone || visit.place?.zone || visit.zone} />
+                    {mode === 'online' && yourTime({ dateKey: dayKey, minutes, timeZone }) && (
+                        <p className="lc-fmt-zone">
+                            <Globe2 size={15} aria-hidden="true" />
+                            <span>{clock(minutes)} is {business.city || 'the business'} time. For you that is <b>{yourTime({ dateKey: dayKey, minutes, timeZone })}</b>.</span>
+                        </p>
+                    )}
                     {was ? (
                         <p className="lc-bk-was">
                             Instead of <b>{dayLabel({ date: parseDateKey(was.dateKey) })} at {clock(was.minutes)}</b>.
@@ -419,6 +482,20 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                     ) : owner ? (
                         <OwnerNote />
                     ) : (
+                        <>
+                        {mode === 'at_client' && (
+                            <VisitAddress
+                                value={visit}
+                                zones={zones}
+                                radius={radius}
+                                search={search}
+                                businessId={business.id}
+                                onSearchOff={() => { setSearch('off'); setVisit((v) => ({ ...v, place: null })) }}
+                                errors={errors}
+                                business={business.business_name}
+                                onChange={(patch) => { setVisit((v) => ({ ...v, ...patch })); setErrors({}) }}
+                            />
+                        )}
                         <BookingDetails
                             value={details}
                             errors={errors}
@@ -426,6 +503,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                             onSignIn={user ? null : () => toAuth('signin')}
                             onChange={(patch) => { setDetails((d) => ({ ...d, ...patch })); setErrors({}) }}
                         />
+                        </>
                     )}
                     {!move && !owner && online && (
                         <p className="lc-bk-policy">
@@ -468,7 +546,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
 
             {step === 'done' && minutes !== null && (
                 <>
-                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={paid || auto ? 'success' : 'signal'} pay={!owner} quote={paid ? quote.data : movedPaid} paid={paid || Boolean(movedPaid)} />
+                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={paid || auto ? 'success' : 'signal'} pay={!owner} quote={paid ? quote.data : movedPaid} paid={paid || Boolean(movedPaid)} mode={mode} travel={travel} zone={move?.client_zone || visit.place?.zone || visit.zone} />
                     {paid && (
                         <p className="lc-bk-done">
                             <b>Paid {payMoney(quote.data?.total, quote.data?.currency)}.</b>

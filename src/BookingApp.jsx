@@ -33,6 +33,7 @@ const Join = lazy(() => import('./pages/app/Join'))
 const AppDownload = lazy(() => import('./pages/app/AppDownload'))
 const PayoutsDone = lazy(() => import('./pages/app/PayoutsDone'))
 const PayReturn = lazy(() => import('./pages/app/PayReturn'))
+const ReceiptPage = lazy(() => import('./pages/app/ReceiptPage'))
 const Invite = lazy(() => import('./pages/business/Invite'))
 
 const BusinessShell = lazy(() => import('./components/business/BusinessShell'))
@@ -110,6 +111,7 @@ const BookingApp = () => (
                     <Route path="/app" element={<AppDownload />} />
                     <Route path="/payouts/done" element={<PayoutsDone />} />
                     <Route path="/pay/return" element={<PayReturn />} />
+                    <Route path="/r/:token" element={<ReceiptPage />} />
 
                     <Route
                         path="/portal"

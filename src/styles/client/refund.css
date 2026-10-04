@@ -179,3 +179,35 @@
 .lc-paidline__kept::before { content: '\00B7'; margin-right: 6px; }
 
 .lc-cl-cancel .lc-refund__lead { margin-top: var(--space-3); }
+
+/* Receipt links under a booking. */
+.lc-rcptlinks,
+.lc-cl-past__text .lc-rcptlinks {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px var(--space-3);
+    margin-top: 2px;
+}
+
+.lc-rcptlinks__a,
+.lc-cl-past__text .lc-rcptlinks__a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 28px;
+    color: var(--lc-info);
+    font-size: 12px;
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    text-decoration: none;
+}
+
+.lc-rcptlinks__a:hover { text-decoration: underline; }
+
+.lc-rcptlinks__a:focus-visible {
+    border-radius: var(--lc-r-sm);
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+}
+
+.lc-cl-bk > .lc-rcptlinks { padding: 0 var(--space-1); }

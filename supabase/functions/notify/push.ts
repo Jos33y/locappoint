@@ -32,6 +32,9 @@ const facts = (row: Row) => {
     }
 }
 
+// Minutes until a trip arrives, at least one.
+const minutesOf = (f: ReturnType<typeof facts>) => Math.max(1, Math.round(Number(f.p.minutes) || 0))
+
 const cap = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 const clip = (text: string, n: number) => (text.length > n ? `${text.slice(0, n - 1).trimEnd()}…` : text)
 
@@ -50,8 +53,15 @@ const CLIENT: Record<string, (f: ReturnType<typeof facts>) => [string, string]> 
     booking_reminder: (f) => [cap(f.when || 'Coming up'), [`${f.service} at ${f.biz}.`, f.place].filter(Boolean).join(' ')],
 }
 
+// Live trips to the client's place, queued straight from the trip (live-trips.sql), not from the bell.
+const TRIP: Record<string, (f: ReturnType<typeof facts>) => [string, string]> = {
+    trip_on_way: (f) => ['On the way', `${oneLine(f.p.by) ? `${oneLine(f.p.by)} from ` : ''}${f.biz} is on the way, about ${minutesOf(f)} min.`],
+    trip_close: (f) => [minutesOf(f) <= 3 ? 'Almost there' : `About ${minutesOf(f)} min away`, `${f.biz} is about ${minutesOf(f)} min away.`],
+    trip_arrived: (f) => ['Arrived', `${f.biz} is at your place.`],
+}
+
 export const renderPush = (row: Row): Push | null => {
-    const table = (row.payload as Record<string, unknown>)?.audience === 'business' ? BUSINESS : CLIENT
+    const table = (row.payload as Record<string, unknown>)?.audience === 'business' ? BUSINESS : { ...CLIENT, ...TRIP }
     const make = table[row.kind]
     if (!make) return null
     const f = facts(row)
@@ -60,3 +70,4 @@ export const renderPush = (row: Row): Push | null => {
 }
 
 export const PUSH_KINDS = { business: Object.keys(BUSINESS), client: Object.keys(CLIENT) }
+export const TRIP_KINDS = Object.keys(TRIP)

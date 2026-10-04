@@ -44,6 +44,9 @@ import ClientAppointments from '@src/pages/client/MyAppointments'
 import ClientSearch from '@src/pages/client/Search'
 import ClientProfile from '@src/pages/client/Profile'
 import ManageBooking from '@src/pages/app/ManageBooking'
+import PayReturn from '@src/pages/app/PayReturn'
+import ReceiptPage from '@src/pages/app/ReceiptPage'
+import PaymentsPage from '@src/pages/business/PaymentsPage'
 import PublicBusinessPage from '@src/pages/app/PublicBusinessPage'
 import { InboxProvider } from '@src/components/inbox/InboxContext'
 import '@src/styles/client/client-shell.css'
@@ -155,6 +158,7 @@ const App = () => (
           <Route path="channels" element={<Channels />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="invite" element={<Invite />} />
+          <Route path="payments" element={<PaymentsPage />} />
           <Route path="setup" element={<Setup />} />
           <Route path="crash" element={<RouteBoundary><Crash /></RouteBoundary>} />
         </Route>
@@ -164,6 +168,8 @@ const App = () => (
         <Route path="/client/profile" element={<ClientProfile />} />
         <Route path="/client/notifications" element={<InboxProvider audience="client"><InboxPage audience="client" /></InboxProvider>} />
         <Route path="/b/:token" element={<ManageBooking />} />
+        <Route path="/pay/return" element={<PayReturn />} />
+        <Route path="/r/:token" element={<ReceiptPage />} />
         <Route path="/team/:token" element={<TeamJoin />} />
         <Route path="/app" element={<AppDownload />} />
         <Route path="/auth" element={<AuthPage />} />

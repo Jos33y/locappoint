@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowUpRight, EyeOff, Trash2, TriangleAlert } from 'lucide-react'
-import { Button, Sheet, Skeleton } from '../../components/ui'
+import { ArrowUpRight, EyeOff, House, MapPin, Trash2, TriangleAlert, Video } from 'lucide-react'
+import { Button, Chip, ChipGroup, Field, Input, Sheet, Skeleton } from '../../components/ui'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
-import { ServiceEditor, menuPrice, serviceFromRow, serviceProblems } from '../../components/business/ServiceEditor'
+import { ServiceEditor, isOnline, menuPrice, serviceFromRow, serviceProblems, visitsClients } from '../../components/business/ServiceEditor'
 import SaveState from '../../components/business/SaveState'
 import { useAutosave } from '../../components/business/useAutosave'
 import { suggestionsFor } from '../../constants/categories'
-import { loadSetup, saveServices, serviceBookingCount, serviceRow } from '../../services/setup'
+import { loadSetup, loadZones, saveServices, serviceBookingCount, serviceRow, updateBusiness } from '../../services/setup'
 import { pageUrl } from '../../services/links'
+import { PlaceSearch } from '../../components/common/PlaceSearch'
+import { MAP_KEY, kmLabel, loadMaps, placeShop, placesOn } from '../../services/places'
 import '../../styles/business/services-hours.css'
+import '../../styles/business/formats.css'
 
 const snapshot = (list) => JSON.stringify(list.map((s, i) => ({ id: s.id || null, ...serviceRow(s, i) })))
 
@@ -92,10 +95,211 @@ const RemoveSheet = ({ ask, onClose, onRemove, onHide }) => {
     )
 }
 
+// One link for every online session, the business's own room. Saved when the field is left.
+const MEETING = /^https:\/\/\S+$/
+const MeetingLink = ({ businessId, value, onSaved }) => {
+    const [url, setUrl] = useState(value || '')
+    const [error, setError] = useState('')
+    const [saved, setSaved] = useState(false)
+    const clean = url.trim()
+    const save = async () => {
+        setSaved(false)
+        if (clean === (value || '')) return
+        if (clean && (!MEETING.test(clean) || clean.length > 300)) {
+            setError('Paste the whole link, starting with https://')
+            return
+        }
+        setError('')
+        try {
+            await updateBusiness(businessId, { meeting_url: clean || null })
+            onSaved(clean || null)
+            setSaved(true)
+        } catch (err) {
+            console.error('Meeting link failed:', err)
+            setError('Not saved. Check your connection and try again.')
+        }
+    }
+    return (
+        <section className="biz-sh__meet" aria-labelledby="meet-title">
+            <h2 id="meet-title" className="biz-sh__meettitle"><Video size={18} aria-hidden="true" />Online sessions</h2>
+            <Field
+                label="Your meeting link"
+                hint={saved ? 'Saved. Clients get it once you confirm their booking.' : 'Zoom, Google Meet, Teams or Whereby. Clients get it once you confirm their booking.'}
+                error={error}
+            >
+                <Input
+                    value={url}
+                    onChange={(e) => { setUrl(e.target.value); setError(''); setSaved(false) }}
+                    onBlur={save}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                    placeholder="https://meet.google.com/abc-defg-hij"
+                    inputMode="url"
+                    autoComplete="off"
+                    spellCheck={false}
+                />
+            </Field>
+            {!clean && !error && <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Without a link, online clients are told it comes with the confirmation, and you send it yourself.</p>}
+        </section>
+    )
+}
+
+// The shop and its distance on a Google map, when the map key is set. Nothing shows if it does not load.
+const ReachMap = ({ lat, lng, km }) => {
+    const box = useRef(null)
+    const drawn = useRef(null)
+    const [failed, setFailed] = useState(false)
+    const [ready, setReady] = useState(0)
+    useEffect(() => {
+        let cancelled = false
+        loadMaps()
+            .then(async (maps) => {
+                const [{ Map, Circle }, { Marker }] = await Promise.all([maps.importLibrary('maps'), maps.importLibrary('marker')])
+                if (cancelled || !box.current) return
+                const center = { lat, lng }
+                const map = new Map(box.current, { center, zoom: 12, disableDefaultUI: true, zoomControl: true, gestureHandling: 'cooperative', clickableIcons: false })
+                const marker = new Marker({ map, position: center, title: 'Your shop' })
+                const circle = new Circle({ map, center, radius: 0, strokeColor: '#2D7FF0', strokeOpacity: 0.9, strokeWeight: 1.5, fillColor: '#2D7FF0', fillOpacity: 0.08, clickable: false })
+                drawn.current = { map, marker, circle }
+                setReady((n) => n + 1)
+            })
+            .catch(() => { if (!cancelled) setFailed(true) })
+        return () => { cancelled = true }
+    }, [lat, lng])
+    useEffect(() => {
+        const d = drawn.current
+        if (!d) return
+        d.circle.setRadius((km || 0) * 1000)
+        d.circle.setVisible(Boolean(km))
+        if (km) d.map.fitBounds(d.circle.getBounds(), 24)
+        else { d.map.setCenter({ lat, lng }); d.map.setZoom(14) }
+    }, [ready, km, lat, lng])
+    if (!MAP_KEY || failed) return null
+    return <div ref={box} className="biz-reach__map" role="img" aria-label={km ? `Map: ${kmLabel(km)} around your shop` : 'Map: your shop'} />
+}
+
+const DISTANCES = [3, 5, 10, 15, 25]
+
+// How far the business travels from its shop, straight line. The shop is placed once with Google.
+const Distance = ({ businessId, address, shop, radius, onShop, onRadius }) => {
+    const [search, setSearch] = useState('checking')
+    const [moving, setMoving] = useState(false)
+    const [error, setError] = useState('')
+    useEffect(() => {
+        let cancelled = false
+        placesOn().then((on) => { if (!cancelled) setSearch(on ? 'on' : 'off') })
+        return () => { cancelled = true }
+    }, [])
+    const placed = shop.lat !== null && shop.lat !== undefined
+    const pick = async (km) => {
+        const before = radius
+        onRadius(km)
+        setError('')
+        try {
+            await updateBusiness(businessId, { service_radius_km: km })
+        } catch (err) {
+            console.error('Distance failed:', err)
+            onRadius(before)
+            setError('Not saved. Check your connection and try again.')
+        }
+    }
+    const resolve = (placeId, session) => placeShop({ businessId, placeId, session })
+
+    return (
+        <div className="biz-reach">
+            <p className="biz-reach__title">Or by distance from your shop</p>
+            {(!placed || moving) && (
+                search === 'checking' ? <Skeleton height={48} radius={10} />
+                    : search === 'off' ? (
+                        <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Distance needs address search, which is not switched on yet. Areas work without it.</p>
+                    ) : (
+                        <Field label="Your shop's address" hint="Pick it from the list. Distance is measured from here, in a straight line.">
+                            <PlaceSearch
+                                businessId={businessId}
+                                resolve={resolve}
+                                onPicked={(spot) => { onShop(spot); setMoving(false) }}
+                                onOff={() => setSearch('off')}
+                                placeholder={address || 'Rua de Cedofeita 120'}
+                            />
+                        </Field>
+                    )
+            )}
+            {placed && !moving && (
+                <>
+                    <div className="lc-place-picked">
+                        <MapPin size={16} aria-hidden="true" />
+                        <span className="lc-place-picked__text">{shop.address || address || 'Your shop is placed on the map'}</span>
+                        <button type="button" className="lc-place-picked__change" onClick={() => setMoving(true)}>Move</button>
+                    </div>
+                    <ChipGroup label="How far you go">
+                        <Chip selected={!radius} onClick={() => pick(null)}>Off</Chip>
+                        {DISTANCES.map((km) => <Chip key={km} selected={Number(radius) === km} onClick={() => pick(km)}>{kmLabel(km)}</Chip>)}
+                    </ChipGroup>
+                    <ReachMap lat={Number(shop.lat)} lng={Number(shop.lng)} km={radius ? Number(radius) : null} />
+                    <p className="biz-sh__tip">
+                        {radius
+                            ? `Clients up to ${kmLabel(radius)} away, in a straight line, can book a visit at their place, as well as clients in the areas you picked.`
+                            : 'Pick a distance to take visits around your shop as well as in your areas.'}
+                    </p>
+                </>
+            )}
+            {error && <p className="biz-sh__meetwarn" role="alert"><TriangleAlert size={16} aria-hidden="true" />{error}</p>}
+        </div>
+    )
+}
+
+// Where the business travels for visits at the client's place: areas, a distance, or both. Saved on every tap.
+const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius, onShop, onRadius }) => {
+    const [zones, setZones] = useState(null)
+    const [picked, setPicked] = useState(value || [])
+    const [error, setError] = useState('')
+    useEffect(() => {
+        let cancelled = false
+        loadZones(market).then((list) => { if (!cancelled) setZones(list) }).catch(() => { if (!cancelled) setZones([]) })
+        return () => { cancelled = true }
+    }, [market])
+    const toggle = async (zone) => {
+        const next = picked.includes(zone) ? picked.filter((z) => z !== zone) : [...picked, zone]
+        const before = picked
+        setPicked(next)
+        setError('')
+        try {
+            await updateBusiness(businessId, { service_zones: next })
+            onSaved(next)
+        } catch (err) {
+            console.error('Areas failed:', err)
+            setPicked(before)
+            setError('Not saved. Check your connection and try again.')
+        }
+    }
+    const byDistance = Boolean(radius) && shop.lat !== null && shop.lat !== undefined
+    return (
+        <section className="biz-sh__meet" aria-labelledby="zones-title">
+            <h2 id="zones-title" className="biz-sh__meettitle"><House size={18} aria-hidden="true" />Where you go</h2>
+            <p className="biz-sh__tip">Clients can book a visit at their place when they are in an area you pick, or within the distance you set.</p>
+            {zones === null ? <Skeleton height={44} radius={10} /> : zones.length === 0 ? (
+                <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Areas for your city are not set up yet. Message us and we add them.</p>
+            ) : (
+                <ChipGroup label="Areas you cover">
+                    {zones.map((z) => <Chip key={z} selected={picked.includes(z)} onClick={() => toggle(z)}>{z}</Chip>)}
+                </ChipGroup>
+            )}
+            {error && <p className="biz-sh__meetwarn" role="alert"><TriangleAlert size={16} aria-hidden="true" />{error}</p>}
+            <Distance businessId={businessId} address={address} shop={shop} radius={radius} onShop={onShop} onRadius={onRadius} />
+            {zones !== null && picked.length === 0 && !byDistance && !error && <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Pick at least one area or a distance, or clients cannot book a visit at their place.</p>}
+        </section>
+    )
+}
+
 const ServicesPage = () => {
     const { business: shellBusiness, reloadWorkspace, notify } = useWorkspace()
     const [phase, setPhase] = useState('loading')
     const [category, setCategory] = useState('')
+    const [meetingUrl, setMeetingUrl] = useState(null)
+    const [market, setMarket] = useState(null)
+    const [serviceZones, setServiceZones] = useState([])
+    const [shop, setShop] = useState({ lat: null, lng: null, address: '' })
+    const [radius, setRadius] = useState(null)
+    const [shopAddress, setShopAddress] = useState('')
     const [services, setServices] = useState([])
     const [savedIds, setSavedIds] = useState([])
     const [savedKey, setSavedKey] = useState('')
@@ -112,6 +316,12 @@ const ServicesPage = () => {
             const data = await loadSetup(shellBusiness.id)
             const list = data.services.map(serviceFromRow)
             setCategory(data.business.category || '')
+            setMeetingUrl(data.business.meeting_url || null)
+            setMarket(data.business.market || null)
+            setServiceZones(data.business.service_zones || [])
+            setShop({ lat: data.business.lat ?? null, lng: data.business.lng ?? null, address: '' })
+            setRadius(data.business.service_radius_km ?? null)
+            setShopAddress([data.business.address, data.business.city].filter(Boolean).join(', '))
             setServices(list)
             setSavedIds(data.services.map((s) => s.id))
             setSavedKey(snapshot(list))
@@ -222,6 +432,20 @@ const ServicesPage = () => {
                     onRemove={requestRemove}
                 />
                 {services.length > 1 && <p className="biz-sh__tip">Clients see your services in this order. Drag the handle to move one.</p>}
+                {services.some(visitsClients) && (
+                    <WhereYouGo
+                        businessId={shellBusiness.id}
+                        market={market}
+                        value={serviceZones}
+                        onSaved={setServiceZones}
+                        address={shopAddress}
+                        shop={shop}
+                        radius={radius}
+                        onShop={(spot) => setShop({ lat: spot.lat, lng: spot.lng, address: spot.address })}
+                        onRadius={setRadius}
+                    />
+                )}
+                {services.some(isOnline) && <MeetingLink businessId={shellBusiness.id} value={meetingUrl} onSaved={setMeetingUrl} />}
             </div>
 
             <RemoveSheet ask={ask} onClose={() => setAsk(null)} onRemove={confirmRemove} onHide={confirmHide} />

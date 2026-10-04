@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { History, Mail, MessageCircle, Phone } from 'lucide-react'
+import { History, House, Mail, MessageCircle, Navigation, Phone, Video } from 'lucide-react'
 import { Sheet } from '../ui'
 import { useWorkspace } from './WorkspaceContext'
 import {
@@ -19,7 +19,10 @@ import {
 import { toMinutes } from '../../services/dates'
 import { clientKey } from '../../services/clients'
 import { loadBookingMoney, paidOnline, payMoney, refundOf, shareLabel } from '../../services/payments'
+import { RECEIPT_KIND, loadReceipts, receiptUrl } from '../../services/receipts'
+import { TripControl } from './TripControl'
 import '../../styles/business/booking-pay.css'
+import '../../styles/business/formats.css'
 
 const ACTIONS = {
     pending: [
@@ -49,6 +52,7 @@ const BookingDetailSheet = ({ booking, onClose }) => {
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState('')
     const [money, setMoney] = useState(null)
+    const [receipts, setReceipts] = useState([])
 
     useEffect(() => {
         setMoving(false)
@@ -58,6 +62,17 @@ const BookingDetailSheet = ({ booking, onClose }) => {
             setOtherTime(!booking.service_id)
         }
     }, [booking])
+
+    // Receipts issued for this booking: paid online, refunded, or a visit paid at the place.
+    useEffect(() => {
+        setReceipts([])
+        if (!booking?.id) return undefined
+        let cancelled = false
+        loadReceipts(booking.id)
+            .then((rows) => { if (!cancelled) setReceipts(rows) })
+            .catch((err) => console.error('Receipts failed:', err))
+        return () => { cancelled = true }
+    }, [booking?.id, booking?.status])
 
     // Paid online: what was refunded and the rule, so the buttons can say what they give back.
     useEffect(() => {
@@ -154,6 +169,34 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                         {(booking.price ?? booking.services?.price) != null && <span className="biz-num biz-muted"> {formatMoney(booking.price ?? booking.services.price)}</span>}
                     </dd>
                 </div>
+                {booking.mode === 'online' && (
+                    <div>
+                        <dt>Where</dt>
+                        <dd className="biz-where">
+                            <Video size={15} aria-hidden="true" />
+                            {booking.meeting_url
+                                ? <a href={booking.meeting_url} target="_blank" rel="noopener noreferrer">Online, open the meeting</a>
+                                : 'Online. Add your meeting link in Services, or send it to the client.'}
+                        </dd>
+                    </div>
+                )}
+                {booking.mode === 'at_client' && (
+                    <div>
+                        <dt>Where</dt>
+                        <dd className="biz-where biz-where--home">
+                            <span><House size={15} aria-hidden="true" />At the client's place{booking.client_zone ? `, ${booking.client_zone}` : ''}</span>
+                            {['confirmed', 'completed'].includes(booking.status) && booking.client_address ? (
+                                <>
+                                    <span className="biz-where__addr">{booking.client_address}</span>
+                                    {booking.client_landmark && <span className="biz-where__note">{booking.client_landmark}</span>}
+                                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([booking.client_address, booking.client_zone].filter(Boolean).join(', '))}`} target="_blank" rel="noopener noreferrer"><Navigation size={14} aria-hidden="true" /> Directions</a>
+                                </>
+                            ) : booking.status === 'pending' && <span className="biz-where__note">The full address shows once you confirm.</span>}
+                            {Number(booking.travel_fee) > 0 && <span className="biz-where__note">Travel fee {formatMoney(booking.travel_fee)}</span>}
+                            {booking.status === 'confirmed' && <TripControl booking={booking} timeZone={business.timezone} />}
+                        </dd>
+                    </div>
+                )}
                 {staff && bookableMembers.length > 1 && (
                     <div>
                         <dt>With</dt>
@@ -170,6 +213,23 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                                     {payMoney(refund.amount, currency, true)} back to the client{refund.full ? '' : `, you keep ${payMoney(Math.max(price - refund.amount, 0), currency, true)}`}
                                 </span>
                             )}
+                        </dd>
+                    </div>
+                )}
+                {receipts.length > 0 && (
+                    <div>
+                        <dt>Receipts</dt>
+                        <dd className="biz-receipts">
+                            {receipts.map((r) => {
+                                const url = receiptUrl(r.token)
+                                const send = whatsappLink(booking.client_phone, `Your ${RECEIPT_KIND[r.kind].toLowerCase()} from ${business.business_name}: ${url}`)
+                                return (
+                                    <span key={r.token} className="biz-receipts__row">
+                                        <a href={url} target="_blank" rel="noopener noreferrer">{RECEIPT_KIND[r.kind]} {r.number}</a>
+                                        {send && <a className="biz-receipts__send" href={send} target="_blank" rel="noopener noreferrer">Send on WhatsApp</a>}
+                                    </span>
+                                )
+                            })}
                         </dd>
                     </div>
                 )}

@@ -45,3 +45,32 @@
     font-size: var(--lc-t-label);
     line-height: var(--lc-lh-snug);
 }
+
+/* Receipts on the booking: open one, or send it to a walk-in on WhatsApp. */
+.biz-receipts {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.biz-receipts__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px var(--space-3);
+}
+
+.biz-receipts__row a {
+    color: var(--lc-info);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    text-decoration: none;
+}
+
+.biz-receipts__row a:hover { text-decoration: underline; }
+
+.biz-receipts__row .biz-receipts__send {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-medium);
+}

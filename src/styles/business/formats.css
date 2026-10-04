@@ -1,0 +1,105 @@
+/* Formats on the business side: the meeting link for online sessions, and where a booking happens. */
+
+.biz-sh__meet {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.biz-sh__meettitle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-sh__meettitle svg { color: var(--lc-info); }
+
+.biz-sh__meetwarn {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-sh__meetwarn svg {
+    flex: none;
+    margin-top: 1px;
+    color: var(--lc-warning);
+}
+
+/* "Online" on a booking in the business's booking sheet. */
+.biz-where {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.biz-where a {
+    color: var(--lc-info);
+    font-weight: var(--font-weight-semibold);
+    overflow-wrap: anywhere;
+    text-decoration: none;
+}
+
+.biz-where a:hover { text-decoration: underline; }
+
+/* A visit at the client's place: the area, the address once confirmed, how to get there. */
+.biz-where--home {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+}
+
+.biz-where--home > span:first-child,
+.biz-where--home a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.biz-where__addr { color: var(--lc-ink-1); }
+
+.biz-where__note {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+/* Distance from the shop, under the areas: the shop's spot, how far, and the map. */
+.biz-reach {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--lc-line);
+}
+
+.biz-reach__title {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-reach__map {
+    height: 220px;
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .biz-reach__map { height: 260px; }
+}

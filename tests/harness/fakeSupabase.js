@@ -108,8 +108,8 @@ const paidWhen = () => {
   return { appointment_date: at >= 1440 ? dk(1) : key, appointment_time: hhmm(at % 1440) }
 }
 const PAID_ROWS = () => [
-  past('pd1', 3, trim, 'confirmed', { ...PAID_MONEY, ...paidWhen() }),
-  past('pd2', -3, trim, 'cancelled', { ...PAID_MONEY, payment_status: 'partly_refunded', cancelled_by: 'client' }),
+  past('pd1', 3, trim, 'confirmed', { ...PAID_MONEY, ...paidWhen(), receipts: [{ kind: 'payment', number: 'FEM-00012', token: 'r'.repeat(32) }] }),
+  past('pd2', -3, trim, 'cancelled', { ...PAID_MONEY, payment_status: 'partly_refunded', cancelled_by: 'client', receipts: [{ kind: 'payment', number: 'FEM-00010', token: 'p'.repeat(32) }, { kind: 'refund', number: 'FEM-00011', token: 'q'.repeat(32) }] }),
 ]
 if (new URLSearchParams(window.location.search).get('paidbooking')) {
   DATA.my_appointments = [...DATA.my_appointments, ...PAID_ROWS()]
@@ -145,6 +145,34 @@ const slots = (staff) => {
   return out
 }
 const quiet = (flag) => new URLSearchParams(window.location.search).get(flag) === '1'
+// Online sessions: ?online=1 offers Haircut in person or online; ?online=only offers it online only.
+// ?onlinebooking=1 adds a confirmed online booking with its meeting link to the client's bookings.
+{
+  const online = new URLSearchParams(window.location.search).get('online')
+  if (online) {
+    DATA.services[0].modes = online === 'only' ? ['online'] : ['at_business', 'online']
+    DATA.businesses[0].meeting_url = 'https://meet.example.com/femtos'
+  }
+  // ?home=1 offers Haircut at the shop or at the client's place, with a EUR 5 travel fee, in Porto and Matosinhos.
+  if (quiet('home')) {
+    DATA.services[0].modes = ['at_business', 'at_client']
+    DATA.services[0].travel_fee = 5
+    DATA.businesses[0].service_zones = ['Porto', 'Matosinhos']
+    DATA.businesses[0].market = 'porto'
+    DATA.market_zones = ['Porto', 'Vila Nova de Gaia', 'Matosinhos', 'Maia'].map((name, i) => ({ market: 'porto', name, sort_order: i }))
+  }
+  // ?radius=1: the shop is placed in Porto and the business travels up to 10 km as well as to its areas.
+  if (quiet('radius')) Object.assign(DATA.businesses[0], { lat: 41.1496, lng: -8.6109, service_radius_km: 10, place_id: 'ChIJshop00000001' })
+  // ?trip=1: a visit at the client's place today in 20 minutes. The client's copy (hm2) has the
+  // business on the way, about 12 min; the business's copy (tr1) has not left yet.
+  if (quiet('trip')) {
+    const soon = hhmm(Math.min(lisbonNow + 20, 1439))
+    DATA.my_appointments = [...DATA.my_appointments, past('hm2', 0, haircut, 'confirmed', { mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12', travel_fee: 5, appointment_time: soon })]
+    DATA.appointments = [...DATA.appointments, { id: 'tr1', business_id: 'b1', staff_id: 'm1', service_id: 's1', appointment_date: key, appointment_time: soon, duration_minutes: 30, status: 'confirmed', source: 'online', client_name: 'Ana', client_phone: '', client_email: '', notes: '', mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12', travel_fee: 5, services: { service_name: 'Haircut', price: 18 } }]
+  }
+  if (quiet('homebooking')) DATA.my_appointments = [...DATA.my_appointments, past('hm1', 2, haircut, 'confirmed', { mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12', client_landmark: 'Blue door', travel_fee: 5, appointment_time: '18:00:00' })]
+  if (quiet('onlinebooking')) DATA.my_appointments = [...DATA.my_appointments, past('on1', 2, haircut, 'confirmed', { mode: 'online', meeting_url: 'https://meet.example.com/femtos', appointment_time: '18:00:00' })]
+}
 if (quiet('demo')) DATA.businesses[0].is_demo = true
 DATA.client_errors = [
   { id: 'e1', message: "TypeError: Cannot read properties of undefined (reading 'map')", stack: "TypeError: Cannot read properties of undefined (reading 'map')\n    at Agenda (Agenda.jsx:40:12)", app: 'app', path: '/portal/calendar', release: 'index-B7x', user_agent: 'Mozilla/5.0 (iPhone)', user_id: 'u1', count: 14, first_seen_at: '2026-09-28T10:00:00Z', last_seen_at: new Date().toISOString() },
@@ -359,7 +387,28 @@ const payouts = (body) => {
 const payParam = (k) => new URLSearchParams(window.location.search).get(k)
 const PAY_POLICY = { free_hours: 24, keep_pct: 50, no_show_keep_pct: 50 }
 const PAY_REF = `cs_test_${'a'.repeat(24)}`
+// Receipts: /r/<token> with ?receipt=refund|missing; payment by default.
+const RECEIPT = {
+  kind: 'payment', number: 'FEM-00012', client_name: 'Joseey John',
+  business: { name: 'Femtos Barbearia', address: 'Rua de Cedofeita 120', city: 'Porto', country: 'PT' },
+  booking: { service: 'Barba com toalha quente', staff: 'Miles Farra', date: '2026-10-06', time: '11:00' },
+  lines: [{ label: 'Barba com toalha quente', amount: 12 }, { label: 'Locappoint service fee', amount: 0.49 }],
+  total: 12.49, currency: 'EUR', method: 'card', refund_of: null, issued_at: '2026-10-03T10:00:00Z', manage_token: 'tok-1234567890abcdef1234567890abcdef',
+}
+const receiptRpc = (name) => {
+  const mode = payParam('receipt')
+  if (name === 'receipt_by_token') {
+    if (mode === 'missing') return { data: null, error: null }
+    if (mode === 'refund') return { data: { ...RECEIPT, kind: 'refund', number: 'FEM-00013', refund_of: 'FEM-00012', lines: [{ label: 'Cancelled after free cancellation closed', amount: 6 }], total: 6 }, error: null }
+    return { data: RECEIPT, error: null }
+  }
+  if (name === 'receipts_by_link') return { data: payParam('guestpaid') ? [{ kind: 'payment', number: 'FEM-00020', token: 's'.repeat(32), total: 18.49, currency: 'EUR' }] : [], error: null }
+  return null
+}
+
 const payRpc = (name, args) => {
+  const receipt = receiptRpc(name)
+  if (receipt) return receipt
   if (name === 'booking_money') {
     const policy = { ...PAY_POLICY }
     return { data: (args?.p_ids || []).map((id) => ({ id, refund: PAID_REFUNDS[id] ?? null, policy })), error: null }
@@ -380,14 +429,56 @@ const payRpc = (name, args) => {
   if (name === 'payment_abandon') return { data: 'released', error: null }
   return null
 }
+// Address search (?places=1 switches it on): two suggestions, one in Matosinhos (an area, 7.5 km),
+// one in Santo Tirso (24 km, not an area).
+const PLACES = {
+  'ChIJnear00000001': { id: 'ChIJnear00000001', address: 'Rua Brito Capelo 200, 4450-073 Matosinhos', lat: 41.1821, lng: -8.6891, zone: 'Matosinhos', km: 7.5 },
+  'ChIJfar000000001': { id: 'ChIJfar000000001', address: 'Rua de Camilo 10, 4780-373 Santo Tirso', lat: 41.3431, lng: -8.4775, zone: null, km: 24.2 },
+}
+const placesFn = (body) => {
+  if (!quiet('places')) return { data: { on: false }, error: null }
+  if (body.action === 'ping') return { data: { on: true }, error: null }
+  if (body.action === 'suggest') return { data: { on: true, items: [{ id: 'ChIJnear00000001', main: 'Rua Brito Capelo 200', rest: '4450-073 Matosinhos' }, { id: 'ChIJfar000000001', main: 'Rua de Camilo 10', rest: '4780-373 Santo Tirso' }] }, error: null }
+  const b = DATA.businesses[0]
+  const p = PLACES[body.place_id]
+  if (body.action === 'place' && p) {
+    const radius = b.lat != null ? Number(b.service_radius_km) || null : null
+    return { data: { on: true, place: { ...p, km: radius ? p.km : null, in_zone: Boolean(p.zone && (b.service_zones || []).includes(p.zone)), in_reach: Boolean(radius && p.km <= radius) } }, error: null }
+  }
+  if (body.action === 'shop' && p) return { data: { on: true, shop: { address: p.address, lat: p.lat, lng: p.lng } }, error: null }
+  return { data: { error: 'Unknown action' }, error: null }
+}
+// Live trips: minutes only, kept per booking for the page's lifetime.
+const clockIn = (min) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(Date.now() + min * 60000))
+const onWay = (minutes, guess = false) => ({ status: 'on_way', started_at: new Date(Date.now() - 3 * 60000).toISOString(), eta_at: new Date(Date.now() + minutes * 60000).toISOString(), eta_time: clockIn(minutes), minutes, late_minutes: 0, guess, by: 'Miles Farra', steps: { on_way: new Date(Date.now() - 3 * 60000).toISOString() } })
+const TRIPS = quiet('trip') ? { hm2: onWay(12) } : {}
+const tripRpc = (name, args) => {
+  if (name === 'my_trips') return { data: (args?.p_ids || []).filter((id) => TRIPS[id]).map((id) => ({ appointment_id: id, trip: TRIPS[id] })), error: null }
+  if (name === 'trip_by_link') return { data: null, error: null }
+  return null
+}
+const tripFn = (body) => {
+  const id = body.appointment_id
+  if (body.action === 'start') {
+    if (body.lat === undefined && !body.minutes) return { data: { need_minutes: true }, error: null }
+    TRIPS[id] = onWay(body.minutes || 14, Boolean(body.minutes))
+    return { data: { trip: TRIPS[id] }, error: null }
+  }
+  if (body.action === 'arrive' && TRIPS[id]) {
+    TRIPS[id] = { ...TRIPS[id], status: 'arrived', ended_at: new Date().toISOString(), minutes: null, steps: { ...TRIPS[id].steps, arrived: new Date().toISOString() } }
+    return { data: { trip: TRIPS[id] }, error: null }
+  }
+  if (body.action === 'stop') { delete TRIPS[id]; return { data: { trip: null }, error: null } }
+  return { data: { trip: TRIPS[id] || null }, error: null }
+}
 const checkoutFn = (body) => (body.action === 'start' && body.appointment_id
   ? { data: { url: `/?path=${encodeURIComponent('/pay/return')}&ref=${PAY_REF}&paystate=paid`, ref: PAY_REF, test: true }, error: null }
   : failed('Unknown action'))
 
 export const supabase = {
-  functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); if (name === 'checkout') return checkoutFn(body || {}); return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
+  functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); if (name === 'checkout') return checkoutFn(body || {}); if (name === 'places') return placesFn(body || {}); if (name === 'trip') return tripFn(body || {}); return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); const paying = payRpc(name, args); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); const tripping = tripRpc(name, args); if (tripping) return tripping; const paying = payRpc(name, args); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

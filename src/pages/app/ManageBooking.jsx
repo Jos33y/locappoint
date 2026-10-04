@@ -18,6 +18,7 @@ import '../../styles/client/rebook.css'
 import { LinkReview } from '../../components/reviews/LinkReview'
 import { reviewByLink, submitReviewByLink } from '../../services/reviews'
 import { RefundCard } from '../../components/client/bookings/PaymentNote'
+import { receiptsByLink } from '../../services/receipts'
 import { paidOnline } from '../../services/payments'
 
 // The page behind "Manage booking" in every booking email. No sign-in: the link is the key.
@@ -42,14 +43,15 @@ const ManageBooking = () => {
 
     const load = useCallback(async () => {
         try {
-            const [booking, rebook, reviewState] = await Promise.all([
+            const [booking, rebook, reviewState, receipts] = await Promise.all([
                 loadByLink(token),
                 loadRebookByLink(token).catch((err) => { console.error('Book again failed:', err); return null }),
                 reviewByLink(token).catch((err) => { console.error('Review failed:', err); return null }),
+                receiptsByLink(token).catch((err) => { console.error('Receipts failed:', err); return [] }),
             ])
             setInfo(rebook)
             setReview(reviewState)
-            setState({ status: booking ? 'ready' : 'missing', booking })
+            setState({ status: booking ? 'ready' : 'missing', booking: booking ? { ...booking, receipts } : booking })
         } catch (err) {
             console.error('Booking link failed:', err)
             setState((s) => ({ status: 'error', booking: s.booking }))
@@ -199,7 +201,7 @@ const ManageBooking = () => {
 
                         {moveError && <p className="lc-mb__error" role="alert">{moveError}</p>}
                         {upcoming ? (
-                            <UpcomingBooking booking={b} lead onCancel={() => { setCancelError(''); setCancelling(true) }} onMove={askMove} />
+                            <UpcomingBooking booking={b} token={token} lead onCancel={() => { setCancelError(''); setCancelling(true) }} onMove={askMove} />
                         ) : (
                             <ul className="lc-cl-pastlist">
                                 <PastBooking booking={b} />

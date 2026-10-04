@@ -1,4 +1,4 @@
-import { CalendarClock, MessageCircle, Navigation, Phone, X } from 'lucide-react'
+import { CalendarClock, Globe2, House, MessageCircle, Navigation, Phone, Video, X } from 'lucide-react'
 import { Button } from '../../ui'
 import { BookingTicket } from '../../booking/sheet/BookingTicket'
 import { AddToCalendar } from '../../booking/AddToCalendar'
@@ -7,9 +7,12 @@ import { parseDateKey, toMinutes } from '../../../services/dates'
 import { bookingPrice, canChange, monthShort } from '../../../services/booking'
 import { clock } from '../../../services/hours'
 import { whenLabel } from '../NextBooking'
-import { PaidRule } from './PaymentNote'
+import { PaidRule, ReceiptLinks } from './PaymentNote'
+import { LiveTrip } from './LiveTrip'
 import { paidQuote } from '../../../services/payments'
+import { isHomeVisit, isOnlineBooking, joinLink, visitPlace, yourTime } from '../../../services/formats'
 import '../../../styles/client/client-bookings.css'
+import '../../../styles/client/formats.css'
 
 const mapsLink = (address, city) =>
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([address, city].filter(Boolean).join(', '))}`
@@ -21,7 +24,7 @@ const movedLabel = (value) => {
     return `${date.toLocaleDateString('en-GB', { weekday: 'short' })} ${date.getDate()} ${monthShort(date)} at ${(time || '').slice(0, 5)}`
 }
 
-export const UpcomingBooking = ({ booking, lead = false, focused = false, onCancel, onMove }) => {
+export const UpcomingBooking = ({ booking, token = null, lead = false, focused = false, onCancel, onMove }) => {
     const business = booking.businesses || {}
     const service = { ...booking.services, duration_minutes: booking.duration_minutes || booking.services?.duration_minutes, price: bookingPrice(booking) }
     const minutes = toMinutes(booking.appointment_time)
@@ -31,6 +34,11 @@ export const UpcomingBooking = ({ booking, lead = false, focused = false, onCanc
     const open = canChange(booking)
     const moved = booking.rescheduled_from ? movedLabel(booking.rescheduled_from) : null
     const quote = paidQuote(booking)
+    const online = isOnlineBooking(booking)
+    const join = joinLink(booking)
+    const home = isHomeVisit(booking)
+    const homePlace = home ? visitPlace(booking) : ''
+    const theirTime = online ? yourTime({ dateKey: booking.appointment_date, minutes, timeZone: business.timezone || 'Europe/Lisbon' }) : null
 
     return (
         <article id={`booking-${booking.id}`} className={`lc-cl-bk${lead ? ' is-lead' : ''}${focused ? ' is-focus' : ''}`}>
@@ -47,12 +55,38 @@ export const UpcomingBooking = ({ booking, lead = false, focused = false, onCanc
                 stampTone={confirmed ? 'success' : 'signal'}
                 quote={quote}
                 paid={Boolean(quote)}
+                mode={booking.mode}
+                travel={booking.travel_fee}
+                zone={booking.client_zone}
             />
+            {home && (
+                <p className="lc-fmt-zone">
+                    <House size={15} aria-hidden="true" />
+                    <span>
+                        {homePlace ? <>{business.business_name} comes to <b>{homePlace}</b>.</> : `${business.business_name} comes to you.`}
+                        {booking.client_landmark ? ` ${booking.client_landmark}` : ''}
+                    </span>
+                </p>
+            )}
+            {home && confirmed && <LiveTrip booking={booking} token={token} business={business} />}
+            {online && (
+                <p className="lc-fmt-zone">
+                    {join ? <Video size={15} aria-hidden="true" /> : <Globe2 size={15} aria-hidden="true" />}
+                    <span>
+                        {join ? 'Join from this booking a few minutes before it starts.' : confirmed ? `${business.business_name} sends the join link before it starts.` : 'The join link arrives once the business confirms.'}
+                        {theirTime && <> For you it starts at <b>{theirTime}</b>.</>}
+                    </span>
+                </p>
+            )}
             <PaidRule booking={booking} />
+            <ReceiptLinks booking={booking} />
             {moved && <p className="lc-cl-bk__moved">Moved from {moved}</p>}
             {booking.notes?.trim() && <p className="lc-cl-bk__note"><b>Your note:</b> {booking.notes.trim()}</p>}
             <div className="lc-cl-bk__actions">
-                {business.address?.trim() && (
+                {join && (
+                    <Button icon={Video} href={join} target="_blank" rel="noopener noreferrer">Join online</Button>
+                )}
+                {!online && !home && business.address?.trim() && (
                     <Button variant="secondary" icon={Navigation} href={mapsLink(business.address, business.city)} target="_blank" rel="noopener noreferrer">Directions</Button>
                 )}
                 {whatsapp ? (
@@ -79,7 +113,7 @@ export const UpcomingBooking = ({ booking, lead = false, focused = false, onCanc
                         minutes,
                         duration: service.duration_minutes,
                         timeZone: business.timezone,
-                        location: [business.address, business.city].filter(Boolean).join(', '),
+                        location: online ? join || 'Online' : home ? homePlace : [business.address, business.city].filter(Boolean).join(', '),
                         details: business.whatsapp || business.phone ? `${business.business_name}: ${business.whatsapp || business.phone}` : '',
                     }}
                 />

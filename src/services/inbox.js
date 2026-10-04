@@ -93,6 +93,7 @@ const KINDS = {
         booking_reminder: () => ({ label: 'Coming up', tone: 'info' }),
         visit_followup: (p) => ({ label: p.ask_review === false ? 'Book again' : 'How was it?', tone: 'success' }),
         review_reply: () => ({ label: 'Reply to your review', tone: 'info' }),
+        trip_on_way: (p) => ({ label: p.minutes ? `On the way, about ${p.minutes} min` : 'On the way', tone: 'info' }),
     },
 }
 

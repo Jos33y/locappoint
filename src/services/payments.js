@@ -13,11 +13,12 @@ const readError = async (error) => {
     return 'The payment page could not open. Check your connection and try again.'
 }
 
-export const loadQuote = async ({ businessId, serviceId, addonIds = [] }) => {
+export const loadQuote = async ({ businessId, serviceId, addonIds = [], mode = null }) => {
     const { data, error } = await supabase.rpc('payment_quote', {
         p_business_id: businessId,
         p_service_id: serviceId,
         p_addon_ids: addonIds.length ? addonIds : null,
+        p_mode: mode,
     })
     if (error) throw error
     return data || { online: false }
@@ -101,7 +102,7 @@ const cents = (n, currency) => (currency === 'NGN' ? Math.round(n) : Math.round(
 export const paidOnline = (booking) => PAID.includes(booking?.payment_status) && Number(booking?.total) > 0
 
 export const paidQuote = (booking) => (paidOnline(booking)
-    ? { online: true, price: booking.price ?? booking.services?.price, client_fee: booking.client_fee, total: booking.total, currency: booking.currency || 'EUR' }
+    ? { online: true, price: booking.price ?? booking.services?.price, client_fee: booking.client_fee, travel_fee: booking.travel_fee, total: booking.total, currency: booking.currency || 'EUR' }
     : null)
 
 export const loadBookingMoney = async (ids) => {
