@@ -13,8 +13,9 @@ import { clock } from '../../services/hours'
 import { parseDateKey, toMinutes } from '../../services/dates'
 import { abandonPayment, loadQuote, paidQuote, payMoney, paymentState, policyLine, providerName, startCheckout } from '../../services/payments'
 import { onAppReturn, openPayoutLink } from '../../services/payouts'
-import { serviceModes, yourTime } from '../../services/formats'
-import { placesOn, takesHomeVisits, travelsByDistance } from '../../services/places'
+import { groupMax, groupMinutes, groupPrice, serviceModes, withPeople, yourTime } from '../../services/formats'
+import { kmBetween, placesOn, takesHomeVisits, travelsByDistance } from '../../services/places'
+import { enginePlace } from '../../services/engine'
 import { DayStrip } from './sheet/DayStrip'
 import { TimeGrid } from './sheet/TimeGrid'
 import { BookingTicket } from './sheet/BookingTicket'
@@ -56,6 +57,9 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     }, [givenExtras, offerExtras, business.id])
     const extras = useMemo(() => (givenExtras || loadedExtras).filter((e) => e.id !== baseService.id), [givenExtras, loadedExtras, baseService.id])
     const [chosen, setAddonIds] = useState(() => resume?.addonIds || rebook?.addonIds || [])
+    // A group: one booking for several people, one after another. Extras stay one-person.
+    const maxPeople = !move && !owner ? groupMax(baseService) : 1
+    const [people, setPeople] = useState(() => Math.min(Math.max(1, Number(resume?.people) || 1), maxPeople))
     // In person or online: the client picks when the service offers both.
     // A visit at the client's place needs areas the business covers or a distance it travels; without
     // either it is not offered.
@@ -63,7 +67,15 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     const radius = travelsByDistance(business) ? Number(business.service_radius_km) : null
     const offered = serviceModes(baseService).filter((m) => m !== 'at_client' || takesHomeVisits(business))
     const modes = offered.length ? offered : serviceModes(baseService)
-    const [visit, setVisit] = useState({ zone: '', address: '', landmark: '', unit: '', place: null })
+    // The address picked in "What do you need?" comes along, checked against this business's areas and distance.
+    const [visit, setVisit] = useState(() => {
+        const blank = { zone: '', address: '', landmark: '', unit: '', place: null }
+        const saved = !move && !owner ? enginePlace() : null
+        if (!saved?.lat || !saved?.address) return blank
+        const km = radius !== null ? Math.round(kmBetween({ lat: Number(business.lat), lng: Number(business.lng) }, saved) * 10) / 10 : null
+        const inZone = Boolean(saved.zone && zones.includes(saved.zone))
+        return { ...blank, zone: inZone ? saved.zone : '', place: { id: saved.id, address: saved.address, lat: saved.lat, lng: saved.lng, zone: saved.zone || null, km, in_zone: inZone, in_reach: km !== null && km <= radius } }
+    })
     // Google's address search, when it is on: checked once the client chooses a visit at their place.
     const [search, setSearch] = useState('checking')
     const [mode, setMode] = useState(() => {
@@ -80,11 +92,16 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
         return () => { cancelled = true }
     }, [askAddress])
     const travel = mode === 'at_client' ? Number(move ? move.travel_fee : baseService.travel_fee) || 0 : 0
-    const addonIds = useMemo(() => chosen.filter((id) => extras.some((e) => e.id === id)), [chosen, extras])
+    const addonIds = useMemo(() => (people > 1 ? [] : chosen.filter((id) => extras.some((e) => e.id === id))), [chosen, extras, people])
     const addonKey = addonIds.join(',')
     const picked = extras.filter((e) => addonIds.includes(e.id))
     // One booking, one slot: the extras' time and price sit on top of the service's.
-    const service = picked.length ? {
+    const service = people > 1 ? {
+        ...baseService,
+        service_name: withPeople(baseService.service_name.trim(), people),
+        duration_minutes: groupMinutes(baseService, people),
+        price: hasPrice(baseService.price) ? groupPrice(baseService, people) : baseService.price,
+    } : picked.length ? {
         ...baseService,
         service_name: [baseService.service_name.trim(), ...picked.map((e) => e.service_name.trim())].join(' + '),
         duration_minutes: Number(baseService.duration_minutes) + picked.reduce((s, e) => s + Number(e.duration_minutes), 0),
@@ -106,6 +123,8 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     const [minutes, setMinutes] = useState(held?.minutes ?? null)
     const [busy, setBusy] = useState({})
     const [notice, setNotice] = useState('')
+    // Set when the business is not taking online bookings from this person: the notice offers a way to tell us.
+    const [contest, setContest] = useState(false)
     const [sending, setSending] = useState(false)
     const [errors, setErrors] = useState({})
     // Paid online once the business has payouts on. The database decides and prices it; the sheet shows it.
@@ -133,12 +152,12 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     }, [counts, step, business.id])
 
     const quoting = !move && !owner && step === 'review'
-    const quoteKey = `${business.id}:${baseService.id}:${addonKey}:${mode}:${quoteTry}`
+    const quoteKey = `${business.id}:${baseService.id}:${addonKey}:${mode}:${people}:${quoteTry}`
     useEffect(() => {
         if (!quoting) return undefined
         let cancelled = false
         setQuote((q) => (q.key === quoteKey && q.state === 'ready' ? q : { state: 'loading', data: null, key: quoteKey }))
-        loadQuote({ businessId: business.id, serviceId: baseService.id, addonIds, mode })
+        loadQuote({ businessId: business.id, serviceId: baseService.id, addonIds, mode, people })
             .then((data) => { if (!cancelled) setQuote({ state: 'ready', data, key: quoteKey }) })
             .catch((err) => {
                 console.error('Quote failed:', err)
@@ -153,20 +172,25 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     const fetchDay = useCallback(async (key) => {
         setBusy((b) => ({ ...b, [key]: { state: 'loading' } }))
         try {
-            const free = await loadSlots({ businessId: business.id, serviceId: service.id, dateKey: key, staffId, ignore: move?.id || null, addonIds })
+            const free = await loadSlots({ businessId: business.id, serviceId: service.id, dateKey: key, staffId, ignore: move?.id || null, addonIds, people: people > 1 ? people : null })
             setBusy((b) => ({ ...b, [key]: { state: 'ready', free } }))
         } catch (err) {
             console.error('Busy times failed:', err)
             setBusy((b) => ({ ...b, [key]: { state: 'error' } }))
         }
-    }, [business.id, service.id, staffId, move?.id, addonIds])
+    }, [business.id, service.id, staffId, move?.id, addonIds, people])
 
     useEffect(() => {
         if (!busy[dayKey]) fetchDay(dayKey)
     }, [dayKey, busy, fetchDay])
 
     // Extras picked last time arrive after the sheet opens; the times must fit the whole booking.
-    useEffect(() => { setBusy({}) }, [addonKey])
+    useEffect(() => { setBusy({}) }, [addonKey, people])
+
+    const pickPeople = (n) => {
+        setPeople(n)
+        setMinutes(null)
+    }
 
     const pickStaff = (id) => {
         setStaffId(id)
@@ -197,7 +221,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     }
 
     const toAuth = (tab) => {
-        savePending({ slug: business.slug, serviceId: service.id, dateKey: dayKey, minutes, addonIds, mode })
+        savePending({ slug: business.slug, serviceId: service.id, dateKey: dayKey, minutes, addonIds, mode, people })
         const back = `/${business.slug}?book=${encodeURIComponent(`${service.id}.${dayKey}.${clock(minutes).replace(':', '')}`)}`
         navigate('/auth', {
             state: {
@@ -245,6 +269,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                 notes: details.notes.trim(),
                 addonIds,
                 mode,
+                people,
                 ...(mode === 'at_client' ? {
                     clientAddress: visitAddressLine(visit),
                     clientLandmark: visit.landmark.trim(),
@@ -334,6 +359,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
 
     const failed = (err, fallback) => {
         console.error('Booking failed:', err)
+        setContest(err?.hint === 'not_taking_you')
         if (TAKEN.includes(err?.code)) {
             setMinutes(null)
             setStep('time')
@@ -423,7 +449,22 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                         </span>
                         {hasPrice(service.price) && <span className="lc-bk-service__price">{menuPrice(service.price)}</span>}
                     </div>
-                    {!move && !owner && extras.length > 0 && (
+                    {maxPeople > 1 && (
+                        <div className="lc-bk-extras lc-bk-people">
+                            <span className="lc-bk-extras__label">How many people</span>
+                            <ChipGroup label="How many people">
+                                {Array.from({ length: maxPeople }, (_, i) => i + 1).map((n) => (
+                                    <Chip key={n} selected={people === n} onClick={() => pickPeople(n)}>{n === 1 ? 'Just me' : String(n)}</Chip>
+                                ))}
+                            </ChipGroup>
+                            {people > 1 && (
+                                <span className="lc-bk-people__note">
+                                    {`One after another, ${durationLabel(groupMinutes(baseService, people))} in all${baseService.price_per === 'person' ? ', priced per person' : ', one price for the group'}.`}
+                                </span>
+                            )}
+                        </div>
+                    )}
+                    {!move && !owner && extras.length > 0 && people === 1 && (
                         <div className="lc-bk-extras">
                             <span className="lc-bk-extras__label">Add to it</span>
                             <ChipGroup label="Extras">
@@ -438,7 +479,14 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                     )}
                     {rebook && <RebookNote rebook={rebook} staffId={staffId} onStaff={pickStaff} picked={dayKey} usual={usual} />}
                     <DayStrip days={days} selected={dayKey} onSelect={pickDay} duration={duration} nowMinutes={nowMinutes} usual={usual} />
-                    {notice && <p className="lc-bk-notice" role="alert">{notice}</p>}
+                    {notice && (
+                        <p className="lc-bk-notice" role="alert">
+                            {notice}
+                            {contest && (user
+                                ? <> <button type="button" className="lc-bk-link" onClick={() => navigate('/client/support')}>Something wrong? Tell Locappoint</button></>
+                                : <> <a className="lc-bk-link" href="mailto:hello@locappoint.com?subject=I%20cannot%20book%20a%20business">Something wrong? Tell Locappoint</a></>)}
+                        </p>
+                    )}
                     <TimeGrid
                         state={entry?.state || 'loading'}
                         windows={windows}
@@ -526,7 +574,14 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                             We could not check how this booking is paid. <button type="button" className="lc-bk-link" onClick={() => setQuoteTry((n) => n + 1)}>Try again</button>
                         </p>
                     )}
-                    {notice && <p className="lc-bk-notice" role="alert">{notice}</p>}
+                    {notice && (
+                        <p className="lc-bk-notice" role="alert">
+                            {notice}
+                            {contest && (user
+                                ? <> <button type="button" className="lc-bk-link" onClick={() => navigate('/client/support')}>Something wrong? Tell Locappoint</button></>
+                                : <> <a className="lc-bk-link" href="mailto:hello@locappoint.com?subject=I%20cannot%20book%20a%20business">Something wrong? Tell Locappoint</a></>)}
+                        </p>
+                    )}
                 </>
             )}
 
@@ -540,7 +595,14 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                     <div className="lc-bk-paying__actions">
                         <Button variant="secondary" loading={reopening} onClick={reopen}>Open the payment page again</Button>
                     </div>
-                    {notice && <p className="lc-bk-notice" role="alert">{notice}</p>}
+                    {notice && (
+                        <p className="lc-bk-notice" role="alert">
+                            {notice}
+                            {contest && (user
+                                ? <> <button type="button" className="lc-bk-link" onClick={() => navigate('/client/support')}>Something wrong? Tell Locappoint</button></>
+                                : <> <a className="lc-bk-link" href="mailto:hello@locappoint.com?subject=I%20cannot%20book%20a%20business">Something wrong? Tell Locappoint</a></>)}
+                        </p>
+                    )}
                 </div>
             )}
 

@@ -6,6 +6,7 @@ import AppFooter from '../../components/common/Appfooter'
 import StreetGridCover from '../../components/business/StreetGridCover'
 import { Button } from '../../components/ui'
 import { PlaceResult } from '../../components/client/find/PlaceResult'
+import { EngineBox } from '../../components/client/find/EngineBox'
 import { loadPlaces } from '../../services/booking'
 import { useAuth } from '../../hooks/useAuth'
 import { CITIES, COHORT_SIZE, inCity } from '../../services/cohort'
@@ -110,6 +111,8 @@ const Businesses = () => {
                         )}
                     </div>
                 </section>
+
+                <EngineBox title="What do you need, and when?" browseTo="/businesses" />
 
                 <ul className="lc-br-cities" aria-label="Cities">
                     {CITIES.map((city, i) => {

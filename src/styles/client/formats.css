@@ -90,3 +90,10 @@
     font-size: var(--lc-t-label);
     line-height: var(--lc-lh-snug);
 }
+
+/* Groups in the booking sheet: how many people, and what that means for time and price. */
+.lc-bk-people__note {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}

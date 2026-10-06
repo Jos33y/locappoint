@@ -173,7 +173,14 @@ const quiet = (flag) => new URLSearchParams(window.location.search).get(flag) ==
   if (quiet('homebooking')) DATA.my_appointments = [...DATA.my_appointments, past('hm1', 2, haircut, 'confirmed', { mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12', client_landmark: 'Blue door', travel_fee: 5, appointment_time: '18:00:00' })]
   if (quiet('onlinebooking')) DATA.my_appointments = [...DATA.my_appointments, past('on1', 2, haircut, 'confirmed', { mode: 'online', meeting_url: 'https://meet.example.com/femtos', appointment_time: '18:00:00' })]
 }
+// ?group=1: Haircut takes groups of up to 4, priced per person, each person the full 30 minutes.
+if (quiet('group')) Object.assign(DATA.services[0], { max_people: 4, price_per: 'person', extra_person_minutes: null })
 if (quiet('demo')) DATA.businesses[0].is_demo = true
+// ?opentoday=1: open today as well (the test business is closed on Sundays).
+if (quiet('opentoday')) {
+  const dow = new Date(`${key}T12:00:00Z`).getUTCDay()
+  if (!DATA.availability.some((a) => a.day_of_week === dow)) DATA.availability.push({ id: `a${dow}`, business_id: 'b1', staff_id: null, day_of_week: dow, start_time: '09:00:00', end_time: '19:00:00' })
+}
 DATA.client_errors = [
   { id: 'e1', message: "TypeError: Cannot read properties of undefined (reading 'map')", stack: "TypeError: Cannot read properties of undefined (reading 'map')\n    at Agenda (Agenda.jsx:40:12)", app: 'app', path: '/portal/calendar', release: 'index-B7x', user_agent: 'Mozilla/5.0 (iPhone)', user_id: 'u1', count: 14, first_seen_at: '2026-09-28T10:00:00Z', last_seen_at: new Date().toISOString() },
   { id: 'e2', message: 'ReferenceError: slot is not defined', stack: 'ReferenceError: slot is not defined\n    at TimeGrid (TimeGrid.jsx:9:3)', app: 'app', path: '/femtos-barbearia', release: 'index-B7x', user_agent: 'Mozilla/5.0 (Android)', user_id: null, count: 2, first_seen_at: '2026-09-29T10:00:00Z', last_seen_at: '2026-09-29T11:00:00Z' },
@@ -448,10 +455,71 @@ const placesFn = (body) => {
   if (body.action === 'shop' && p) return { data: { on: true, shop: { address: p.address, lat: p.lat, lng: p.lng } }, error: null }
   return { data: { error: 'Unknown action' }, error: null }
 }
+// "What do you need?": three options for any words, a later time when asked for 21:00, nothing for "nothing".
+const openDay = () => { const d = new Date(`${dk(1)}T12:00:00Z`).getUTCDay(); return d === 0 ? dk(2) : dk(1) }
+const engineOption = (label, i, extra = {}) => ({ business_id: `b${i}`, business_name: ['Femtos Barbearia', 'Nove Unhas', 'Barba Rija'][i - 1], slug: 'femtos-barbearia', city: 'Porto', service_id: 's1', service_name: 'Haircut', people: 1, price: 18, price_per: 'booking', currency: 'EUR', mode: 'at_business', date: openDay(), time: ['10:00', '09:30', '11:00'][i - 1], km: i === 3 ? 1.2 : null, rating: i === 3 ? 4.8 : null, reviews: i === 3 ? 12 : 0, rebook_pct: i === 1 ? 70 : null, regular: false, label, ...extra })
+const engineRpc = (name, args) => {
+  if (name === 'engine_popular') return { data: [{ category: 'barbershop', businesses: 2 }, { category: 'nails', businesses: 1 }], error: null }
+  if (name !== 'engine_match') return null
+  if (/nothing/.test(args.p_query || '')) return { data: { options: [], later: [], matched: 0, words: ['nothing'] }, error: null }
+  if (args.p_at === '21:00') return { data: { options: [], later: [engineOption('later', 1, { time: '18:30' })], matched: 1 }, error: null }
+  return { data: { options: [engineOption('best', 1, { people: args.p_people, service_name: 'Haircut' }), engineOption('earliest', 2), engineOption('closest', 3)], later: [], matched: 3 }, error: null }
+}
+
 // Live trips: minutes only, kept per booking for the page's lifetime.
 const clockIn = (min) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(Date.now() + min * 60000))
 const onWay = (minutes, guess = false) => ({ status: 'on_way', started_at: new Date(Date.now() - 3 * 60000).toISOString(), eta_at: new Date(Date.now() + minutes * 60000).toISOString(), eta_time: clockIn(minutes), minutes, late_minutes: 0, guess, by: 'Miles Farra', steps: { on_way: new Date(Date.now() - 3 * 60000).toISOString() } })
 const TRIPS = quiet('trip') ? { hm2: onWay(12) } : {}
+// Support: two tickets for whoever asks, and the admin queue with one ticket open in full.
+const sAgo = (mins) => new Date(Date.now() - mins * 60000).toISOString()
+const SUPPORT_ROWS = () => [
+  { id: 'st1', number: 1042, subject: 'Haircut at Femtos Barbearia, 4 Oct', category: 'payment', status: 'waiting', side: 'client', created_at: sAgo(300), last_message_at: sAgo(120), unread: true, from_us: false, booking: { id: 'a1', business_name: 'Femtos Barbearia', service_name: 'Haircut', date: '2026-10-04', time: '15:00', status: 'completed' } },
+  { id: 'st2', number: 1031, subject: 'Clients cannot see Saturday', category: 'bookings', status: 'resolved', side: 'business', created_at: sAgo(5000), last_message_at: sAgo(4000), unread: false, from_us: false, booking: null },
+]
+const SUPPORT_THREAD = [
+  { id: 'sm1', from: 'you', mine: true, body: 'I was charged twice for this visit.', at: sAgo(300) },
+  { id: 'sm2', from: 'support', mine: false, body: 'We checked: one charge and one hold that drops in 3 days.', at: sAgo(120) },
+]
+const ADMIN_TICKET = {
+  ticket: { id: 'st1', number: 1042, subject: 'Haircut at Femtos Barbearia, 4 Oct', category: 'payment', priority: 1, status: 'open', side: 'client', outcome: null, created_at: sAgo(300), parent_id: null, children: [] },
+  reporter: { name: 'Ana Silva', email: 'ana@x.pt', has_account: true, tickets: 1, upheld: 0, not_upheld: 0 },
+  messages: [{ id: 'sm1', role: 'user', body: 'I was charged twice for this visit.', at: sAgo(300), author: 'Ana Silva' }, { id: 'sm3', role: 'note', body: 'Stripe shows one capture.', at: sAgo(200), author: 'Miles Farra' }],
+  booking: { id: 'a1', date: '2026-10-04', time: '15:00', status: 'completed', service: 'Haircut', staff: 'Rui', mode: 'at_business', people: 1, client_name: 'Ana Silva', client_email: 'ana@x.pt', has_account: true, price: 18, currency: 'EUR', payment_status: 'paid', created_at: sAgo(5000), started: true, report_open: true },
+  payment: { provider: 'stripe', method: 'card', amount: 18.49, currency: 'EUR', refunded: 0, pending_refunds: 0, refunds: [] },
+  business: { id: 'b1', name: 'Femtos Barbearia', slug: 'femtos', is_active: true, suspended_at: null, owner_email: 'rui@femtos.pt', bookings_90d: 212, cancelled_by_business_90d: 3, no_shows_marked_90d: 5, reports_against: 1, upheld_against: 0, warnings: 0 },
+  client: { has_account: true, bookings: 7, no_shows: 0, late_cancels: 1, warnings: 0 },
+  actions: [],
+}
+const supportRpc = (name, args) => {
+  const sp = new URLSearchParams(location.search)
+  if (name === 'my_tickets') return { data: sp.has('notickets') ? { rows: [], unread: 0 } : { rows: SUPPORT_ROWS().filter((r) => r.side === args.p_side), unread: args.p_side === 'client' ? 1 : 0 }, error: null }
+  if (['my_ticket', 'reply_ticket', 'close_ticket'].includes(name)) return { data: { ...SUPPORT_ROWS().find((r) => r.id === args.p_id), unread: false, can_reply: true, status: name === 'close_ticket' ? 'resolved' : 'waiting', messages: SUPPORT_THREAD }, error: null }
+  if (name === 'open_ticket' || name === 'report_by_link') return { data: { id: 'st9', number: 1050, added: false }, error: null }
+  if (name === 'tickets_by_link') return { data: { can_report: true, rows: [] }, error: null }
+  if (name === 'my_business_suspension') return { data: sp.has('paused') ? { since: sAgo(60), reason: 'Two reports of charging outside Locappoint this week.' } : null, error: null }
+  if (name === 'admin_tickets') return { data: { total: 2, counts: { open: 2, urgent: 1, waiting: 0, resolved: 4 }, rows: [
+    { id: 'st1', number: 1042, subject: 'Haircut at Femtos Barbearia, 4 Oct', category: 'payment', priority: 1, status: 'open', side: 'client', who: 'Ana Silva', email: 'ana@x.pt', guest: false, business_name: 'Femtos Barbearia', has_booking: true, last_from: 'user', last_message_at: sAgo(40), created_at: sAgo(300) },
+    { id: 'st3', number: 1040, subject: 'Clients cannot see Saturday', category: 'bookings', priority: 3, status: 'open', side: 'business', who: 'Rui Costa', email: 'rui@femtos.pt', guest: false, business_name: 'Femtos Barbearia', has_booking: false, last_from: 'user', last_message_at: sAgo(900), created_at: sAgo(1000) },
+  ] }, error: null }
+  if (/^admin_(ticket|reply|update_ticket|refund|set_visit|warn|suspend|unsuspend|ask_other)$/.test(name)) return { data: ADMIN_TICKET, error: null }
+  return null
+}
+
+// Blocks: one client blocked by Femtos, one block waiting for review in admin. ?blockedme=1 makes a
+// client's booking fail the way a blocked client's does; ?phoned=1 gives Jameson a phone to block by.
+if (new URLSearchParams(window.location.search).get('phoned') === '1') DATA.appointments[0].client_phone = '+351 912 000 222'
+const BLOCKS = () => [{ id: 'bk1', name: 'Rui Costa', email: 'rui@x.pt', phone: '912000111', has_account: true, reason: 'no_shows', note: 'Three no-shows since August', status: 'active', review: 'pending', review_note: null, lifted_by: null, created_at: new Date(Date.now() - 86400000).toISOString() }]
+const ADMIN_BLOCKS = () => ({ total: 1, counts: { pending: 1, kept: 2, lifted: 1 }, rows: [{ id: 'bk1', business_id: 'b1', business_name: 'Femtos Barbearia', slug: 'femtos-barbearia', name: 'Rui Costa', email: 'rui@x.pt', phone: '912000111', has_account: true, reason: 'no_shows', note: 'Three no-shows since August', status: 'active', review: 'pending', review_note: null, created_at: new Date(Date.now() - 86400000).toISOString(), ticket_id: null, flag: { recent: 4, active: 4, clients: 40, share: 10, flagged: true }, client: { bookings: 5, no_shows: 3, late_cancels: 0, cancelled: 1, blocked_elsewhere: 0 } }] })
+const blockRpc = (name, args) => {
+  if (name === 'book_appointment' && new URLSearchParams(window.location.search).get('blockedme') === '1') return { data: null, error: { code: 'P0001', hint: 'not_taking_you', message: 'This business is not taking online bookings from you. Contact them directly.' } }
+  if (name === 'my_blocks' || name === 'unblock_client') return { data: name === 'unblock_client' ? BLOCKS().map((b) => ({ ...b, status: 'lifted', lifted_by: 'business' })) : BLOCKS(), error: null }
+  if (name === 'block_client') return { data: BLOCKS(), error: null }
+  if (name === 'booking_block') return { data: null, error: null }
+  if (name === 'admin_blocks' || name === 'admin_review_block') return { data: ADMIN_BLOCKS(), error: null }
+  if (name === 'admin_business_blocks') return { data: { recent: 4, active: 4, clients: 40, share: 10, flagged: true }, error: null }
+  return null
+}
+
 const tripRpc = (name, args) => {
   if (name === 'my_trips') return { data: (args?.p_ids || []).filter((id) => TRIPS[id]).map((id) => ({ appointment_id: id, trip: TRIPS[id] })), error: null }
   if (name === 'trip_by_link') return { data: null, error: null }
@@ -478,7 +546,7 @@ const checkoutFn = (body) => (body.action === 'start' && body.appointment_id
 export const supabase = {
   functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); if (name === 'checkout') return checkoutFn(body || {}); if (name === 'places') return placesFn(body || {}); if (name === 'trip') return tripFn(body || {}); return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); const tripping = tripRpc(name, args); if (tripping) return tripping; const paying = payRpc(name, args); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); const tripping = tripRpc(name, args); if (tripping) return tripping; const supporting = supportRpc(name, args); if (supporting) return supporting; const blocking = blockRpc(name, args); if (blocking) return blocking; const matching = engineRpc(name, args); if (matching) return matching; const paying = payRpc(name, args); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

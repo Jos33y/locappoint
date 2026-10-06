@@ -8,6 +8,7 @@ import { USER_ERRORS, shortDate } from '../../services/booking'
 import { shortDay } from '../../services/inbox'
 import { moneyFor } from '../../services/insights'
 import { OUTCOME_LABEL, gapLabel, isDueBack, loadClientHistory, loadClients, saveClientNote, visitsLabel } from '../../services/clients'
+import { BlockedClients } from '../../components/blocks/BlockedClients'
 import '../../styles/business/clients.css'
 
 const PAGE = 60
@@ -240,6 +241,8 @@ const Clients = () => {
                     </p>
                 </div>
             </header>
+
+            {isOwner && <BlockedClients businessId={business.id} />}
 
             {state.status === 'loading' && (
                 <div className="lc-cli__skel" aria-hidden="true">

@@ -1,0 +1,220 @@
+/* Admin support queue and ticket. Prefix adm-sup. Same panels and pills as the rest of admin. */
+
+.adm-sup-table tr.is-urgent td:first-child { box-shadow: inset 3px 0 0 var(--danger); }
+
+.adm-sup-subject {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-primary);
+    font: inherit;
+    font-weight: var(--font-weight-semibold);
+    text-align: left;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+
+.adm-sup-subject:hover { color: var(--azure-link); }
+
+.adm-sup { gap: var(--space-4); }
+.adm-sup__back { align-self: flex-start; }
+
+.adm-sup__head { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.adm-sup__ref {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    margin: 0;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+.adm-sup__title {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: var(--font-weight-semibold);
+    overflow-wrap: anywhere;
+}
+
+.adm-sup__controls,
+.adm-sup-reply__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+}
+
+.adm-sup__controls label,
+.adm-sup-reply__actions label,
+.adm-sup-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.adm-sup__controls select,
+.adm-sup-reply__actions select,
+.adm-sup-field select,
+.adm-sup-field input,
+.adm-sup-field textarea,
+.adm-sup-reply textarea {
+    min-height: 36px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-sm);
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.85rem;
+}
+
+.adm-sup-field textarea,
+.adm-sup-reply textarea { width: 100%; resize: vertical; line-height: 1.5; }
+
+.adm-sup__controls select:focus,
+.adm-sup-reply select:focus,
+.adm-sup-field :is(select, input, textarea):focus,
+.adm-sup-reply textarea:focus { outline: 2px solid var(--azure-link); outline-offset: 1px; }
+
+.adm-sup-field small { color: var(--text-muted); }
+
+.adm-sup__links { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: 0; font-size: 0.8rem; }
+
+.adm-sup__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+}
+
+@media (min-width: 1100px) {
+    .adm-sup__grid { grid-template-columns: minmax(0, 1fr) 360px; }
+}
+
+.adm-sup__side { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+
+.adm-sup__talk { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4); }
+
+.adm-sup-msgs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.adm-sup-msg {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+}
+
+.adm-sup-msg.is-admin { border-left: 3px solid var(--azure-link); }
+.adm-sup-msg.is-note { border-style: dashed; border-left: 3px solid var(--signal); background: var(--surface-0); }
+
+.adm-sup-msg.is-system {
+    align-self: center;
+    padding: var(--space-1) var(--space-3);
+    border: 0;
+    background: none;
+    text-align: center;
+}
+
+.adm-sup-msg.is-system .adm-sup-msg__who { justify-content: center; }
+
+.adm-sup-msg__who {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.adm-sup-msg__who b { color: var(--text-primary); font-weight: var(--font-weight-semibold); }
+
+.adm-sup-msg__body {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.adm-sup-msg.is-system .adm-sup-msg__body { color: var(--text-muted); font-size: 0.8rem; }
+
+.adm-sup-reply {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.adm-sup-reply__actions { justify-content: flex-end; }
+
+.adm-sup-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.adm-sup-actions > .btn { display: inline-flex; align-items: center; gap: var(--space-1); }
+
+.adm-sup-form { display: flex; flex-direction: column; gap: var(--space-3); width: 100%; }
+.adm-sup-form__title { margin: 0; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.45; }
+.adm-sup-form__actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
+
+.adm-sup-log {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.adm-sup-log li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 0.8rem;
+}
+
+.adm-sup-log li:last-child { border-bottom: 0; padding-bottom: 0; }
+.adm-sup-log b { color: var(--text-primary); }
+.adm-sup-log span { color: var(--text-secondary); overflow-wrap: anywhere; }
+.adm-sup-log small { color: var(--text-muted); }
+
+.adm-sup__page { margin-top: var(--space-2); font-size: 0.8rem; }
+
+/* Blocks to review. */
+.adm-blk-list { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.adm-blk { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
+.adm-blk__head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
+.adm-blk__title { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
+.adm-blk__title b { color: var(--text-primary); }
+.adm-blk__why { margin: 0; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; overflow-wrap: anywhere; }
+.adm-blk__why b { color: var(--text-primary); }
+.adm-blk__flag {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--signal);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+.adm-blk__flag svg { flex: none; color: var(--signal); }

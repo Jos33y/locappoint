@@ -5,6 +5,8 @@ import { BOOKING } from './booking.ts'
 import { STATEMENT } from './statement.ts'
 import { RECEIPT } from './receipt.ts'
 import { TRIP } from './trip.ts'
+import { SUPPORT } from './support.ts'
+import { BLOCKS } from './blocks.ts'
 import type { Render } from '../types.ts'
 
-export const RENDER: Record<string, Render> = { ...ACCOUNT, ...BOOKING, ...STATEMENT, ...RECEIPT, ...TRIP }
+export const RENDER: Record<string, Render> = { ...ACCOUNT, ...BOOKING, ...STATEMENT, ...RECEIPT, ...TRIP, ...SUPPORT, ...BLOCKS }

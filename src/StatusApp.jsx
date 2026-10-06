@@ -53,10 +53,10 @@ export default function StatusApp() {
                             <span>Live status / Locappoint</span>
                         </div>
                         <h1 id="hero-title" className="hero__title">
-                            Booking platform <span className="signal">running</span>. Finishing it for the <span className="azure">Porto beta.</span>
+                            Booking platform <span className="signal">running</span>. Building the trust layer for the <span className="azure">Porto beta.</span>
                         </h1>
                         <p className="hero__lede">
-                            Clients book, owners run their day. The Android app is live, with push notifications. Before the first businesses go live: the store listings.
+                            Clients say what they need and get three free times. Owners run their day, get paid online, and have a real support desk behind them. Now: reliability scores and verified badges. Still waiting on the store listings.
                         </p>
 
                         <div className="hero__stats">
@@ -72,13 +72,13 @@ export default function StatusApp() {
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Now building</div>
-                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>Store listings</div>
-                                <div className="hero__stat-sub">Waiting on the D-U-N-S number</div>
+                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>Reliability and badges</div>
+                                <div className="hero__stat-sub">Store listings wait on the D-U-N-S number</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Updated</div>
                                 <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>
-                                    <time className="js-relative" dateTime="2026-10-01T04:38:00Z">1 October 2026</time>
+                                    <time className="js-relative" dateTime="2026-10-06T09:00:00Z">6 October 2026</time>
                                 </div>
                                 <div className="hero__stat-sub">This page auto-refreshes</div>
                             </div>
@@ -125,7 +125,7 @@ export default function StatusApp() {
                         </a>
 
                         <a className="phase" href="#phase-3">
-                            <div className="phase__pin phase__pin--outline">
+                            <div className="phase__pin phase__pin--half">
                                 <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#loca-mark" /></svg>
                             </div>
                             <div className="phase__body">
@@ -133,9 +133,9 @@ export default function StatusApp() {
                                     <span className="phase__num">Phase 3</span>
                                     <span className="phase__name">Why people prefer us</span>
                                 </div>
-                                <div className="phase__sub">WhatsApp, the Google Book button, filling empty slots.</div>
+                                <div className="phase__sub">"What do you need?" search is live. WhatsApp and Google next.</div>
                             </div>
-                            <span className="phase__status phase__status--scoped">Scoped</span>
+                            <span className="phase__status phase__status--building">Started</span>
                         </a>
 
                         <a className="phase" href="#phase-4">
@@ -232,11 +232,25 @@ export default function StatusApp() {
                                     <div className="detail__item detail__item--done">Push notifications on Android</div>
                                     <div className="detail__item detail__item--done">Delete account inside the app</div>
                                     <div className="detail__item detail__item--done">Google search: business pages, previews, sitemap</div>
+                                    <div className="detail__item detail__item--done">Pay online at booking, payouts to the business (test mode)</div>
+                                    <div className="detail__item detail__item--done">Receipts for paid and completed visits</div>
+                                    <div className="detail__item detail__item--done">Online sessions with a meeting link</div>
+                                    <div className="detail__item detail__item--done">Visits at the client's place: areas or distance</div>
+                                    <div className="detail__item detail__item--done">Address search with Google</div>
+                                    <div className="detail__item detail__item--done">On my way: the client sees minutes, never a position</div>
+                                    <div className="detail__item detail__item--done">Group bookings: one person books for several</div>
+                                    <div className="detail__item detail__item--done">Bookings list for owners, with download</div>
+                                    <div className="detail__item detail__item--done">Support desk: report a problem on any booking</div>
+                                    <div className="detail__item detail__item--done">Admin support queue: refunds, warnings, pauses</div>
+                                    <div className="detail__item detail__item--done">Blocks need a reason, and we review every one</div>
+                                    <div className="detail__item detail__item--done">Booking policies, written in plain words</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--active">
                                 <div className="detail__col-label">Building now</div>
                                 <div className="detail__list">
+                                    <div className="detail__item detail__item--active">Reliability score for every business</div>
+                                    <div className="detail__item detail__item--active">Blue badge: earned automatically</div>
                                     <div className="detail__item detail__item--active">D-U-N-S number for the company</div>
                                     <div className="detail__item detail__item--active">Google Play account and listing</div>
                                     <div className="detail__item detail__item--active">Android developer verification, Google's 2027 rule</div>
@@ -248,6 +262,9 @@ export default function StatusApp() {
                                 <div className="detail__list">
                                     <div className="detail__item detail__item--next">Android on Google Play</div>
                                     <div className="detail__item detail__item--next">iPhone: TestFlight, then App Store, with push</div>
+                                    <div className="detail__item detail__item--next">Gold badge: ID check and a visit to the shop</div>
+                                    <div className="detail__item detail__item--next">Payments live, once the Portuguese company has Stripe</div>
+                                    <div className="detail__item detail__item--next">EU tax reporting (DAC7) through Stripe</div>
                                     <div className="detail__item detail__item--next">"Join Beta" on the waitlist</div>
                                     <div className="detail__item detail__item--next">First five businesses live in Porto</div>
                                 </div>
@@ -289,7 +306,7 @@ export default function StatusApp() {
                             <div className="detail__col">
                                 <div className="detail__col-label">For clients</div>
                                 <div className="detail__list">
-                                    <div className="detail__item">Search by who is free today</div>
+                                    <div className="detail__item detail__item--done">"What do you need?": three free times, each for a reason</div>
                                     <div className="detail__item">Alerts when an earlier time opens</div>
                                     <div className="detail__item">Saved places</div>
                                     <div className="detail__item">Photos of work and staff profiles</div>
@@ -468,7 +485,7 @@ export default function StatusApp() {
                     <div className="section__head">
                         <span className="section__eyebrow">08 / Your input</span>
                         <h2 className="section__title" id="need-title">What we need from you</h2>
-                        <p className="section__lede">Four things only Vincent can start. Each runs on an outside clock.</p>
+                        <p className="section__lede">Things only Vincent can start. Each runs on an outside clock.</p>
                     </div>
 
                     <div className="needs">
@@ -484,7 +501,7 @@ export default function StatusApp() {
                                 <div className="need__title">App store accounts</div>
                                 <div className="need__when">In progress</div>
                             </div>
-                            <p className="need__text">D-U-N-S number for Locappoint Technologies Ltd, free through Apple, about a week. The same number opens Google Play (USD 25 once), Apple (USD 99 a year) and Google's check for apps installed from our website. Needs the CAC certificate.</p>
+                            <p className="need__text">D-U-N-S number for Locappoint Technologies Ltd, requested in the Apple sign-up. The same number opens Google Play, Apple and Google's check for apps installed from our website. Needs the CAC certificate. Costs below.</p>
                         </div>
                         <div className="need">
                             <div className="need__head">
@@ -500,6 +517,82 @@ export default function StatusApp() {
                             </div>
                             <p className="need__text">A Lda in Porto, run by Vincent, for Stripe, euro invoices and EU data rules. Nigeria stays with Locappoint Technologies Ltd and Paystack. Needs a certified accountant from day one.</p>
                         </div>
+                        <div className="need">
+                            <div className="need__head">
+                                <div className="need__title">Lock the fees</div>
+                                <div className="need__when">Before payments go live</div>
+                            </div>
+                            <p className="need__text">Client fee 2% (EUR 0.49 to 4.90), business fee 1.5%, first month free. Built and waiting for Vincent's yes.</p>
+                        </div>
+                        <div className="need">
+                            <div className="need__head">
+                                <div className="need__title">Stripe tax reporting</div>
+                                <div className="need__when">With the Lda</div>
+                            </div>
+                            <p className="need__text">Request access to Stripe's tax reporting preview. Stripe then collects each business's tax number and files the yearly EU report (DAC7) for us.</p>
+                        </div>
+                        <div className="need">
+                            <div className="need__head">
+                                <div className="need__title">Google Maps billing</div>
+                                <div className="need__when">Now</div>
+                            </div>
+                            <p className="need__text">A one-time prepayment turns on address search and live minutes for home visits. Everything already works without it, with typed addresses.</p>
+                        </div>
+                    </div>
+
+                    <div className="st-cost" aria-labelledby="st-cost-title">
+                        <div className="st-cost__head">
+                            <h3 className="st-cost__title" id="st-cost-title">Launch costs</h3>
+                            <p className="st-cost__sub">In USD. Each fee includes the card charge.</p>
+                        </div>
+                        <table className="st-cost__table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Item</th>
+                                    <th scope="col">How often</th>
+                                    <th scope="col" className="st-cost__num">Fee</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">D-U-N-S number</th>
+                                    <td>Once</td>
+                                    <td className="st-cost__num">0</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Apple Developer Program</th>
+                                    <td>Every year</td>
+                                    <td className="st-cost__num">100</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Google Play Console</th>
+                                    <td>Once</td>
+                                    <td className="st-cost__num">26</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Android developer verification</th>
+                                    <td>Once</td>
+                                    <td className="st-cost__num">26</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Google Maps billing</th>
+                                    <td>Once, prepaid</td>
+                                    <td className="st-cost__num">101</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr className="st-cost__total">
+                                    <th scope="row" colSpan={2}>Total to start</th>
+                                    <td className="st-cost__num">253</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Every year after</th>
+                                    <td>Apple renewal</td>
+                                    <td className="st-cost__num">100</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <p className="st-cost__note"><b>D-U-N-S number:</b> we ask for it in the Apple sign-up, where the look-up is free and takes up to 7 working days. If that fails, D&amp;B's DUNSFile costs USD 230, and the total to start becomes USD 483.</p>
                     </div>
                 </section>
 
@@ -522,7 +615,7 @@ export default function StatusApp() {
                     <div>
                         <div className="footer__col-label">Meta</div>
                         <div className="footer__meta">
-                            Status page v1.2<br />
+                            Status page v1.4<br />
                             status.locappoint.com
                         </div>
                     </div>

@@ -7,7 +7,8 @@ import { describeItem } from '../../services/inbox'
 import { InboxProvider } from '../inbox/InboxContext'
 import { InboxBell } from '../inbox/InboxBell'
 import { WorkspaceContext } from './WorkspaceContext'
-import { HUBS, NAV_FOOT, NAV_ITEMS, hubFor, staffCanSee } from './nav'
+import { HUBS, NAV_FOOT, NAV_ITEMS, SUPPORT_NAV, hubFor, staffCanSee } from './nav'
+import { useSupportUnread } from '../support/useSupportUnread'
 import { BrandLoader, Mark, Ring, Wordmark, initials } from './Brand'
 import { Sheet } from '../ui'
 import NewBookingSheet from './NewBookingSheet'
@@ -19,17 +20,19 @@ import HubNav from './HubNav'
 import PushSetup from '../common/PushSetup'
 import AccountMenu from './AccountMenu'
 import '../../styles/business/shell.css'
+import '../../styles/support.css'
 
 // The floating + belongs where bookings are; on Page, Hours or Settings it only covers content.
 const FAB_PAGES = ['/portal', '/portal/calendar']
 
-const NavItem = ({ item, onClick, compact = false }) => {
+const NavItem = ({ item, onClick, compact = false, count = 0 }) => {
     const Icon = item.icon
     return (
         <NavLink to={item.to} end={item.end} className="biz-navlink" onClick={onClick} data-tour={item.tour}>
             <Icon size={compact ? 20 : 18} aria-hidden="true" />
             <span className="biz-navlink__label">{item.label}</span>
             {item.planned && <span className="biz-soon">Soon</span>}
+            {count > 0 && <span className="biz-navlink__count" aria-label={`${count} new ${count === 1 ? 'reply' : 'replies'}`}>{count}</span>}
         </NavLink>
     )
 }
@@ -163,6 +166,7 @@ const BusinessShell = () => {
     }, [])
 
     const staffOnly = Boolean(ownedBusiness?.staff)
+    const supportUnread = useSupportUnread({ side: 'business', businessId: ownedBusiness?.id || null, enabled: Boolean(ownedBusiness?.launched_at) })
 
     useEffect(() => {
         if (!workspace || tourSeen() || staffOnly) return undefined
@@ -276,6 +280,9 @@ const BusinessShell = () => {
                         </div>
                         <div className="biz-navgroup">
                             {hubs.map((item) => <HubLink key={item.id} hub={item} active={item === hub} />)}
+                        </div>
+                        <div className="biz-navgroup biz-navgroup--support">
+                            <NavItem item={SUPPORT_NAV} count={supportUnread} />
                         </div>
                     </nav>
 

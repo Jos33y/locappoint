@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeftRight, CalendarDays, Home, LogOut, Search, Store, UserRound } from 'lucide-react'
+import { ArrowLeftRight, CalendarDays, Home, LifeBuoy, LogOut, Search, Store, UserRound } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { Mark, Wordmark, initials } from '../../components/business/Brand'
 import AccountMenu from '../../components/business/AccountMenu'
@@ -8,10 +8,12 @@ import { NextBooking } from '../../components/client/NextBooking'
 import { Sheet } from '../../components/ui'
 import { InboxProvider } from '../../components/inbox/InboxContext'
 import { InboxBell } from '../../components/inbox/InboxBell'
+import { useSupportUnread } from '../../components/support/useSupportUnread'
 import { loadNextBooking } from '../../services/booking'
 import PushSetup from '../../components/common/PushSetup'
 import '../../styles/business/shell.css'
 import '../../styles/client/client-shell.css'
+import '../../styles/support.css'
 
 const NAV = [
     { to: '/client', label: 'Home', icon: Home, end: true },
@@ -21,7 +23,9 @@ const NAV = [
 
 const TABS = [...NAV, { to: '/client/profile', label: 'Profile', icon: UserRound }]
 
-const TITLES = { '/client': 'Home', '/client/appointments': 'Bookings', '/client/search': 'Find a place', '/client/profile': 'Profile', '/client/notifications': 'Notifications' }
+const SUPPORT_NAV = { to: '/client/support', label: 'Support', icon: LifeBuoy }
+
+const TITLES = { '/client': 'Home', '/client/appointments': 'Bookings', '/client/search': 'Find a place', '/client/profile': 'Profile', '/client/notifications': 'Notifications', '/client/support': 'Support' }
 
 const ClientLayout = () => {
     const { user, userProfile, signOut, setMode, hasBusiness } = useAuth()
@@ -31,6 +35,7 @@ const ClientLayout = () => {
     const [accountOpen, setAccountOpen] = useState(false)
     const email = userProfile?.email || user?.email || ''
     const name = userProfile?.full_name || ''
+    const supportUnread = useSupportUnread({ side: 'client', enabled: Boolean(user) })
 
     useEffect(() => { setMode('client') }, [setMode])
     useEffect(() => { setAccountOpen(false) }, [location.pathname])
@@ -54,6 +59,7 @@ const ClientLayout = () => {
 
     const accountItems = [
         { to: '/client/profile', icon: UserRound, label: 'Profile' },
+        { to: '/client/support', icon: LifeBuoy, label: 'Support' },
         hasBusiness
             ? { to: '/portal', icon: ArrowLeftRight, label: 'Switch to my business' }
             : { to: '/portal', icon: Store, label: 'Start a business' },
@@ -81,10 +87,17 @@ const ClientLayout = () => {
                                 </NavLink>
                             ))}
                         </div>
+                        <div className="biz-navgroup biz-navgroup--support">
+                            <NavLink to={SUPPORT_NAV.to} className="biz-navlink">
+                                <LifeBuoy size={18} aria-hidden="true" />
+                                <span className="biz-navlink__label">Support</span>
+                                {supportUnread > 0 && <span className="biz-navlink__count" aria-label={`${supportUnread} new ${supportUnread === 1 ? 'reply' : 'replies'}`}>{supportUnread}</span>}
+                            </NavLink>
+                        </div>
                     </nav>
 
                     <div className="biz-sidebar__foot">
-                        <AccountMenu name={name} email={email} onSignOut={leave} links={accountItems} ownPages={['/client/profile']} />
+                        <AccountMenu name={name} email={email} onSignOut={leave} links={accountItems} ownPages={['/client/profile', '/client/support']} />
                     </div>
                 </aside>
 

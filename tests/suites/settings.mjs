@@ -80,7 +80,7 @@ export default async ({ browser, url, check }) => {
     check(/^We are (online|away)$/.test(await text(p, '.lc-help__deskname')), `support desk status ${await text(p, '.lc-help__deskname')}`)
     check(await p.evaluate(() => document.querySelectorAll('.lc-faq__icon svg').length) === 6, 'every answer has its icon')
     check(await p.evaluate(() => Boolean(document.querySelector('.lc-help__desk a[href^="mailto:support@locappoint.com"]'))), 'email support from the desk')
-    check(await p.evaluate(() => Boolean(document.querySelector('.lc-help__empty .lc-stub'))), 'empty tickets show the stub')
+    check(await p.evaluate(() => Boolean(document.querySelector('.lc-help__inbox a[href="/portal/support"]')) && !document.querySelector('.lc-help form')), 'Help points to the Support inbox and has no ticket form of its own')
     check(p.errors.length === 0, `help errors ${p.errors}`)
     await p.close()
 }

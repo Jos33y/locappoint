@@ -1,4 +1,4 @@
-import { Bell, Bot, CalendarDays, ChartColumn, Clock, Gift, LifeBuoy, Radio, Rocket, Scissors, Settings, Sprout, Star, Store, Sun, Users, UsersRound, Wallet } from 'lucide-react'
+import { Bell, Bot, CalendarDays, ChartColumn, Clock, Gift, Inbox, LifeBuoy, ListChecks, Radio, Rocket, Scissors, Settings, Sprout, Star, Store, Sun, Users, UsersRound, Wallet } from 'lucide-react'
 
 export const NAV_GROUPS = [
     {
@@ -6,6 +6,7 @@ export const NAV_GROUPS = [
         items: [
             { to: '/portal', label: 'Today', icon: Sun, end: true, tab: true, tour: 'today' },
             { to: '/portal/calendar', label: 'Calendar', icon: CalendarDays, tab: true, tour: 'calendar' },
+            { to: '/portal/bookings', label: 'Bookings', icon: ListChecks, keywords: ['appointments', 'list', 'all bookings', 'history', 'upcoming', 'export'] },
             { to: '/portal/clients', label: 'Clients', icon: Users, tab: true, keywords: ['customers', 'regulars', 'notes', 'due back'] },
         ],
     },
@@ -41,8 +42,12 @@ export const HUBS = [
 
 export const NAV_FOOT = [
     { to: '/portal/start', label: 'Getting started', icon: Rocket, tour: 'start' },
-    { to: '/portal/help', label: 'Help and support', icon: LifeBuoy, tour: 'help' },
+    { to: '/portal/help', label: 'Help', icon: LifeBuoy, tour: 'help', keywords: ['faq', 'questions', 'how do i'] },
+    { to: '/portal/support', label: 'Support', icon: Inbox, keywords: ['ticket', 'report', 'problem', 'contact', 'refund'] },
 ]
+
+// Support sits in the sidebar on its own, always in view: in this business people need to reach us fast.
+export const SUPPORT_NAV = { to: '/portal/support', label: 'Support', icon: LifeBuoy, tour: 'support' }
 
 export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items)
 
@@ -55,7 +60,7 @@ export const HUB_PAGES = HUBS.flatMap((hub) => hub.pages.map((page) => ({ ...pag
 export const PALETTE_PAGES = [...NAV_ITEMS, ...HUB_PAGES, ...NAV_FOOT, { to: '/portal/settings', label: 'Settings', icon: Settings }]
 
 // Staff run their own day: bookings, clients and their account. The business itself is the owner's.
-const STAFF_PATHS = ['/portal', '/portal/calendar', '/portal/clients', '/portal/notifications', '/portal/help', '/portal/settings']
+const STAFF_PATHS = ['/portal', '/portal/calendar', '/portal/bookings', '/portal/clients', '/portal/notifications', '/portal/help', '/portal/support', '/portal/settings']
 export const staffCanSee = (pathname) => STAFF_PATHS.some((p) => pathname === p || (p !== '/portal' && pathname.startsWith(`${p}/`)))
 export const STAFF_PALETTE_PAGES = PALETTE_PAGES.filter((page) => staffCanSee(page.to))
 

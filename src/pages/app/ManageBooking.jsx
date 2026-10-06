@@ -20,6 +20,8 @@ import { reviewByLink, submitReviewByLink } from '../../services/reviews'
 import { RefundCard } from '../../components/client/bookings/PaymentNote'
 import { receiptsByLink } from '../../services/receipts'
 import { paidOnline } from '../../services/payments'
+import { LinkSupport } from '../../components/support/LinkSupport'
+import { shortDay } from '../../services/inbox'
 
 // The page behind "Manage booking" in every booking email. No sign-in: the link is the key.
 const ManageBooking = () => {
@@ -217,6 +219,11 @@ const ManageBooking = () => {
                                 onSubmit={async (values) => setReview(await submitReviewByLink({ token, ...values }))}
                             />
                         )}
+                        <LinkSupport
+                            token={token}
+                            booking={b}
+                            title={`${b.services?.service_name || 'Booking'} at ${b.businesses?.business_name || 'the business'}, ${shortDay(b.appointment_date)} at ${String(b.appointment_time || '').slice(0, 5)}`}
+                        />
                         {canAgain && (
                             <aside className="lc-mb__account lc-again-mb">
                                 <span className="lc-mb__icon" aria-hidden="true"><RotateCcw size={20} /></span>

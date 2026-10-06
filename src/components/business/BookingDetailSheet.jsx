@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { History, House, Mail, MessageCircle, Navigation, Phone, Video } from 'lucide-react'
+import { Ban, Flag, History, House, Mail, MessageCircle, Navigation, Phone, Video } from 'lucide-react'
 import { Sheet } from '../ui'
 import { useWorkspace } from './WorkspaceContext'
 import {
@@ -21,6 +21,12 @@ import { clientKey } from '../../services/clients'
 import { loadBookingMoney, paidOnline, payMoney, refundOf, shareLabel } from '../../services/payments'
 import { RECEIPT_KIND, loadReceipts, receiptUrl } from '../../services/receipts'
 import { TripControl } from './TripControl'
+import { ReportSheet } from '../support/ReportSheet'
+import { ClientBlockSheet } from '../blocks/ClientBlockSheet'
+import { bookingBlock } from '../../services/clientBlocks'
+import '../../styles/client-blocks.css'
+import { canReport } from '../../services/support'
+import { shortDay } from '../../services/inbox'
 import '../../styles/business/booking-pay.css'
 import '../../styles/business/formats.css'
 
@@ -53,9 +59,14 @@ const BookingDetailSheet = ({ booking, onClose }) => {
     const [error, setError] = useState('')
     const [money, setMoney] = useState(null)
     const [receipts, setReceipts] = useState([])
+    const [reporting, setReporting] = useState(false)
+    const [blocking, setBlocking] = useState(false)
+    const [blocked, setBlocked] = useState(null)
 
     useEffect(() => {
         setMoving(false)
+        setReporting(false)
+        setBlocking(false)
         setError('')
         if (booking) {
             setMove({ date: booking.appointment_date, time: '', staffId: booking.staff_id })
@@ -73,6 +84,17 @@ const BookingDetailSheet = ({ booking, onClose }) => {
             .catch((err) => console.error('Receipts failed:', err))
         return () => { cancelled = true }
     }, [booking?.id, booking?.status])
+
+    // Whether this client is blocked from booking online (owners only).
+    useEffect(() => {
+        setBlocked(null)
+        if (!booking?.id || !isOwner) return undefined
+        let cancelled = false
+        bookingBlock(booking.id)
+            .then((row) => { if (!cancelled) setBlocked(row || null) })
+            .catch(() => { if (!cancelled) setBlocked(null) })
+        return () => { cancelled = true }
+    }, [booking?.id, isOwner, blocking])
 
     // Paid online: what was refunded and the rule, so the buttons can say what they give back.
     useEffect(() => {
@@ -95,6 +117,23 @@ const BookingDetailSheet = ({ booking, onClose }) => {
     }, [moving, business.id, booking?.service_id, move?.date, move?.staffId])
 
     if (!booking) return null
+
+    // Reporting swaps this sheet for the report, so only one dialog is ever open.
+    if (reporting) {
+        return (
+            <ReportSheet
+                booking={booking}
+                side="business"
+                businessId={business.id}
+                title={`${booking.client_name}, ${booking.services?.service_name || 'booking'}, ${shortDay(booking.appointment_date)} at ${shortTime(booking.appointment_time)}`}
+                onClose={() => setReporting(false)}
+            />
+        )
+    }
+
+    if (blocking) {
+        return <ClientBlockSheet booking={booking} onClose={() => setBlocking(false)} />
+    }
 
     const staff = bookableMembers.find((m) => m.id === booking.staff_id)
     const started = hasStarted(booking, business.timezone)
@@ -165,7 +204,7 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                 <div>
                     <dt>Service</dt>
                     <dd>
-                        {serviceLabel(booking, 'Service removed')}
+                        {serviceLabel(booking, 'Service removed')}{Number(booking.people) > 1 ? `, for ${booking.people} people` : ''}
                         {(booking.price ?? booking.services?.price) != null && <span className="biz-num biz-muted"> {formatMoney(booking.price ?? booking.services.price)}</span>}
                     </dd>
                 </div>
@@ -378,6 +417,21 @@ const BookingDetailSheet = ({ booking, onClose }) => {
             )}
 
             {error && <p className="biz-error" role="alert">{error}</p>}
+            {!moving && blocked && (
+                <p className="lc-cbk-note"><Ban size={14} aria-hidden="true" />Blocked from booking you online. Manage it in Clients.</p>
+            )}
+            {!moving && canReport(booking) && (
+                <button type="button" className="biz-textbtn biz-report" onClick={() => setReporting(true)}>
+                    <Flag size={14} aria-hidden="true" />
+                    <span>Report a problem with this booking</span>
+                </button>
+            )}
+            {!moving && isOwner && !blocked && (booking.client_email || booking.client_phone || booking.client_id) && (
+                <button type="button" className="biz-textbtn biz-report" onClick={() => setBlocking(true)}>
+                    <Ban size={14} aria-hidden="true" />
+                    <span>Block this client from booking online</span>
+                </button>
+            )}
         </Sheet>
     )
 }

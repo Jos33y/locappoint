@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ArrowLeftRight, ChevronsUpDown, CirclePlay, LifeBuoy, LogOut, Settings } from 'lucide-react'
+import { ArrowLeftRight, ChevronsUpDown, CirclePlay, Inbox, LifeBuoy, LogOut, Settings } from 'lucide-react'
 import { initials } from './Brand'
 import '../../styles/business/account-menu.css'
 
-const OWN_PAGES = ['/portal/settings', '/portal/help']
+const OWN_PAGES = ['/portal/settings', '/portal/help', '/portal/support']
 
 const AccountMenu = ({ name, email, onTour, onSignOut, links = null, ownPages = OWN_PAGES }) => {
     const [open, setOpen] = useState(false)
@@ -80,7 +80,11 @@ const AccountMenu = ({ name, email, onTour, onSignOut, links = null, ownPages = 
                             </Link>
                             <Link to="/portal/help" role="menuitem" tabIndex={-1} className="biz-acctmenu__item" onClick={() => close()}>
                                 <LifeBuoy size={17} aria-hidden="true" />
-                                <span>Help and support</span>
+                                <span>Help</span>
+                            </Link>
+                            <Link to="/portal/support" role="menuitem" tabIndex={-1} className="biz-acctmenu__item" onClick={() => close()}>
+                                <Inbox size={17} aria-hidden="true" />
+                                <span>Support</span>
                             </Link>
                             <button type="button" role="menuitem" tabIndex={-1} className="biz-acctmenu__item" onClick={run(onTour)}>
                                 <CirclePlay size={17} aria-hidden="true" />

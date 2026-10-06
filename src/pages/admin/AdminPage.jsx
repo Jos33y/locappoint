@@ -4,6 +4,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { supabase } from '../../config/supabase'
+import { loadAdminTickets } from '../../services/admin'
+import { loadAdminBlocks } from '../../services/clientBlocks'
 import AdminSidebar from './AdminSidebar'
 import AdminTopbar from './AdminTopbar'
 import AdminDash from './AdminDash'
@@ -14,13 +16,15 @@ const SECTION_LABELS = {
     businesses: 'Businesses',
     bookings: 'Bookings',
     people: 'People',
+    support: 'Support',
+    blocks: 'Blocks',
     analytics: 'Analytics',
     waitlist: 'Waitlist',
     partnership: 'Partnerships',
     errors: 'App errors'
 }
 
-const VALID_SECTIONS = ['overview', 'businesses', 'bookings', 'people', 'analytics', 'waitlist', 'partnership', 'errors']
+const VALID_SECTIONS = ['overview', 'support', 'blocks', 'businesses', 'bookings', 'people', 'analytics', 'waitlist', 'partnership', 'errors']
 const DEFAULT_SECTION = 'overview'
 
 const getSectionFromHash = () => {
@@ -79,6 +83,19 @@ const AdminPage = () => {
     const [dataLoading, setDataLoading] = useState(true)
     const [dataError, setDataError] = useState(null)
     const [dateRange, setDateRange] = useState('7d')
+    const [supportOpen, setSupportOpen] = useState(0)
+    const [blocksPending, setBlocksPending] = useState(0)
+
+    // Open tickets for the sidebar. Quietly zero until support-desk.sql has been run.
+    useEffect(() => {
+        if (!isAuthenticated) return
+        loadAdminTickets({ status: 'open', limit: 1 })
+            .then((data) => setSupportOpen(Number(data?.counts?.open) || 0))
+            .catch(() => setSupportOpen(0))
+        loadAdminBlocks({ review: 'pending', limit: 1 })
+            .then((data) => setBlocksPending(Number(data?.counts?.pending) || 0))
+            .catch(() => setBlocksPending(0))
+    }, [isAuthenticated])
 
     // Session restore + initial loader dismissal
     useEffect(() => {
@@ -554,7 +571,9 @@ const AdminPage = () => {
                 counts={{
                     analytics: analyticsData.stats.totalVisitors || 0,
                     waitlist: waitlistData.length,
-                    partnership: partnershipData.length
+                    partnership: partnershipData.length,
+                    support: supportOpen,
+                    blocks: blocksPending
                 }}
                 onClose={() => setSidebarOpen(false)}
                 onLogout={handleLogout}
@@ -589,6 +608,8 @@ const AdminPage = () => {
                         onStatusChange={updatePartnershipStatus}
                         onDeleteWaitlist={deleteWaitlist}
                         onDeletePartnership={deletePartnership}
+                        onSupportCount={setSupportOpen}
+                        onBlocksCount={setBlocksPending}
                     />
                 </main>
             </div>

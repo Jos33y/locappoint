@@ -43,7 +43,7 @@ export const hasTimeLeft = (day, duration, nowMinutes) =>
         return first + duration <= w.end
     })
 
-export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null, ignore = null, addonIds = [] }) => {
+export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null, ignore = null, addonIds = [], people = null }) => {
     const { data, error } = await supabase.rpc('get_available_slots', {
         p_business_id: businessId,
         p_service_id: serviceId,
@@ -51,12 +51,13 @@ export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null
         p_staff_id: staffId,
         p_ignore_appointment: ignore,
         p_addon_ids: addonIds.length ? addonIds : null,
+        p_people: people,
     })
     if (error) throw error
     return [...new Set((data || []).map((row) => toMinutes(row.slot_time)))].sort((a, b) => a - b)
 }
 
-export const requestBooking = async ({ businessId, serviceId, staffId = null, dateKey, minutes, name, email, phone, notes, addonIds = [], mode = null, clientAddress = null, clientLandmark = null, clientZone = null, clientLat = null, clientLng = null, clientPlaceId = null }) => {
+export const requestBooking = async ({ businessId, serviceId, staffId = null, dateKey, minutes, name, email, phone, notes, addonIds = [], mode = null, clientAddress = null, clientLandmark = null, clientZone = null, clientLat = null, clientLng = null, clientPlaceId = null, people = 1 }) => {
     const { data, error } = await supabase.rpc('book_appointment', {
         p_business_id: businessId,
         p_service_id: serviceId,
@@ -75,14 +76,15 @@ export const requestBooking = async ({ businessId, serviceId, staffId = null, da
         p_client_lat: clientLat,
         p_client_lng: clientLng,
         p_client_place_id: clientPlaceId,
+        p_people: people,
     })
     if (error) throw error
     return data
 }
 
-export const savePending = ({ slug, serviceId, dateKey, minutes, addonIds = [], mode = null }) => {
+export const savePending = ({ slug, serviceId, dateKey, minutes, addonIds = [], mode = null, people = 1 }) => {
     try {
-        sessionStorage.setItem(PENDING, JSON.stringify({ businessSlug: slug, serviceId, addonIds, mode, date: dateKey, time: fromMinutes(minutes), savedAt: Date.now() }))
+        sessionStorage.setItem(PENDING, JSON.stringify({ businessSlug: slug, serviceId, addonIds, mode, people, date: dateKey, time: fromMinutes(minutes), savedAt: Date.now() }))
     } catch { /* storage blocked: the client picks the time again */ }
 }
 
@@ -91,17 +93,22 @@ export const readPending = (slug) => {
         const saved = JSON.parse(sessionStorage.getItem(PENDING) || 'null')
         if (!saved || saved.businessSlug !== slug || !parseDateKey(saved.date)) return null
         if (saved.savedAt && Date.now() - saved.savedAt > PENDING_TTL) return null
-        return { serviceId: saved.serviceId, addonIds: Array.isArray(saved.addonIds) ? saved.addonIds : [], mode: saved.mode || null, dateKey: saved.date, minutes: toMinutes(saved.time) }
+        return { serviceId: saved.serviceId, addonIds: Array.isArray(saved.addonIds) ? saved.addonIds : [], mode: saved.mode || null, people: Number(saved.people) || 1, dateKey: saved.date, minutes: toMinutes(saved.time) }
     } catch {
         return null
     }
 }
 
+// ?book=<service>.<date>.<hhmm>, from sign-in or from "What do you need?", which also carries the
+// format (&mode=) and the group size (&people=).
 export const readBookParam = (search) => {
-    const value = new URLSearchParams(search).get('book')
+    const params = new URLSearchParams(search)
+    const value = params.get('book')
     const match = value && /^([^.]+)\.(\d{4}-\d{2}-\d{2})\.(\d{2})(\d{2})$/.exec(value)
     if (!match || !parseDateKey(match[2])) return null
-    return { serviceId: match[1], dateKey: match[2], minutes: Number(match[3]) * 60 + Number(match[4]) }
+    const mode = ['at_business', 'at_client', 'online'].includes(params.get('mode')) ? params.get('mode') : null
+    const people = Math.max(1, Math.min(50, Number(params.get('people')) || 1))
+    return { serviceId: match[1], dateKey: match[2], minutes: Number(match[3]) * 60 + Number(match[4]), mode, people }
 }
 
 // Your bookings: made while signed in, or as a guest with your email. Filtered to you, because a
@@ -128,7 +135,7 @@ export const loadNextBooking = async (email) => {
     return data?.[0] || null
 }
 
-const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, mode, meeting_url, client_address, client_landmark, client_zone, travel_fee, payment_status, total, client_fee, currency, cancelled_by, rescheduled_from, addons, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price, modes, travel_fee), reviews (id, rating, body, reply, replied_at, created_at, status), receipts (kind, number, token)'
+const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, mode, people, meeting_url, client_address, client_landmark, client_zone, travel_fee, payment_status, total, client_fee, currency, cancelled_by, rescheduled_from, addons, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price, modes, travel_fee, max_people, price_per, extra_person_minutes), reviews (id, rating, body, reply, replied_at, created_at, status), receipts (kind, number, token)'
 
 export const loadMyBookings = async (email) => {
     const { data, error } = await supabase

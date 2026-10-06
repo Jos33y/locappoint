@@ -635,6 +635,93 @@ ol, ul { list-style: none; }
 }
 
 
+/* Launch costs (under What we need) */
+
+.st-cost {
+    margin-top: 12px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 18px 22px;
+}
+.st-cost__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+.st-cost__title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+.st-cost__sub {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.st-cost__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.st-cost__table th,
+.st-cost__table td {
+    padding: 10px 0;
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: baseline;
+}
+.st-cost__table th + td,
+.st-cost__table td + td,
+.st-cost__table th + th { padding-left: 12px; }
+.st-cost__table thead th {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding-top: 0;
+}
+.st-cost__table tbody th {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+.st-cost__table td { color: var(--text-secondary); }
+.st-cost__table .st-cost__num {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+.st-cost__table thead .st-cost__num { color: var(--text-muted); }
+.st-cost__table tfoot th,
+.st-cost__table tfoot td { border-bottom: 0; }
+.st-cost__table tfoot th { font-weight: 500; color: var(--text-secondary); }
+.st-cost__total th,
+.st-cost__total td {
+    border-top: 1px solid var(--border-strong);
+}
+.st-cost__table .st-cost__total th {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.st-cost__table .st-cost__total .st-cost__num { color: var(--signal); font-weight: 600; }
+.st-cost__note {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+}
+.st-cost__note b { color: var(--text-primary); font-weight: 600; }
+
+
 /* Recent updates log */
 
 .log {

@@ -33,14 +33,17 @@ export const newSession = () => {
     return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`
 }
 
-export const suggestAddresses = async ({ businessId, input, session }) => {
-    const data = await callPlaces('suggest', { business_id: businessId, input, session })
+// Near a business, or anywhere in a city (market) before a business is chosen.
+const where = (businessId, market) => (businessId ? { business_id: businessId } : { market })
+
+export const suggestAddresses = async ({ businessId = null, market = null, input, session }) => {
+    const data = await callPlaces('suggest', { ...where(businessId, market), input, session })
     if (data.on === false) return null
     return data.items || []
 }
 
-export const pickAddress = async ({ businessId, placeId, session }) => {
-    const data = await callPlaces('place', { business_id: businessId, place_id: placeId, session })
+export const pickAddress = async ({ businessId = null, market = null, placeId, session }) => {
+    const data = await callPlaces('place', { ...where(businessId, market), place_id: placeId, session })
     if (data.on === false) return null
     return data.place || null
 }
@@ -79,4 +82,11 @@ export const loadMaps = () => {
         document.head.appendChild(script)
     })
     return loading
+}
+
+// Straight-line km between two points, as the database measures it.
+export const kmBetween = (a, b) => {
+    const rad = (d) => (d * Math.PI) / 180
+    const h = Math.sin(rad(b.lat - a.lat) / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lng - a.lng) / 2) ** 2
+    return 6371.0088 * 2 * Math.asin(Math.sqrt(h))
 }

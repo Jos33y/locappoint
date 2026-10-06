@@ -84,6 +84,15 @@ const CASES = [
     ['receipt', { audience: 'client', ...RECEIPT, kind: 'visit', number: 'FEM-00014', method: 'at_visit', lines: [{ label: 'Skin fade', amount: 18.5 }], total: 18.5, client_name: null }],
     ['trip_on_way', { audience: 'client', mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12, 2 Esq', minutes: 14, eta: '10:16', by: 'Rui' }],
     ['trip_on_way', { audience: 'client', mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12, 2 Esq', minutes: 0, eta: null, by: null, manage_token: null, client_name: null }],
+    ['support_reply', { audience: 'client', ticket_id: 'aaaa-bbbb', number: 1042, subject: 'Skin fade <b>at</b> Femtos, 1 Oct', status: 'waiting', body: 'We checked.\nOne charge, one hold that drops in 3 days. <b>bold</b>', guest: false, manage_token: null }],
+    ['support_reply', { audience: 'client', ticket_id: 'aaaa-bbbb', number: 1042, subject: 'Skin fade at Femtos, 1 Oct', status: 'resolved', body: 'Refund sent. It shows in 5 to 10 days.', guest: true, name: null }],
+    ['support_reply', { audience: 'business', ticket_id: 'cccc-dddd', number: 7, subject: 'Calendar shows Saturday closed', status: 'waiting', body: 'Which week is it?', guest: false, manage_token: null }],
+    ['support_warning', { audience: 'business', ticket_id: 'cccc-dddd', number: 7, body: 'Please do not charge clients outside Locappoint for bookings made here.' }],
+    ['support_warning', { audience: 'client', ticket_id: 'cccc-dddd', number: 7, body: 'Three missed visits this month. Please cancel in time.', guest: true }],
+    ['support_team', { event: 'new', ticket_id: 'aaaa-bbbb', number: 1042, subject: 'Charged twice <x>', category: 'payment', priority: 1, side: 'client', who: 'Joe <script>', body: 'I was charged twice' }],
+    ['block_review', { audience: 'business', decision: 'kept', client_name: 'Joe <b>Silva</b>', reason: 'no_shows', note: 'Three no-shows since August.', business_name: 'Femtos <Barbers>' }],
+    ['block_review', { audience: 'business', decision: 'lifted', client_name: 'Ana', reason: 'other', note: 'One missed visit is not enough to block.', business_name: 'Femtos' }],
+    ['support_team', { event: 'reply', ticket_id: 'aaaa-bbbb', number: 1043, subject: 'Email change', category: 'account', priority: 3, side: 'business', who: 'Ana', body: 'Still not working' }],
 ]
 
 const audit = () => {
@@ -183,6 +192,23 @@ export default async ({ browser, check, server, root }) => {
             check(/never where they are/.test(msg.html) && /never where they are/.test(msg.text), `${label} says only minutes are shared`)
             check(!extra.eta || (msg.html.includes(extra.eta) && msg.text.includes(extra.eta)), `${label} gives the arrival time`)
             check(!msg.attachments, `${label} carries no calendar invite`)
+        }
+        if (kind === 'support_reply') {
+            const where = extra.audience === 'business' ? /\/portal\/support\?t=cccc-dddd/ : extra.guest ? /\/b\/[a-f0-9]{32,}#support/ : /\/client\/support\?t=aaaa-bbbb/
+            check(where.test(msg.html) && where.test(msg.text), `${label} links back to the conversation`)
+            check(msg.subject.startsWith('#') && /(we replied|resolved)$/.test(msg.subject), `${label} subject has the number and the state: ${msg.subject}`)
+            check(!msg.html.includes('<b>bold</b>') && !msg.html.includes('<b>at</b>') && msg.html.includes('We checked.<br>One') === extra.body.includes('\n'), `${label} escapes our words and keeps line breaks`)
+            check(/not to this email/.test(msg.html) && /not to this email/.test(msg.text), `${label} says to reply in Locappoint`)
+            check(!msg.attachments, `${label} carries no calendar invite`)
+        }
+        if (kind === 'support_warning') {
+            check(/warning/i.test(msg.subject) && /kept on record/.test(msg.html) && /kept on record/.test(msg.text), `${label} says it is a warning and is kept`)
+            check(extra.audience === 'business' ? /\/portal\/support/.test(msg.html) : !/\/client\/support/.test(msg.html), `${label} offers a reply where they can make one`)
+        }
+        if (kind === 'support_team') {
+            check(/\/admin\?ticket=aaaa-bbbb#support/.test(msg.html) && /\/admin\?ticket=aaaa-bbbb#support/.test(msg.text), `${label} opens the ticket in admin`)
+            check((extra.priority === 1) === msg.subject.startsWith('[Priority]'), `${label} flags priority in the subject: ${msg.subject}`)
+            check(!msg.html.includes('<script>') && !msg.html.includes('<x>'), `${label} escapes what people wrote`)
         }
         if (kind === 'weekly_statement') {
             const online = extra.online.count > 0

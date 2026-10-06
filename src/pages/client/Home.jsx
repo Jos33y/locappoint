@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, RotateCw, Search } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, RotateCw } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/ui'
 import { UpcomingBooking } from '../../components/client/bookings/UpcomingBooking'
@@ -13,6 +13,7 @@ import { useRebook } from '../../components/client/bookings/useRebook'
 import { BookingSheet } from '../../components/booking/BookingSheet'
 import { WaitingOnYou } from '../../components/client/home/WaitingOnYou'
 import { PlaceResult } from '../../components/client/find/PlaceResult'
+import { EngineBox } from '../../components/client/find/EngineBox'
 import { RateSheet } from '../../components/reviews/RateSheet'
 import { canReview, submitMyReview } from '../../services/reviews'
 import { loadPlaces } from '../../services/booking'
@@ -30,11 +31,9 @@ const greeting = () => {
 
 const ClientHome = () => {
     const { user, userProfile } = useAuth()
-    const navigate = useNavigate()
     const email = userProfile?.email || user?.email || ''
     const first = (userProfile?.full_name || '').trim().split(/\s+/)[0]
     const { state, groups, load, cancelling, busy, cancelError, toast, askCancel, keep, confirmCancel } = useMyBookings(email)
-    const [query, setQuery] = useState('')
     const rebook = useRebook(Boolean(email))
     const places = rebook.places.items.slice(0, 6)
 
@@ -77,12 +76,6 @@ const ClientHome = () => {
         rebook.openRow(row)
     }
 
-    const find = (event) => {
-        event.preventDefault()
-        const q = query.trim()
-        navigate(q ? `/client/search?q=${encodeURIComponent(q)}` : '/client/search')
-    }
-
     return (
         <div className="biz-page lc-cl-home">
             <header className="lc-cl-home__head">
@@ -118,22 +111,11 @@ const ClientHome = () => {
 
             {state.status === 'ready' && <WaitingOnYou rate={toRate} waiting={unconfirmed} onRate={setRating} />}
 
-            {next && <form className="lc-cl-home__find" role="search" onSubmit={find}>
-                <label className="lc-cl-home__findlabel" htmlFor="lc-cl-home-q">Find a place</label>
-                <span className="lc-cl-home__field">
-                    <Search size={18} aria-hidden="true" />
-                    <input
-                        id="lc-cl-home-q"
-                        type="search"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Barber, nails, dentist, or a name"
-                        autoComplete="off"
-                        enterKeyHint="search"
-                    />
-                    <Button type="submit" size="sm">Search</Button>
-                </span>
-            </form>}
+            <EngineBox />
+            <Link to="/client/search" className="lc-cl-home__more">
+                <span>Or browse every place</span>
+                <ArrowRight size={16} aria-hidden="true" />
+            </Link>
 
             {places.length > 0 && (
                 <section className="lc-cl-home__places" aria-labelledby="lc-cl-home-places">

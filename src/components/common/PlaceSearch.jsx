@@ -6,7 +6,7 @@ import '../../styles/client/places.css'
 // An address field with Google's suggestions under it, in the flow of the page (no floating list, so
 // it works inside a sheet on a phone). Picking one resolves it through `resolve`; when search is off
 // or fails, `onOff` lets the parent fall back to a plain address field.
-export const PlaceSearch = ({ id, businessId, resolve, onPicked, onOff, placeholder, 'aria-invalid': invalid, 'aria-describedby': describedBy }) => {
+export const PlaceSearch = ({ id, businessId = null, market = null, resolve, onPicked, onOff, placeholder, 'aria-invalid': invalid, 'aria-describedby': describedBy }) => {
     const listId = useId()
     const [text, setText] = useState('')
     const [items, setItems] = useState([])
@@ -22,7 +22,7 @@ export const PlaceSearch = ({ id, businessId, resolve, onPicked, onOff, placehol
         const timer = setTimeout(async () => {
             setState('searching')
             try {
-                const found = await suggestAddresses({ businessId, input: q, session: session.current })
+                const found = await suggestAddresses({ businessId, market, input: q, session: session.current })
                 if (cancelled) return
                 if (found === null) { onOff?.(); return }
                 setItems(found)
@@ -34,7 +34,7 @@ export const PlaceSearch = ({ id, businessId, resolve, onPicked, onOff, placehol
             }
         }, 300)
         return () => { cancelled = true; clearTimeout(timer) }
-    }, [text, businessId]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [text, businessId, market]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const choose = async (item) => {
         setState('picking')

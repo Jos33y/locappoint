@@ -44,6 +44,16 @@ export default async ({ browser, url, check, server, root }) => {
     }
     check(renderPush(row('trip_close', 'client', { minutes: 3 })).title === 'Almost there' && renderPush(row('trip_close', 'client', { minutes: 10 })).title === 'About 10 min away', 'a trip says how many minutes, then almost there')
     check(renderPush(row('trip_on_way', 'client', { minutes: 15, by: 'Rui' })).body === 'Rui from Femtos Barbearia is on the way, about 15 min.', 'on the way says who and how long')
+    const { SUPPORT_KINDS } = await server.ssrLoadModule(fn('push.ts'))
+    for (const kind of SUPPORT_KINDS) {
+        for (const audience of ['client', 'business']) {
+            const p = renderPush(row(kind, audience, { ticket_id: 'aaaa-bbbb', number: 12, subject: 'Charged twice', body: 'We checked.\nOne charge.', status: 'waiting' }))
+            const all = `${p?.title} ${p?.body}`
+            check(Boolean(p?.title && p?.body) && p.title.length <= 60 && !/[\u2013\u2014]/.test(all) && !/undefined|null|NaN/.test(all), `support ${kind} to ${audience} reads cleanly: ${all}`)
+            check(p?.link === `/${audience === 'business' ? 'portal' : 'client'}/support?t=aaaa-bbbb`, `support ${kind} to ${audience} opens the ticket: ${p?.link}`)
+        }
+    }
+    check(renderPush(row('support_reply', 'client', { ticket_id: 'x1', number: 12, subject: 'Charged twice', body: 'We checked.', status: 'waiting' })).body === '#12 Charged twice: We checked.', 'a support reply says which ticket and what we said')
     check(renderPush(row('review_new', 'business')) === null && renderPush(row('booking_requested', 'client')) === null, 'kinds without a push send none')
 
     // How it reaches Firebase

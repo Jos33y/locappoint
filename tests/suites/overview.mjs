@@ -13,7 +13,8 @@ export default async ({ browser, url, check }) => {
     }
     const text = (p, sel) => p.evaluate((s) => document.querySelector(s)?.textContent?.trim() || '', sel)
 
-    let p = await open('/portal')
+    // The ring and the timeline need an open day; the test business is closed on Sundays, so today is opened.
+    let p = await open('/portal', 1272, 800, '&opentoday=1')
     const ring = await p.evaluate(() => ({
         label: document.querySelector('.biz-ring svg')?.getAttribute('aria-label') || '',
         arcs: document.querySelectorAll('.biz-ring__booked').length,
@@ -24,12 +25,15 @@ export default async ({ browser, url, check }) => {
     check(/booked/.test(ring.label) && /earned/.test(ring.label), `the ring says how full the day is and the money: ${ring.label}`)
     check(ring.arcs === 2 && ring.pending === 1, `each booking is an arc, waiting ones marked: ${ring.arcs}/${ring.pending}`)
     check(/earned/.test(ring.money) && /to come/.test(ring.money), 'earned and still to come are shown apart')
+    check(/Closes/.test(await text(p, '.biz-agenda')), 'the timeline ends with closing time')
+    await p.close()
+
+    p = await open('/portal')
     check(/1 booking waits for you/.test(await text(p, '.biz-ov__needs')), 'what needs the owner sits beside the ring')
     check(await p.evaluate(() => document.querySelectorAll('.biz-weekrings__day').length === 7), 'this week as seven rings')
     check(/Closed/.test(await p.evaluate(() => [...document.querySelectorAll('.biz-weekrings__day')].pop()?.textContent || '')), 'a closed day says so')
     check(/3\.3/.test(await text(p, '.biz-ovcard--link')) && /2 waiting/.test(await text(p, '.biz-ovcard--link')), 'reviews card: average and replies waiting')
     check(/visits/.test(await text(p, '.biz-ov__side')) && /Copy link/.test(await text(p, '.biz-ov__side')), 'page card: visits and the share link')
-    check(/Closes/.test(await text(p, '.biz-agenda')), 'the timeline ends with closing time')
     await p.evaluate(() => [...document.querySelectorAll('.biz-weekrings__day')][2]?.click())
     await wait(700)
     check(await p.evaluate(() => window.__path) === '/portal/calendar', 'a day ring opens that day in the calendar')

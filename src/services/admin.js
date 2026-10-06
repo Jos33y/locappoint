@@ -41,3 +41,20 @@ export const BOOKING_STATUS = {
     no_show: ['No-show', 'danger'],
     cancelled: ['Cancelled', 'muted'],
 }
+
+// Support queue (support-desk.sql). Every action is checked against users.is_admin on the server and logged.
+export const loadAdminTickets = ({ status = 'open', search = '', offset = 0, limit = 50 } = {}) =>
+    call('admin_tickets', { p_status: status || 'all', p_search: search || null, p_limit: limit, p_offset: offset })
+export const loadAdminTicket = (id) => call('admin_ticket', { p_id: id })
+export const adminReply = ({ id, body, note = false, status = null }) => call('admin_reply', { p_id: id, p_body: body, p_note: note, p_status: status })
+export const adminUpdateTicket = ({ id, status = null, priority = null, outcome = null }) =>
+    call('admin_update_ticket', { p_id: id, p_status: status, p_priority: priority, p_outcome: outcome })
+export const adminRefund = ({ id, amount, detail = '' }) => call('admin_refund', { p_ticket: id, p_amount: amount, p_detail: detail || null })
+export const adminSetVisit = ({ id, status, detail = '' }) => call('admin_set_visit', { p_ticket: id, p_status: status, p_detail: detail || null })
+export const adminWarn = ({ id, target, message }) => call('admin_warn', { p_ticket: id, p_target: target, p_message: message })
+export const adminSuspend = ({ id, reason }) => call('admin_suspend', { p_ticket: id, p_reason: reason })
+export const adminUnsuspend = ({ id, detail = '' }) => call('admin_unsuspend', { p_ticket: id, p_detail: detail || null })
+export const adminAskOther = ({ id, message }) => call('admin_ask_other', { p_ticket: id, p_message: message })
+
+export const TICKET_PRIORITY = { 1: ['Money or safety', 'danger'], 2: ['Visit or bill', 'warning'], 3: ['General', 'muted'] }
+export const TICKET_STATE = { open: ['Open', 'info'], waiting: ['Waiting on them', 'warning'], resolved: ['Resolved', 'muted'] }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import '../../styles/business/hubnav.css'
 
@@ -7,11 +7,28 @@ const HubNav = ({ hub }) => {
     const track = useRef(null)
     const { pathname } = useLocation()
 
-    useEffect(() => {
+    // Measured on screen, not by offsetLeft: the track is not the tabs' offset parent. Centred again
+    // whenever the tabs change size (the web font arriving, the page settling), not only on navigation.
+    useLayoutEffect(() => {
         const box = track.current
-        const active = box?.querySelector('.biz-hubnav__tab.active')
-        if (!box || !active || box.scrollWidth <= box.clientWidth) return
-        box.scrollLeft = active.offsetLeft - (box.clientWidth - active.offsetWidth) / 2
+        if (!box) return undefined
+        const center = () => {
+            const active = box.querySelector('.biz-hubnav__tab.active')
+            if (!active || box.scrollWidth <= box.clientWidth) return
+            const b = box.getBoundingClientRect()
+            const a = active.getBoundingClientRect()
+            box.scrollLeft += (a.left + a.width / 2) - (b.left + b.width / 2)
+        }
+        center()
+        let stop = () => {}
+        if (typeof ResizeObserver !== 'undefined') {
+            const watch = new ResizeObserver(center)
+            watch.observe(box)
+            box.querySelectorAll('.biz-hubnav__tab').forEach((tab) => watch.observe(tab))
+            stop = () => watch.disconnect()
+        }
+        document.fonts?.ready?.then(center).catch(() => {})
+        return stop
     }, [pathname])
 
     return (

@@ -28,7 +28,7 @@ export const loadSetup = async (businessId) => {
     const [business, services, hours] = await Promise.all([
         supabase.from('businesses').select(BUSINESS_FIELDS).eq('id', businessId).single(),
         supabase.from('services')
-            .select('id, service_name, duration_minutes, price, description, is_active, is_addon, sort_order, modes, travel_fee')
+            .select('id, service_name, duration_minutes, price, description, is_active, is_addon, sort_order, modes, travel_fee, max_people, price_per, extra_person_minutes')
             .eq('business_id', businessId)
             .order('sort_order')
             .order('service_name'),
@@ -100,6 +100,9 @@ export const serviceRow = (service, index) => ({
         ? (service.modes || []).filter((m) => ['at_business', 'at_client', 'online'].includes(m))
         : ['at_business'],
     travel_fee: (service.modes || []).includes('at_client') ? Number(String(service.travel_fee || 0).replace(',', '.')) || 0 : 0,
+    max_people: Math.max(1, Math.min(10, Number(service.max_people) || 1)),
+    price_per: Number(service.max_people) > 1 && service.price_per === 'person' ? 'person' : 'booking',
+    extra_person_minutes: Number(service.max_people) > 1 && String(service.extra_person_minutes ?? '').trim() !== '' ? Number(service.extra_person_minutes) : null,
     sort_order: index,
 })
 

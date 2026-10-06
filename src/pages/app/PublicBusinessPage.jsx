@@ -90,7 +90,7 @@ const PublicBusinessPage = () => {
                 }
                 const [services, hours] = await Promise.all([
                     supabase.from('services')
-                        .select('id, service_name, duration_minutes, price, description, is_active, is_addon, sort_order, modes, travel_fee')
+                        .select('id, service_name, duration_minutes, price, description, is_active, is_addon, sort_order, modes, travel_fee, max_people, price_per, extra_person_minutes')
                         .eq('business_id', business.id)
                         .eq('is_active', true)
                         .order('sort_order')
@@ -117,9 +117,10 @@ const PublicBusinessPage = () => {
     }, [businessSlug, attempt])
 
     useEffect(() => {
-        if (state.status !== 'ready' || !user || (ownBusiness?.id && ownBusiness.id === state.business.id)) return
+        if (state.status !== 'ready' || (ownBusiness?.id && ownBusiness.id === state.business.id)) return
+        // A time picked in "What do you need?" opens for guests too; a time saved before sign-in needs the account.
         const fromLink = readBookParam(location.search)
-        const pending = fromLink || readPending(state.business.slug)
+        const pending = fromLink || (user ? readPending(state.business.slug) : null)
         const service = pending && state.services.find((s) => s.id === pending.serviceId)
         if (service) {
             setResume(pending)

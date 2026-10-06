@@ -1,4 +1,4 @@
-import { CalendarClock, Globe2, House, MessageCircle, Navigation, Phone, Video, X } from 'lucide-react'
+import { CalendarClock, Flag, Globe2, House, MessageCircle, Navigation, Phone, Video, X } from 'lucide-react'
 import { Button } from '../../ui'
 import { BookingTicket } from '../../booking/sheet/BookingTicket'
 import { AddToCalendar } from '../../booking/AddToCalendar'
@@ -10,7 +10,7 @@ import { whenLabel } from '../NextBooking'
 import { PaidRule, ReceiptLinks } from './PaymentNote'
 import { LiveTrip } from './LiveTrip'
 import { paidQuote } from '../../../services/payments'
-import { isHomeVisit, isOnlineBooking, joinLink, visitPlace, yourTime } from '../../../services/formats'
+import { isHomeVisit, isOnlineBooking, joinLink, visitPlace, withPeople, yourTime } from '../../../services/formats'
 import '../../../styles/client/client-bookings.css'
 import '../../../styles/client/formats.css'
 
@@ -24,9 +24,9 @@ const movedLabel = (value) => {
     return `${date.toLocaleDateString('en-GB', { weekday: 'short' })} ${date.getDate()} ${monthShort(date)} at ${(time || '').slice(0, 5)}`
 }
 
-export const UpcomingBooking = ({ booking, token = null, lead = false, focused = false, onCancel, onMove }) => {
+export const UpcomingBooking = ({ booking, token = null, lead = false, focused = false, onCancel, onMove, onReport }) => {
     const business = booking.businesses || {}
-    const service = { ...booking.services, duration_minutes: booking.duration_minutes || booking.services?.duration_minutes, price: bookingPrice(booking) }
+    const service = { ...booking.services, service_name: withPeople(booking.services?.service_name || 'Booking', booking.people), duration_minutes: booking.duration_minutes || booking.services?.duration_minutes, price: bookingPrice(booking) }
     const minutes = toMinutes(booking.appointment_time)
     const confirmed = booking.status === 'confirmed'
     const whatsapp = whatsappLink(business.whatsapp, `Hi ${business.business_name}, about my booking on ${booking.appointment_date} at ${clock(minutes)}: `)
@@ -101,6 +101,9 @@ export const UpcomingBooking = ({ booking, token = null, lead = false, focused =
                     <Button variant="quiet" icon={X} className="lc-cl-bk__cancel" onClick={() => onCancel(booking)}>Cancel booking</Button>
                 ) : (
                     <p className="lc-cl-bk__late">Too late to change online. Message {business.business_name} if your plans change.</p>
+                )}
+                {onReport && (
+                    <Button variant="quiet" icon={Flag} className="lc-cl-bk__report" onClick={() => onReport(booking)}>Report a problem</Button>
                 )}
             </div>
             {confirmed && (

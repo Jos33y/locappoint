@@ -4,7 +4,7 @@ export default async ({ browser, url, check, only }) => {
       ['tab-768', 768, 1024, true], ['tab-820', 820, 1180, true], ['tab-1024', 1024, 768, true], ['tab-1180', 1180, 820, true], ['tab-1366', 1366, 1024, true],
       ['lap-1272x588', 1272, 588, false], ['lap-1280x720', 1280, 720, false], ['lap-1280x800', 1280, 800, false], ['lap-1440x900', 1440, 900, false], ['lap-1920x1080', 1920, 1080, false],
     ]
-    const PAGES = ['/portal', '/portal/calendar', '/portal/page', '/portal/services', '/portal/hours', '/portal/team', '/portal/channels', '/portal/insights', '/portal/reviews', '/portal/invite', '/portal/settings', '/portal/help', '/portal/start']
+    const PAGES = ['/portal', '/portal/calendar', '/portal/bookings', '/portal/page', '/portal/services', '/portal/hours', '/portal/team', '/portal/channels', '/portal/insights', '/portal/reviews', '/portal/invite', '/portal/settings', '/portal/help', '/portal/support', '/portal/start']
     const QUICK = ['phone-320', 'phone-390', 'tab-1024', 'lap-1272x588']
     const chosen = SCREENS.filter(([name]) => (only === 'quick' ? QUICK.includes(name) : !only || name.includes(only)))
     const runScreen = async ([name, w, h, touch]) => {
@@ -34,7 +34,7 @@ export default async ({ browser, url, check, only }) => {
           return {
             vw: innerWidth, vh: innerHeight, docW: document.documentElement.scrollWidth,
             sideOn, navScroll: nav ? nav.scrollHeight - nav.clientHeight : 0, rows,
-            hub: hub && { l: box(hub).left, r: box(hub).right, w: box(hub).width },
+            hub: hub && { l: box(hub).left, r: box(hub).right, w: box(hub).width, scroll: hub.scrollWidth > hub.clientWidth + 1 },
             tabs, activeRows, path: window.__path,
             acctCurrent: q('.biz-account__btn')?.classList.contains('is-current'),
             sh: q('.biz-sh') && {
@@ -58,7 +58,8 @@ export default async ({ browser, url, check, only }) => {
           check(r.hub.l >= 0 && r.hub.r <= r.vw, `${tag} hub track off screen ${r.hub.l}-${r.hub.r}`)
           for (const t of r.tabs) {
             check(!t.trunc, `${tag} tab label truncated ${t.t}`)
-            check(t.r <= r.hub.r + 0.5 && t.l >= r.hub.l - 0.5, `${tag} tab outside track ${t.t}`)
+            // On a narrow phone the track scrolls sideways: every tab is reachable, the open one is in view.
+            if (!r.hub.scroll || t.active) check(t.r <= r.hub.r + 0.5 && t.l >= r.hub.l - 0.5, `${tag} tab outside track ${t.t}`)
             if (touch) check(t.h >= 44, `${tag} touch tab ${t.t} ${t.h}px`)
           }
           check(r.tabs.filter((t) => t.active).length === 1, `${tag} one active tab`)
@@ -87,7 +88,7 @@ export default async ({ browser, url, check, only }) => {
           const expectHub = path in { '/portal/page': 1, '/portal/services': 1, '/portal/hours': 1, '/portal/team': 1 } ? 'Your business' : ['/portal/channels', '/portal/insights', '/portal/reviews', '/portal/invite'].includes(path) ? 'Grow' : null
           if (expectHub) check(r.activeRows.includes(expectHub) && r.activeRows.length === 1, `${tag} active rows ${r.activeRows}`)
           if (path === '/portal') check(r.activeRows.join() === 'Today', `${tag} active rows ${r.activeRows}`)
-          check(r.acctCurrent === ['/portal/settings', '/portal/help'].includes(path), `${tag} account current ${r.acctCurrent}`)
+          check(r.acctCurrent === ['/portal/settings', '/portal/help', '/portal/support'].includes(path), `${tag} account current ${r.acctCurrent}`)
         } else {
           check(!r.sideOn, `${tag} sidebar hidden`)
         }
@@ -103,7 +104,7 @@ export default async ({ browser, url, check, only }) => {
           return { top: menu.top, bottom: menu.bottom, left: menu.left, right: menu.right, btnTop: btn.top, items, focus: document.activeElement.textContent.trim(), vh: innerHeight }
         })
         check(m.top >= 0 && m.bottom <= m.btnTop, `${name} menu placement ${JSON.stringify(m)}`)
-        check(m.items.join('|') === 'Settings|Help and support|Replay the tour|Switch to Booking|Sign out', `${name} menu items ${m.items}`)
+        check(m.items.join('|') === 'Settings|Help|Support|Replay the tour|Switch to Booking|Sign out', `${name} menu items ${m.items}`)
         check(m.focus === 'Settings', `${name} menu first focus ${m.focus}`)
       }
       check(errors.length === 0, `${name} page errors ${errors}`)

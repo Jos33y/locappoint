@@ -3,7 +3,8 @@
 // one chosen address, and whether it is inside the business's areas or distance.
 //
 // - ping: is address search on (the key is set)?
-// - suggest: up to five addresses for what the client typed, near the business.
+// - suggest: up to five addresses for what the client typed, near the business, or in a city
+//   (market) when no business is chosen yet, as in "What do you need?".
 // - place: the chosen address, the municipality it is in, and how far from the shop. The booking
 //   checks the distance again in the database; this is only so the client sees it before booking.
 // - shop: the owner places their shop (signed in, owner of the business). Written by
@@ -32,6 +33,7 @@ const reply = (status: number, body: unknown) =>
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const PLACE = /^[A-Za-z0-9_-]{10,300}$/
 const SESSION = /^[A-Za-z0-9-]{8,64}$/
+const MARKET = /^[a-z]{2,20}$/
 
 // A loose brake per visitor and instance, on top of the quota set on the key in Google Cloud.
 const seen = new Map<string, number[]>()
@@ -109,10 +111,15 @@ Deno.serve(async (req) => {
 
         const session = String(input.session || '')
         if (!SESSION.test(session)) return reply(400, { error: 'Start the search again' })
-        const business = await businessFor(String(input.business_id || ''))
-        if (!business) return reply(404, { error: 'We could not find this business' })
-        const country = business.country || 'PT'
-        const shop = business.lat !== null && business.lng !== null ? { lat: Number(business.lat), lng: Number(business.lng) } : null
+        // A business, or only a city: "What do you need?" asks for an address before any business is chosen.
+        const business = input.business_id ? await businessFor(String(input.business_id)) : null
+        if (input.business_id && !business) return reply(404, { error: 'We could not find this business' })
+        const marketCode = business?.market || (MARKET.test(String(input.market || '')) ? String(input.market) : null)
+        if (!business && !marketCode) return reply(400, { error: 'Pick a city first' })
+        const { data: market } = marketCode ? await db.from('markets').select('code, country').eq('code', marketCode).maybeSingle() : { data: null }
+        if (!business && !market) return reply(400, { error: 'Pick a city first' })
+        const country = business?.country || market?.country || 'PT'
+        const shop = business && business.lat !== null && business.lng !== null ? { lat: Number(business.lat), lng: Number(business.lng) } : null
 
         if (action === 'suggest') {
             const text = String(input.input || '').replace(/\s+/g, ' ').trim()
@@ -135,11 +142,11 @@ Deno.serve(async (req) => {
                 return googleFailed(err)
             }
             // The area: the first municipality or town in the address that is one of the city's areas.
-            const { data: zones } = await db.from('market_zones').select('name').eq('market', business.market || '')
+            const { data: zones } = await db.from('market_zones').select('name').eq('market', marketCode || '')
             const byFold = new Map((zones || []).map((z: { name: string }) => [fold(z.name), z.name]))
             const zone = place.areas.map((a) => byFold.get(fold(a))).find(Boolean) || null
-            const listed = (business.service_zones || []) as string[]
-            const radius = business.service_radius_km === null ? null : Number(business.service_radius_km)
+            const listed = (business?.service_zones || []) as string[]
+            const radius = business && business.service_radius_km !== null ? Number(business.service_radius_km) : null
             const km = shop && radius !== null ? Math.round(kmBetween(shop, place) * 10) / 10 : null
             return reply(200, {
                 on: true,
@@ -157,6 +164,7 @@ Deno.serve(async (req) => {
         }
 
         if (action === 'shop') {
+            if (!business) return reply(404, { error: 'We could not find this business' })
             const user = await signedIn(req)
             if (!user) return reply(401, { error: 'Sign in again' })
             const { data: member } = await db.from('business_members')

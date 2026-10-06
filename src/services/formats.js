@@ -54,3 +54,29 @@ export const yourTime = ({ dateKey, minutes, timeZone }, zone = clientZone()) =>
     const sameDay = fmt({ year: 'numeric', month: '2-digit', day: '2-digit' }) === new Intl.DateTimeFormat('en-GB', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(instant))
     return sameDay ? `${time} your time` : `${time} your time, ${fmt({ weekday: 'short', day: 'numeric', month: 'short' })}`
 }
+
+// Groups: one booking for several people, one staff member, one after another. Each extra person
+// takes the time set for them, or the service's own time when none is set.
+export const groupMax = (service) => Math.max(1, Math.min(50, Number(service?.max_people) || 1))
+
+const eachExtra = (service) => {
+    const set = service?.extra_person_minutes
+    return set === null || set === undefined || set === '' ? Number(service?.duration_minutes) || 0 : Number(set) || 0
+}
+
+export const groupMinutes = (service, people = 1) => (Number(service?.duration_minutes) || 0) + (Math.max(1, people) - 1) * eachExtra(service)
+
+export const groupPrice = (service, people = 1) => {
+    const price = Number(String(service?.price ?? '').replace(',', '.'))
+    if (!Number.isFinite(price)) return service?.price
+    return service?.price_per === 'person' ? price * Math.max(1, people) : price
+}
+
+export const withPeople = (name, people) => (Number(people) > 1 ? `${name} for ${people} people` : name)
+
+// "Up to 4 people, priced per person" on the menu.
+export const groupTag = (service) => {
+    const max = groupMax(service)
+    if (max < 2) return ''
+    return `Up to ${max} people, ${service.price_per === 'person' ? 'priced per person' : 'one price for the group'}`
+}

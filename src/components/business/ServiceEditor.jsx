@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, ChevronRight, GripVertical, House, Plus, Store, Trash2, Video } from 'lucide-react'
+import { Check, ChevronRight, GripVertical, House, Plus, Store, Trash2, Users, Video } from 'lucide-react'
 import { AffixInput, Button, Chip, ChipGroup, Field, Input, Switch, Textarea } from '../ui'
 import { durationLabel, menuPrice } from '../../services/business'
 import { DurationDial } from './DurationDial'
@@ -20,6 +20,9 @@ export const blankService = (name = '', minutes = 30) => ({
     is_addon: false,
     modes: ['at_business'],
     travel_fee: '',
+    max_people: 1,
+    price_per: 'booking',
+    extra_person_minutes: '',
 })
 
 export const serviceFromRow = (row) => ({
@@ -33,7 +36,14 @@ export const serviceFromRow = (row) => ({
     is_addon: row.is_addon === true,
     modes: Array.isArray(row.modes) && row.modes.length ? row.modes : ['at_business'],
     travel_fee: Number(row.travel_fee) > 0 ? String(row.travel_fee) : '',
+    max_people: Number(row.max_people) || 1,
+    price_per: row.price_per === 'person' ? 'person' : 'booking',
+    extra_person_minutes: row.extra_person_minutes === null || row.extra_person_minutes === undefined ? '' : String(row.extra_person_minutes),
 })
+
+// Groups: off at one person. Turned on, four people priced per person, each taking the full time.
+export const GROUP_SIZES = [2, 3, 4, 5, 6, 8, 10]
+export const takesGroups = (service) => Number(service.max_people) > 1
 
 // Where a service happens. Visits at the client's place come next.
 export const MODES = [
@@ -45,8 +55,8 @@ export const isOnline = (service) => (service.modes || []).includes('online')
 export const visitsClients = (service) => (service.modes || []).includes('at_client')
 export const modeTag = (service) => {
     const modes = service.modes || ['at_business']
-    if (modes.length === 1 && modes[0] === 'at_business') return ''
-    return MODES.filter((m) => modes.includes(m.value)).map((m) => m.short).join(', ')
+    const where = modes.length === 1 && modes[0] === 'at_business' ? [] : MODES.filter((m) => modes.includes(m.value)).map((m) => m.short)
+    return [...where, ...(takesGroups(service) ? [`Up to ${service.max_people} people`] : [])].join(', ')
 }
 
 const parsePrice = (price) => Number(String(price).replace(',', '.').trim())
@@ -62,6 +72,8 @@ export const serviceProblems = (service) => {
     if (price === '' || Number.isNaN(parsePrice(price)) || parsePrice(price) < 0) problems.price = 'Enter a price, or 0 if it is free'
     const travel = String(service.travel_fee ?? '').trim()
     if (visitsClients(service) && travel !== '' && (Number.isNaN(parsePrice(travel)) || parsePrice(travel) < 0 || parsePrice(travel) > 500)) problems.travel_fee = 'A travel fee between 0 and 500, or leave it empty'
+    const extra = String(service.extra_person_minutes ?? '').trim()
+    if (takesGroups(service) && extra !== '' && (!/^\d+$/.test(extra) || Number(extra) > 600)) problems.extra_person_minutes = 'Minutes between 0 and 600, or leave it empty'
     return problems
 }
 
@@ -171,6 +183,51 @@ const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusFie
                         autoComplete="off"
                     />
                 </Field>
+            )}
+
+            {showVisibility && (
+                <Switch
+                    checked={takesGroups(service)}
+                    onChange={(on) => set(on ? { max_people: 4, price_per: 'person' } : { max_people: 1, extra_person_minutes: '' })}
+                    label="Book for a group"
+                    description={takesGroups(service)
+                        ? 'One person books for several. You do them one after another, in one booking.'
+                        : 'One person per booking.'}
+                />
+            )}
+
+            {showVisibility && takesGroups(service) && (
+                <div className="biz-svc__group">
+                    <Field label="Up to how many people">
+                        <ChipGroup label="Up to how many people">
+                            {GROUP_SIZES.map((n) => (
+                                <Chip key={n} selected={Number(service.max_people) === n} onClick={() => set({ max_people: n })}>
+                                    <Users size={14} aria-hidden="true" />{n}
+                                </Chip>
+                            ))}
+                        </ChipGroup>
+                    </Field>
+                    <Field label="Price" hint={service.price_per === 'person' ? `Three people pay ${menuPrice(parsePrice(service.price || 0) * 3)}.` : 'The same price however many come.'}>
+                        <ChipGroup label="Price for a group">
+                            <Chip selected={service.price_per === 'person'} onClick={() => set({ price_per: 'person' })}>Per person</Chip>
+                            <Chip selected={service.price_per !== 'person'} onClick={() => set({ price_per: 'booking' })}>For the whole group</Chip>
+                        </ChipGroup>
+                    </Field>
+                    <Field
+                        label="Minutes for each extra person"
+                        optional
+                        error={problems.extra_person_minutes}
+                        hint={`Leave empty if each person takes the full ${durationLabel(Number(service.duration_minutes) || 0)}.`}
+                    >
+                        <Input
+                            inputMode="numeric"
+                            value={service.extra_person_minutes ?? ''}
+                            onChange={(e) => set({ extra_person_minutes: e.target.value.replace(/[^\d]/g, '').slice(0, 3) })}
+                            placeholder={String(Number(service.duration_minutes) || '')}
+                            autoComplete="off"
+                        />
+                    </Field>
+                </div>
             )}
 
             <Field label="Description" optional hint="One line under the name on your page">

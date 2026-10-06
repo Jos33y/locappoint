@@ -83,6 +83,9 @@ const KINDS = {
         referral_points: (p) => ({ label: `+${p.points} points`, tone: 'success' }),
         weekly_statement: () => ({ label: 'Weekly statement', tone: 'info' }),
         review_new: (p) => ({ label: `New review, ${p.rating} ${Number(p.rating) === 1 ? 'star' : 'stars'}`, tone: Number(p.rating) >= 4 ? 'success' : Number(p.rating) === 3 ? 'info' : 'warning' }),
+        support_reply: (p) => ({ label: p.status === 'resolved' ? 'Support: resolved' : 'Support replied', tone: 'info' }),
+        support_warning: () => ({ label: 'Warning from Locappoint', tone: 'danger' }),
+        block_review: (p) => ({ label: p.decision === 'kept' ? 'Block kept' : 'Block lifted by Locappoint', tone: p.decision === 'kept' ? 'info' : 'warning' }),
     },
     client: {
         booking_confirmed: () => ({ label: 'Confirmed', tone: 'success' }),
@@ -94,6 +97,8 @@ const KINDS = {
         visit_followup: (p) => ({ label: p.ask_review === false ? 'Book again' : 'How was it?', tone: 'success' }),
         review_reply: () => ({ label: 'Reply to your review', tone: 'info' }),
         trip_on_way: (p) => ({ label: p.minutes ? `On the way, about ${p.minutes} min` : 'On the way', tone: 'info' }),
+        support_reply: (p) => ({ label: p.status === 'resolved' ? 'Support: resolved' : 'Support replied', tone: 'info' }),
+        support_warning: () => ({ label: 'Warning from Locappoint', tone: 'danger' }),
     },
 }
 
@@ -107,10 +112,16 @@ const reviewLine = (item, p) => {
     }
     if (item.kind === 'review_new') return p.body ? `“${clip(p.body)}”` : `${p.service_name || 'Visit'}, stars only`
     if (item.kind === 'review_reply') return `${p.business_name || 'The business'}: “${clip(p.reply)}”`
+    if (item.kind === 'support_reply' || item.kind === 'support_warning') return clip(p.body)
+    if (item.kind === 'block_review') return p.note ? clip(p.note) : p.decision === 'kept' ? 'Reviewed. They still cannot book you online.' : 'They can book you online again.'
     return ''
 }
 
+const SUPPORT_KINDS = ['support_reply', 'support_warning']
+
 const hrefFor = (item, forBusiness, p) => {
+    if (SUPPORT_KINDS.includes(item.kind)) return `${forBusiness ? '/portal' : '/client'}/support${p.ticket_id ? `?t=${p.ticket_id}` : ''}`
+    if (item.kind === 'block_review') return '/portal/clients'
     if (item.kind === 'referral_points') return '/portal/invite'
     if (item.kind === 'weekly_statement') return `/portal/insights?statement=${p.from || ''}`
     if (item.kind === 'review_new') return p.review_id ? `/portal/reviews?review=${p.review_id}` : '/portal/reviews'
@@ -130,9 +141,9 @@ export const describeItem = (item) => {
     const movedFrom = p.moved_from && (item.kind === 'booking_moved' || item.kind === 'booking_request') ? String(p.moved_from) : ''
     return {
         ...kind,
-        time: String(p.time || '').slice(0, 5),
-        day: p.date ? shortDay(p.date) : item.kind === 'weekly_statement' && p.from ? shortDay(p.from) : '',
-        title: item.kind === 'referral_points' ? 'Points earned' : item.kind === 'weekly_statement' ? `Your week, ${shortDay(p.from)} to ${shortDay(p.to)}` : forBusiness ? p.client_name || 'A client' : p.service_name || 'Your booking',
+        time: SUPPORT_KINDS.includes(item.kind) || item.kind === 'block_review' ? '' : String(p.time || '').slice(0, 5),
+        day: SUPPORT_KINDS.includes(item.kind) || item.kind === 'block_review' ? '' : p.date ? shortDay(p.date) : item.kind === 'weekly_statement' && p.from ? shortDay(p.from) : '',
+        title: item.kind === 'block_review' ? p.client_name || 'A client' : SUPPORT_KINDS.includes(item.kind) ? `${p.number ? `#${p.number} ` : ''}${p.subject || 'Locappoint support'}` : item.kind === 'referral_points' ? 'Points earned' : item.kind === 'weekly_statement' ? `Your week, ${shortDay(p.from)} to ${shortDay(p.to)}` : forBusiness ? p.client_name || 'A client' : p.service_name || 'Your booking',
         sub: reviewLine(item, p) || (forBusiness
             ? [p.service_name, duration, price]
             : [p.business_name, p.staff_name ? `with ${p.staff_name}` : '', price]

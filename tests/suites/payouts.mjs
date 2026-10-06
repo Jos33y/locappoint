@@ -152,7 +152,7 @@ export default async ({ browser, url, check, server, root }) => {
     await wait(600)
     v = await view(p)
     check(v.live === 'Payouts on' && /Access Bank/.test(v.paidTo) && /Account ending 6789/.test(v.paidTo) && v.buttons.includes('Change bank') && /first paid booking/.test(v.text), 'saved: the bank name and last four digits show as Paid to')
-    check(JSON.stringify(await fn(p)) === JSON.stringify(['status', 'banks', 'resolve', 'connect']), `calls in order: ${(await fn(p)).join(', ')}`)
+    check(JSON.stringify(await fn(p)) === JSON.stringify(['status', 'banks', 'resolve', 'connect', 'money']), `calls in order: ${(await fn(p)).join(', ')}`)
     await click(p, 'Change bank')
     await wait(300)
     v = await view(p)

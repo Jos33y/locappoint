@@ -9,6 +9,8 @@ import OverviewTab from './tabs/OverviewTab'
 import BusinessesTab from './tabs/BusinessesTab'
 import BookingsTab from './tabs/BookingsTab'
 import PeopleTab from './tabs/PeopleTab'
+import SupportTab from './tabs/SupportTab'
+import BlocksTab from './tabs/BlocksTab'
 
 const AdminDash = ({
     activeSection,
@@ -29,13 +31,17 @@ const AdminDash = ({
     onExportEvents,
     onStatusChange,
     onDeleteWaitlist,
-    onDeletePartnership
+    onDeletePartnership,
+    onSupportCount,
+    onBlocksCount
 }) => {
     // These load their own data, so they never wait for the waitlist and analytics.
     if (activeSection === 'overview') return <div className="admin-dashboard"><OverviewTab onGo={setActiveSection} /></div>
     if (activeSection === 'businesses') return <div className="admin-dashboard"><BusinessesTab formatDate={formatDate} /></div>
     if (activeSection === 'bookings') return <div className="admin-dashboard"><BookingsTab /></div>
     if (activeSection === 'people') return <div className="admin-dashboard"><PeopleTab /></div>
+    if (activeSection === 'support') return <div className="admin-dashboard"><SupportTab onCount={onSupportCount} /></div>
+    if (activeSection === 'blocks') return <div className="admin-dashboard"><BlocksTab onCount={onBlocksCount} /></div>
 
     if (loading) {
         return (

@@ -12,7 +12,9 @@ import {
     Bug,
     Gauge,
     ArrowLeft,
-    LogOut
+    LogOut,
+    LifeBuoy,
+    Ban
 } from 'lucide-react'
 import LogoIcon from '../../components/LogoIcon'
 
@@ -87,6 +89,24 @@ const AdminSidebar = ({ activeSection, setActiveSection, counts, onClose, onLogo
                 <div>
                     <span className="admin-sidebar__group-label">Operations</span>
                     <nav className="admin-sidebar__nav">
+                        <button
+                            type="button"
+                            className={`admin-sidebar__item ${activeSection === 'support' ? 'admin-sidebar__item--active' : ''}`}
+                            onClick={() => goTo('support')}
+                        >
+                            <LifeBuoy size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
+                            <span className="admin-sidebar__item-label">Support</span>
+                            {counts.support > 0 && <span className="admin-sidebar__item-count">{counts.support}</span>}
+                        </button>
+                        <button
+                            type="button"
+                            className={`admin-sidebar__item ${activeSection === 'blocks' ? 'admin-sidebar__item--active' : ''}`}
+                            onClick={() => goTo('blocks')}
+                        >
+                            <Ban size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
+                            <span className="admin-sidebar__item-label">Blocks</span>
+                            {counts.blocks > 0 && <span className="admin-sidebar__item-count">{counts.blocks}</span>}
+                        </button>
                         {[['businesses', Building2, 'Businesses'], ['bookings', ShoppingBag, 'Bookings'], ['people', UserCog, 'People']].map(([key, Icon, label]) => (
                             <button
                                 key={key}

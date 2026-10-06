@@ -71,7 +71,7 @@ export default async ({ browser, url, check }) => {
     await wait(1500)
     up = await calls(p, 'services', 'update')
     check(up.some((u) => u.service_name === 'Beard trim' && u.is_active === false), 'hidden saved')
-    check(await p.evaluate(() => document.querySelector('.biz-svc__item.is-open [role=switch]').getAttribute('aria-checked')) === 'false', 'switch shows hidden')
+    check(await p.evaluate(() => [...document.querySelectorAll('.biz-svc__item.is-open .ui-switchrow')].find((r) => r.textContent.includes('Show on your page'))?.querySelector('[role=switch]').getAttribute('aria-checked')) === 'false', 'switch shows hidden')
     await clickText(p, '.biz-svc__formactions button', 'Done')
     await wait(300)
     check(await p.evaluate(() => document.querySelector('.biz-svc__item.is-hidden .biz-svc__hidden')?.textContent === 'Hidden'), 'hidden label on the row')
@@ -90,12 +90,12 @@ export default async ({ browser, url, check }) => {
 
     await clickText(p, '.biz-svc__open', 'Haircut')
     await wait(300)
-    await p.evaluate(() => document.querySelector('.biz-svc__item.is-open [role=switch]').click())
+    await p.evaluate(() => [...document.querySelectorAll('.biz-svc__item.is-open .ui-switchrow')].find((r) => r.textContent.includes('Show on your page'))?.querySelector('[role=switch]').click())
     await wait(400)
     check(await p.evaluate(() => document.body.textContent.includes('Keep at least one service')), 'last visible service is protected')
     await clickText(p, '.ui-sheet button', 'Cancel')
     await wait(300)
-    check(await p.evaluate(() => document.querySelector('.biz-svc__item.is-open [role=switch]').getAttribute('aria-checked')) === 'true', 'switch stays on')
+    check(await p.evaluate(() => [...document.querySelectorAll('.biz-svc__item.is-open .ui-switchrow')].find((r) => r.textContent.includes('Show on your page'))?.querySelector('[role=switch]').getAttribute('aria-checked')) === 'true', 'switch stays on')
     check(p.errors.length === 0, `errors ${p.errors}`)
     await p.close()
 

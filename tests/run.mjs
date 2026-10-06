@@ -35,14 +35,20 @@ import pricing from './suites/pricing.mjs'
 import payouts from './suites/payouts.mjs'
 import pay from './suites/pay.mjs'
 import formats from './suites/formats.mjs'
+import engine from './suites/engine.mjs'
+import support from './suites/support.mjs'
+import blocks from './suites/blocks.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const [target = 'quick', filter] = process.argv.slice(2)
-const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage], ['services and hours', servicesHours], ['settings', settings], ['notifications', notifications], ['insights', insights], ['rebooking', rebook], ['reviews', reviews], ['business audit', audit], ['overview', overview], ['client home', clientHome], ['referrals', referrals], ['clients', clients], ['team', team], ['time', time], ['addons', addons], ['money', money], ['hardening', hardening], ['apps', apps], ['account', account], ['push', push], ['seo', seo], ['admin', admin], ['brand', brand], ['cities', cities], ['pricing', pricing], ['payouts', payouts], ['pay at booking', pay], ['formats', formats]] }
+const SUITES = { layout: [['layout', layout]], flows: [['shell', shell], ['business page', businessPage], ['services and hours', servicesHours], ['settings', settings], ['notifications', notifications], ['insights', insights], ['rebooking', rebook], ['reviews', reviews], ['business audit', audit], ['overview', overview], ['client home', clientHome], ['referrals', referrals], ['clients', clients], ['team', team], ['time', time], ['addons', addons], ['money', money], ['hardening', hardening], ['apps', apps], ['account', account], ['push', push], ['seo', seo], ['admin', admin], ['brand', brand], ['cities', cities], ['pricing', pricing], ['payouts', payouts], ['pay at booking', pay], ['formats', formats], ['engine', engine], ['support', support], ['blocks', blocks]] }
 SUITES.emails = [['emails', emails]]
 SUITES.all = [...SUITES.flows, ...SUITES.emails, ...SUITES.layout]
 SUITES.quick = [...SUITES.flows, ...SUITES.emails, ['layout, 4 key screens', layout]]
 const only = target === 'quick' ? 'quick' : filter
+// ONLY=engine,support runs just those suites, by name: handy after a fix.
+const pick = (process.env.ONLY || '').split(',').map((n) => n.trim()).filter(Boolean)
+if (pick.length && SUITES[target]) SUITES[target] = SUITES.all.filter(([name]) => pick.includes(name))
 
 if (!SUITES[target]) {
     console.log(`Unknown suite "${target}". Use quick, flows, emails, layout or all.`)

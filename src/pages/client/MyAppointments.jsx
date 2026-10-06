@@ -14,6 +14,8 @@ import { RateSheet } from '../../components/reviews/RateSheet'
 import { submitMyReview } from '../../services/reviews'
 import { BookingSheet } from '../../components/booking/BookingSheet'
 import { bookingPrice } from '../../services/booking'
+import { ReportSheet } from '../../components/support/ReportSheet'
+import { shortDay } from '../../services/inbox'
 import '../../styles/client/client-bookings.css'
 
 const ClientAppointments = () => {
@@ -27,6 +29,7 @@ const ClientAppointments = () => {
     const againId = params.get('again')
     const rateId = params.get('rate')
     const [rating, setRating] = useState(null)
+    const [reporting, setReporting] = useState(null)
     const rebook = useRebook(Boolean(email))
     const { openRow, places: rebookPlaces } = rebook
 
@@ -123,7 +126,7 @@ const ClientAppointments = () => {
                 groups.upcoming.length === 0 ? <EmptyTicket /> : (
                     <div className="lc-cl-bookings__list">
                         {groups.upcoming.map((b, i) => (
-                            <UpcomingBooking key={b.id} booking={b} lead={i === 0} focused={b.id === focused} onCancel={askCancel} onMove={askMove} />
+                            <UpcomingBooking key={b.id} booking={b} lead={i === 0} focused={b.id === focused} onCancel={askCancel} onMove={askMove} onReport={setReporting} />
                         ))}
                     </div>
                 )
@@ -134,7 +137,7 @@ const ClientAppointments = () => {
                     <p className="lc-cl-bookings__none">{view === 'past' ? 'No past bookings yet.' : 'Nothing cancelled.'}</p>
                 ) : (
                     <ul className="lc-cl-pastlist">
-                        {groups[view].map((b) => <PastBooking key={b.id} booking={b} focused={b.id === focused} onAgain={rebook.openRow} onRate={setRating} />)}
+                        {groups[view].map((b) => <PastBooking key={b.id} booking={b} focused={b.id === focused} onAgain={rebook.openRow} onRate={setRating} onReport={setReporting} />)}
                     </ul>
                 )
             )}
@@ -158,6 +161,14 @@ const ClientAppointments = () => {
                     week={rebook.again.week}
                     rebook={rebook.again.rebook}
                     onClose={closeAgain}
+                />
+            )}
+            {reporting && (
+                <ReportSheet
+                    booking={reporting}
+                    side="client"
+                    title={`${reporting.services?.service_name || 'Booking'} at ${reporting.businesses?.business_name || 'the business'}, ${shortDay(reporting.appointment_date)} at ${String(reporting.appointment_time || '').slice(0, 5)}`}
+                    onClose={() => setReporting(null)}
                 />
             )}
             <BookingToast message={toast} />

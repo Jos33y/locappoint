@@ -60,7 +60,27 @@ const TRIP: Record<string, (f: ReturnType<typeof facts>) => [string, string]> = 
     trip_arrived: (f) => ['Arrived', `${f.biz} is at your place.`],
 }
 
+// Support, queued straight from the ticket (support-desk.sql). Opens the conversation itself.
+const SUPPORT: Record<string, (p: Record<string, unknown>) => [string, string]> = {
+    support_reply: (p) => [
+        p.status === 'resolved' ? 'Support: resolved' : 'Support replied',
+        `${Number(p.number) > 0 ? `#${Number(p.number)} ` : ''}${oneLine(p.subject)}: ${oneLine(p.body)}`,
+    ],
+    support_warning: (p) => ['A warning from Locappoint', oneLine(p.body)],
+}
+
+const supportPush = (row: Row): Push | null => {
+    const p = (row.payload || {}) as Record<string, unknown>
+    const make = SUPPORT[row.kind]
+    if (!make) return null
+    const [title, body] = make(p)
+    const id = String(p.ticket_id || '').replace(/[^a-f0-9-]/gi, '')
+    const base = p.audience === 'business' ? '/portal/support' : '/client/support'
+    return { title: clip(title, 60), body: clip(body.replace(/\s+/g, ' '), 180), link: id ? `${base}?t=${id}` : base }
+}
+
 export const renderPush = (row: Row): Push | null => {
+    if (Object.prototype.hasOwnProperty.call(SUPPORT, row.kind)) return supportPush(row)
     const table = (row.payload as Record<string, unknown>)?.audience === 'business' ? BUSINESS : { ...CLIENT, ...TRIP }
     const make = table[row.kind]
     if (!make) return null
@@ -71,3 +91,4 @@ export const renderPush = (row: Row): Push | null => {
 
 export const PUSH_KINDS = { business: Object.keys(BUSINESS), client: Object.keys(CLIENT) }
 export const TRIP_KINDS = Object.keys(TRIP)
+export const SUPPORT_KINDS = Object.keys(SUPPORT)

@@ -1,0 +1,164 @@
+/* "What do you need?": the request box and the three options under it. Flat card, 1px borders,
+   the reason tag in a quiet chip; the best match carries the only accent. */
+
+.lc-eng {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-eng__title {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-eng__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.lc-eng__what {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 52px;
+    padding: 4px 4px 4px var(--space-4);
+    border-radius: var(--radius-full);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+}
+
+.lc-eng__what:focus-within { box-shadow: inset 0 0 0 2px var(--azure); }
+
+.lc-eng__what > svg { flex: none; color: var(--lc-ink-3); }
+
+.lc-eng__what input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--lc-ink-1);
+    font: inherit;
+    font-size: var(--lc-t-body);
+}
+
+.lc-eng__what input::placeholder { color: var(--lc-ink-3); }
+
+.lc-eng__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+}
+
+.lc-eng__row > :last-child { grid-column: 1 / -1; }
+
+@media (min-width: 600px) {
+    .lc-eng__row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .lc-eng__row > :last-child { grid-column: auto / span 1; }
+}
+
+.lc-eng__place { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.lc-eng__out { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.lc-eng__note {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-eng__opts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lc-eng__opt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "tag tag" "main side";
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-eng__opt.is-best,
+.lc-eng__opt.is-regular { box-shadow: inset 0 0 0 1.5px var(--azure); }
+
+.lc-eng__opt.is-skeleton { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.lc-eng__tag {
+    grid-area: tag;
+    justify-self: start;
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    color: var(--lc-ink-2);
+    font-size: 12px;
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-eng__opt.is-best .lc-eng__tag,
+.lc-eng__opt.is-regular .lc-eng__tag { color: var(--lc-info); box-shadow: inset 0 0 0 1px var(--azure); }
+
+.lc-eng__main {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.lc-eng__biz {
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-eng__svc,
+.lc-eng__when { color: var(--lc-ink-2); font-size: var(--lc-t-label); }
+
+.lc-eng__when b { color: var(--lc-ink-1); font-variant-numeric: tabular-nums; }
+
+.lc-eng__why { color: var(--lc-ink-3); font-size: 12px; line-height: var(--lc-lh-snug); }
+
+.lc-eng__side {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.lc-eng__price {
+    color: var(--lc-ink-1);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-eng__none { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.lc-eng__noneactions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+@media (max-width: 479px) {
+    .lc-eng { padding: var(--space-4); }
+    .lc-eng__opt { grid-template-areas: "tag tag" "main main" "side side"; }
+    .lc-eng__side { flex-direction: row; align-items: center; }
+}

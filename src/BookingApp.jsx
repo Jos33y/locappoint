@@ -22,6 +22,7 @@ const LegalNotice = lazy(() => import('./pages/app/legal/LegalNotice'))
 const Dpa = lazy(() => import('./pages/app/legal/Dpa'))
 const Subprocessors = lazy(() => import('./pages/app/legal/Subprocessors'))
 const Ranking = lazy(() => import('./pages/app/legal/Ranking'))
+const Policies = lazy(() => import('./pages/app/legal/Policies'))
 const DeleteAccount = lazy(() => import('./pages/app/legal/DeleteAccount'))
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 const AuthPage = lazy(() => import('./pages/app/auth/AuthPage'))
@@ -49,6 +50,8 @@ const TeamJoin = lazy(() => import('./pages/app/TeamJoin'))
 const UiGallery = lazy(() => import('./pages/business/UiGallery'))
 const GettingStarted = lazy(() => import('./pages/business/GettingStarted'))
 const Help = lazy(() => import('./pages/business/Help'))
+const SupportPage = lazy(() => import('./pages/business/SupportPage'))
+const Bookings = lazy(() => import('./pages/business/Bookings'))
 const Channels = lazy(() => import('./pages/business/Channels'))
 const Setup = lazy(() => import('./pages/business/Setup'))
 const BusinessPage = lazy(() => import('./pages/business/BusinessPage'))
@@ -62,6 +65,7 @@ const ClientHome = lazy(() => import('./pages/client/Home'))
 const ClientSearch = lazy(() => import('./pages/client/Search'))
 const ClientAppointments = lazy(() => import('./pages/client/MyAppointments'))
 const ClientProfile = lazy(() => import('./pages/client/Profile'))
+const ClientSupport = lazy(() => import('./pages/client/Support'))
 
 // Quiet placeholder while a screen downloads: holds the space, no spinner flash.
 const Waiting = () => <div className="lc-route-wait" aria-busy="true" />
@@ -99,6 +103,7 @@ const BookingApp = () => (
                     <Route path="/legal/dpa" element={<Dpa />} />
                     <Route path="/legal/subprocessors" element={<Subprocessors />} />
                     <Route path="/legal/ranking" element={<Ranking />} />
+                    <Route path="/legal/policies" element={<Policies />} />
                     <Route path="/legal/delete-account" element={<DeleteAccount />} />
                     <Route path="/admin" element={<AdminPage />} />
                     <Route path="/auth" element={<AuthPage />} />
@@ -123,6 +128,7 @@ const BookingApp = () => (
                     >
                         <Route index element={inShell(<Today />)} />
                         <Route path="calendar" element={inShell(<Calendar />)} />
+                        <Route path="bookings" element={inShell(<Bookings />)} />
                         <Route path="services" element={inShell(<ServicesPage />)} />
                         <Route path="hours" element={inShell(<HoursPage />)} />
                         <Route path="page" element={inShell(<BusinessPage />)} />
@@ -136,11 +142,12 @@ const BookingApp = () => (
                         <Route path="ui" element={inShell(<UiGallery />)} />
                         <Route path="start" element={inShell(<GettingStarted />)} />
                         <Route path="help" element={inShell(<Help />)} />
+                        <Route path="support" element={inShell(<SupportPage />)} />
                         <Route path="channels" element={inShell(<Channels />)} />
                         <Route path="setup" element={inShell(<Setup />)} />
                         <Route path="reviews" element={inShell(<Reviews />)} />
                         <Route path="invite" element={inShell(<Invite />)} />
-                        <Route path="appointments" element={<Navigate to="/portal/calendar" replace />} />
+                        <Route path="appointments" element={<Navigate to="/portal/bookings" replace />} />
                         <Route path="availability" element={<Navigate to="/portal/hours" replace />} />
                         <Route path="profile" element={<Navigate to="/portal/page" replace />} />
                         <Route path="*" element={<Navigate to="/portal" replace />} />
@@ -158,6 +165,7 @@ const BookingApp = () => (
                         <Route path="search" element={inShell(<ClientSearch />)} />
                         <Route path="appointments" element={inShell(<ClientAppointments />)} />
                         <Route path="profile" element={inShell(<ClientProfile />)} />
+                        <Route path="support" element={inShell(<ClientSupport />)} />
                         <Route path="notifications" element={inShell(<InboxPage audience="client" />)} />
                     </Route>
 

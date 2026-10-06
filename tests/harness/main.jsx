@@ -25,6 +25,10 @@ import Calendar from '@src/pages/business/Calendar'
 import Planned from '@src/pages/business/Planned'
 import GettingStarted from '@src/pages/business/GettingStarted'
 import Help from '@src/pages/business/Help'
+import SupportPage from '@src/pages/business/SupportPage'
+import Bookings from '@src/pages/business/Bookings'
+import Policies from '@src/pages/app/legal/Policies'
+import ClientSupport from '@src/pages/client/Support'
 import Channels from '@src/pages/business/Channels'
 
 import BusinessPage from '@src/pages/business/BusinessPage'
@@ -142,6 +146,7 @@ const App = () => (
         <Route path="/portal" element={<BusinessShell />}>
           <Route index element={<Today />} />
           <Route path="calendar" element={<Calendar />} />
+          <Route path="bookings" element={<Bookings />} />
           <Route path="services" element={<ServicesPage />} />
           <Route path="page" element={<BusinessPage />} />
           
@@ -155,6 +160,7 @@ const App = () => (
           <Route path="notifications" element={<InboxPage audience="business" />} />
           <Route path="start" element={<GettingStarted />} />
           <Route path="help" element={<Help />} />
+          <Route path="support" element={<SupportPage />} />
           <Route path="channels" element={<Channels />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="invite" element={<Invite />} />
@@ -166,6 +172,7 @@ const App = () => (
         <Route path="/client/appointments" element={<ClientAppointments />} />
         <Route path="/client/search" element={<ClientSearch />} />
         <Route path="/client/profile" element={<ClientProfile />} />
+        <Route path="/client/support" element={<ClientSupport />} />
         <Route path="/client/notifications" element={<InboxProvider audience="client"><InboxPage audience="client" /></InboxProvider>} />
         <Route path="/b/:token" element={<ManageBooking />} />
         <Route path="/pay/return" element={<PayReturn />} />
@@ -175,6 +182,7 @@ const App = () => (
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/legal/delete-account" element={<DeleteAccount />} />
         <Route path="/admin-view/:section" element={<AdminView />} />
+        <Route path="/legal/policies" element={<Policies />} />
         <Route path="/admin-errors" element={<div className="admin"><ErrorsTab formatDate={fmtDate} formatTime={fmtTime} /></div>} />
         <Route path="/:businessSlug" element={<PublicBusinessPage />} />
       </Routes>
