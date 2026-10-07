@@ -463,7 +463,7 @@ const engineRpc = (name, args) => {
   if (name !== 'engine_match') return null
   if (/nothing/.test(args.p_query || '')) return { data: { options: [], later: [], matched: 0, words: ['nothing'] }, error: null }
   if (args.p_at === '21:00') return { data: { options: [], later: [engineOption('later', 1, { time: '18:30' })], matched: 1 }, error: null }
-  return { data: { options: [engineOption('best', 1, { people: args.p_people, service_name: 'Haircut' }), engineOption('earliest', 2), engineOption('closest', 3)], later: [], matched: 3 }, error: null }
+  return { data: { options: [engineOption('best', 1, { people: args.p_people, service_name: 'Haircut', reliable: true, kept_pct: 98 }), engineOption('earliest', 2), engineOption('closest', 3)], later: [], matched: 3 }, error: null }
 }
 
 // Live trips: minutes only, kept per booking for the page's lifetime.
@@ -520,6 +520,58 @@ const blockRpc = (name, args) => {
   return null
 }
 
+// Reliability: Femtos holds the badge at 96. ?rel=new is a business under 10 bookings, ?rel=risk one under 85.
+const relMode = () => new URLSearchParams(window.location.search).get('rel') || ''
+const REL_CHECKS = { score: true, completed: true, email: true, phone: true, safety: true, active: true }
+const MY_REL = () => {
+  if (relMode() === 'new') return { score: 100, shown: false, bookings: 6, completed: 4, kept_pct: 100, parts: { kept: 40, showed: 25, answers: 20, clean: 15 }, counts: { cancels: 0, late_cancels: 0, excused: 0, no_shows: 0, requests: 0, late_requests: 0, reports: 0, safety: 0 }, checks: { ...REL_CHECKS, score: false, completed: false }, items: [], badge: false, weeks: [], removed: false }
+  const risk = relMode() === 'risk'
+  return {
+    score: risk ? 82 : 96, shown: true, bookings: 48, completed: 41, kept_pct: risk ? 92 : 98,
+    parts: { kept: risk ? 26.7 : 36.7, showed: 25, answers: risk ? 15.3 : 19.3, clean: 15 },
+    counts: { cancels: risk ? 3 : 1, late_cancels: risk ? 1 : 0, excused: 1, no_shows: 0, requests: 14, late_requests: risk ? 2 : 1, reports: 0, safety: 0 },
+    checks: risk ? { ...REL_CHECKS, score: false } : REL_CHECKS,
+    items: [
+      { kind: 'cancel', appointment_id: 'p1', date: dk(-10), time: '15:00', client_name: 'Jameson Clarke', at: new Date(Date.now() - 12 * 86400000).toISOString(), points: 3.3 },
+      { kind: 'late_request', appointment_id: 'p2', date: dk(-4), time: '11:00', client_name: 'Ana Silva', at: new Date(Date.now() - 5 * 86400000).toISOString(), waited_hours: 19, points: 2.9 },
+    ],
+    badge: true, badge_since: '2026-08-20T03:33:00Z', below_since: risk ? new Date(Date.now() - 2 * 86400000).toISOString() : null, removed: false, removed_note: null,
+    weeks: [88, 90, 93, 95, 94, 96, 97, risk ? 82 : 96].map((score, i) => ({ week: dk(-7 * (8 - i)), score, badge: score >= 90 })),
+  }
+}
+const ADMIN_REL = () => ({ total: 2, counts: { all: 2, badge: 1, warned: 0, removed: 0, new: 1 }, rows: [
+  { business_id: 'b1', business_name: 'Femtos Barbearia', slug: 'femtos-barbearia', city: 'Lisbon', score: 96, shown: true, bookings: 48, completed: 41, kept_pct: 98, parts: { kept: 36.7, showed: 25, answers: 19.3, clean: 15 }, counts: MY_REL().counts, badge: true, badge_since: '2026-08-20T03:33:00Z', below_since: null, warned_at: null, removed_at: null, removed_note: null, computed_at: new Date(Date.now() - 3600000).toISOString() },
+  { business_id: 'b2', business_name: 'Nove Unhas', slug: 'nove-unhas', city: 'Porto', score: 100, shown: false, bookings: 4, completed: 3, kept_pct: null, parts: { kept: 40, showed: 25, answers: 20, clean: 15 }, counts: {}, badge: false, badge_since: null, below_since: null, warned_at: null, removed_at: null, removed_note: null, computed_at: new Date(Date.now() - 3600000).toISOString() },
+] })
+// Verified: ?ver=sent has the ID done and the video in, ?ver=gold is verified, ?ver=nobiz has no address.
+const verMode = () => new URLSearchParams(window.location.search).get('ver') || ''
+const MY_VER = () => {
+  const m = verMode()
+  const idDone = m === 'sent' || m === 'gold'
+  return {
+    status: m === 'gold' ? 'approved' : m === 'sent' ? 'submitted' : 'none', gold: m === 'gold',
+    identity: { status: idDone ? 'verified' : 'none', attempts: idDone ? 1 : 0, left: idDone ? 2 : 3, error: null, at: idDone ? '2026-10-06T10:00:00Z' : null },
+    place: { kind: m === 'sent' ? 'video' : null, video: m === 'sent', video_at: m === 'sent' ? '2026-10-06T10:05:00Z' : null, call_at: null, has_address: m !== 'nobiz', address: m === 'nobiz' ? null : 'Rua Morais Soares 12' },
+    verified_until: m === 'gold' ? '2027-10-06T10:00:00Z' : null, removed: false, paused: false,
+  }
+}
+const ADMIN_VER = () => ({ total: 1, counts: { submitted: 1, approved: 0, rejected: 0, expired: 0, started: 2, all: 3 }, rows: [{ ...MY_VER(), status: 'submitted', identity: { status: 'verified', attempts: 1, left: 2 }, place: { kind: 'video', video: true, address: 'Rua Morais Soares 12' }, business_id: 'b1', business_name: 'Femtos Barbearia', city: 'Lisbon', phone: '+351912345678', owner_email: 'milesfarra@gmail.com', video_path: 'b1/1.mp4', reliable: true, score: 96, submitted_at: new Date(Date.now() - 7200000).toISOString() }] })
+const verRpc = (name) => {
+  if (name === 'my_verification') return { data: MY_VER(), error: null }
+  if (name === 'submit_verification_place') return { data: { ...MY_VER(), place: { ...MY_VER().place, kind: 'video', video: true, video_at: new Date().toISOString() } }, error: null }
+  if (name === 'admin_verifications') return { data: ADMIN_VER(), error: null }
+  if (name === 'admin_review_verification' || name === 'admin_gold') return { data: { ...MY_VER(), delete_path: 'b1/1.mp4' }, error: null }
+  return null
+}
+
+const relRpc = (name) => {
+  if (name === 'my_reliability') return { data: MY_REL(), error: null }
+  if (name === 'business_trust') return { data: relMode() === 'none' ? [] : [{ business_id: 'b1', reliable: true, kept_pct: 98, verified: true }], error: null }
+  if (name === 'admin_reliability') return { data: ADMIN_REL(), error: null }
+  if (['admin_reliability_business', 'admin_badge', 'admin_excuse_cancellation'].includes(name)) return { data: { ...MY_REL(), removed_at: null, excused: [] }, error: null }
+  return null
+}
+
 const tripRpc = (name, args) => {
   if (name === 'my_trips') return { data: (args?.p_ids || []).filter((id) => TRIPS[id]).map((id) => ({ appointment_id: id, trip: TRIPS[id] })), error: null }
   if (name === 'trip_by_link') return { data: null, error: null }
@@ -544,10 +596,10 @@ const checkoutFn = (body) => (body.action === 'start' && body.appointment_id
   : failed('Unknown action'))
 
 export const supabase = {
-  functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); if (name === 'checkout') return checkoutFn(body || {}); if (name === 'places') return placesFn(body || {}); if (name === 'trip') return tripFn(body || {}); return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
+  functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); if (name === 'checkout') return checkoutFn(body || {}); if (name === 'places') return placesFn(body || {}); if (name === 'trip') return tripFn(body || {}); if (name === 'verify') return { data: body?.action === 'start' ? { url: '#stripe-identity' } : MY_VER(), error: null }; return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); const tripping = tripRpc(name, args); if (tripping) return tripping; const supporting = supportRpc(name, args); if (supporting) return supporting; const blocking = blockRpc(name, args); if (blocking) return blocking; const matching = engineRpc(name, args); if (matching) return matching; const paying = payRpc(name, args); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
-  storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async () => ({ error: null }) }) },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); const tripping = tripRpc(name, args); if (tripping) return tripping; const relying = relRpc(name); if (relying) return relying; const verifying = verRpc(name); if (verifying) return verifying; const supporting = supportRpc(name, args); if (supporting) return supporting; const blocking = blockRpc(name, args); if (blocking) return blocking; const matching = engineRpc(name, args); if (matching) return matching; const paying = payRpc(name, args); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
+  storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async (paths) => { calls.push(['remove', paths]); return { error: null } }, createSignedUrl: async (path) => ({ data: { signedUrl: `/brand/loca-app-icon.svg?${path}` }, error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),
     getUser: async () => ({ data: { user: { id: 'u1', email: 'milesfarra@gmail.com' } } }),

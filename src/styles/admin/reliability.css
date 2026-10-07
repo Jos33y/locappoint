@@ -1,0 +1,83 @@
+/* Admin Reliability: the score per business, what counted, excuses and the badge. */
+
+.adm-rel-side {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.adm-rel-score {
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.adm-rel-toggle { align-self: flex-start; font-size: 0.85rem; }
+
+.adm-rel-detail {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.adm-rel-cols {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.adm-rel-h4 {
+    margin: 0 0 var(--space-2);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.adm-rel-items,
+.adm-rel-checks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    list-style: none;
+}
+
+.adm-rel-items li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.adm-rel-items__row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.adm-rel-items__row b { display: block; color: var(--text-primary); font-weight: 600; }
+.adm-rel-items__pts { flex: none; color: var(--signal); font-variant-numeric: tabular-nums; }
+
+.adm-rel-checks li { color: var(--text-muted); font-size: 0.85rem; }
+.adm-rel-checks li.is-ok { color: var(--text-secondary); }
+
+.adm-rel-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+}
+
+.adm-rel-form { width: 100%; }
+.adm-rel-items li > .btn { align-self: flex-start; }
+
+@media (min-width: 900px) {
+    .adm-rel-cols { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-6); }
+}

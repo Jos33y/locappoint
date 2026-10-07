@@ -7,6 +7,7 @@ import { weekFromRows } from '../../../services/hours'
 import { categoryLabel } from '../../../constants/categories'
 import { Stars } from '../../reviews/Stars'
 import { reviewCount } from '../../../services/reviews'
+import { TrustLine } from '../../trust/Trust'
 import '../../../styles/client/find-page.css'
 
 export const PlaceResult = ({ place, from = '/client/search' }) => {
@@ -38,6 +39,7 @@ export const PlaceResult = ({ place, from = '/client/search' }) => {
                     ) : (
                         <span className="lc-cl-result__rating is-new">New on Locappoint</span>
                     )}
+                    <TrustLine trust={place.trust} small className="lc-cl-result__trust" />
                     <span className="lc-cl-result__what">{[categoryLabel(place.category, place.category_detail), where].filter(Boolean).join(' in ')}</span>
                     {status && (
                         <span className={`lc-cl-result__status${status.open ? ' is-open' : ''}`}>

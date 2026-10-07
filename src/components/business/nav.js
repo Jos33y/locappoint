@@ -1,4 +1,4 @@
-import { Bell, Bot, CalendarDays, ChartColumn, Clock, Gift, Inbox, LifeBuoy, ListChecks, Radio, Rocket, Scissors, Settings, Sprout, Star, Store, Sun, Users, UsersRound, Wallet } from 'lucide-react'
+import { BadgeCheck, Bell, Bot, CalendarDays, ChartColumn, Clock, Gift, Inbox, LifeBuoy, ListChecks, Radio, Rocket, Scissors, Settings, Sprout, Star, Store, Sun, Users, UsersRound, Wallet } from 'lucide-react'
 
 export const NAV_GROUPS = [
     {
@@ -24,6 +24,7 @@ export const HUBS = [
             { to: '/portal/hours', label: 'Hours', name: 'Opening hours', icon: Clock, keywords: ['schedule', 'open', 'closed', 'lunch'] },
             { to: '/portal/team', label: 'Team', name: 'Team', icon: UsersRound, keywords: ['staff', 'barbers', 'people', 'login'] },
             { to: '/portal/payments', label: 'Payments', name: 'Payments', icon: Wallet, keywords: ['payouts', 'getting paid', 'bank', 'iban', 'stripe', 'paystack', 'money'] },
+            { to: '/portal/verified', label: 'Verified', name: 'Verified badge', icon: BadgeCheck, keywords: ['gold badge', 'verify', 'id check', 'trust', 'badge'] },
         ],
     },
     {

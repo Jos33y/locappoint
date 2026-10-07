@@ -6,6 +6,7 @@ import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { supabase } from '../../config/supabase'
 import { loadAdminTickets } from '../../services/admin'
 import { loadAdminBlocks } from '../../services/clientBlocks'
+import { loadAdminVerifications } from '../../services/verification'
 import AdminSidebar from './AdminSidebar'
 import AdminTopbar from './AdminTopbar'
 import AdminDash from './AdminDash'
@@ -18,13 +19,15 @@ const SECTION_LABELS = {
     people: 'People',
     support: 'Support',
     blocks: 'Blocks',
+    reliability: 'Reliability',
+    verification: 'Verification',
     analytics: 'Analytics',
     waitlist: 'Waitlist',
     partnership: 'Partnerships',
     errors: 'App errors'
 }
 
-const VALID_SECTIONS = ['overview', 'support', 'blocks', 'businesses', 'bookings', 'people', 'analytics', 'waitlist', 'partnership', 'errors']
+const VALID_SECTIONS = ['overview', 'support', 'blocks', 'reliability', 'verification', 'businesses', 'bookings', 'people', 'analytics', 'waitlist', 'partnership', 'errors']
 const DEFAULT_SECTION = 'overview'
 
 const getSectionFromHash = () => {
@@ -85,6 +88,7 @@ const AdminPage = () => {
     const [dateRange, setDateRange] = useState('7d')
     const [supportOpen, setSupportOpen] = useState(0)
     const [blocksPending, setBlocksPending] = useState(0)
+    const [toVerify, setToVerify] = useState(0)
 
     // Open tickets for the sidebar. Quietly zero until support-desk.sql has been run.
     useEffect(() => {
@@ -95,6 +99,9 @@ const AdminPage = () => {
         loadAdminBlocks({ review: 'pending', limit: 1 })
             .then((data) => setBlocksPending(Number(data?.counts?.pending) || 0))
             .catch(() => setBlocksPending(0))
+        loadAdminVerifications({ view: 'submitted', limit: 1 })
+            .then((data) => setToVerify(Number(data?.counts?.submitted) || 0))
+            .catch(() => setToVerify(0))
     }, [isAuthenticated])
 
     // Session restore + initial loader dismissal
@@ -573,7 +580,8 @@ const AdminPage = () => {
                     waitlist: waitlistData.length,
                     partnership: partnershipData.length,
                     support: supportOpen,
-                    blocks: blocksPending
+                    blocks: blocksPending,
+                    verification: toVerify
                 }}
                 onClose={() => setSidebarOpen(false)}
                 onLogout={handleLogout}
@@ -610,6 +618,7 @@ const AdminPage = () => {
                         onDeletePartnership={deletePartnership}
                         onSupportCount={setSupportOpen}
                         onBlocksCount={setBlocksPending}
+                        onVerifyCount={setToVerify}
                     />
                 </main>
             </div>

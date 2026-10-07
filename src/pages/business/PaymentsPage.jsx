@@ -132,6 +132,7 @@ const PaidTo = ({ payout }) => (
 
 // What Stripe is waiting for, in the owner's words. Stripe reports field paths
 // (identity.individual.date_of_birth.day); owners need "Date of birth".
+const TAX = 'Tax number (NIF), for EU reporting'
 const NEEDS = [
     [/given_name|surname|first_name|last_name|\.name$/, 'Your name'],
     [/date_of_birth|\.dob/, 'Date of birth'],
@@ -139,6 +140,7 @@ const NEEDS = [
     [/address/, 'Business address'],
     [/phone/, 'Phone number'],
     [/email/, 'Email'],
+    [/tax_reporting|tax identification|taxpayer|\btin\b/i, TAX],
     [/id_number|tax_id|nif/, 'Tax or ID number'],
     [/document|verification|selfie/, 'Photo of your ID'],
     [/external_account|bank_account|payout_method/, 'Bank account'],
@@ -164,6 +166,9 @@ const Needs = ({ due }) => {
             <ul className="biz-pay__needlist">
                 {items.map((item) => <li key={item}>{item}</li>)}
             </ul>
+            {items.includes(TAX) && (
+                <p className="biz-pay__weeknote">EU rules (DAC7) ask platforms to report what each business earns once a year. Stripe collects your tax number for that report, and you get a copy. Locappoint never sees the number.</p>
+            )}
         </div>
     )
 }

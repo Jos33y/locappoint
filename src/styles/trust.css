@@ -1,0 +1,47 @@
+/* The Verified (gold) and Reliable (blue) badges and "Keeps 98% of bookings", on pages, results and the engine. */
+
+.lc-trust {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.lc-trust-badge {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.3em;
+    padding: 0.2em 0.6em 0.2em 0.45em;
+    border-radius: 999px;
+    background: var(--lc-info-tint);
+    box-shadow: inset 0 0 0 1px var(--lc-info);
+    color: var(--lc-info);
+    font-family: var(--lc-font-body);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.lc-trust-badge.is-gold {
+    background: var(--lc-warning-tint);
+    box-shadow: inset 0 0 0 1px var(--lc-warning);
+    color: var(--lc-warning);
+}
+
+.lc-trust-badge.is-small {
+    padding: 0.15em 0.5em 0.15em 0.4em;
+    font-size: var(--lc-t-micro);
+}
+
+.lc-trust__kept {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.lc-trust.is-small .lc-trust__kept {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-micro);
+}

@@ -9,6 +9,7 @@ import { loadZones } from '../../../services/setup'
 import { payMoney } from '../../../services/payments'
 import { withPeople } from '../../../services/formats'
 import { USER_ERRORS } from '../../../services/booking'
+import { ReliableBadge, VerifiedBadge } from '../../trust/Trust'
 import '../../../styles/client/engine.css'
 
 const PEOPLE = Array.from({ length: 6 }, (_, i) => ({ value: String(i + 1), label: i === 0 ? 'Just me' : `${i + 1} people` }))
@@ -19,7 +20,7 @@ const Option = ({ o, timeZone, onBook }) => {
         <li className={`lc-eng__opt is-${o.label}`}>
             <span className="lc-eng__tag">{LABELS[o.label] || 'Free'}</span>
             <span className="lc-eng__main">
-                <b className="lc-eng__biz">{o.business_name}</b>
+                <b className="lc-eng__biz">{o.business_name}{o.verified && <> <VerifiedBadge small /></>}{o.reliable && <> <ReliableBadge small /></>}</b>
                 <span className="lc-eng__svc">{withPeople(o.service_name, Number(o.people))}{o.mode === 'at_client' ? ', at your place' : o.mode === 'online' ? ', online' : ''}</span>
                 <span className="lc-eng__when">{dayWord(o.date, timeZone)} at <b>{o.time}</b></span>
                 {why.length > 0 && <span className="lc-eng__why">{why.join(' · ')}</span>}

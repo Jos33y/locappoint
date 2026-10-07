@@ -1,0 +1,296 @@
+/* Reliability in Insights: the score, its four parts, what cost points and the badge checks. */
+
+.lc-rel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
+    padding: var(--space-5) var(--space-4);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+    scroll-margin-top: var(--space-6);
+}
+
+.lc-rel__skel {
+    display: block;
+    height: 220px;
+    border-radius: var(--lc-r-xl);
+}
+
+.lc-rel__head h2 {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-rel__head p {
+    margin: var(--space-1) 0 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+}
+
+/* Score and status */
+.lc-rel-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-6);
+}
+
+.lc-rel-score {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+}
+
+.lc-rel-score__value {
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-figure);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1;
+    letter-spacing: var(--lc-track-title);
+}
+
+.lc-rel-score__of {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+.lc-rel-top__side {
+    display: flex;
+    flex: 1 1 260px;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.lc-rel-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-rel-status b { color: var(--lc-ink-1); }
+.lc-rel-status.is-warn b { color: var(--lc-warning); }
+.lc-rel-status.is-bad b { color: var(--lc-danger); }
+
+.lc-rel-sees {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+}
+
+/* Trend */
+.lc-rel-trend {
+    margin: 0;
+}
+
+.lc-rel-trend svg {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+}
+
+.lc-rel-trend__line {
+    stroke: var(--lc-line-strong);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+    vector-effect: non-scaling-stroke;
+}
+
+.lc-rel-trend__col { fill: var(--lc-ink-4); }
+.lc-rel-trend__col.is-badge { fill: var(--lc-info); }
+
+.lc-rel-trend figcaption {
+    margin-top: var(--space-1);
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-micro);
+}
+
+/* Meters */
+.lc-rel-meter {
+    display: block;
+    overflow: hidden;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--lc-well);
+}
+
+.lc-rel-meter > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--lc-info);
+}
+
+/* New business */
+.lc-rel-new {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-lg);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-rel-new__title {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-rel-new__text {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-rel-new__text b { color: var(--lc-ink-1); }
+
+/* Parts */
+.lc-rel-parts {
+    display: grid;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lc-rel-part {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.lc-rel-part__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+}
+
+.lc-rel-part__top b { font-weight: var(--font-weight-semibold); }
+.lc-rel-part__top small { color: var(--lc-ink-3); font-size: var(--lc-t-label); }
+.lc-rel-part.is-short .lc-rel-meter > span { background: var(--lc-warning); }
+
+.lc-rel-part__says {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+}
+
+/* What cost points, and the checks */
+.lc-rel-cols {
+    display: grid;
+    gap: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--lc-line);
+}
+
+.lc-rel-h3 {
+    margin: 0 0 var(--space-3);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-rel-items,
+.lc-rel-checks {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lc-rel-items li {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--lc-line);
+}
+
+.lc-rel-items li:last-child { border-bottom: 0; }
+
+.lc-rel-items__what {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.lc-rel-items__what b {
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-rel-items__what small {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-micro);
+    overflow-wrap: anywhere;
+}
+
+.lc-rel-items__pts {
+    flex: none;
+    color: var(--lc-warning);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-rel-checks { gap: var(--space-2); }
+
+.lc-rel-checks li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+.lc-rel-checks li svg { flex: none; color: var(--lc-ink-4); }
+.lc-rel-checks li.is-ok { color: var(--lc-ink-1); }
+.lc-rel-checks li.is-ok svg { color: var(--lc-success); }
+
+.lc-rel-checks__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.lc-rel-note {
+    margin: var(--space-3) 0 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-micro);
+    line-height: var(--lc-lh-body);
+}
+
+@media (min-width: 640px) {
+    .lc-rel { padding: var(--space-5); }
+    .lc-rel-parts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-6); }
+}
+
+@media (min-width: 1100px) {
+    .lc-rel-parts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .lc-rel-cols { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-8); }
+}

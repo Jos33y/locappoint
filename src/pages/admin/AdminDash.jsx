@@ -11,6 +11,8 @@ import BookingsTab from './tabs/BookingsTab'
 import PeopleTab from './tabs/PeopleTab'
 import SupportTab from './tabs/SupportTab'
 import BlocksTab from './tabs/BlocksTab'
+import ReliabilityTab from './tabs/ReliabilityTab'
+import VerificationTab from './tabs/VerificationTab'
 
 const AdminDash = ({
     activeSection,
@@ -33,7 +35,8 @@ const AdminDash = ({
     onDeleteWaitlist,
     onDeletePartnership,
     onSupportCount,
-    onBlocksCount
+    onBlocksCount,
+    onVerifyCount
 }) => {
     // These load their own data, so they never wait for the waitlist and analytics.
     if (activeSection === 'overview') return <div className="admin-dashboard"><OverviewTab onGo={setActiveSection} /></div>
@@ -42,6 +45,8 @@ const AdminDash = ({
     if (activeSection === 'people') return <div className="admin-dashboard"><PeopleTab /></div>
     if (activeSection === 'support') return <div className="admin-dashboard"><SupportTab onCount={onSupportCount} /></div>
     if (activeSection === 'blocks') return <div className="admin-dashboard"><BlocksTab onCount={onBlocksCount} /></div>
+    if (activeSection === 'reliability') return <div className="admin-dashboard"><ReliabilityTab /></div>
+    if (activeSection === 'verification') return <div className="admin-dashboard"><VerificationTab onCount={onVerifyCount} /></div>
 
     if (loading) {
         return (

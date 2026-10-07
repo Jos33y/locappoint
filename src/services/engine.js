@@ -2,6 +2,7 @@ import { supabase } from '../config/supabase'
 import { zonedNow } from './business'
 import { parseDateKey, toDateKey } from './dates'
 import { CATEGORIES } from '../constants/categories'
+import { keptLine } from './reliability'
 
 // "What do you need?": one request, matched in the database (engine_match) against every live
 // business in the city. The same function serves the site, the app and, later, WhatsApp.
@@ -114,6 +115,7 @@ export const reasons = (o) => [
     o.km !== null && o.km !== undefined ? `${Number(o.km).toLocaleString('en-GB', { maximumFractionDigits: 1 })} km away` : '',
     o.rating && Number(o.reviews) >= 5 ? `${Number(o.rating).toFixed(1)} from ${o.reviews} reviews` : '',
     o.rebook_pct ? `${o.rebook_pct}% of clients book again` : '',
+    o.kept_pct !== null && o.kept_pct !== undefined ? keptLine(o.kept_pct) : '',
 ].filter(Boolean)
 
 // One tap: the business page opens the booking sheet at that time, format and group size.

@@ -51,6 +51,7 @@ import ManageBooking from '@src/pages/app/ManageBooking'
 import PayReturn from '@src/pages/app/PayReturn'
 import ReceiptPage from '@src/pages/app/ReceiptPage'
 import PaymentsPage from '@src/pages/business/PaymentsPage'
+import Verified from '@src/pages/business/Verified'
 import PublicBusinessPage from '@src/pages/app/PublicBusinessPage'
 import { InboxProvider } from '@src/components/inbox/InboxContext'
 import '@src/styles/client/client-shell.css'
@@ -165,6 +166,7 @@ const App = () => (
           <Route path="reviews" element={<Reviews />} />
           <Route path="invite" element={<Invite />} />
           <Route path="payments" element={<PaymentsPage />} />
+          <Route path="verified" element={<Verified />} />
           <Route path="setup" element={<Setup />} />
           <Route path="crash" element={<RouteBoundary><Crash /></RouteBoundary>} />
         </Route>

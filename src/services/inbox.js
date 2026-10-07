@@ -86,6 +86,8 @@ const KINDS = {
         support_reply: (p) => ({ label: p.status === 'resolved' ? 'Support: resolved' : 'Support replied', tone: 'info' }),
         support_warning: () => ({ label: 'Warning from Locappoint', tone: 'danger' }),
         block_review: (p) => ({ label: p.decision === 'kept' ? 'Block kept' : 'Block lifted by Locappoint', tone: p.decision === 'kept' ? 'info' : 'warning' }),
+        reliability: (p) => RELIABILITY[p.event] || { label: 'Reliability', tone: 'info' },
+        verification: (p) => VERIFICATION[p.event] || { label: 'Verified badge', tone: 'info' },
     },
     client: {
         booking_confirmed: () => ({ label: 'Confirmed', tone: 'success' }),
@@ -102,6 +104,33 @@ const KINDS = {
     },
 }
 
+const RELIABILITY = {
+    won: { label: 'Reliable badge earned', tone: 'success' },
+    warning: { label: 'Reliability slipping', tone: 'warning' },
+    lost: { label: 'Reliable badge lost', tone: 'danger' },
+    removed: { label: 'Badge removed by Locappoint', tone: 'danger' },
+}
+
+const VERIFICATION = {
+    approved: { label: 'Verified badge on', tone: 'success' },
+    rejected: { label: 'Verification: not yet', tone: 'warning' },
+    expired: { label: 'Verified badge needs a new video', tone: 'warning' },
+    removed: { label: 'Verified badge removed', tone: 'danger' },
+}
+
+const verificationLine = (p) => {
+    if (p.event === 'approved') return 'Clients now see the gold badge on your page and in search.'
+    if (p.event === 'expired') return p.reason === 'address' ? 'Your address changed. Send a video of the new place.' : 'A year has passed. Send a new video of your place.'
+    return p.note ? clip(p.note) : 'Open to see what to do next.'
+}
+
+const reliabilityLine = (p) => {
+    if (p.event === 'removed') return p.note ? clip(p.note) : 'Reply in Support if you disagree.'
+    if (p.event === 'won') return `Score ${p.score} of 100. Clients now see the blue badge.`
+    if (p.event === 'lost') return 'It comes back once your score is 90 or more again.'
+    return Number(p.score) < 85 ? `Score ${p.score}. Under 85 for 7 days and the badge goes.` : `Score ${p.score}. See what cost points.`
+}
+
 const clip = (text, n = 90) => { const t = String(text || '').trim(); return t.length > n ? `${t.slice(0, n - 1)}…` : t }
 
 const reviewLine = (item, p) => {
@@ -114,6 +143,8 @@ const reviewLine = (item, p) => {
     if (item.kind === 'review_reply') return `${p.business_name || 'The business'}: “${clip(p.reply)}”`
     if (item.kind === 'support_reply' || item.kind === 'support_warning') return clip(p.body)
     if (item.kind === 'block_review') return p.note ? clip(p.note) : p.decision === 'kept' ? 'Reviewed. They still cannot book you online.' : 'They can book you online again.'
+    if (item.kind === 'reliability') return reliabilityLine(p)
+    if (item.kind === 'verification') return verificationLine(p)
     return ''
 }
 
@@ -122,6 +153,8 @@ const SUPPORT_KINDS = ['support_reply', 'support_warning']
 const hrefFor = (item, forBusiness, p) => {
     if (SUPPORT_KINDS.includes(item.kind)) return `${forBusiness ? '/portal' : '/client'}/support${p.ticket_id ? `?t=${p.ticket_id}` : ''}`
     if (item.kind === 'block_review') return '/portal/clients'
+    if (item.kind === 'reliability') return '/portal/insights?reliability=1'
+    if (item.kind === 'verification') return '/portal/verified'
     if (item.kind === 'referral_points') return '/portal/invite'
     if (item.kind === 'weekly_statement') return `/portal/insights?statement=${p.from || ''}`
     if (item.kind === 'review_new') return p.review_id ? `/portal/reviews?review=${p.review_id}` : '/portal/reviews'
@@ -141,9 +174,9 @@ export const describeItem = (item) => {
     const movedFrom = p.moved_from && (item.kind === 'booking_moved' || item.kind === 'booking_request') ? String(p.moved_from) : ''
     return {
         ...kind,
-        time: SUPPORT_KINDS.includes(item.kind) || item.kind === 'block_review' ? '' : String(p.time || '').slice(0, 5),
-        day: SUPPORT_KINDS.includes(item.kind) || item.kind === 'block_review' ? '' : p.date ? shortDay(p.date) : item.kind === 'weekly_statement' && p.from ? shortDay(p.from) : '',
-        title: item.kind === 'block_review' ? p.client_name || 'A client' : SUPPORT_KINDS.includes(item.kind) ? `${p.number ? `#${p.number} ` : ''}${p.subject || 'Locappoint support'}` : item.kind === 'referral_points' ? 'Points earned' : item.kind === 'weekly_statement' ? `Your week, ${shortDay(p.from)} to ${shortDay(p.to)}` : forBusiness ? p.client_name || 'A client' : p.service_name || 'Your booking',
+        time: SUPPORT_KINDS.includes(item.kind) || item.kind === 'block_review' || item.kind === 'reliability' || item.kind === 'verification' ? '' : String(p.time || '').slice(0, 5),
+        day: SUPPORT_KINDS.includes(item.kind) || item.kind === 'block_review' || item.kind === 'reliability' || item.kind === 'verification' ? '' : p.date ? shortDay(p.date) : item.kind === 'weekly_statement' && p.from ? shortDay(p.from) : '',
+        title: item.kind === 'verification' ? 'Your Verified badge' : item.kind === 'reliability' ? 'Your reliability' : item.kind === 'block_review' ? p.client_name || 'A client' : SUPPORT_KINDS.includes(item.kind) ? `${p.number ? `#${p.number} ` : ''}${p.subject || 'Locappoint support'}` : item.kind === 'referral_points' ? 'Points earned' : item.kind === 'weekly_statement' ? `Your week, ${shortDay(p.from)} to ${shortDay(p.to)}` : forBusiness ? p.client_name || 'A client' : p.service_name || 'Your booking',
         sub: reviewLine(item, p) || (forBusiness
             ? [p.service_name, duration, price]
             : [p.business_name, p.staff_name ? `with ${p.staff_name}` : '', price]

@@ -11,6 +11,7 @@ import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { weekFromRows } from '../../services/hours'
 import { clearPending, readBookParam, readPending } from '../../services/booking'
 import { loadPublicReviews } from '../../services/reviews'
+import { loadTrust } from '../../services/reliability'
 import { trackPage, visitSource } from '../../services/pageStats'
 import '../../styles/public-page.css'
 
@@ -107,6 +108,10 @@ const PublicBusinessPage = () => {
                 loadPublicReviews(business.id)
                     .then((reviews) => { if (!cancelled && reviews) setState((s) => (s.business?.id === business.id ? { ...s, reviews } : s)) })
                     .catch((err) => console.error('Reviews failed:', err))
+                loadTrust().then((all) => {
+                    const trust = all.get(business.id)
+                    if (!cancelled && trust) setState((s) => (s.business?.id === business.id ? { ...s, trust } : s))
+                })
             } catch (err) {
                 console.error('Business page load failed:', err)
                 if (!cancelled) setState({ status: 'error' })
@@ -191,6 +196,7 @@ const PublicBusinessPage = () => {
                         services={state.services}
                         week={state.week}
                         reviews={state.reviews}
+                        trust={state.trust}
                         onMoreReviews={moreReviews}
                         onBook={(service) => { setResume(null); setBooking(service) }}
                     />

@@ -7,6 +7,8 @@ import { RECEIPT } from './receipt.ts'
 import { TRIP } from './trip.ts'
 import { SUPPORT } from './support.ts'
 import { BLOCKS } from './blocks.ts'
+import { RELIABILITY } from './reliability.ts'
+import { VERIFICATION } from './verification.ts'
 import type { Render } from '../types.ts'
 
-export const RENDER: Record<string, Render> = { ...ACCOUNT, ...BOOKING, ...STATEMENT, ...RECEIPT, ...TRIP, ...SUPPORT, ...BLOCKS }
+export const RENDER: Record<string, Render> = { ...ACCOUNT, ...BOOKING, ...STATEMENT, ...RECEIPT, ...TRIP, ...SUPPORT, ...BLOCKS, ...RELIABILITY, ...VERIFICATION }

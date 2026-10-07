@@ -1,0 +1,188 @@
+/* Verified badge: the owner's three steps to gold. */
+
+.lc-ver {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-width: 760px;
+}
+
+.lc-ver__skel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.lc-ver-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-ver-hero p {
+    flex: 1 1 260px;
+    margin: 0;
+    color: var(--lc-ink-2);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-ver-hero b { color: var(--lc-ink-1); }
+.lc-ver-hero.is-gold { box-shadow: inset 0 0 0 1px var(--lc-warning); }
+.lc-ver-hero.is-warn b { color: var(--lc-warning); }
+.lc-ver-hero.is-bad b { color: var(--lc-danger); }
+
+.lc-ver-steps {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-ver-step {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-5) var(--space-4);
+    border-bottom: 1px solid var(--lc-line);
+}
+
+.lc-ver-step:last-child { border-bottom: 0; }
+
+.lc-ver-step__mark {
+    display: inline-flex;
+    flex: none;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    color: var(--lc-ink-2);
+    font-family: var(--lc-font-mono);
+    font-size: var(--lc-t-label);
+}
+
+.lc-ver-step.is-done .lc-ver-step__mark {
+    background: var(--lc-success-tint);
+    box-shadow: inset 0 0 0 1px var(--lc-success);
+    color: var(--lc-success);
+}
+
+.lc-ver-step__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.lc-ver-step__title {
+    margin: 0;
+    padding-top: 4px;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-ver-note {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-ver-small {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-ver-error {
+    margin: 0;
+    color: var(--lc-danger);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-ver-ok {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--lc-success);
+    font-size: var(--lc-t-label);
+}
+
+.lc-ver-act {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.lc-ver-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* The camera */
+.lc-ver-rec {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.lc-ver-rec__view {
+    display: block;
+    width: 100%;
+    max-height: 60vh;
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-well);
+    object-fit: contain;
+}
+
+.lc-ver-rec__time {
+    position: absolute;
+    top: var(--space-3);
+    left: var(--space-3);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--lc-overlay);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+}
+
+.lc-ver-rec__time i {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--lc-danger);
+}
+
+.lc-ver-rec__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.lc-ver-foot { padding: 0 var(--space-1); }
+
+@media (min-width: 640px) {
+    .lc-ver-step { padding: var(--space-5); }
+}

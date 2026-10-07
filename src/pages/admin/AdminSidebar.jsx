@@ -14,7 +14,9 @@ import {
     ArrowLeft,
     LogOut,
     LifeBuoy,
-    Ban
+    Ban,
+    ShieldCheck,
+    BadgeCheck
 } from 'lucide-react'
 import LogoIcon from '../../components/LogoIcon'
 
@@ -106,6 +108,23 @@ const AdminSidebar = ({ activeSection, setActiveSection, counts, onClose, onLogo
                             <Ban size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
                             <span className="admin-sidebar__item-label">Blocks</span>
                             {counts.blocks > 0 && <span className="admin-sidebar__item-count">{counts.blocks}</span>}
+                        </button>
+                        <button
+                            type="button"
+                            className={`admin-sidebar__item ${activeSection === 'reliability' ? 'admin-sidebar__item--active' : ''}`}
+                            onClick={() => goTo('reliability')}
+                        >
+                            <ShieldCheck size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
+                            <span className="admin-sidebar__item-label">Reliability</span>
+                        </button>
+                        <button
+                            type="button"
+                            className={`admin-sidebar__item ${activeSection === 'verification' ? 'admin-sidebar__item--active' : ''}`}
+                            onClick={() => goTo('verification')}
+                        >
+                            <BadgeCheck size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
+                            <span className="admin-sidebar__item-label">Verification</span>
+                            {counts.verification > 0 && <span className="admin-sidebar__item-count">{counts.verification}</span>}
                         </button>
                         {[['businesses', Building2, 'Businesses'], ['bookings', ShoppingBag, 'Bookings'], ['people', UserCog, 'People']].map(([key, Icon, label]) => (
                             <button

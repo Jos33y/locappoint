@@ -11,6 +11,7 @@ import { PublicReviews, RatingLine } from '../reviews/PublicReviews'
 import { whatsappLink, zonedNow } from '../../services/business'
 import { parseDateKey } from '../../services/dates'
 import { categoryLabel } from '../../constants/categories'
+import { TrustLine } from '../trust/Trust'
 import { WEEK, clock } from '../../services/hours'
 import '../../styles/public-page.css'
 
@@ -35,7 +36,7 @@ export const openStatus = (week, timeZone) => {
 const mapsLink = (address, city) =>
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([address, city].filter(Boolean).join(', '))}`
 
-export const PublicPageView = ({ business, services, week, preview = false, onBook, reviews, onMoreReviews }) => {
+export const PublicPageView = ({ business, services, week, preview = false, onBook, reviews, onMoreReviews, trust = null }) => {
     const name = business.business_name?.trim() || 'Your business'
     const timeZone = business.timezone || 'Europe/Lisbon'
     const now = useNow(timeZone)
@@ -63,6 +64,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                         <h1 className="lc-pub__name">{name}</h1>
                         {where && <p className="lc-pub__where">{where}</p>}
                         <RatingLine reviews={reviews} />
+                        <TrustLine trust={trust} className="lc-pub__trust" />
                     </div>
                 </header>
 

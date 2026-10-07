@@ -18,7 +18,9 @@ const sections = [
                 <ul className="legal__list">
                     <li><strong>Time.</strong> How close the free time is to the time you asked for, or how soon it is when you asked for any time. This weighs most.</li>
                     <li><strong>Distance.</strong> How close the business is, when both places are known.</li>
-                    <li><strong>Quality.</strong> The average review, once a business has five reviews or more; how often its clients book again; and how rarely it cancels on clients. Businesses without enough history are treated as average, so new businesses are not pushed down.</li>
+                    <li><strong>Quality.</strong> The average review, once a business has five reviews or more; how often its clients book again; and its reliability score. The score comes from the last 90 days: how rarely the business cancels, whether it turns up, whether it answers requests within 12 hours, and reports about it that we upheld. Nothing a client does counts against it. Businesses without enough history (under five reviews, five clients or ten bookings) are treated as average, so new businesses are not pushed down.</li>
+                    <li><strong>The Reliable badge.</strong> Shown to businesses with a reliability score of 90 or more, at least ten completed visits in 90 days, a confirmed email and no upheld safety report. It is earned, never bought, and gives no extra place in the order on its own.</li>
+                    <li><strong>The Verified badge.</strong> Shown when a person at Locappoint has checked the owner's ID (through Stripe) and seen the place, or met a business without a place on a video call. It lasts a year, needs a new check when the address changes, and also gives no extra place in the order.</li>
                     <li><strong>Your history.</strong> A business you have booked before comes first.</li>
                 </ul>
                 <p>The three options are picked for different reasons: the best overall, the earliest, and the closest or best rated. When two businesses score the same, the order between them changes from one search to the next.</p>

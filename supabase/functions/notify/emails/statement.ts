@@ -2,7 +2,7 @@
 // what is owed, which is nothing during the beta. A statement, never a bill.
 
 import { layout } from '../layout.ts'
-import { added, done, fee, slot } from '../blocks.ts'
+import { added, done, fee, said, slot } from '../blocks.ts'
 import { SITE, FOOTER_TEXT, esc, oneLine } from '../format.ts'
 import type { Render } from '../types.ts'
 
@@ -45,6 +45,11 @@ export const STATEMENT: Record<string, Render> = {
         const onlineLine = `${visits(online)} booked on LocAppoint, ${money(p.online?.value, country)}`
         const feeLine = `LocAppoint fee ${money(p.fee, country)}`
         const addedLine = `${added_ === 1 ? '1 walk-in or booking' : `${added_} walk-ins and bookings`} you added, ${money(p.added?.value, country)}. Never a fee.`
+        // The reliability line, once the score shows (10 bookings in 90 days).
+        const rel = p.reliability as Record<string, any> | undefined
+        const relLine = rel?.shown && rel.score !== null && rel.score !== undefined
+            ? `Reliability ${Number(rel.score)} of 100.${rel.badge ? ' You hold the Reliable badge.' : Number(rel.score) < 90 ? ' See what cost points in Insights.' : ''}`
+            : ''
         const small = `This is a statement, not a bill. LocAppoint is free during the beta. When online payments arrive, fees apply only to bookings clients make on LocAppoint, and you will hear from us before anything changes. Walk-ins and bookings you add yourself are always free.${priced && online ? ' Fees are shown before VAT.' : ''}`
 
         return {
@@ -62,6 +67,7 @@ export const STATEMENT: Record<string, Render> = {
                     online ? done(esc(onlineLine)) : '',
                     added_ ? added(esc(addedLine)) : '',
                     online && priced ? fee(esc(feeLine)) : '',
+                    relLine ? said('trust', esc(relLine), true) : '',
                     slot({ state: 'booked', flag: 'You pay', title: zero, sub: 'Free during the beta.', button: { label: 'See your week', href: link, width: 160 } }),
                 ],
                 small,
@@ -74,6 +80,7 @@ export const STATEMENT: Record<string, Render> = {
                 ...(online ? [onlineLine] : []),
                 ...(online && priced ? [`${feeLine}, waived`] : []),
                 ...(added_ ? [addedLine] : []),
+                ...(relLine ? [relLine] : []),
                 `You pay: ${zero}. Free during the beta.`,
                 '',
                 `See your week: ${link}`,

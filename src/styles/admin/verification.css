@@ -1,0 +1,17 @@
+/* Admin Verification: gold badge applications, the video and the decision. */
+
+.adm-ver-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+.adm-ver-video {
+    display: block;
+    width: 100%;
+    max-width: 520px;
+    max-height: 420px;
+    border-radius: var(--radius-md);
+    background: var(--surface-0);
+}

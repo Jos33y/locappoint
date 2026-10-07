@@ -7,6 +7,7 @@ import { BarList } from '../../components/insights/BarList'
 import { Funnel } from '../../components/insights/Funnel'
 import { Heatmap } from '../../components/insights/Heatmap'
 import { Statement } from '../../components/insights/Statement'
+import { Reliability } from '../../components/insights/Reliability'
 import { SOURCE_LABEL, change, leadLabel, loadInsights, loadReminderEffect, moneyFor, moneySentence, percent } from '../../services/insights'
 import { formatDay } from '../../services/business'
 import '../../styles/business/insights.css'
@@ -167,6 +168,8 @@ const Insights = () => {
             </header>
 
             <Statement businessId={business.id} country={business.country} money={money} />
+
+            <Reliability businessId={business.id} />
 
             {state.status === 'loading' && (
                 <div className="lc-ins__skel" aria-hidden="true">

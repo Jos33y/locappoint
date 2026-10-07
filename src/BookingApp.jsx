@@ -59,6 +59,7 @@ const ServicesPage = lazy(() => import('./pages/business/ServicesPage'))
 const HoursPage = lazy(() => import('./pages/business/HoursPage'))
 const SettingsPage = lazy(() => import('./pages/business/SettingsPage'))
 const PaymentsPage = lazy(() => import('./pages/business/PaymentsPage'))
+const Verified = lazy(() => import('./pages/business/Verified'))
 
 const ClientLayout = lazy(() => import('./pages/client/ClientLayout'))
 const ClientHome = lazy(() => import('./pages/client/Home'))
@@ -134,6 +135,7 @@ const BookingApp = () => (
                         <Route path="page" element={inShell(<BusinessPage />)} />
                         <Route path="settings" element={inShell(<SettingsPage />)} />
                         <Route path="payments" element={inShell(<PaymentsPage />)} />
+                        <Route path="verified" element={inShell(<Verified />)} />
                         <Route path="assistant" element={inShell(<Planned section="assistant" />)} />
                         <Route path="clients" element={inShell(<Clients />)} />
                         <Route path="team" element={inShell(<Team />)} />

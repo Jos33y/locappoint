@@ -74,6 +74,7 @@ const CASES = [
     ['weekly_statement', { audience: 'business', ...WEEK }],
     ['weekly_statement', { audience: 'business', ...WEEK, online: { count: 0, value: 0 }, fee: 0, name: null }],
     ['weekly_statement', { audience: 'business', ...WEEK, from: '2026-09-28', to: '2026-10-04', country: 'NG', fee: null, online: { count: 1, value: 15000 }, added: { count: 0, value: 0 } }],
+    ['weekly_statement', { audience: 'business', ...WEEK, reliability: { shown: true, score: 96, badge: true, kept_pct: 98 } }],
     ['booking_confirmed', { audience: 'client', mode: 'online', meeting_url: 'https://meet.example.com/femtos-rui' }],
     ['booking_requested', { audience: 'client', mode: 'online', status: 'pending', meeting_url: 'https://meet.example.com/femtos-rui' }],
     ['booking_confirmed', { audience: 'client', mode: 'at_client', client_zone: 'Matosinhos', client_address: 'Rua das Flores 12, 2 Esq', client_landmark: 'Blue door', travel_fee: 5 }],
@@ -91,6 +92,14 @@ const CASES = [
     ['support_warning', { audience: 'client', ticket_id: 'cccc-dddd', number: 7, body: 'Three missed visits this month. Please cancel in time.', guest: true }],
     ['support_team', { event: 'new', ticket_id: 'aaaa-bbbb', number: 1042, subject: 'Charged twice <x>', category: 'payment', priority: 1, side: 'client', who: 'Joe <script>', body: 'I was charged twice' }],
     ['block_review', { audience: 'business', decision: 'kept', client_name: 'Joe <b>Silva</b>', reason: 'no_shows', note: 'Three no-shows since August.', business_name: 'Femtos <Barbers>' }],
+    ['reliability', { audience: 'business', event: 'won', score: 96, kept_pct: 98, counts: { cancels: 1, late_cancels: 0 }, business_name: 'Femtos <Barbers>' }],
+    ['reliability', { audience: 'business', event: 'warning', score: 82, kept_pct: 91, counts: { cancels: 2, late_cancels: 1, late_requests: 1, no_shows: 0 }, business_name: 'Femtos' }],
+    ['reliability', { audience: 'business', event: 'lost', score: 80, kept_pct: 90, counts: { cancels: 3, late_cancels: 1 }, business_name: 'Femtos' }],
+    ['reliability', { audience: 'business', event: 'removed', score: 95, kept_pct: 99, note: 'Charging clients <b>outside</b> Locappoint.\nSee ticket 1050.', business_name: 'Femtos' }],
+    ['verification', { audience: 'business', event: 'approved', verified_until: '2027-10-07T10:00:00Z', business_name: 'Femtos <Barbers>' }],
+    ['verification', { audience: 'business', event: 'rejected', note: 'The street sign is <b>not</b> in the video.', business_name: 'Femtos' }],
+    ['verification', { audience: 'business', event: 'expired', reason: 'address', business_name: 'Femtos' }],
+    ['verification', { audience: 'business', event: 'removed', note: 'The shop in the video is not this business.', business_name: 'Femtos' }],
     ['block_review', { audience: 'business', decision: 'lifted', client_name: 'Ana', reason: 'other', note: 'One missed visit is not enough to block.', business_name: 'Femtos' }],
     ['support_team', { event: 'reply', ticket_id: 'aaaa-bbbb', number: 1043, subject: 'Email change', category: 'account', priority: 3, side: 'business', who: 'Ana', body: 'Still not working' }],
 ]
@@ -218,6 +227,24 @@ export default async ({ browser, check, server, root }) => {
             check(extra.added.count > 0 === /Never a fee/.test(msg.html), `${label} lists walk-ins as never carrying a fee`)
             check(new RegExp(`/portal/insights\\?statement=${extra.from}`).test(msg.html), `${label} opens the statement in Insights`)
             check(/to pay$/.test(msg.subject) && (extra.country === 'NG' ? /NGN|\u20A6/.test(msg.subject) : /\u20AC0 to pay/.test(msg.subject)), `${label} subject ends on what is owed: ${msg.subject}`)
+            check(!msg.attachments, `${label} carries no calendar invite`)
+        }
+        if (kind === 'weekly_statement') {
+            check(Boolean(extra.reliability) === /Reliability 96 of 100\. You hold the Reliable badge\./.test(msg.html + msg.text), `${label} carries the reliability line only once there is a score`)
+        }
+        if (kind === 'verification') {
+            check(extra.event === 'removed' ? /\/portal\/support/.test(msg.html) : /\/portal\/verified/.test(msg.html) && /\/portal\/verified/.test(msg.text), `${label} opens the right page`)
+            check(!msg.html.includes('<b>not</b>') && !msg.html.includes('<Barbers>'), `${label} escapes names and notes`)
+            check(!extra.note || (msg.html.includes('in the video') || msg.html.includes('this business')) && /Our note:/.test(msg.text), `${label} carries our note`)
+            check(extra.event !== 'expired' || /address changed/.test(msg.html), `${label} says why a new video is needed`)
+            check(/Stripe keeps the ID photos/.test(msg.text) && /accounts@relay\.locappoint\.com/.test(msg.from), `${label} says who keeps the ID and comes from accounts@`)
+        }
+        if (kind === 'reliability') {
+            check(/\/portal\/insights\?reliability=1/.test(msg.html) && /\/portal\/insights\?reliability=1/.test(msg.text), `${label} opens the score in Insights`)
+            check(!msg.html.includes('<b>outside</b>') && !msg.html.includes('<Barbers>'), `${label} escapes names and notes`)
+            check(extra.event !== 'removed' || (/Charging clients/.test(msg.html) && /Our reason: Charging/.test(msg.text)), `${label} gives our reason when we removed it`)
+            check(extra.event !== 'warning' || (/under 24 hours before/.test(msg.html) && /answered after 12 hours/.test(msg.text) && /7 days/.test(msg.html)), `${label} says what cost points and when the badge goes`)
+            check(/never what clients do/.test(msg.text) && /accounts@relay\.locappoint\.com/.test(msg.from), `${label} explains the score and comes from accounts@`)
             check(!msg.attachments, `${label} carries no calendar invite`)
         }
         if (kind === 'review_new') {

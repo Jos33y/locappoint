@@ -15,6 +15,8 @@ export default async ({ browser, url, check }) => {
 
     let p = await open()
     check((await rpcDays(p))[0] === 7, 'opens on the last 7 days')
+    // The figure counts up for 700 ms; wait for it to settle rather than racing it.
+    await p.waitForFunction(() => document.querySelector('.lc-ins-hero__value')?.textContent === '\u20AC448', { timeout: 4000 }).catch(() => {})
     check(await p.evaluate(() => document.querySelector('.lc-ins-hero__value')?.textContent) === '€448', 'earned is the headline')
     check(await p.evaluate(() => {
         const hero = parseFloat(getComputedStyle(document.querySelector('.lc-ins-hero__value')).fontSize)

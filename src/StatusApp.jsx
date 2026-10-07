@@ -56,7 +56,7 @@ export default function StatusApp() {
                             Booking platform <span className="signal">running</span>. Building the trust layer for the <span className="azure">Porto beta.</span>
                         </h1>
                         <p className="hero__lede">
-                            Clients say what they need and get three free times. Owners run their day, get paid online, and have a real support desk behind them. Now: reliability scores and verified badges. Still waiting on the store listings.
+                            Clients say what they need and get three free times. Owners run their day, get paid online, and have a real support desk behind them. Every business now earns the blue Reliable badge and can apply for the gold Verified one. Next: WhatsApp. Still waiting on the store listings.
                         </p>
 
                         <div className="hero__stats">
@@ -72,13 +72,13 @@ export default function StatusApp() {
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Now building</div>
-                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>Reliability and badges</div>
+                                <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>WhatsApp v1</div>
                                 <div className="hero__stat-sub">Store listings wait on the D-U-N-S number</div>
                             </div>
                             <div className="hero__stat">
                                 <div className="hero__stat-label">Updated</div>
                                 <div className="hero__stat-value" style={{ fontSize: '15px', fontWeight: 500, paddingTop: '6px' }}>
-                                    <time className="js-relative" dateTime="2026-10-06T09:00:00Z">6 October 2026</time>
+                                    <time className="js-relative" dateTime="2026-10-07T18:00:00Z">7 October 2026</time>
                                 </div>
                                 <div className="hero__stat-sub">This page auto-refreshes</div>
                             </div>
@@ -244,13 +244,14 @@ export default function StatusApp() {
                                     <div className="detail__item detail__item--done">Admin support queue: refunds, warnings, pauses</div>
                                     <div className="detail__item detail__item--done">Blocks need a reason, and we review every one</div>
                                     <div className="detail__item detail__item--done">Booking policies, written in plain words</div>
+                                    <div className="detail__item detail__item--done">Reliability score and the blue Reliable badge</div>
+                                    <div className="detail__item detail__item--done">Gold Verified badge: ID check, a walk-through video, our approval</div>
                                 </div>
                             </div>
                             <div className="detail__col detail__col--active">
                                 <div className="detail__col-label">Building now</div>
                                 <div className="detail__list">
-                                    <div className="detail__item detail__item--active">Reliability score for every business</div>
-                                    <div className="detail__item detail__item--active">Blue badge: earned automatically</div>
+                                    <div className="detail__item detail__item--active">WhatsApp v1: book, move and cancel by message</div>
                                     <div className="detail__item detail__item--active">D-U-N-S number for the company</div>
                                     <div className="detail__item detail__item--active">Google Play account and listing</div>
                                     <div className="detail__item detail__item--active">Android developer verification, Google's 2027 rule</div>
@@ -262,7 +263,6 @@ export default function StatusApp() {
                                 <div className="detail__list">
                                     <div className="detail__item detail__item--next">Android on Google Play</div>
                                     <div className="detail__item detail__item--next">iPhone: TestFlight, then App Store, with push</div>
-                                    <div className="detail__item detail__item--next">Gold badge: ID check and a visit to the shop</div>
                                     <div className="detail__item detail__item--next">Payments live, once the Portuguese company has Stripe</div>
                                     <div className="detail__item detail__item--next">EU tax reporting (DAC7) through Stripe</div>
                                     <div className="detail__item detail__item--next">"Join Beta" on the waitlist</div>
@@ -529,7 +529,7 @@ export default function StatusApp() {
                                 <div className="need__title">Stripe tax reporting</div>
                                 <div className="need__when">With the Lda</div>
                             </div>
-                            <p className="need__text">Request access to Stripe's tax reporting preview. Stripe then collects each business's tax number and files the yearly EU report (DAC7) for us.</p>
+                            <p className="need__text">Request access to Stripe's tax reporting preview. Stripe then collects each business's tax number and prepares the yearly EU report (DAC7); the Lda's accountant files it with the tax authority by 31 January.</p>
                         </div>
                         <div className="need">
                             <div className="need__head">
@@ -593,6 +593,7 @@ export default function StatusApp() {
                             </tfoot>
                         </table>
                         <p className="st-cost__note"><b>D-U-N-S number:</b> we ask for it in the Apple sign-up, where the look-up is free and takes up to 7 working days. If that fails, D&amp;B's DUNSFile costs USD 230, and the total to start becomes USD 483.</p>
+                        <p className="st-cost__note"><b>Verified badge:</b> EUR 1.25 per ID check that passes, through Stripe Identity, paid by Locappoint. About EUR 25 for the first 20 businesses.</p>
                     </div>
                 </section>
 
@@ -615,7 +616,7 @@ export default function StatusApp() {
                     <div>
                         <div className="footer__col-label">Meta</div>
                         <div className="footer__meta">
-                            Status page v1.4<br />
+                            Status page v1.5<br />
                             status.locappoint.com
                         </div>
                     </div>
