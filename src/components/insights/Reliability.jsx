@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Check, RotateCw, X } from 'lucide-react'
 import { Button } from '../ui'
 import { ReliableBadge } from '../trust/Trust'
-import { BADGE_KEEP, BADGE_MIN, CHECKS, ITEM_LABEL, MIN_BOOKINGS, PARTS, keptLine, loadMyReliability } from '../../services/reliability'
+import { BADGE_KEEP, BADGE_MIN, CHECKS, ITEM_LABEL, MIN_BOOKINGS, PARTS, checkLabel, keptLine, loadMyReliability } from '../../services/reliability'
 import { formatDay } from '../../services/business'
 import '../../styles/business/reliability.css'
 
@@ -184,7 +184,7 @@ export const Reliability = ({ businessId }) => {
                             return (
                                 <li key={c.key} className={ok ? 'is-ok' : ''}>
                                     <Icon size={14} strokeWidth={2.5} aria-hidden="true" />
-                                    <span>{c.label}</span>
+                                    <span>{checkLabel(c, r)}</span>
                                     <span className="lc-rel-checks__sr">{ok ? 'done' : 'not yet'}</span>
                                 </li>
                             )

@@ -564,8 +564,32 @@ const verRpc = (name) => {
   return null
 }
 
+// WhatsApp in Settings: ?wa=linked is linked with one business on, ?wa=code has a code out, ?wa=stopped wrote STOP.
+// window.__waLink() is the message with the code arriving. ?walive=1 makes the badge ask for WhatsApp.
+let WA = null
+const waState = () => {
+  if (WA) return WA
+  const m = new URLSearchParams(window.location.search).get('wa') || ''
+  const linked = m === 'linked' || m === 'stopped' ? { ends: '678', since: '2026-10-07T10:00:00Z', stopped: m === 'stopped' } : null
+  WA = { number: '15556461337', live: false, linked, code: m === 'code' ? { code: '482913', expires_at: new Date(Date.now() + 1800000).toISOString() } : null,
+    businesses: [{ member_id: 'm1', business_id: 'b1', business_name: 'Femtos Barbearia', role: 'owner', on: m === 'linked' }] }
+  return WA
+}
+window.__waLink = () => { const s = waState(); WA = { ...s, code: null, linked: { ends: '678', since: new Date().toISOString(), stopped: false } } }
+const waRpc = (name, args) => {
+  if (name === 'my_whatsapp') return { data: waState(), error: null }
+  if (name === 'wa_link_start') { WA = { ...waState(), code: { code: '482913', expires_at: new Date(Date.now() + 1800000).toISOString() } }; return { data: WA, error: null } }
+  if (name === 'wa_unlink') { WA = { ...waState(), linked: null, code: null, businesses: waState().businesses.map((b) => ({ ...b, on: false })) }; return { data: WA, error: null } }
+  if (name === 'wa_set_alerts') {
+    if (!waState().linked) return { data: null, error: { code: '22023', message: 'Link your WhatsApp first' } }
+    WA = { ...waState(), businesses: waState().businesses.map((b) => (b.member_id === args.p_member ? { ...b, on: Boolean(args.p_on) } : b)) }
+    return { data: WA, error: null }
+  }
+  return null
+}
+
 const relRpc = (name) => {
-  if (name === 'my_reliability') return { data: MY_REL(), error: null }
+  if (name === 'my_reliability') return { data: { ...MY_REL(), wa_live: new URLSearchParams(window.location.search).get('walive') === '1' }, error: null }
   if (name === 'business_trust') return { data: relMode() === 'none' ? [] : [{ business_id: 'b1', reliable: true, kept_pct: 98, verified: true }], error: null }
   if (name === 'admin_reliability') return { data: ADMIN_REL(), error: null }
   if (['admin_reliability_business', 'admin_badge', 'admin_excuse_cancellation'].includes(name)) return { data: { ...MY_REL(), removed_at: null, excused: [] }, error: null }
@@ -598,7 +622,7 @@ const checkoutFn = (body) => (body.action === 'start' && body.appointment_id
 export const supabase = {
   functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); if (name === 'checkout') return checkoutFn(body || {}); if (name === 'places') return placesFn(body || {}); if (name === 'trip') return tripFn(body || {}); if (name === 'verify') return { data: body?.action === 'start' ? { url: '#stripe-identity' } : MY_VER(), error: null }; return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
   from: builder,
-  rpc: async (name, args) => { calls.push(['rpc', name, args]); const tripping = tripRpc(name, args); if (tripping) return tripping; const relying = relRpc(name); if (relying) return relying; const verifying = verRpc(name); if (verifying) return verifying; const supporting = supportRpc(name, args); if (supporting) return supporting; const blocking = blockRpc(name, args); if (blocking) return blocking; const matching = engineRpc(name, args); if (matching) return matching; const paying = payRpc(name, args); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
+  rpc: async (name, args) => { calls.push(['rpc', name, args]); const tripping = tripRpc(name, args); if (tripping) return tripping; const relying = relRpc(name); if (relying) return relying; const chatting = waRpc(name, args); if (chatting) return chatting; const verifying = verRpc(name); if (verifying) return verifying; const supporting = supportRpc(name, args); if (supporting) return supporting; const blocking = blockRpc(name, args); if (blocking) return blocking; const matching = engineRpc(name, args); if (matching) return matching; const paying = payRpc(name, args); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async (paths) => { calls.push(['remove', paths]); return { error: null } }, createSignedUrl: async (path) => ({ data: { signedUrl: `/brand/loca-app-icon.svg?${path}` }, error: null }) }) },
   auth: {
     getSession: async () => ({ data: { session: null } }),

@@ -19,7 +19,7 @@ export const CHECKS = [
     { key: 'score', label: 'Score of 90 or more' },
     { key: 'completed', label: '10 completed visits in 90 days' },
     { key: 'email', label: 'Email confirmed' },
-    { key: 'phone', label: 'Phone number on your page' },
+    { key: 'phone', label: 'Phone number on your page', live: 'WhatsApp linked in Settings' },
     { key: 'safety', label: 'No upheld safety report in 180 days' },
     { key: 'active', label: 'Page live and taking bookings' },
 ]
@@ -36,6 +36,9 @@ export const ITEM_LABEL = {
 export const BADGE_MIN = 90
 export const BADGE_KEEP = 85
 export const MIN_BOOKINGS = 10
+
+// The phone check asks for a linked WhatsApp once Locappoint is live on WhatsApp.
+export const checkLabel = (c, r) => (r?.wa_live && c.live ? c.live : c.label)
 
 export const keptLine = (pct) => (pct === null || pct === undefined ? '' : `Keeps ${pct}% of bookings`)
 
