@@ -99,7 +99,8 @@ export default async ({ browser, url, check }) => {
         HTMLAnchorElement.prototype.click = function () { window.__saved.push({ name: this.download, href: this.href }) }
     })
     await p.evaluate(() => [...document.querySelectorAll('.lc-poster-sheet .ui-btn')].find((b) => /Download poster/.test(b.textContent))?.click())
-    await wait(1500)
+    // Drawing the poster can take a few seconds on a busy machine: wait for the file, not a fixed time.
+    await p.waitForFunction(() => window.__saved.some((s) => /qr-poster\.png$/.test(s.name)), { timeout: 15000 }).catch(() => {})
     const png = await p.evaluate(async () => {
         const saved = window.__saved.find((s) => /qr-poster\.png$/.test(s.name))
         if (!saved) return null

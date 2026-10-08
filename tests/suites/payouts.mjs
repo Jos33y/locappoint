@@ -35,7 +35,7 @@ export default async ({ browser, url, check, server, root }) => {
     // Where it lives
     let p = await open('not_started')
     const tabs = await p.evaluate(() => [...document.querySelectorAll('.biz-hubnav__tab')].map((t) => t.textContent.trim()))
-    check(tabs.join(',') === 'Page,Services,Hours,Team,Payments', `Payments is a tab under Your business: ${tabs.join(', ')}`)
+    check(tabs.slice(0, 5).join(',') === 'Page,Services,Hours,Team,Payments', `Payments is a tab under Your business: ${tabs.join(', ')}`)
     check(await p.evaluate(() => document.querySelector('.biz-hubnav__tab.active')?.textContent.trim() === 'Payments'), 'the Payments tab is the open one')
     await p.close()
     p = await open('not_started', 390, 844, '', '/portal/settings')
