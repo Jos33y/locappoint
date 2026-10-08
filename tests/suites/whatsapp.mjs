@@ -137,4 +137,88 @@ export default async ({ browser, url, check, server, root }) => {
     await p.waitForFunction(() => document.querySelector('.lc-rel-checks'), { timeout: 5000 }).catch(() => {})
     check(/Phone number on your page/.test(await text(p, '.lc-rel-checks')), 'before live: a phone on the page')
     await p.close()
+
+    // ---------- 3b: the agent for clients ----------
+    const client = await server.ssrLoadModule(path.join(fns, '_shared', 'wa-client.ts'))
+    const agent = await server.ssrLoadModule(path.join(fns, '_shared', 'agent.ts'))
+    const agentSql = fs.readFileSync(path.join(root, 'supabase', 'migrations', 'agent.sql'), 'utf8')
+
+    // Client booking news: every kind the database queues has words, in both languages, and a template when needed.
+    const clientKinds = (agentSql.match(/p_kind NOT IN \(([^)]+)\)/) || [])[1]?.match(/'([a-z_]+)'/g)?.map((k) => k.slice(1, -1)) || []
+    check(clientKinds.length === 6, `six kinds of client news on WhatsApp: ${clientKinds.join(', ')}`)
+    const cb = { business_name: 'Femtos Barbearia', service_name: 'Haircut', date: day(1), time: '10:30', timezone: 'Europe/Lisbon', address: 'Rua da Rosa 12', city: 'Lisbon', manage_token: 'tok123', payment_status: 'paid', total: 20.49, currency: 'EUR', staff_name: 'Rui' }
+    for (const kind of clientKinds) {
+        for (const lang of ['en', 'pt']) {
+            const out = client.clientNews(kind, { ...cb, lang }, true)
+            check(Boolean(out) && clean(out.text), `${kind} in ${lang} reads cleanly: ${out?.text.replace(/\n/g, ' / ')}`)
+        }
+        const later = client.clientNews(kind, cb, false)
+        check(kind === 'booking_requested' ? later === null : later?.message.type === 'template' && Object.prototype.hasOwnProperty.call(client.CLIENT_TEMPLATES, later.message.template.name), `${kind} after 24 hours: ${later ? later.message.template.name : 'not sent (they just wrote)'}`)
+    }
+    check(/amanhã às 10:30/.test(client.clientNews('booking_confirmed', { ...cb, lang: 'pt' }, true).text) && /tomorrow at 10:30/.test(client.clientNews('booking_confirmed', cb, true).text), 'when, in their language')
+    check(/locappoint\.com\/b\/tok123/.test(client.clientNews('booking_confirmed', cb, true).text) && /Paid: .*20\.49/.test(client.clientNews('booking_confirmed', cb, true).text), 'confirmed: the manage link and what was paid')
+    for (const [name, t] of Object.entries(client.CLIENT_TEMPLATES)) {
+        const vars = t.body.match(/\{\{\d\}\}/g) || []
+        check(/^lc_client_[a-z]+$/.test(name) && vars.length === t.sample.length && !/^\{\{|\}\}$/.test(t.body.trim()) && clean(t.body), `${name} is a valid utility template`)
+    }
+
+    // The summary is built from database values, with Yes and No.
+    const prop = { kind: 'book', business_name: 'Femtos Barbearia', service_name: 'Haircut', date: day(1), time: '10:30', timezone: 'Europe/Lisbon', minutes: 30, people: 1, total: 20.49, currency: 'EUR', online: true, confirms: false, cutoff: 1440, name: 'Ana Silva', email: null, mode: 'at_business' }
+    const sum = client.summary(prop, 'abcdef012345', 'en')
+    check(sum.message.interactive.action.buttons.map((b) => b.reply.id).join() === 'yes:abcdef012345,no:abcdef012345', 'a summary answers with Yes or No')
+    check(/paid now online/.test(sum.text) && /confirms the request/.test(sum.text) && /up to 1 day before/.test(sum.text), `it says how it is paid, who confirms and the cut-off: ${sum.text.replace(/\n/g, ' / ')}`)
+    check(words.readReply('yes:abcdef012345')?.nonce === 'abcdef012345' && words.readReply('pay:11111111-2222-3333-4444-555555555555')?.verb === 'pay' && words.readReply('yes:zz') === null, 'Yes, No and Pay again are understood, nothing else')
+    check(agent.typedAnswer('Sim') === 'yes' && agent.typedAnswer('não') === 'no' && agent.typedAnswer('yes but tomorrow instead please') === null, 'typed yes and no, in both languages')
+    const pay = client.payLink({ ...cb, payment_status: 'awaiting' }, 'https://checkout.stripe.com/c/pay/cs_test_1', 35, 'en')
+    check(/held for 35 min/.test(pay.text) && /https:\/\/checkout\.stripe\.com/.test(pay.text), 'the payment link says how long the time is held')
+
+    // The agent loop, with a model that makes things up: tools refuse, and only a proposal waits for a yes.
+    const BIZ = '11111111-1111-1111-1111-111111111111', SVC = '22222222-2222-2222-2222-222222222222'
+    const fakeCall = async (fn, args) => {
+        if (fn === 'wa_times') return ['10:00', '10:30', '11:00']
+        if (fn === 'wa_business') return { business_id: BIZ, name: 'Femtos Barbearia', slug: 'femtos-barbearia', timezone: 'Europe/Lisbon', currency: 'EUR', confirms_automatically: true, cancel_cutoff_minutes: 120, services: [{ service_id: SVC, name: 'Haircut', minutes: 30, price: 18, price_per: 'booking', ways: ['at_business'] }] }
+        if (fn === 'wa_quote') return { online: false }
+        if (fn === 'wa_my') return []
+        return null
+    }
+    const script = (steps) => { let n = 0; const f = async (body) => { f.seen.push(body); return steps[n++] }; f.seen = []; return f }
+    const use = (name, input) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: `t${name}`, name, input }], usage: { input_tokens: 800, output_tokens: 40 } })
+    const thread = { business: { business_id: BIZ, name: 'Femtos Barbearia', slug: 'femtos-barbearia', city: 'Lisbon' }, name: null, email: null, lang: null, history: [], pending: null }
+    let model = script([use('propose_booking', { business_id: BIZ, service_id: SVC, date: day(1), time: '03:00', name: 'Ana', language: 'en' }), { stop_reason: 'end_turn', content: [{ type: 'text', text: '03:00 is not free. 10:30?' }], usage: {} }])
+    let turn = await agent.runAgent({ call: fakeCall, claude: model, nonce: () => 'abcdef012345' }, { phone: '351911222333', profileName: 'Ana', message: 'Book 3am', thread })
+    check(!turn.pending && model.seen[1].messages.at(-1).content[0].is_error, 'an invented time is refused, nothing waits')
+    model = script([use('propose_booking', { business_id: BIZ, service_id: SVC, date: day(1), time: '10:30', name: 'Ana Silva', language: 'pt' }), { stop_reason: 'end_turn', content: [{ type: 'text', text: 'Booked!' }], usage: {} }])
+    turn = await agent.runAgent({ call: fakeCall, claude: model, nonce: () => 'abcdef012345' }, { phone: '351911222333', profileName: 'Ana', message: '10:30', thread })
+    check(turn.pending?.args.time === '10:30' && turn.replies.length === 1 && /Confirma esta marcação/.test(turn.replies[0].text) && !/Booked!/.test(turn.replies.map((r) => r.text).join()), 'a real time: the Portuguese summary from the database, never the model saying "booked"')
+    check(model.seen.length === 1 && model.seen[0].system[0].cache_control, 'one model call, with the rules cached')
+
+    // Business page: Book on WhatsApp only once WhatsApp is live.
+    p = await browser.newPage()
+    await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
+    await p.goto(`${url}/?path=${encodeURIComponent('/femtos-barbearia')}&guest=1&nobiz=1`, { waitUntil: 'networkidle0' })
+    await wait(800)
+    check(!(await p.$('.lc-pub__wabook')), 'no Book on WhatsApp before WhatsApp is live')
+    await p.close()
+    p = await browser.newPage()
+    await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
+    await p.goto(`${url}/?path=${encodeURIComponent('/femtos-barbearia')}&guest=1&nobiz=1&wabook=1`, { waitUntil: 'networkidle0' })
+    await p.waitForFunction(() => document.querySelector('.lc-pub__wabook'), { timeout: 5000 }).catch(() => {})
+    const href = await p.evaluate(() => document.querySelector('.lc-pub__wabook a')?.getAttribute('href') || '')
+    check(/^https:\/\/wa\.me\/15556461337\?text=Book%20at%20/.test(href) && /\(femtos-barbearia\)$/.test(decodeURIComponent(href)), `live: Book on WhatsApp names the business: ${decodeURIComponent(href)}`)
+    check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'the page still fits a phone')
+    await p.close()
+
+    // Admin: every conversation, opened in place.
+    p = await browser.newPage()
+    await p.setViewport({ width: 1272, height: 900 })
+    p.errors = []
+    p.on('pageerror', (e) => p.errors.push(e.message))
+    await p.goto(`${url}/?path=${encodeURIComponent('/admin-view/whatsapp')}&guest=1`, { waitUntil: 'networkidle0' })
+    await p.waitForFunction(() => document.querySelector('.adm-wa__head'), { timeout: 5000 }).catch(() => {})
+    check((await p.evaluate(() => document.querySelectorAll('.adm-wa').length)) === 2, 'admin lists the conversations')
+    await p.evaluate(() => document.querySelector('.adm-wa__head').click()); await wait(500)
+    check((await p.evaluate(() => document.querySelectorAll('.adm-wa-thread .adm-sup-msg').length)) === 4 && /Femtos Barbearia/.test(await text(p, '.adm-wa-bookings')), 'and opens one with its messages and bookings')
+    check(p.errors.length === 0, `no admin errors ${p.errors.join(' | ')}`)
+    await p.close()
+
 }

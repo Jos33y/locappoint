@@ -25,4 +25,20 @@ export const showNumber = (digits) => {
     return d ? `+${d}` : ''
 }
 
+// The number for "Book on WhatsApp" on business pages: null until WhatsApp is live and the agent is on.
+export const loadBookNumber = async () => {
+    try {
+        return (await call('wa_book_number')) || null
+    } catch {
+        return null
+    }
+}
+
+export const bookOnWhatsApp = (digits, name, slug) =>
+    `https://wa.me/${String(digits || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Book at ${name} (${slug})`)}`
+
+// Admin: every conversation, and one in full.
+export const loadAdminWaThreads = ({ search = '', offset = 0, limit = 50 } = {}) => call('admin_wa_threads', { p_search: search || null, p_limit: limit, p_offset: offset })
+export const loadAdminWaThread = (phone) => call('admin_wa_thread', { p_phone: phone })
+
 export const chatLink = (digits, code) => `https://wa.me/${String(digits || '').replace(/\D/g, '')}?text=${encodeURIComponent(`${CODE_PREFIX}${code}`)}`

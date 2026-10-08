@@ -16,7 +16,8 @@ import {
     LifeBuoy,
     Ban,
     ShieldCheck,
-    BadgeCheck
+    BadgeCheck,
+    MessagesSquare
 } from 'lucide-react'
 import LogoIcon from '../../components/LogoIcon'
 
@@ -125,6 +126,14 @@ const AdminSidebar = ({ activeSection, setActiveSection, counts, onClose, onLogo
                             <BadgeCheck size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
                             <span className="admin-sidebar__item-label">Verification</span>
                             {counts.verification > 0 && <span className="admin-sidebar__item-count">{counts.verification}</span>}
+                        </button>
+                        <button
+                            type="button"
+                            className={`admin-sidebar__item ${activeSection === 'whatsapp' ? 'admin-sidebar__item--active' : ''}`}
+                            onClick={() => goTo('whatsapp')}
+                        >
+                            <MessagesSquare size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
+                            <span className="admin-sidebar__item-label">WhatsApp</span>
                         </button>
                         {[['businesses', Building2, 'Businesses'], ['bookings', ShoppingBag, 'Bookings'], ['people', UserCog, 'People']].map(([key, Icon, label]) => (
                             <button

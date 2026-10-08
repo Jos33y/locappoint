@@ -50,6 +50,7 @@
 .lc-pub__head { order: 1; }
 .lc-pub__status { order: 2; }
 .lc-pub__actions { order: 3; }
+.lc-pub__wabook { order: 3; }
 .lc-pub__demo { order: 4; }
 .lc-pub__about { order: 4; }
 .lc-pub__menu { order: 5; }
@@ -157,6 +158,20 @@
 }
 
 .lc-pub__actions svg { flex: none; }
+
+/* Book on WhatsApp: under the actions on a phone, top of the side column on a wide screen. */
+.lc-pub__wabook {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.lc-pub__wabook p {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-body);
+}
 
 .lc-pub__card {
     border-radius: var(--lc-r-xl);

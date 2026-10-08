@@ -12,6 +12,7 @@ import { weekFromRows } from '../../services/hours'
 import { clearPending, readBookParam, readPending } from '../../services/booking'
 import { loadPublicReviews } from '../../services/reviews'
 import { loadTrust } from '../../services/reliability'
+import { bookOnWhatsApp, loadBookNumber } from '../../services/whatsapp'
 import { trackPage, visitSource } from '../../services/pageStats'
 import '../../styles/public-page.css'
 
@@ -112,6 +113,10 @@ const PublicBusinessPage = () => {
                     const trust = all.get(business.id)
                     if (!cancelled && trust) setState((s) => (s.business?.id === business.id ? { ...s, trust } : s))
                 })
+                // Book on WhatsApp shows only once WhatsApp is live; never holds the page up.
+                loadBookNumber().then((number) => {
+                    if (!cancelled && number) setState((s) => (s.business?.id === business.id ? { ...s, waBook: bookOnWhatsApp(number, business.business_name, business.slug) } : s))
+                })
             } catch (err) {
                 console.error('Business page load failed:', err)
                 if (!cancelled) setState({ status: 'error' })
@@ -197,6 +202,7 @@ const PublicBusinessPage = () => {
                         week={state.week}
                         reviews={state.reviews}
                         trust={state.trust}
+                        bookOnWhatsApp={state.waBook || null}
                         onMoreReviews={moreReviews}
                         onBook={(service) => { setResume(null); setBooking(service) }}
                     />

@@ -79,7 +79,8 @@ export type Booking = {
 // offer to remember the card for next time (the client ticks it) and shows it, with a way to remove
 // it, on the next booking there. Guests pay as today. Link, when switched on, remembers a card
 // across every business through Stripe's own sign-in.
-export type SessionOptions = { customer?: string | null; link?: boolean }
+// back: where Stripe sends the client after paying or giving up (the WhatsApp chat, for bookings made there).
+export type SessionOptions = { customer?: string | null; link?: boolean; back?: string | null }
 
 export const stripeSession = (b: Booking, site: string, app: boolean, o: SessionOptions = {}): Params => {
     const tail = app ? '&app=1' : ''
@@ -106,8 +107,8 @@ export const stripeSession = (b: Booking, site: string, app: boolean, o: Session
         'metadata[appointment_id]': b.id,
         // Checkout pages must live at least 30 minutes; the time is held for 35.
         expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
-        success_url: `${site}/pay/return?ref={CHECKOUT_SESSION_ID}${tail}`,
-        cancel_url: `${site}/pay/return?ref=${b.id}&cancelled=1${tail}`,
+        success_url: o.back || `${site}/pay/return?ref={CHECKOUT_SESSION_ID}${tail}`,
+        cancel_url: o.back || `${site}/pay/return?ref=${b.id}&cancelled=1${tail}`,
     }
     // Each extra line in order: the travel fee for a visit at the client's place, then the service fee.
     const extra: [string, number][] = []

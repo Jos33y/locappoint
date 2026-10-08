@@ -54,9 +54,16 @@ export const SUBPROCESSORS = [
     },
     {
         name: 'Meta Platforms (WhatsApp Business API)',
-        purpose: 'Booking confirmations and reminders on WhatsApp',
-        data: 'Phone number, name, booking details',
+        purpose: 'Booking on WhatsApp, booking news and reminders to clients, booking alerts to businesses',
+        data: 'Phone number, WhatsApp profile name, message content, booking details',
         location: 'European Union and United States',
-        status: 'Planned, not yet active',
+        status: 'In testing, active when Locappoint opens on WhatsApp',
+    },
+    {
+        name: 'Anthropic, PBC (Claude)',
+        purpose: 'Understands booking messages sent to Locappoint on WhatsApp and suggests replies; it cannot book or change anything on its own',
+        data: 'Message content, first name, the booking details in the conversation',
+        location: 'United States',
+        status: 'In testing, active when Locappoint opens on WhatsApp',
     },
 ]

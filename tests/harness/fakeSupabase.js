@@ -576,7 +576,15 @@ const waState = () => {
   return WA
 }
 window.__waLink = () => { const s = waState(); WA = { ...s, code: null, linked: { ends: '678', since: new Date().toISOString(), stopped: false } } }
+// The WhatsApp agent: ?wabook=1 puts Book on WhatsApp on business pages (WhatsApp live); the admin sees two conversations.
+const WA_MSGS = [['in', 'text', 'Book at Femtos Barbearia (femtos-barbearia)'], ['out', 'buttons', '*Book this?*\nFemtos Barbearia\nHaircut, tomorrow at 10:30'], ['in', 'interactive', 'Yes, book it [yes:abcdef012345]'], ['out', 'failed', 'Reminder\n[WhatsApp 400 131026: undeliverable]']]
 const waRpc = (name, args) => {
+  if (name === 'wa_book_number') return { data: new URLSearchParams(window.location.search).get('wabook') === '1' ? '15556461337' : null, error: null }
+  if (name === 'admin_wa_threads') return { data: { total: 2, rows: [
+    { phone: '351911222333', profile_name: 'Ana', linked_name: null, messages: 4, inbound: 2, last_at: new Date(Date.now() - 600000).toISOString(), last_body: 'Reminder', bookings: 1 },
+    { phone: '2348162438553', profile_name: 'boy', linked_name: 'Miles Farra', messages: 9, inbound: 4, last_at: new Date(Date.now() - 7200000).toISOString(), last_body: 'Today, 2 bookings', bookings: 0 }] }, error: null }
+  if (name === 'admin_wa_thread') return { data: { phone: args.p_phone, messages: WA_MSGS.map(([direction, kind, body], i) => ({ direction, kind, body, at: new Date(Date.now() - (9 - i) * 60000).toISOString() })),
+    bookings: [{ id: 'x1', status: 'confirmed', business_name: 'Femtos Barbearia', service_name: 'Haircut', date: '2026-10-09', time: '10:30', payment_status: 'at_visit' }] }, error: null }
   if (name === 'my_whatsapp') return { data: waState(), error: null }
   if (name === 'wa_link_start') { WA = { ...waState(), code: { code: '482913', expires_at: new Date(Date.now() + 1800000).toISOString() } }; return { data: WA, error: null } }
   if (name === 'wa_unlink') { WA = { ...waState(), linked: null, code: null, businesses: waState().businesses.map((b) => ({ ...b, on: false })) }; return { data: WA, error: null } }

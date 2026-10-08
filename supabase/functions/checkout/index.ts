@@ -7,6 +7,9 @@
 // so Stripe can remember their card for that business (only if they tick it on Stripe's page).
 // Never for guests: anyone can type an email, and a saved card must only ever show to its owner.
 //
+// From WhatsApp (target "whatsapp", called by the whatsapp function), Stripe sends the client back to
+// the chat, where the confirmation arrives once the webhook marks it paid.
+//
 // Deploy: npx supabase functions deploy checkout
 // Secrets: STRIPE_SECRET_KEY, PAYSTACK_SECRET_KEY, and optionally SITE_URL and STRIPE_CHECKOUT_LINK
 // (set to on once Link is turned on for connected accounts in the Stripe dashboard).
@@ -75,6 +78,12 @@ Deno.serve(async (req) => {
         const id = String(input.appointment_id || '')
         if (!UUID.test(id)) return reply(400, { error: 'We could not find this booking' })
         const app = input.target === 'app'
+        // Back to the Locappoint WhatsApp chat after paying; only our own number, read from the database.
+        let back: string | null = null
+        if (input.target === 'whatsapp') {
+            const { data: wa } = await db.from('wa_config').select('number').eq('id', 1).maybeSingle()
+            back = wa?.number && /^[0-9]{8,15}$/.test(wa.number) ? `https://wa.me/${wa.number}` : null
+        }
 
         const { data: a } = await db.from('appointments')
             .select('id, business_id, client_id, client_name, payment_status, hold_until, price, client_fee, business_fee, travel_fee, total, currency, client_email, addons, appointment_date, appointment_time, services(service_name), businesses(business_name, market)')
@@ -135,12 +144,12 @@ Deno.serve(async (req) => {
             }
             // Remembering the card is a convenience: if Stripe refuses any part of it, the client
             // still gets today's payment page.
-            const session = await stripeCall(STRIPE, 'checkout/sessions', stripeSession(booking, SITE, app, { customer, link: LINK }), payout.account_ref, `checkout-${id}-${count || 0}${customer ? '-c' : ''}`)
+            const session = await stripeCall(STRIPE, 'checkout/sessions', stripeSession(booking, SITE, app, { customer, link: LINK, back }), payout.account_ref, `checkout-${id}-${count || 0}${customer ? '-c' : ''}`)
                 .catch(async (err) => {
                     if (!customer || !(err instanceof ProviderError) || err.status !== 400) throw err
                     console.error('saved card refused, plain checkout:', err.code, err.message)
                     if (err.code === 'resource_missing') await db.from('payment_customers').delete().eq('customer_ref', customer)
-                    return stripeCall(STRIPE, 'checkout/sessions', stripeSession(booking, SITE, app, { link: LINK }), payout.account_ref, `checkout-${id}-${count || 0}`)
+                    return stripeCall(STRIPE, 'checkout/sessions', stripeSession(booking, SITE, app, { link: LINK, back }), payout.account_ref, `checkout-${id}-${count || 0}`)
                 })
             ref = session.id
             url = session.url

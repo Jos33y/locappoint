@@ -1,6 +1,6 @@
 // LocAppoint notification sender, the "notify" Edge Function.
 // Claims rows from public.notification_queue and sends emails through Resend, pushes through Firebase,
-// and booking news to owners and staff on WhatsApp.
+// and booking news on WhatsApp: to owners and staff who switched it on, and to clients who booked there.
 // Templates: emails/ (what each email says), layout.ts and blocks.ts (how every email looks).
 //
 // Deploy from the repo root: npx supabase functions deploy notify --no-verify-jwt
@@ -14,6 +14,7 @@ import { fcmAccount, sendPush } from './fcm.ts'
 import type { Message, Row } from './types.ts'
 import { NO_TEMPLATE, OUTSIDE_WINDOW, UNREACHABLE, WA, WaError, send as sendWa } from '../_shared/wa.ts'
 import { news } from '../_shared/wa-words.ts'
+import { clientNews } from '../_shared/wa-client.ts'
 
 const REPLY_TO = 'hello@locappoint.com'
 const MAX_ATTEMPTS = 5
@@ -73,20 +74,27 @@ const deliverWhatsApp = async (row: Row) => {
     if (row.created_at && Date.now() - new Date(row.created_at).getTime() > PUSH_FRESH_MS) return { skip: 'Too late for WhatsApp' }
     const p = (row.payload || {}) as Record<string, any>
     const phone = String(p.phone || '')
+    const forClient = row.kind.startsWith('wa_client_')
     const { data: contact, error } = await db.from('wa_contacts').select('user_id, verified_at, stopped_at, last_inbound_at').eq('phone', phone).maybeSingle()
     if (error) throw new Error(error.message)
-    if (!contact || contact.user_id !== row.recipient_user || !contact.verified_at) return { skip: 'Phone no longer linked' }
-    if (contact.stopped_at) return { skip: 'They wrote STOP' }
-    const inWindow = Boolean(contact.last_inbound_at) && Date.now() - new Date(contact.last_inbound_at).getTime() < WA_WINDOW_MS
-    let out = news(String(p.event || row.kind.replace(/^wa_/, '')), p as any, inWindow)
-    if (!out) return { skip: `No WhatsApp for ${row.kind}` }
+    // Owner and staff alerts go only to the phone still linked to that person; a client is the
+    // number they booked from.
+    if (!forClient && (!contact || contact.user_id !== row.recipient_user || !contact.verified_at)) return { skip: 'Phone no longer linked' }
+    if (contact?.stopped_at) return { skip: 'They wrote STOP' }
+    const inWindow = Boolean(contact?.last_inbound_at) && Date.now() - new Date(contact!.last_inbound_at).getTime() < WA_WINDOW_MS
+    const event = String(p.event || row.kind.replace(/^wa_(client_)?/, ''))
+    const make = (open: boolean) => (forClient ? clientNews(event, p as any, open) : news(event, p as any, open))
+    let out = make(inWindow)
+    if (!out) return { skip: `No WhatsApp for ${row.kind}${inWindow ? '' : ' outside the 24 hours'}` }
     let id: string
     try {
         id = await sendWa(phone, out)
     } catch (err) {
         // Meta's clock says the window closed: the template instead.
         if (!(err instanceof WaError) || err.code !== OUTSIDE_WINDOW || !inWindow) throw err
-        out = news(String(p.event || row.kind.replace(/^wa_/, '')), p as any, false)!
+        const later = make(false)
+        if (!later) return { skip: `No WhatsApp for ${row.kind} outside the 24 hours` }
+        out = later
         id = await sendWa(phone, out)
     }
     await db.rpc('wa_log', { p_phone: phone, p_direction: 'out', p_kind: out.kind, p_body: out.text, p_wa_id: id })

@@ -36,7 +36,8 @@ export const openStatus = (week, timeZone) => {
 const mapsLink = (address, city) =>
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([address, city].filter(Boolean).join(', '))}`
 
-export const PublicPageView = ({ business, services, week, preview = false, onBook, reviews, onMoreReviews, trust = null }) => {
+// bookOnWhatsApp: the link that opens the Locappoint WhatsApp with the business named, once WhatsApp is live.
+export const PublicPageView = ({ business, services, week, preview = false, onBook, reviews, onMoreReviews, trust = null, bookOnWhatsApp = null }) => {
     const name = business.business_name?.trim() || 'Your business'
     const timeZone = business.timezone || 'Europe/Lisbon'
     const now = useNow(timeZone)
@@ -70,7 +71,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
 
                 {(whatsapp || phone || maps) && (
                     <div className="lc-pub__actions">
-                        {whatsapp && <Button variant="secondary" icon={MessageCircle} href={whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</Button>}
+                        {whatsapp && <Button variant="secondary" icon={MessageCircle} href={whatsapp} target="_blank" rel="noopener noreferrer">{bookOnWhatsApp ? 'Message' : 'WhatsApp'}</Button>}
                         {phone && <Button variant="secondary" icon={Phone} href={`tel:${phone}`}>Call</Button>}
                         {maps && <Button variant="secondary" icon={Navigation} href={maps} target="_blank" rel="noopener noreferrer">Directions</Button>}
                     </div>
@@ -87,6 +88,12 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                 </div>
 
                 <aside className="lc-pub__aside">
+                    {bookOnWhatsApp && !business.is_demo && !preview && (
+                        <div className="lc-pub__wabook">
+                            <Button variant="secondary" icon={MessageCircle} full href={bookOnWhatsApp} target="_blank" rel="noopener noreferrer">Book on WhatsApp</Button>
+                            <p>Say what you need and when. Our assistant books it with {name}.</p>
+                        </div>
+                    )}
                     {hasHours && now && <PublicStatus week={week} timeZone={timeZone} now={now} />}
                     {address && <PublicFind business={business} href={maps} map={Boolean(business.banner_url)} />}
                 </aside>

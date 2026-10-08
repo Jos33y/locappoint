@@ -5,6 +5,8 @@
 //   day                today's list        acc:<id> / dec:<id>  accept or decline a request
 //   way:<id>           pick the minutes    min:<id>:<n>         on my way, n minutes
 //   arr:<id>           arrived
+//   yes:<nonce> / no:<nonce>   a client answering the agent's summary
+//   pay:<id>           a client asking for the payment link again
 
 import { oneLine, relativeDay } from '../notify/format.ts'
 import { buttons, choices, template, text, type Outgoing } from './wa.ts'
@@ -32,10 +34,16 @@ export const LANG = 'en'
 const ID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
 const ACT = new RegExp(`^(acc|dec|way|arr):(${ID})$`, 'i')
 const MIN = new RegExp(`^min:(${ID}):(\\d{1,3})$`, 'i')
+const ANSWER = /^(yes|no):([0-9a-f]{12})$/i
+const PAY = new RegExp(`^pay:(${ID})$`, 'i')
 
 // A tapped button, read back. Anything else is null.
-export const readReply = (reply: string): { verb: 'day' | 'acc' | 'dec' | 'way' | 'arr' | 'min'; id?: string; minutes?: number } | null => {
+export const readReply = (reply: string): { verb: 'day' | 'acc' | 'dec' | 'way' | 'arr' | 'min' | 'yes' | 'no' | 'pay'; id?: string; minutes?: number; nonce?: string } | null => {
     if (reply === 'day') return { verb: 'day' }
+    const answer = reply.match(ANSWER)
+    if (answer) return { verb: answer[1].toLowerCase() as 'yes', nonce: answer[2].toLowerCase() }
+    const pay = reply.match(PAY)
+    if (pay) return { verb: 'pay', id: pay[1].toLowerCase() }
     const min = reply.match(MIN)
     if (min) return { verb: 'min', id: min[1].toLowerCase(), minutes: Number(min[2]) }
     const act = reply.match(ACT)
