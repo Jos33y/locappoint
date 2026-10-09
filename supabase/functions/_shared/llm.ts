@@ -72,25 +72,31 @@ export const fromOpenAI = (res: any) => {
     }
 }
 
+// A model that is busy (429) is asked once more after the wait it names, up to 8 seconds.
+const post = async (url: string, headers: Record<string, string>, payload: unknown) => {
+    for (let attempt = 0; ; attempt++) {
+        const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload) })
+        if (res.status !== 429 || attempt > 0) return res
+        const wait = Math.min(8, Math.max(1, Number(res.headers?.get?.('retry-after')) || 3))
+        await new Promise((r) => setTimeout(r, wait * 1000))
+    }
+}
+
+export class BusyError extends Error {}
+
 export const callModel = async (body: Record<string, unknown>) => {
     const which = provider()
     if (which === 'anthropic') {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'x-api-key': env('ANTHROPIC_API_KEY'), 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-            body: JSON.stringify(body),
-        })
+        const res = await post('https://api.anthropic.com/v1/messages', { 'x-api-key': env('ANTHROPIC_API_KEY'), 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }, body)
         const json: any = await res.json().catch(() => ({}))
+        if (res.status === 429) throw new BusyError('Anthropic 429')
         if (!res.ok) throw new Error(`Anthropic ${res.status}: ${String(json?.error?.message || '').slice(0, 300)}`)
         return json
     }
     if (which === 'groq') {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${env('GROQ_API_KEY')}`, 'content-type': 'application/json' },
-            body: JSON.stringify(toOpenAI(body, 'groq')),
-        })
+        const res = await post('https://api.groq.com/openai/v1/chat/completions', { Authorization: `Bearer ${env('GROQ_API_KEY')}`, 'content-type': 'application/json' }, toOpenAI(body, 'groq'))
         const json: any = await res.json().catch(() => ({}))
+        if (res.status === 429) throw new BusyError(`Groq 429: ${String(json?.error?.message || '').slice(0, 200)}`)
         if (!res.ok || json?.error) throw new Error(`Groq ${res.status}: ${String(json?.error?.message || '').slice(0, 300)}`)
         const out = fromOpenAI(json)
         // Groq does not say what a call cost: from its prices per million tokens, 0 on the free plan.
@@ -98,12 +104,9 @@ export const callModel = async (body: Record<string, unknown>) => {
         return out
     }
     if (which === 'openrouter') {
-        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${env('OPENROUTER_API_KEY')}`, 'content-type': 'application/json', 'HTTP-Referer': 'https://locappoint.com', 'X-Title': 'Locappoint' },
-            body: JSON.stringify(toOpenAI(body, 'openrouter')),
-        })
+        const res = await post('https://openrouter.ai/api/v1/chat/completions', { Authorization: `Bearer ${env('OPENROUTER_API_KEY')}`, 'content-type': 'application/json', 'HTTP-Referer': 'https://locappoint.com', 'X-Title': 'Locappoint' }, toOpenAI(body, 'openrouter'))
         const json: any = await res.json().catch(() => ({}))
+        if (res.status === 429) throw new BusyError(`OpenRouter 429: ${String(json?.error?.message || '').slice(0, 200)}`)
         if (!res.ok || json?.error) throw new Error(`OpenRouter ${res.status}: ${String(json?.error?.message || '').slice(0, 300)}`)
         return fromOpenAI(json)
     }

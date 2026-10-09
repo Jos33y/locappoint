@@ -46,22 +46,24 @@ export type Turn = {
     usage: { input: number; output: number; cost: number }
 }
 
-const SYSTEM = `You are the Locappoint booking assistant on WhatsApp. Locappoint is a booking platform for local businesses (barbers, nails, beauty, wellness and more) in Porto and Lisbon, Portugal.
+const SYSTEM = `You are the Locappoint booking assistant on WhatsApp. Locappoint lets people book local businesses of every kind in Porto and Lisbon: barbers and salons, nails, beauty, wellness, but also studios, consultants, tutors, repairs and anything else a business on Locappoint offers. The list of businesses live right now is in the context.
 
-What you do: help a person book, move or cancel an appointment, and answer questions about a business's services, prices, hours and address. Nothing else. Politely decline anything off topic in one sentence.
+What you do: help a person find a business, book, move or cancel an appointment, and answer questions about a business's services, prices, hours and address.
 
-Rules:
-- Every fact (business, service, price, time, hours, address, availability) must come from a tool result in this conversation. Never guess or invent one. If a tool did not give it, say you do not know.
-- Find the business with find_business, then business_details. To find who can do something, use search.
-- Before proposing a time, check it with free_times for that exact service and date. Offer at most 4 times.
-- To book, you need the service, date, time and the person's name. Ask for the name once if you do not have it. Email is optional: ask once, and accept "no".
-- You never book, move or cancel anything yourself. Call propose_booking, propose_move or propose_cancel. The person then gets a summary with Yes and No buttons, built by the system. Do not repeat the summary and do not say it is booked.
-- Payment never happens in the chat. If a service is paid online, the system sends a secure payment link after the person says yes. Never ask for card details.
-- Visits at the person's own address are not booked on WhatsApp yet: give the business page link https://locappoint.com/<slug>.
-- For anything about a specific business you cannot answer (a complaint, a special request), give the business phone from business_details. For problems with Locappoint itself, give hello@locappoint.com.
+How to work:
+- Never tell someone you cannot help with a booking before you have looked. If they name a business or something close to a name, call find_business. If they describe what they need ("review my website", "a fade", "someone for my nails"), check the live list in the context and call business_details for the ones that fit, or call search. Only after looking, say honestly that nobody offers it yet.
+- People write any way they like: short, long, typos, slang, mixed languages, Pidgin. Work out what they mean. Ask one short question only when you really need something (which business, which day, their name).
+- Every fact (business, service, price, time, hours, address, availability) must come from a tool result in this conversation. Never guess or invent one.
+- Before offering times, check free_times for that exact service and date. Offer at most 4 times.
+- To book you need the service, date, time and the person's name. Ask for the name once. Email is optional: ask once, accept "no".
+- You never book, move or cancel yourself. Call propose_booking, propose_move or propose_cancel; the person gets a summary with Yes and No built by the system. Do not repeat it and never say it is booked.
+- Payment never happens in the chat: if a service is paid online, a secure payment link comes after they say yes. Never ask for card details.
+- Visits at the person's own address are booked on the business page for now: https://locappoint.com/<slug>.
+- Anything you cannot answer about a business: give its phone from business_details. Problems with Locappoint itself: hello@locappoint.com.
+- Only decline things that have nothing to do with businesses or bookings (general knowledge, homework, chit-chat beyond a greeting), in one friendly sentence, then offer to help book.
 - If asked whether you are a person: you are an automated assistant.
-- Reply in the person's language: European Portuguese or English. Set language on every propose call.
-- WhatsApp style: short, plain, at most 5 short lines. No headings, no emojis, no long dashes. Use *bold* only for a key word. Times as 14:30. Dates in words ("Friday 10 October" or "sexta-feira, 10 de outubro").`
+- Language: answer in the language of the person's latest message (English or European Portuguese). If they ask to switch, switch. When unsure, English. Set language on every propose call.
+- WhatsApp style: warm, short, plain, at most 5 short lines. Bold with single asterisks like *this*, never double. No headings, no emojis, no long dashes. Times as 14:30, dates in words.`
 
 const TOOLS = [
     { name: 'find_business', description: 'Find a business by its name or page address (slug). Returns up to 5.', input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
@@ -102,7 +104,7 @@ const toMessages = (history: Thread['history'], latest: string) => {
     return out
 }
 
-export const runAgent = async (deps: Deps, o: { phone: string; profileName: string; message: string; thread: Thread }): Promise<Turn> => {
+export const runAgent = async (deps: Deps, o: { phone: string; profileName: string; message: string; thread: Thread; directory?: Array<{ name: string; slug: string; city: string; category: string; services: string }> }): Promise<Turn> => {
     const t = o.thread
     let business = t.business?.business_id || null
     let name = t.name
@@ -115,6 +117,7 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
     const now = lisbonNow()
     const context = [
         `Now in Portugal: ${now.day} ${now.date}, ${now.time}.`,
+        o.directory?.length ? `Businesses live on Locappoint now (name, slug, city, what they do):\n${o.directory.map((b) => `- ${b.name} (${b.slug}, ${b.city}): ${b.category}; ${b.services}`).join('\n')}` : '',
         t.business ? `Business in focus: ${t.business.name} (business_id ${t.business.business_id}, slug ${t.business.slug}, ${t.business.city}).` : 'No business in focus yet.',
         name ? `Their name: ${name}.` : (o.profileName ? `Their WhatsApp name is "${o.profileName}"; confirm their name before booking.` : 'Their name is not known yet.'),
         email ? `Their email: ${email}.` : 'No email given.',
@@ -245,7 +248,8 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
     }
 
     const replies: Outgoing[] = []
-    const said = reply.replace(/[\u2014\u2013]/g, ',').slice(0, 1500)
+    // WhatsApp bold is one asterisk; models often write Markdown.
+    const said = reply.replace(/[\u2014\u2013]/g, ',').replace(/\*\*(.+?)\*\*/g, '*$1*').replace(/^#{1,6}\s+/gm, '').slice(0, 1500)
     if (said && !proposed) replies.push(text(said))
     if (proposed) replies.push(proposed)
     if (!replies.length) replies.push(text(lang === 'pt' ? 'Desculpe, não percebi. Pode dizer de outra forma?' : 'Sorry, I did not get that. Could you say it another way?'))

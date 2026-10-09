@@ -17,7 +17,7 @@ import { WA, failures, inbound, missing, send, signed, text, type Inbound, type 
 import * as W from '../_shared/wa-words.ts'
 import * as C from '../_shared/wa-client.ts'
 import { runAgent, typedAnswer, type Thread } from '../_shared/agent.ts'
-import { callModel, provider } from '../_shared/llm.ts'
+import { BusyError, callModel, provider } from '../_shared/llm.ts'
 import { longDay } from '../notify/format.ts'
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined
@@ -160,12 +160,15 @@ const agentTurn = async (phone: string, m: Inbound, who: any): Promise<Outgoing[
     if ((count || 0) > AGENT_PER_HOUR) return [C.slowDown(lang)]
 
     try {
-        const turn = await runAgent({ call, claude: callModel, nonce }, { phone, profileName: m.name || who?.name || '', message: m.text || `(${m.type})`, thread })
+        const directory = await call('wa_directory', {}).catch(() => [])
+        const turn = await runAgent({ call, claude: callModel, nonce }, { phone, profileName: m.name || who?.name || '', message: m.text || `(${m.type})`, thread, directory })
         await call('wa_agent_spent', { p_input: turn.usage.input, p_output: turn.usage.output, p_cost: Number(turn.usage.cost.toFixed(6)) }).catch(() => null)
         await saveThread(phone, { history: turn.history, business: turn.business, name: turn.name, email: turn.email, pending: turn.pending, lang: turn.lang })
         return turn.replies
     } catch (err) {
         console.error('agent failed:', err instanceof Error ? err.message : err)
+        // The model's per-minute limit: ask them to send it again rather than sending them away.
+        if (err instanceof BusyError) return [C.busy(lang)]
         return [C.pausedAgent(thread.business?.slug || null, lang)]
     }
 }

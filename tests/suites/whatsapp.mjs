@@ -202,6 +202,15 @@ export default async ({ browser, url, check, server, root }) => {
     const groqReq = llm.toOpenAI({ system: [], max_tokens: 10, tools: [], messages: [{ role: 'user', content: 'hi' }] }, 'groq')
     check(!('usage' in groqReq) && groqReq.model, 'Groq requests carry no OpenRouter-only fields and always name a model')
 
+    // Round 2: the live businesses reach the model, and Markdown bold becomes WhatsApp bold.
+    let seenBody
+    const mdModel = async (b) => { seenBody = b; return { stop_reason: 'end_turn', content: [{ type: 'text', text: '## Hi\nFound **Femtos Barbearia**.' }], usage: {} } }
+    const mdTurn = await agent.runAgent({ call: fakeCall, claude: mdModel, nonce: () => 'abcdef012345' }, { phone: '351911222333', profileName: '', message: 'a fade', thread: { ...thread, business: null },
+        directory: [{ name: 'Femtos Barbearia', slug: 'femtos-barbearia', city: 'Lisbon', category: 'barbershop', services: 'Haircut, Fade' }] })
+    check(/Femtos Barbearia \(femtos-barbearia, Lisbon\): barbershop; Haircut, Fade/.test(seenBody.system[1].text), 'the model is told which businesses are live and what they offer')
+    check(mdTurn.replies[0].text === 'Hi\nFound *Femtos Barbearia*.', `WhatsApp bold and no headings: ${JSON.stringify(mdTurn.replies[0].text)}`)
+    check(/before you have looked/.test(seenBody.system[0].text), 'the rules forbid refusing a booking before looking')
+
     // Business page: Book on WhatsApp only once WhatsApp is live.
     p = await browser.newPage()
     await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
