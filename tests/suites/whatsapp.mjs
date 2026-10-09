@@ -192,6 +192,16 @@ export default async ({ browser, url, check, server, root }) => {
     check(turn.pending?.args.time === '10:30' && turn.replies.length === 1 && /Confirma esta marcação/.test(turn.replies[0].text) && !/Booked!/.test(turn.replies.map((r) => r.text).join()), 'a real time: the Portuguese summary from the database, never the model saying "booked"')
     check(model.seen.length === 1 && model.seen[0].system[0].cache_control, 'one model call, with the rules cached')
 
+    // OpenRouter: the same conversation in OpenAI's format and back.
+    const llm = await server.ssrLoadModule(path.join(fns, '_shared', 'llm.ts'))
+    const orReq = llm.toOpenAI({ system: [{ text: 'Rules' }, { text: 'Context' }], max_tokens: 700, tools: [{ name: 'free_times', description: 'd', input_schema: { type: 'object' } }],
+        messages: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: [{ type: 'tool_use', id: 'c1', name: 'free_times', input: { date: '2026-10-10' } }] }, { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'c1', content: '["10:00"]' }] }] })
+    check(orReq.messages[0].role === 'system' && /Rules/.test(orReq.messages[0].content) && orReq.tools[0].function.name === 'free_times' && orReq.messages[2].tool_calls[0].function.arguments === '{"date":"2026-10-10"}' && orReq.messages[3].role === 'tool', 'OpenRouter requests carry the rules, the tools and the tool results')
+    const orBack = llm.fromOpenAI({ choices: [{ message: { content: null, tool_calls: [{ id: 'c2', function: { name: 'my_bookings', arguments: '{}' } }] } }], usage: { prompt_tokens: 10, completion_tokens: 2, cost: 0.001 } })
+    check(orBack.stop_reason === 'tool_use' && orBack.content[0].name === 'my_bookings' && orBack.usage.cost_usd === 0.001, 'and OpenRouter answers come back as tool calls with their cost')
+    const groqReq = llm.toOpenAI({ system: [], max_tokens: 10, tools: [], messages: [{ role: 'user', content: 'hi' }] }, 'groq')
+    check(!('usage' in groqReq) && groqReq.model, 'Groq requests carry no OpenRouter-only fields and always name a model')
+
     // Business page: Book on WhatsApp only once WhatsApp is live.
     p = await browser.newPage()
     await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })

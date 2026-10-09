@@ -214,7 +214,9 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
         const p = PRICE()
         usage.input += Number(u.input_tokens) || 0
         usage.output += Number(u.output_tokens) || 0
-        usage.cost += (((Number(u.input_tokens) || 0) + (Number(u.cache_creation_input_tokens) || 0) * 1.25 + (Number(u.cache_read_input_tokens) || 0) * 0.1) * p.input
+        // OpenRouter says what a call cost; for Anthropic it is worked out from the token prices.
+        usage.cost += typeof u.cost_usd === 'number' ? u.cost_usd * p.eur
+            : (((Number(u.input_tokens) || 0) + (Number(u.cache_creation_input_tokens) || 0) * 1.25 + (Number(u.cache_read_input_tokens) || 0) * 0.1) * p.input
             + (Number(u.output_tokens) || 0) * p.output) / 1e6 * p.eur
 
         const blocks: any[] = Array.isArray(res?.content) ? res.content : []

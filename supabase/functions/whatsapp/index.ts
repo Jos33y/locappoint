@@ -8,8 +8,8 @@
 // - Everyone: STOP and START.
 //
 // Deploy: npx supabase functions deploy whatsapp --no-verify-jwt
-// Secrets: WHATSAPP_TOKEN, WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN, ANTHROPIC_API_KEY, optionally
-// WHATSAPP_PHONE_ID and ANTHROPIC_MODEL. Meta signs every call with the app secret, which is why JWT
+// Secrets: WHATSAPP_TOKEN, WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN, optionally WHATSAPP_PHONE_ID, and the
+// model: ANTHROPIC_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY with OPENROUTER_MODEL (see _shared/llm.ts). Meta signs every call with the app secret, which is why JWT
 // verification is off.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
@@ -17,6 +17,7 @@ import { WA, failures, inbound, missing, send, signed, text, type Inbound, type 
 import * as W from '../_shared/wa-words.ts'
 import * as C from '../_shared/wa-client.ts'
 import { runAgent, typedAnswer, type Thread } from '../_shared/agent.ts'
+import { callModel, provider } from '../_shared/llm.ts'
 import { longDay } from '../notify/format.ts'
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined
@@ -75,18 +76,6 @@ const firstName = (name: unknown) => String(name || '').trim().split(/\s+/)[0] |
 
 const nonce = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, '0')).join('')
 
-const claude = async (body: Record<string, unknown>) => {
-    const key = Deno.env.get('ANTHROPIC_API_KEY')
-    if (!key) throw new Error('ANTHROPIC_API_KEY is not set')
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify(body),
-    })
-    const json: any = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(`Claude ${res.status}: ${String(json?.error?.message || '').slice(0, 300)}`)
-    return json
-}
 
 // The payment page for a held booking, opened by the checkout function exactly as the website does.
 const payPage = async (appointment: string): Promise<string> => {
@@ -165,13 +154,13 @@ const agentTurn = async (phone: string, m: Inbound, who: any): Promise<Outgoing[
     }
 
     const budget = await call('wa_agent_budget', {})
-    if (!budget?.on || Number(budget.left) <= 0 || !Deno.env.get('ANTHROPIC_API_KEY')) return [C.pausedAgent(thread.business?.slug || null, lang)]
+    if (!budget?.on || Number(budget.left) <= 0 || !provider()) return [C.pausedAgent(thread.business?.slug || null, lang)]
     const { count } = await db.from('wa_messages').select('id', { count: 'exact', head: true })
         .eq('phone', phone).eq('direction', 'in').gte('created_at', new Date(Date.now() - 3_600_000).toISOString())
     if ((count || 0) > AGENT_PER_HOUR) return [C.slowDown(lang)]
 
     try {
-        const turn = await runAgent({ call, claude, nonce }, { phone, profileName: m.name || who?.name || '', message: m.text || `(${m.type})`, thread })
+        const turn = await runAgent({ call, claude: callModel, nonce }, { phone, profileName: m.name || who?.name || '', message: m.text || `(${m.type})`, thread })
         await call('wa_agent_spent', { p_input: turn.usage.input, p_output: turn.usage.output, p_cost: Number(turn.usage.cost.toFixed(6)) }).catch(() => null)
         await saveThread(phone, { history: turn.history, business: turn.business, name: turn.name, email: turn.email, pending: turn.pending, lang: turn.lang })
         return turn.replies
