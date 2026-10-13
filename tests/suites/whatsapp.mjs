@@ -181,6 +181,8 @@ export default async ({ browser, url, check, server, root }) => {
     }
     check(/amanhã às 10:30/.test(client.clientNews('booking_confirmed', { ...cb, lang: 'pt' }, true).text) && /tomorrow at 10:30/.test(client.clientNews('booking_confirmed', cb, true).text), 'when, in their language')
     check(/locappoint\.com\/b\/tok123/.test(client.clientNews('booking_confirmed', cb, true).text) && /Paid: .*20\.49/.test(client.clientNews('booking_confirmed', cb, true).text), 'confirmed: the manage link and what was paid')
+    const due = client.clientNews('booking_reminder', cb, false)
+    check(due?.message.template.name === 'lc_client_upcoming' && /^Your booking at Femtos Barbearia is coming up: Haircut, tomorrow at 10:30\./.test(due.text) && !('lc_client_reminder' in client.CLIENT_TEMPLATES), `the reminder after 24 hours uses lc_client_upcoming: ${due?.text}`)
     for (const [name, t] of Object.entries(client.CLIENT_TEMPLATES)) {
         const vars = t.body.match(/\{\{\d\}\}/g) || []
         check(/^lc_client_[a-z]+$/.test(name) && vars.length === t.sample.length && !/^\{\{|\}\}$/.test(t.body.trim()) && clean(t.body), `${name} is a valid utility template`)

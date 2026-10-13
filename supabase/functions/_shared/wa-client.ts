@@ -108,8 +108,9 @@ export const CLIENT_TEMPLATES = {
         body: 'Your booking at {{1}} for {{2}} has moved to {{3}}. Reply here if that time does not work.',
         sample: ['Barbearia Rio', 'Haircut', 'Friday 10 October at 11:00'],
     },
-    lc_client_reminder: {
-        body: 'Reminder from {{1}}: {{2}}, {{3}}. Reply here if you need to change it.',
+    // Replaces lc_client_reminder, which Meta moved to Marketing. Worded as a notice about one booking.
+    lc_client_upcoming: {
+        body: 'Your booking at {{1}} is coming up: {{2}}, {{3}}. Reply here to change or cancel it.',
         sample: ['Barbearia Rio', 'Haircut', 'tomorrow at 10:30'],
     },
     // Values: {{1}} ticket number, {{2}} the reply.
@@ -125,7 +126,7 @@ const CLIENT_EVENT: Record<string, keyof typeof CLIENT_TEMPLATES | null> = {
     booking_declined: 'lc_client_declined',
     booking_cancelled: 'lc_client_cancelled',
     booking_moved: 'lc_client_moved',
-    booking_reminder: 'lc_client_reminder',
+    booking_reminder: 'lc_client_upcoming',
     support_reply: 'lc_client_support',
 }
 
