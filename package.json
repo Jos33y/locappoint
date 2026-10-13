@@ -14,6 +14,7 @@
     "test:flows": "node tests/run.mjs flows",
     "test:layout": "node tests/run.mjs layout",
     "test:emails": "node tests/run.mjs emails",
+    "eval:agent": "node tests/agent-eval/run.mjs",
     "deploy:notify": "npx supabase functions deploy notify --use-api"
   },
   "dependencies": {

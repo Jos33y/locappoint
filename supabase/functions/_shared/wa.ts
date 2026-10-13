@@ -111,6 +111,17 @@ export const send = async (to: string, out: Outgoing): Promise<string> => {
     return String(body.messages[0].id)
 }
 
+// Their message shows as read and "typing..." shows while the agent thinks (up to 25 seconds, or until
+// the reply). Never stops a reply: any error is ignored.
+export const typing = async (messageId: string) => {
+    if (!WA.token() || !messageId) return
+    await fetch(`https://graph.facebook.com/${WA.graph()}/${WA.phoneId()}/messages`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${WA.token()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messaging_product: 'whatsapp', status: 'read', message_id: messageId, typing_indicator: { type: 'text' } }),
+    }).catch(() => null)
+}
+
 // X-Hub-Signature-256 is the HMAC of the raw body with the app secret.
 export const signed = async (raw: string, header: string | null, secret: string) => {
     if (!header || !secret || !header.startsWith('sha256=')) return false

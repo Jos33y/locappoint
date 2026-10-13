@@ -48,7 +48,8 @@ export const toOpenAI = (body: any, to: 'groq' | 'openrouter' = 'openrouter') =>
         max_tokens: body.max_tokens,
         messages,
         tools: (body.tools || []).map((t: any) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.input_schema } })),
-        tool_choice: 'auto',
+        // The agent's last round asks for words only.
+        tool_choice: body.tool_choice?.type === 'none' ? 'none' : 'auto',
         // OpenRouter adds the cost to its answer when asked; Groq takes no extra fields.
         ...(to === 'openrouter' ? { usage: { include: true } } : {}),
     }

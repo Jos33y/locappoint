@@ -211,6 +211,38 @@ export default async ({ browser, url, check, server, root }) => {
     check(mdTurn.replies[0].text === 'Hi\nFound *Femtos Barbearia*.', `WhatsApp bold and no headings: ${JSON.stringify(mdTurn.replies[0].text)}`)
     check(/before you have looked/.test(seenBody.system[0].text), 'the rules forbid refusing a booking before looking')
 
+    // Round 3: a calendar for dates, plain WhatsApp text, prices in words, Portuguese noticed, and the
+    // last round always answers in words.
+    let r3Body
+    const r3Model = async (b) => { r3Body = b; return { stop_reason: 'end_turn', content: [{ type: 'text', text: '*Haircut* \u2014 30 min , \u20ac18' }], usage: {} } }
+    const r3Turn = await agent.runAgent({ call: fakeCall, claude: r3Model, nonce: () => 'abcdef012345' }, { phone: '351911222333', profileName: '', message: 'Quero marcar um corte amanhã', thread: { ...thread, history: [] } })
+    check(/\(today\); .* \(tomorrow\)/.test(r3Body.system[1].text) && /start of the conversation/.test(r3Body.system[1].text), 'the agent gets a two-week calendar and knows the conversation just started')
+    check(r3Turn.replies[0].text === '*Haircut*, 30 min, \u20ac18' && r3Turn.lang === 'pt', `plain WhatsApp text, and a Portuguese message sets Portuguese: ${JSON.stringify(r3Turn.replies[0].text)}`)
+    check(r3Body.tools.some((t) => t.name === 'free_days') && agent.priceText(0, 'EUR') === 'free' && agent.priceText(50, 'EUR') === '\u20ac50', 'free_days for "when are you free", and a price of 0 reads free')
+    const stuck = script([...Array.from({ length: 5 }, () => use('my_bookings', {})), { stop_reason: 'end_turn', content: [{ type: 'text', text: 'Nothing booked yet.' }], usage: {} }])
+    const stuckTurn = await agent.runAgent({ call: fakeCall, claude: stuck, nonce: () => 'abcdef012345' }, { phone: '351911222333', profileName: '', message: 'my bookings', thread })
+    check(stuck.seen[5]?.tool_choice?.type === 'none' && stuckTurn.replies[0].text === 'Nothing booked yet.', 'a model stuck on tools answers in words on its last round')
+    const waSrc = fs.readFileSync(path.join(fns, 'whatsapp', 'index.ts'), 'utf8')
+    check(/BUSY_WAIT_MS/.test(waSrc) && /typing\(m\.id\)/.test(waSrc) && /history: \[\.\.\.thread\.history, \{ role: 'user', text: message/.test(waSrc), 'when busy: one more try after a wait, typing shows, and an unanswered message is kept')
+
+    // Round 4: an email added from the chat, system notes after a Yes, and an empty answer asked again.
+    check(r3Body.tools.some((t) => t.name === 'add_email') && /\[Locappoint\]/.test(r3Body.system[0].text), 'the agent can add an email to a booking and trusts [Locappoint] notes')
+    check(/\[Locappoint\] \$\{what\}/.test(waSrc) && !/'\(booked\)'/.test(waSrc), 'after a Yes the conversation records what happened, never "(booked)"')
+    const empty = script([{ stop_reason: 'end_turn', content: [], usage: {} }, { stop_reason: 'end_turn', content: [{ type: 'text', text: 'You have nothing booked yet.' }], usage: {} }])
+    const emptyTurn = await agent.runAgent({ call: fakeCall, claude: empty, nonce: () => 'abcdef012345' }, { phone: '351911222333', profileName: '', message: 'and my booking?', thread })
+    check(empty.seen[1]?.tool_choice?.type === 'none' && emptyTurn.replies[0].text === 'You have nothing booked yet.', 'an empty answer is asked for once more, in words')
+    const round4 = fs.readFileSync(path.join(root, 'supabase', 'migrations', 'agent-4.sql'), 'utf8')
+    check(/a\.source IN \(''web'', ''whatsapp''\)/.test(round4) && /wa_set_email/.test(round4), 'WhatsApp bookings with an email get their emails and receipts')
+
+    // Round 5: a yes in words is settled like a tap, each service says how it is paid, groups show their real length.
+    const yesWords = script([use('answer_summary', { answer: 'yes' })])
+    const yesTurn = await agent.runAgent({ call: fakeCall, claude: yesWords, nonce: () => 'abcdef012345' }, { phone: '351911222333', profileName: 'Ana', message: "yes that's the one", thread: { ...thread, pending: turn.pending } })
+    check(yesTurn.answer === 'yes' && yesTurn.replies.length === 0 && /\.answer && thread\.pending\) return settle\(/.test(waSrc), 'a yes in words is settled by the webhook exactly as a tap, and the model says nothing')
+    const details = script([use('business_details', { business_id: BIZ }), { stop_reason: 'end_turn', content: [{ type: 'text', text: 'ok' }], usage: {} }])
+    await agent.runAgent({ call: fakeCall, claude: details, nonce: () => 'abcdef012345' }, { phone: '351911222333', profileName: '', message: 'how do I pay', thread })
+    check(/"pay":"at the visit"/.test(details.seen[1].messages.at(-1).content[0].content), 'each service says how it is paid')
+    check(/extra_person_minutes/.test(fs.readFileSync(path.join(root, 'supabase', 'migrations', 'agent-5.sql'), 'utf8')), 'group bookings show their real length')
+
     // Business page: Book on WhatsApp only once WhatsApp is live.
     p = await browser.newPage()
     await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })

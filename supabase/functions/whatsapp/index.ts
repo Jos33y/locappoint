@@ -13,10 +13,10 @@
 // verification is off.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { WA, failures, inbound, missing, send, signed, text, type Inbound, type Outgoing } from '../_shared/wa.ts'
+import { WA, failures, inbound, missing, send, signed, text, typing, type Inbound, type Outgoing } from '../_shared/wa.ts'
 import * as W from '../_shared/wa-words.ts'
 import * as C from '../_shared/wa-client.ts'
-import { runAgent, typedAnswer, type Thread } from '../_shared/agent.ts'
+import { guessLang, runAgent, typedAnswer, type Thread } from '../_shared/agent.ts'
 import { BusyError, callModel, provider } from '../_shared/llm.ts'
 import { longDay } from '../notify/format.ts'
 
@@ -34,6 +34,8 @@ const STOP = ['stop', 'parar', 'unsubscribe']
 const START = ['start', 'comecar', 'começar', 'voltar']
 const ENTRY = /\(([a-z0-9]+(?:-[a-z0-9]+)*)\)\s*$/
 const AGENT_PER_HOUR = 30
+// A busy model is tried once more after this wait, before the client hears anything.
+const BUSY_WAIT_MS = 20_000
 
 const call = async (fn: string, args: Record<string, unknown>) => {
     const { data, error } = await db.rpc(fn, args)
@@ -111,11 +113,14 @@ const settle = async (phone: string, thread: Thread, verb: 'yes' | 'no', code: s
     const lang = C.langOf(thread.lang)
     const p = thread.pending
     if (!p || p.nonce !== code) return [C.expired(lang)]
-    const done = (out: Outgoing[]) => saveThread(phone, {
-        history: [...thread.history, { role: 'user', text: label }, { role: 'assistant', text: out.map((o) => o.text).join('\n') || '(booked)' }],
+    // What happened goes into the conversation as a [Locappoint] line, so the agent knows it later
+    // and never mistakes it for something it said itself.
+    const done = (out: Outgoing[], note = '') => saveThread(phone, {
+        history: [...thread.history, { role: 'user', text: label }, { role: 'assistant', text: [note, out.map((o) => o.text).join('\n')].filter(Boolean).join('\n') }],
         pending: null, lang,
     }).then(() => out)
-    if (verb === 'no') return done([C.dropped(lang)])
+    const said = (v: any, what: string) => `[Locappoint] ${what}: ${v.service_name} at ${v.business_name}, ${v.date} ${v.time}, booking_id ${v.id}, ${v.status}${v.payment_status === 'awaiting' ? ', waiting for payment' : ''}. The details were sent in this chat.`
+    if (verb === 'no') return done([C.dropped(lang)], '[Locappoint] They said no to the summary. Nothing was booked or changed.')
     const a = p.args as Record<string, any>
     try {
         if (p.kind === 'book') {
@@ -125,18 +130,23 @@ const settle = async (phone: string, thread: Thread, verb: 'yes' | 'no', code: s
             })
             // Paid online: the link. Paid at the visit: the "booked" or "request sent" message comes
             // from the queue a moment later, the same news the email carries.
-            return done(v.payment_status === 'awaiting' ? [await sendPayLink(phone, v, lang)] : [])
+            return done(v.payment_status === 'awaiting' ? [await sendPayLink(phone, v, lang)] : [], said(v, v.status === 'pending' ? 'Request sent' : 'Booked'))
         }
-        if (p.kind === 'move') return done([C.moved(await call('wa_move', { p_phone: phone, p_appointment: a.booking, p_date: a.date, p_time: a.time }), lang)])
-        return done([C.cancelled(await call('wa_cancel', { p_phone: phone, p_appointment: a.booking }), lang)])
+        if (p.kind === 'move') {
+            const v = await call('wa_move', { p_phone: phone, p_appointment: a.booking, p_date: a.date, p_time: a.time })
+            return done([C.moved(v, lang)], said(v, 'Moved'))
+        }
+        const v = await call('wa_cancel', { p_phone: phone, p_appointment: a.booking })
+        return done([C.cancelled(v, lang)], said(v, 'Cancelled'))
     } catch (err) {
-        return done([problem(err)])
+        const out = problem(err)
+        return done([out], `[Locappoint] That did not go through: ${out.text}`)
     }
 }
 
 const agentTurn = async (phone: string, m: Inbound, who: any): Promise<Outgoing[]> => {
     let thread: Thread = await call('wa_thread', { p_phone: phone })
-    const lang = C.langOf(thread.lang)
+    const lang = guessLang(m.text) || C.langOf(thread.lang)
 
     // A typed yes or no while a summary waits.
     const typed = thread.pending ? typedAnswer(m.text) : null
@@ -159,15 +169,30 @@ const agentTurn = async (phone: string, m: Inbound, who: any): Promise<Outgoing[
         .eq('phone', phone).eq('direction', 'in').gte('created_at', new Date(Date.now() - 3_600_000).toISOString())
     if ((count || 0) > AGENT_PER_HOUR) return [C.slowDown(lang)]
 
+    const message = m.text || `(${m.type})`
+    await typing(m.id)
+    const directory = await call('wa_directory', {}).catch(() => [])
+    const run = () => runAgent({ call, claude: callModel, nonce }, { phone, profileName: m.name || who?.name || '', message, thread, directory })
     try {
-        const directory = await call('wa_directory', {}).catch(() => [])
-        const turn = await runAgent({ call, claude: callModel, nonce }, { phone, profileName: m.name || who?.name || '', message: m.text || `(${m.type})`, thread, directory })
+        let turn
+        try {
+            turn = await run()
+        } catch (err) {
+            if (!(err instanceof BusyError)) throw err
+            // Busy: wait, show typing again, and try once more before telling them anything.
+            await new Promise((r) => setTimeout(r, BUSY_WAIT_MS))
+            await typing(m.id)
+            turn = await run()
+        }
         await call('wa_agent_spent', { p_input: turn.usage.input, p_output: turn.usage.output, p_cost: Number(turn.usage.cost.toFixed(6)) }).catch(() => null)
+        // A yes or no in words to the summary waiting: settled exactly as a tap on the button.
+        if (turn.answer && thread.pending) return settle(phone, { ...thread, lang: turn.lang }, turn.answer, thread.pending.nonce, message)
         await saveThread(phone, { history: turn.history, business: turn.business, name: turn.name, email: turn.email, pending: turn.pending, lang: turn.lang })
         return turn.replies
     } catch (err) {
         console.error('agent failed:', err instanceof Error ? err.message : err)
-        // The model's per-minute limit: ask them to send it again rather than sending them away.
+        // Their message is kept, so the next turn answers it too instead of losing it.
+        await saveThread(phone, { history: [...thread.history, { role: 'user', text: message.slice(0, 1000) }], pending: thread.pending }).catch(() => null)
         if (err instanceof BusyError) return [C.busy(lang)]
         return [C.pausedAgent(thread.business?.slug || null, lang)]
     }

@@ -227,5 +227,6 @@ export const expired = (lang: Lang): Outgoing => text(lang === 'pt' ? 'Essa perg
 export const pausedAgent = (slug: string | null, lang: Lang): Outgoing => text(lang === 'pt'
     ? `Neste momento não consigo responder aqui. Marque em ${SITE}${slug ? `/${slug}` : ''}`
     : `I cannot chat right now. Book on ${SITE}${slug ? `/${slug}` : ''}`)
-export const busy = (lang: Lang): Outgoing => text(lang === 'pt' ? 'Estou com muitas mensagens neste momento. Envie de novo daqui a um minuto.' : 'Lots of messages right now. Send that again in a minute and I will pick it up.')
+// Their message is kept: whatever they send next, the agent answers both.
+export const busy = (lang: Lang): Outgoing => text(lang === 'pt' ? 'Estou com muitas mensagens neste momento. Guardei a sua mensagem: escreva-me daqui a um minuto e eu continuo.' : 'Lots of messages right now. I have kept your message: write to me again in a minute and I will carry on.')
 export const slowDown = (lang: Lang): Outgoing => text(lang === 'pt' ? 'Muitas mensagens seguidas. Tente daqui a pouco, ou marque em locappoint.com.' : 'Lots of messages in a row. Try again in a little while, or book on locappoint.com.')
