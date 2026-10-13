@@ -80,6 +80,8 @@ export default async ({ check, root, server }) => {
     check(menuPrice(15000, 'NGN').includes('\u20a6') && currencySign('NGN') === '\u20a6' && currencySign('EUR') === '\u20ac', 'menus and price fields use the business currency')
     if (!hadWindow) delete globalThis.window
     check(!/prefix="\u20ac"/.test(read('src/components/business/ServiceEditor.jsx')), 'the service price field shows the business currency')
+    const editor = read('src/components/business/ServiceEditor.jsx')
+    check(/TRAVEL_MAX = \{ EUR: 500, NGN: 200000 \}/.test(editor) && /serviceProblems\(service, currency\)/.test(editor) && /servicesValid\(services, details\.country === 'NG' \? 'NGN' : 'EUR'\)/.test(read('src/pages/business/Setup.jsx')), 'a Lagos travel fee is checked in naira, not capped at 500')
     check(/country: 'PT',\s*city: 'Porto'/.test(read('src/pages/business/Setup.jsx')), 'a new Portuguese business starts on Porto')
     check(/useState\(startDetails\)/.test(read('src/pages/business/Setup.jsx')) && /city === 'lagos'\) return \{ \.\.\.emptyDetails, country: 'NG', city: 'Lagos', phoneCountry: 'NG' \}/.test(read('src/pages/business/Setup.jsx')), 'a new business starts in the city picked in the header')
     check(/Portugal time/.test(read('src/constants/support.js')), 'support hours are given in Portugal time')

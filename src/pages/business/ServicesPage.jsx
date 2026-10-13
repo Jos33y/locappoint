@@ -379,7 +379,7 @@ const ServicesPage = () => {
 
     useEffect(() => { load() }, [load])
 
-    const valid = services.length > 0 && services.every((s) => Object.keys(serviceProblems(s)).length === 0)
+    const valid = services.length > 0 && services.every((s) => Object.keys(serviceProblems(s, shellBusiness?.currency || 'EUR')).length === 0)
     const key = useMemo(() => snapshot(services), [services])
     const dirty = phase === 'ready' && key !== savedKey
 

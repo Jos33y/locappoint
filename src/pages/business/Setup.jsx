@@ -388,7 +388,7 @@ const Setup = () => {
     }
 
     const submitServices = () => {
-        if (!servicesValid(services)) { setShowErrors(true); return }
+        if (!servicesValid(services, details.country === 'NG' ? 'NGN' : 'EUR')) { setShowErrors(true); return }
         run(async () => {
             const saved = await saveServices(business.id, services, savedServiceIds)
             setServices(saved.map((s) => ({ ...s, key: s.key })))

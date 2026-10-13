@@ -61,7 +61,10 @@ export const modeTag = (service) => {
 
 const parsePrice = (price) => Number(String(price).replace(',', '.').trim())
 
-export const serviceProblems = (service) => {
+// The most a visit can add for travel, in each currency: a Lagos trip runs to thousands of naira.
+const TRAVEL_MAX = { EUR: 500, NGN: 200000 }
+
+export const serviceProblems = (service, currency = 'EUR') => {
     const problems = {}
     const name = service.service_name.trim()
     if (!name) problems.service_name = 'Give it a name clients will recognise'
@@ -71,21 +74,22 @@ export const serviceProblems = (service) => {
     const price = String(service.price).trim()
     if (price === '' || Number.isNaN(parsePrice(price)) || parsePrice(price) < 0) problems.price = 'Enter a price, or 0 if it is free'
     const travel = String(service.travel_fee ?? '').trim()
-    if (visitsClients(service) && travel !== '' && (Number.isNaN(parsePrice(travel)) || parsePrice(travel) < 0 || parsePrice(travel) > 500)) problems.travel_fee = 'A travel fee between 0 and 500, or leave it empty'
+    const travelMax = TRAVEL_MAX[currency] ?? TRAVEL_MAX.EUR
+    if (visitsClients(service) && travel !== '' && (Number.isNaN(parsePrice(travel)) || parsePrice(travel) < 0 || parsePrice(travel) > travelMax)) problems.travel_fee = `A travel fee between 0 and ${menuPrice(travelMax, currency)}, or leave it empty`
     const extra = String(service.extra_person_minutes ?? '').trim()
     if (takesGroups(service) && extra !== '' && (!/^\d+$/.test(extra) || Number(extra) > 600)) problems.extra_person_minutes = 'Minutes between 0 and 600, or leave it empty'
     return problems
 }
 
-export const servicesValid = (services) =>
-    services.length > 0 && services.every((s) => Object.keys(serviceProblems(s)).length === 0)
+export const servicesValid = (services, currency = 'EUR') =>
+    services.length > 0 && services.every((s) => Object.keys(serviceProblems(s, currency)).length === 0)
 
 const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusField, showVisibility, currency }) => {
     const nameRef = useRef(null)
     const priceRef = useRef(null)
     const custom = !DURATIONS.includes(Number(service.duration_minutes))
     const [otherOpen, setOtherOpen] = useState(custom)
-    const problems = showErrors ? serviceProblems(service) : {}
+    const problems = showErrors ? serviceProblems(service, currency) : {}
     const set = (patch) => onChange({ ...service, ...patch })
 
     useEffect(() => {
@@ -386,7 +390,7 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
                 {services.length > 0 && (
                     <ol className="biz-svc__list" ref={order.listRef}>
                         {services.map((service, index) => {
-                            const invalid = showErrors && Object.keys(serviceProblems(service)).length > 0
+                            const invalid = showErrors && Object.keys(serviceProblems(service, currency)).length > 0
                             const isOpen = editing === service.key || invalid
                             const name = service.service_name.trim() || 'New service'
                             const hidden = service.is_active === false

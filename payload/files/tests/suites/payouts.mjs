@@ -1,0 +1,252 @@
+// Payments: where a business owner's money goes, on its own page under Your business. Stripe in
+// Portugal through its own page (Accounts v2), Paystack in Nigeria on our screen with the account
+// name confirmed by the bank first. Plus the server rules.
+
+import path from 'node:path'
+
+export default async ({ browser, url, check, server, root }) => {
+    const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms))
+    const open = async (state, vw = 390, vh = 844, extra = '', at = '/portal/payments') => {
+        const page = await browser.newPage()
+        page.errors = []
+        page.on('pageerror', (e) => page.errors.push(e.message))
+        await page.setViewport({ width: vw, height: vh })
+        await page.goto(`${url}/?path=${encodeURIComponent(at)}&payoutstate=${state}${extra}`, { waitUntil: 'networkidle0' })
+        await wait(500)
+        return page
+    }
+    const view = (p) => p.evaluate(() => {
+        const card = document.querySelector('.biz-pay__card')
+        const route = document.querySelector('.biz-pay__route')
+        return {
+            text: document.querySelector('.biz-pay')?.textContent || '',
+            title: document.querySelector('.biz-pay__title')?.textContent || '',
+            badge: card?.querySelector('.ui-status')?.textContent || '',
+            route: route ? route.className : '',
+            bank: document.querySelector('.biz-pay__stop--bank')?.textContent || '',
+            paidTo: document.querySelector('.biz-pay__paidto')?.textContent || '',
+            live: document.querySelector('.biz-pay__live')?.textContent || '',
+            buttons: [...document.querySelectorAll('.biz-pay button')].map((b) => b.textContent.trim()).filter(Boolean),
+        }
+    })
+    const click = (p, label) => p.evaluate((l) => [...document.querySelectorAll('.biz-pay button')].find((b) => b.textContent.trim() === l)?.click(), label)
+    const fn = (p) => p.evaluate(() => window.__calls.filter((c) => c[0] === 'fn').map((c) => c[2].action))
+
+    // Where it lives
+    let p = await open('not_started')
+    const tabs = await p.evaluate(() => [...document.querySelectorAll('.biz-hubnav__tab')].map((t) => t.textContent.trim()))
+    check(tabs.join(',') === 'Page,Services,Hours,Team,Payments', `Payments is a tab under Your business: ${tabs.join(', ')}`)
+    check(await p.evaluate(() => document.querySelector('.biz-hubnav__tab.active')?.textContent.trim() === 'Payments'), 'the Payments tab is the open one')
+    await p.close()
+    p = await open('not_started', 390, 844, '', '/portal/settings')
+    check(!(await p.evaluate(() => document.body.textContent)).includes('Getting paid') && !(await p.evaluate(() => !!document.querySelector('.biz-pay__route'))), 'Settings is back to the owner as a person: no payouts there')
+    check(/Your account, sign-in and security/.test(await p.evaluate(() => document.body.textContent)), 'Settings subtitle no longer mentions payouts')
+    await p.close()
+
+    // Portugal, not set up
+    p = await open('not_started')
+    let v = await view(p)
+    check(v.title === 'Get paid for bookings online' && v.badge === 'Not set up', `the page says what this is for: ${v.title} / ${v.badge}`)
+    check(/is-missing/.test(v.route) && /Not set yet/.test(v.bank), 'the route shows the bank as the missing stop')
+    check(/Client pays/.test(v.text) && /Stripe/.test(v.text) && /Keeps it safe/.test(v.text), 'the route reads client, Stripe, your bank')
+    const marks = await p.evaluate(() => [...document.querySelectorAll('.biz-pay img.biz-pay__logo')].map((i) => [i.getAttribute('src'), i.alt, i.complete && i.naturalWidth > 0]))
+    check(marks.length === 2 && marks.every(([src, alt]) => src === '/brand/partners/stripe.svg' && alt === 'Stripe'), `the official Stripe mark sits on the route and by the button: ${JSON.stringify(marks)}`)
+    check(/Have these ready/.test(v.text) && /ID card or passport/.test(v.text) && /IBAN/.test(v.text) && /3 minutes/.test(v.text), 'it says what to have at hand before leaving for Stripe')
+    check(v.buttons.filter((b) => b === 'Continue to Stripe').length === 1 && !v.buttons.includes('Set up payouts'), 'one action, said once')
+    check(/When the money lands/.test(v.text) && /3 working days/.test(v.text) && /every working day/.test(v.text), 'it says when the money arrives')
+    const week = await p.evaluate(() => ({
+        days: document.querySelectorAll('.biz-pay__day').length,
+        paid: document.querySelectorAll('.biz-pay__day.is-paid').length,
+        lands: document.querySelectorAll('.biz-pay__day.is-lands').length,
+        label: document.querySelector('.biz-pay__days')?.getAttribute('aria-label') || '',
+    }))
+    check(week.days >= 7 && week.paid === 1 && week.lands === 1 && /reaches your bank on/.test(week.label), `the week strip shows today and the landing day, and reads aloud: ${week.label}`)
+    check(/Locappoint only sees your bank name and the last four digits/.test(v.text), 'it says what Locappoint keeps')
+    check(await p.evaluate(() => document.querySelector('.biz-pay__head .ui-status')?.textContent === 'Test mode'), 'test mode is marked by the title, not inside a sentence')
+    await click(p, 'Continue to Stripe')
+    await wait(1400)
+    v = await view(p)
+    check(!(await p.evaluate(() => window.location.search)).includes('payouts='), 'the return flag is cleared from the address')
+    check(v.live === 'Payouts on' && !v.route && !v.badge, `back from Stripe, payouts show as on, said once, with no setup route: ${v.live}`)
+    check(/Paid to/.test(v.paidTo) && /Millennium BCP/.test(v.paidTo) && /Account ending 6789/.test(v.paidTo), 'ready shows which account the money goes to, bank name and last four digits')
+    check(/On its way to your bank/.test(v.text) && /Nothing on its way yet/.test(v.text) && /first card booking/.test(v.text), 'ready shows what is on its way, and an honest empty state before the first booking')
+    check(v.buttons.includes('Manage on Stripe'), 'a ready account can be managed on Stripe')
+    check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
+    await p.close()
+
+    // Money once payouts are on: what is on its way and the day it lands, the month, bookings and payouts.
+    p = await open('active', 390, 844, '&money=full')
+    const m = await p.evaluate(() => ({
+        total: document.querySelector('.biz-money__total')?.textContent || '',
+        next: document.querySelector('.biz-money__next')?.textContent || '',
+        lands: document.querySelectorAll('.biz-money__day.is-lands').length,
+        due: document.querySelectorAll('.biz-money__day.is-due').length,
+        stats: [...document.querySelectorAll('.biz-money__stats dt')].map((d) => d.textContent),
+        rows: [...document.querySelectorAll('.biz-money__row')].map((r) => r.textContent),
+        fits: document.documentElement.scrollWidth <= window.innerWidth,
+    }))
+    check(/34[.,]62/.test(m.total) && /Next/.test(m.next) && /11[.,]38/.test(m.next), `the headline is what is on its way, then the next payout: ${m.total} / ${m.next}`)
+    check(m.lands === 1 && m.due === 1, `the strip marks the day sent money lands, and the expected day, differently: ${m.lands} / ${m.due}`)
+    check(m.stats.includes('Into your bank') && m.stats.includes('From bookings, after fees') && m.stats.includes('Paid bookings'), `the month in plain words: ${m.stats.join(', ')}`)
+    check(m.rows.some((r) => /Joseey John/.test(r) && /You get/.test(r) && /11[.,]38/.test(r)) && m.rows.some((r) => /Ana Guest/.test(r) && /refunded/.test(r)), `paid bookings say what the owner gets, or the refund: ${JSON.stringify(m.rows)}`)
+    await p.evaluate(() => [...document.querySelectorAll('.ui-seg__btn')].find((b) => /Payouts/.test(b.textContent))?.click())
+    await wait(200)
+    const po = await p.evaluate(() => [...document.querySelectorAll('.biz-money__row')].map((r) => r.textContent))
+    check(po.some((r) => /In your bank/.test(r) && /46[.,]10/.test(r)) && po.some((r) => /On its way/.test(r)) && po.every((r) => /ending 6789/.test(r)), `payouts with their state and the account: ${JSON.stringify(po)}`)
+    check(m.fits && p.errors.length === 0, `money fits a phone with no errors: ${p.errors.join(' | ')}`)
+    await p.close()
+    p = await open('active', 390, 844, '&money=error')
+    check(/balance could not load/.test(await p.evaluate(() => document.querySelector('.biz-pay')?.textContent || '')) && /Paid to/.test(await p.evaluate(() => document.querySelector('.biz-pay__paidto')?.textContent || '')), 'money that cannot load says so, and the bank card still shows')
+    await p.close()
+
+    p = await open('active-nobank')
+    v = await view(p)
+    check(!v.live && !v.paidTo && v.badge === 'Being checked', 'never "on" without a bank the owner can see')
+    await p.close()
+
+    p = await open('pending')
+    v = await view(p)
+    check(/Stripe is waiting for/.test(v.text) && /Date of birth/.test(v.text), 'an unfinished setup says what Stripe is waiting for, in plain words')
+    check(v.title === 'Finish setting up with Stripe' && v.badge === 'Unfinished' && v.buttons.includes('Continue to Stripe') && /is-unfinished/.test(v.route), 'an unfinished setup says so and continues')
+    await p.close()
+
+    p = await open('waiting')
+    v = await view(p)
+    check(/checking your details/.test(v.title) && v.badge === 'Being checked' && v.buttons.includes('Check again'), 'a setup under review says so and can check again')
+    const before = (await fn(p)).length
+    await wait(6600)
+    check((await fn(p)).length > before, 'under review, the page looks again by itself')
+    await p.close()
+
+    p = await open('restricted')
+    v = await view(p)
+    check(v.title === 'Payouts are paused' && v.badge === 'Paused' && v.buttons.includes('Fix it on Stripe') && /is-paused/.test(v.route), 'a paused account says payouts are paused and how to fix it')
+    await p.close()
+
+    p = await open('not_started', 390, 844, '&payouts=expired')
+    await wait(1400)
+    v = await view(p)
+    check(v.live === 'Payouts on' && (await p.evaluate(() => window.location.search)).includes('payoutstate=active'), 'an expired Stripe link is replaced with a fresh one, no dead end')
+    await p.close()
+
+    p = await open('error')
+    v = await view(p)
+    check(/not switched on yet/.test(v.text) && v.buttons.includes('Try again'), 'a server problem shows its reason and a retry')
+    await p.close()
+
+    // Nigeria
+    p = await open('paystack')
+    v = await view(p)
+    check(v.title === 'Where should we pay you?' && /Paystack/.test(v.text) && /By transfer or card/.test(v.text), 'a Lagos owner sees the Paystack route')
+    check(/Bank/.test(v.text) && /Account number/.test(v.text) && /Next working day/.test(v.text), 'bank and account number on our screen, and when money arrives')
+    check(await p.evaluate(() => [...document.querySelectorAll('.biz-pay button')].find((b) => /Pay me here/.test(b.textContent))?.disabled), 'nothing can be saved before the bank confirms the name')
+    await p.evaluate(() => document.querySelector('.biz-pay__form button[aria-haspopup]')?.click())
+    await wait(300)
+    await p.evaluate(() => [...document.querySelectorAll('[role=option]')].find((o) => o.textContent.includes('Access Bank'))?.click())
+    await wait(200)
+    await p.type('.biz-pay__nuban', '0987654321')
+    await wait(900)
+    v = await view(p)
+    check(/in the name of CHIDI EZE/.test(v.text) && /your name \(Adebayo Oluwaseun\)/.test(v.text) && await p.evaluate(() => [...document.querySelectorAll('.biz-pay button')].find((b) => /Pay me here/.test(b.textContent))?.disabled), `an account in someone else's name is refused before saving: ${v.text.match(/This account[^.]*\./)?.[0]}`)
+    await p.evaluate(() => { const i = document.querySelector('.biz-pay__nuban'); const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(i, ''); i.dispatchEvent(new Event('input', { bubbles: true })) })
+    await wait(200)
+    await p.type('.biz-pay__nuban', '01234-56789')
+    await wait(900)
+    check(await p.evaluate(() => document.querySelector('.biz-pay__nuban').value) === '0123456789', 'only digits go in, ten at most')
+    check(/ADEBAYO OLUWASEUN/.test((await view(p)).text), 'the bank confirms the account name before saving')
+    await click(p, 'Yes, pay me here')
+    await wait(600)
+    v = await view(p)
+    check(v.live === 'Payouts on' && /Access Bank/.test(v.paidTo) && /Account ending 6789/.test(v.paidTo) && v.buttons.includes('Change bank') && /first paid booking/.test(v.text), 'saved: the bank name and last four digits show as Paid to')
+    check(JSON.stringify(await fn(p)) === JSON.stringify(['status', 'banks', 'resolve', 'connect', 'money']), `calls in order: ${(await fn(p)).join(', ')}`)
+    await click(p, 'Change bank')
+    await wait(300)
+    v = await view(p)
+    check(v.title === 'Change where we pay you' && v.buttons.includes('Cancel'), 'changing the bank reopens the form with a way back')
+    check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
+    await p.close()
+
+    // Fit
+    for (const [state, w, h] of [['not_started', 1272, 588], ['not_started', 320, 640], ['active', 320, 640], ['paystack', 320, 640]]) {
+        p = await open(state, w, h)
+        check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${state} fits ${w}px`)
+        await p.close()
+    }
+    p = await open('not_started', 320, 640)
+    check(await p.evaluate(() => {
+        const box = document.querySelector('.biz-hubnav__track')
+        const tab = box.querySelector('.active').getBoundingClientRect()
+        const b = box.getBoundingClientRect()
+        return tab.left >= b.left - 1 && tab.right <= b.right + 1
+    }), 'on a small phone the hub tabs scroll and the open tab is in view')
+    await p.close()
+
+    // Server rules
+    const prov = await server.ssrLoadModule(path.join(root, 'supabase', 'functions', 'payouts', 'providers.ts'))
+    const caps = (card, payouts) => ({
+        configuration: { merchant: { capabilities: { card_payments: { status: card }, stripe_balance: { payouts: { status: payouts } } } } },
+    })
+    const due = (status, from = 'user') => ({ requirements: { entries: [{ description: 'representative.dob', awaiting_action_from: from, minimum_deadline: { status } }] } })
+    check(prov.stripeState({ ...caps('active', 'active') }).status === 'active', 'cards and payouts on means ready')
+    check(prov.stripeState({ ...caps('active', 'pending') }).status === 'pending', 'cards on but payouts not yet is not ready')
+    check(prov.stripeState({ ...caps('restricted', 'restricted'), ...due('past_due') }).status === 'pending', 'a new account still waiting for the owner is unfinished, not paused')
+    check(prov.stripeState({ ...caps('restricted', 'restricted'), ...due('past_due') }, true).status === 'restricted', 'a ready account that now needs details is paused')
+    const review = prov.stripeState({ ...caps('pending', 'pending'), ...due('currently_due', 'stripe') })
+    check(review.status === 'pending' && review.details_due.length === 0, 'waiting on Stripe alone is a review, nothing for the owner to do')
+    check(prov.stripeState({ ...caps('rejected', 'active') }).status === 'restricted', 'a rejected capability is paused')
+    const bank = prov.bankSummary({ data: [{ object: 'bank_account', bank_name: 'MILLENNIUM BCP', last4: '4321', iban: 'PT50...' }] })
+    check(bank.bank_name === 'MILLENNIUM BCP' && bank.account_last4 === '4321' && Object.keys(bank).length === 2, 'only the bank name and last four digits are kept')
+    check(prov.nigerianAccount('012 345 6789') === '0123456789' && prov.nigerianAccount('12345') === null, 'Nigerian account numbers are ten digits')
+    check(prov.bankCode('044') === '044' && prov.bankCode('044; drop') === null, 'bank codes are checked before use')
+    check(prov.nameMatches('ABIOLA SAMUEL OLUWASEUN', 'Abiola Samuel', 'Trimline Grooming Studio'), 'the owner\'s own account, with a middle name, is accepted')
+    check(prov.nameMatches('SAMUEL ABIOLA', 'Abiola Samuel', 'Trimline'), 'names in another order are accepted')
+    check(prov.nameMatches('TRIMLINE GROOMING ENT', 'Abiola Samuel', 'Trimline Grooming Studio'), 'the business\'s own account is accepted')
+    check(prov.nameMatches('Ábíọ́lá Samuel', 'Abiola Samuel', 'X'), 'accents do not matter')
+    check(!prov.nameMatches('SAMUEL OKAFOR', 'Abiola Samuel', 'Trimline Grooming Studio'), 'one shared first name is not enough for the owner')
+    check(!prov.nameMatches('CHIDI EZE', 'Abiola Samuel', 'Trimline Grooming Studio'), 'someone else\'s account is refused')
+    check(!prov.nameMatches('BEST STUDIO ENTERPRISES LTD', '', 'Best Studio Enterprises'.replace('Best', 'Prime')), 'filler words like STUDIO, ENTERPRISES and LTD do not count')
+    check(prov.nameMatches('OKAFOR NGOZI', 'Ngozi', 'X'), 'a one-word owner name needs that one word')
+    const acct = prov.newStripeAccount({ country: 'PT', currency: 'EUR', email: 'a@b.pt', name: 'Femtos', url: 'https://locappoint.com/femtos', businessId: 'b1' })
+    check(acct.dashboard === 'express' && acct.identity.country === 'pt' && acct.defaults.currency === 'eur', 'a v2 account: Express dashboard, Portugal, euros')
+    check(acct.defaults.responsibilities.fees_collector === 'stripe' && acct.defaults.responsibilities.losses_collector === 'stripe', 'Managed Risk: Stripe collects its fees and carries losses')
+    check(acct.configuration.merchant.capabilities.card_payments.requested === true && !acct.configuration.recipient, 'the business takes cards directly; no transfers through Locappoint')
+    check(prov.STRIPE_PREVIEW_VERSION.endsWith('.preview'), 'account creation uses the preview version Express with Managed Risk needs')
+    const link = prov.onboardingLink('acct_1', { return_url: 'https://x/r', refresh_url: 'https://x/e' })
+    check(link.use_case.type === 'account_onboarding' && !('configurations' in link.use_case.account_onboarding) && link.use_case.account_onboarding.collection_options.fields === 'eventually_due', 'onboarding asks for everything once and sends no configurations list (Stripe rejects it)')
+    check(prov.includeQuery(['a', 'b.c']) === 'include[0]=a&include[1]=b.c', 'v2 include fields are encoded as Stripe expects')
+
+    // Money: Stripe's and Paystack's answers into one view.
+    const money = await server.ssrLoadModule(path.join(root, 'supabase', 'functions', 'payouts', 'money.ts'))
+    const now = new Date('2026-10-07T10:00:00Z')
+    const secs = (iso) => Math.floor(new Date(iso).getTime() / 1000)
+    const row = (id, ref, amount, fee, refunded, paid) => ({ id, appointment_id: `a-${id}`, amount, platform_fee: fee, refunded, payment_ref: ref, paid_at: paid, appointments: { client_name: 'Ana', appointment_date: '2026-10-09', appointment_time: '10:00:00', services: { service_name: 'Haircut' } } })
+    const sm = money.stripeMoney({
+        timeZone: 'Europe/Lisbon', now, refundedThisMonth: 6,
+        balance: { available: [{ currency: 'eur', amount: 500 }], pending: [{ currency: 'eur', amount: 1138 }] },
+        payouts: [
+            { id: 'po_3', currency: 'eur', amount: 2000, status: 'in_transit', arrival_date: secs('2026-10-08T00:00:00Z') },
+            { id: 'po_2', currency: 'eur', amount: 4610, status: 'paid', arrival_date: secs('2026-10-02T00:00:00Z') },
+            { id: 'po_1', currency: 'eur', amount: 999, status: 'paid', arrival_date: secs('2026-09-28T00:00:00Z') },
+        ],
+        txns: [
+            { type: 'charge', currency: 'eur', status: 'pending', net: 1138, available_on: secs('2026-10-09T00:00:00Z'), created: secs('2026-10-06T09:00:00Z'), source: { payment_intent: 'pi_a' } },
+            { type: 'charge', currency: 'eur', status: 'available', net: 2000, available_on: secs('2026-10-05T00:00:00Z'), created: secs('2026-10-03T09:00:00Z'), source: { payment_intent: 'pi_b' } },
+            { type: 'payout', currency: 'eur', status: 'available', net: -4610, available_on: secs('2026-10-02T00:00:00Z'), created: secs('2026-10-01T09:00:00Z') },
+            { type: 'charge', currency: 'eur', status: 'available', net: 999, available_on: secs('2026-09-25T00:00:00Z'), created: secs('2026-09-24T09:00:00Z'), source: { payment_intent: 'pi_c' } },
+        ],
+        rows: [row('p1', 'pi_a', 12.49, 1.11, 0, '2026-10-06T09:00:00Z'), row('p2', 'pi_b', 21, 1.2, 21, '2026-10-03T09:00:00Z'), row('p3', 'pi_c', 11, 1, 0, '2026-09-24T09:00:00Z')],
+    })
+    check(sm.on_way.days.map((d) => `${d.date}:${d.amount}:${d.exact}`).join(' ') === '2026-10-08:25:false 2026-10-09:11.38:false', `on its way: a payout in transit on its arrival day, available money with the next payout, settling money when Stripe frees it: ${JSON.stringify(sm.on_way.days)}`)
+    check(sm.on_way.total === 36.38, `the total is all of it: ${sm.on_way.total}`)
+    check(sm.month.paid_out === 46.1 && sm.month.earned === 31.38 && sm.month.bookings === 2, `this month: payouts that arrived, booking money after fees, paid bookings: ${JSON.stringify(sm.month)}`)
+    check(sm.payments[0].net === 11.38 && sm.payments[1].net === null && sm.payments[1].refunded === 21, 'each booking says what the owner gets, unless it was refunded')
+    check(sm.payouts.map((p) => p.status).join(',') === 'on_way,paid,paid', 'payout states in plain words')
+    const pm = money.paystackMoney({
+        timeZone: 'Africa/Lagos', now, refundedThisMonth: 0,
+        settlements: [{ id: 9, status: 'success', total_amount: 1500000, settlement_date: '2026-10-06T08:00:00Z' }],
+        rows: [row('n1', '1', 15300, 835, 0, '2026-10-06T15:00:00Z'), row('n2', '2', 15300, 835, 0, '2026-10-05T15:00:00Z')],
+    })
+    check(pm.on_way.total === 14465 && pm.on_way.days[0].date === '2026-10-07' && !pm.net_exact, `Paystack: paid since the last settlement lands the next working day, before Paystack's fee: ${JSON.stringify(pm.on_way)}`)
+    check(pm.month.paid_out === 15000 && pm.payouts[0].status === 'paid', 'Paystack settlements are the payouts, in naira')
+    check(money.nextWorkingDay('2026-10-09') === '2026-10-12', 'Friday money moves on Monday')
+}
