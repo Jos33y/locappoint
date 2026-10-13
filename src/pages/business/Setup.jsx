@@ -26,6 +26,7 @@ import {
 } from '../../services/setup'
 import { ABOUT_MAX, OTHER_CITY, aboutExample, cityOf, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
 import { useSlugStatus } from '../../hooks/useSlugStatus'
+import { savedCity } from '../../services/engine'
 import { isNative, shareLink } from '../../services/native'
 import '../../styles/business/setup.css'
 
@@ -45,6 +46,14 @@ const emptyDetails = {
     phoneValid: false,
     phoneCountry: 'PT',
     whatsappSame: true,
+}
+
+// A new business starts in the city picked in the header: Lagos with a Nigerian phone, Lisbon or Porto.
+const startDetails = () => {
+    const city = savedCity()
+    if (city === 'lagos') return { ...emptyDetails, country: 'NG', city: 'Lagos', phoneCountry: 'NG' }
+    if (city === 'lisbon') return { ...emptyDetails, city: 'Lisbon' }
+    return emptyDetails
 }
 
 const andList = (items) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}` : items[0] || '')
@@ -242,7 +251,7 @@ const Setup = () => {
 
     const [phase, setPhase] = useState(owned || user ? 'loading' : 'welcome')
     const [business, setBusiness] = useState(null)
-    const [details, setDetails] = useState(emptyDetails)
+    const [details, setDetails] = useState(startDetails)
     const [services, setServices] = useState([])
     const [savedServiceIds, setSavedServiceIds] = useState([])
     const [week, setWeek] = useState(defaultWeek)
