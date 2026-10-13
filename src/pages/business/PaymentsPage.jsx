@@ -191,6 +191,8 @@ const BankForm = ({ onSaved, onCancel }) => {
     const [bank, setBank] = useState('')
     const [number, setNumber] = useState('')
     const [name, setName] = useState('')
+    // Whose account it is: payouts go only to the owner's or the business's own account.
+    const [whose, setWhose] = useState(null)
     const [checking, setChecking] = useState(false)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState('')
@@ -204,13 +206,14 @@ const BankForm = ({ onSaved, onCancel }) => {
 
     useEffect(() => {
         setName('')
+        setWhose(null)
         setError('')
         if (!bank || number.length !== 10) return
         const key = `${bank}:${number}`
         asked.current = key
         setChecking(true)
         callPayouts('resolve', { bank_code: bank, account_number: number })
-            .then((r) => { if (asked.current === key) setName(r.account_name) })
+            .then((r) => { if (asked.current === key) { setName(r.account_name); setWhose(r) } })
             .catch((err) => { if (asked.current === key) setError(err.message) })
             .finally(() => { if (asked.current === key) setChecking(false) })
     }, [bank, number])
@@ -255,7 +258,12 @@ const BankForm = ({ onSaved, onCancel }) => {
             </div>
             <div className="biz-pay__confirm" aria-live="polite">
                 {checking && <span className="biz-pay__checking">Checking the account with your bank</span>}
-                {name && (
+                {name && whose?.matches === false && (
+                    <span className="biz-pay__alert" role="alert">
+                        This account is in the name of <b>{name}</b>. We only pay into an account in your name{whose.owner_name ? ` (${whose.owner_name})` : ''} or your business&apos;s name ({whose.business_name}).
+                    </span>
+                )}
+                {name && whose?.matches !== false && (
                     <span className="biz-pay__name">
                         <Check size={18} aria-hidden="true" />
                         <span><span className="biz-pay__namelabel">Account name</span><b>{name}</b></span>
@@ -264,7 +272,7 @@ const BankForm = ({ onSaved, onCancel }) => {
             </div>
             {error && <p className="biz-pay__alert" role="alert">{error}</p>}
             <div className="biz-pay__act">
-                <Button onClick={save} disabled={!name || checking} loading={saving}>{name ? 'Yes, pay me here' : 'Pay me here'}</Button>
+                <Button onClick={save} disabled={!name || checking || whose?.matches === false} loading={saving}>{name ? 'Yes, pay me here' : 'Pay me here'}</Button>
                 {onCancel && <Button variant="quiet" onClick={onCancel}>Cancel</Button>}
             </div>
         </div>

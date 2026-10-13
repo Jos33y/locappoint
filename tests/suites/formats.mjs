@@ -145,6 +145,12 @@ export default async ({ browser, url, check, server, root }) => {
     check(await p.evaluate(() => [...document.querySelectorAll('.biz-reach .ui-chip.is-selected')].map((c) => c.textContent.trim()).join() === '10 km'), 'the distance is a choice of chips')
     await p.close()
 
+    p = await open('/portal/services', '&home=1')
+    await wait(400)
+    const noSearch = await p.evaluate(() => document.body.textContent)
+    check(!(await p.$('.biz-reach')) && !/not switched on/.test(noSearch) && !/within the distance/.test(noSearch), 'without address search, owners see areas only, no talk of a setting they cannot change')
+    await p.close()
+
     // On the way: the client sees minutes and steps, never a place.
     p = await open('/client/appointments?booking=hm2', '&trip=1')
     const tripText = await p.evaluate(() => document.querySelector('#booking-hm2 .lc-trip')?.textContent || '')

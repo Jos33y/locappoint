@@ -164,3 +164,25 @@ export const bankCode = (value: unknown) => {
     const code = String(value ?? '').trim()
     return /^[0-9A-Za-z]{2,12}$/.test(code) ? code : null
 }
+
+// The words of a name that say whose it is: capitals, no accents or punctuation, without titles and
+// the words registries and banks add to business names (LTD, ENTERPRISES, VENTURES ...).
+const FILLER = new Set([
+    'LTD', 'LIMITED', 'ENT', 'ENTERPRISE', 'ENTERPRISES', 'VENTURE', 'VENTURES', 'NIG', 'NIGERIA', 'GLOBAL', 'SERVICE', 'SERVICES',
+    'INTERNATIONAL', 'INTL', 'COMPANY', 'PLC', 'THE', 'AND', 'STUDIO', 'STUDIOS', 'CONCEPT', 'CONCEPTS', 'HUB', 'GROUP', 'RESOURCES',
+    'INVESTMENT', 'INVESTMENTS', 'MRS', 'MISS', 'CHIEF', 'ALHAJI', 'ALHAJA', 'PASTOR', 'PROF',
+])
+export const nameWords = (name: unknown) => [...new Set(String(name ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()
+    .replace(/[^A-Z0-9 ]+/g, ' ').split(/\s+/).filter((w) => w.length >= 3 && !FILLER.has(w)))]
+
+// Payouts go only to an account in the owner's name or the business's name. The owner: two words in
+// common (first name and surname, in any order, extra names allowed), or one when only one is known.
+// The business: one distinctive word in common ("TRIMLINE GROOMING ENT" for Trimline Grooming Studio).
+export const nameMatches = (accountName: unknown, owner: unknown, business: unknown) => {
+    const account = new Set(nameWords(accountName))
+    if (!account.size) return false
+    const shared = (words: string[]) => words.filter((w) => account.has(w)).length
+    const person = nameWords(owner)
+    if (person.length && shared(person) >= Math.min(2, person.length)) return true
+    return shared(nameWords(business)) >= 1
+}

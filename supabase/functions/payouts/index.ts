@@ -9,7 +9,7 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import {
-    ProviderError, STRIPE_PREVIEW_VERSION, STRIPE_VERSION, bankCode, bankSummary, includeQuery, newStripeAccount, nigerianAccount, onboardingLink,
+    ProviderError, STRIPE_PREVIEW_VERSION, STRIPE_VERSION, bankCode, bankSummary, includeQuery, nameMatches, newStripeAccount, nigerianAccount, onboardingLink,
     paystackCall, stripeCall, stripeState, stripeV2,
 } from './providers.ts'
 import { type PaymentRow, paystackMoney, stripeMoney } from './money.ts'
@@ -242,7 +242,14 @@ Deno.serve(async (req) => {
             const resolved = await paystackCall(PAYSTACK, `bank/resolve?account_number=${account}&bank_code=${encodeURIComponent(code)}`)
             const accountName = String(resolved.data?.account_name || '').trim()
             if (!accountName) return reply(400, { error: 'We could not find that account. Check the number and the bank.' })
-            if (action === 'resolve') return reply(200, { account_name: accountName })
+            // Only an account in the owner's or the business's name: no paying into someone else's account.
+            const { data: owner } = await db.from('users').select('full_name').eq('id', user.id).maybeSingle()
+            const ownerName = String(owner?.full_name || '').trim()
+            const matches = nameMatches(accountName, ownerName, business.business_name)
+            if (action === 'resolve') return reply(200, { account_name: accountName, matches, owner_name: ownerName || null, business_name: business.business_name })
+            if (!matches) {
+                return reply(409, { error: `This account is in the name of ${accountName}. We only pay into an account in your name${ownerName ? ` (${ownerName})` : ''} or your business's name (${business.business_name}).` })
+            }
 
             const bank = (await loadBanks()).find((b) => b.code === code)
             const fields = {

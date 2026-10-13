@@ -67,6 +67,21 @@
     font-size: 15px;
 }
 
+/* The business's own logo, once uploaded: its colours, on a plain 1px edge. */
+.biz-avatar--logo {
+    overflow: hidden;
+    background: var(--lc-raised);
+    border: 1px solid var(--lc-line-strong);
+    box-shadow: none;
+}
+
+.biz-avatar--logo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 
 .biz-sidebar {
     display: none;

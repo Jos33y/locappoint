@@ -57,4 +57,6 @@ export default async ({ check, root }) => {
     const posterImage = read('src/components/business/posterImage.js')
     check(/Loc<span className="lc-poster__accent">Appoint<\/span>/.test(poster), 'the poster preview carries the two-tone wordmark')
     check(/fillText\('Loc'/.test(posterImage) && /fillText\('Appoint'/.test(posterImage), 'the saved poster image carries the two-tone wordmark')
+    check(/business\.logo_url\s*\? <span className="biz-avatar biz-avatar--business biz-avatar--logo"><img src=\{business\.logo_url\}/.test(read('src/components/business/BusinessShell.jsx')), 'the sidebar card shows the business logo once there is one')
+    check(!/Porto, Portugal/.test(read('src/components/common/Appfooter.jsx')), 'the footer gives no city that differs from the registered address')
 }

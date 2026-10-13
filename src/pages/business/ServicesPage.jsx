@@ -204,14 +204,16 @@ const Distance = ({ businessId, address, shop, radius, onShop, onRadius }) => {
     }
     const resolve = (placeId, session) => placeShop({ businessId, placeId, session })
 
+    // Without address search there is no way to place the shop: the whole option stays out of sight
+    // rather than telling owners about a setting they cannot change. A shop placed earlier still shows.
+    if (search === 'off' && !placed) return null
+
     return (
         <div className="biz-reach">
             <p className="biz-reach__title">Or by distance from your shop</p>
             {(!placed || moving) && (
                 search === 'checking' ? <Skeleton height={48} radius={10} />
-                    : search === 'off' ? (
-                        <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Distance needs address search, which is not switched on yet. Areas work without it.</p>
-                    ) : (
+                    : search === 'off' ? null : (
                         <Field label="Your shop's address" hint="Pick it from the list. Distance is measured from here, in a straight line.">
                             <PlaceSearch
                                 businessId={businessId}
@@ -317,7 +319,7 @@ const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius,
     return (
         <section className="biz-sh__meet" aria-labelledby="zones-title">
             <h2 id="zones-title" className="biz-sh__meettitle"><House size={18} aria-hidden="true" />Where you go</h2>
-            <p className="biz-sh__tip">Clients can book a visit at their place when they are in an area you pick, or within the distance you set.</p>
+            <p className="biz-sh__tip">Clients can book a visit at their place when they are in an area you pick.</p>
             {zones === null ? <Skeleton height={44} radius={10} /> : zones.length === 0 ? (
                 <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Areas for your city are not set up yet. Message us and we add them.</p>
             ) : (
@@ -328,7 +330,7 @@ const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius,
             {error && <p className="biz-sh__meetwarn" role="alert"><TriangleAlert size={16} aria-hidden="true" />{error}</p>}
             {travels && zones?.length > 0 && <StartFrom businessId={businessId} zones={zones} value={base} onSaved={onBase} />}
             <Distance businessId={businessId} address={address} shop={shop} radius={radius} onShop={onShop} onRadius={onRadius} />
-            {zones !== null && picked.length === 0 && !byDistance && !error && <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Pick at least one area or a distance, or clients cannot book a visit at their place.</p>}
+            {zones !== null && picked.length === 0 && !byDistance && !error && <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Pick at least one area, or clients cannot book a visit at their place.</p>}
         </section>
     )
 }

@@ -234,6 +234,9 @@ a.lc-rating:focus-visible {
 }
 
 .lc-rating.is-new {
+    width: fit-content;
+    align-self: flex-start;
+    justify-self: start;
     padding: 2px var(--space-2);
     border-radius: var(--radius-full);
     background: var(--lc-info-tint);

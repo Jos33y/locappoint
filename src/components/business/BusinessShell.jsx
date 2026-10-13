@@ -264,7 +264,9 @@ const BusinessShell = () => {
                     </div>
 
                     <Link to={staffOnly ? '/portal' : '/portal/page'} className="biz-bizcard">
-                        <span className="biz-avatar biz-avatar--business">{initials(business.business_name)}</span>
+                        {business.logo_url
+                            ? <span className="biz-avatar biz-avatar--business biz-avatar--logo"><img src={business.logo_url} alt="" /></span>
+                            : <span className="biz-avatar biz-avatar--business">{initials(business.business_name)}</span>}
                         <span className="biz-bizcard__text">
                             <strong>{business.business_name}</strong>
                             <small className={business.is_active === false ? 'is-paused' : ''}>

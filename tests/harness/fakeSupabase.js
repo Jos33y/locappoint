@@ -388,7 +388,11 @@ const payouts = (body) => {
   if (body.action === 'start' || body.action === 'manage') return { data: { url: `/?path=${encodeURIComponent('/portal/payments')}&payouts=return&payoutstate=active` }, error: null }
   if (body.action === 'money') return money()
   if (body.action === 'banks') return { data: { banks: [{ code: '044', name: 'Access Bank' }, { code: '058', name: 'GTBank' }] }, error: null }
-  if (body.action === 'resolve') return body.account_number === '0123456789' ? { data: { account_name: 'ADEBAYO OLUWASEUN' }, error: null } : failed('We could not find that account. Check the number and the bank.')
+  if (body.action === 'resolve') {
+    if (body.account_number === '0123456789') return { data: { account_name: 'ADEBAYO OLUWASEUN', matches: true, owner_name: 'Adebayo Oluwaseun', business_name: 'Femtos Barbearia' }, error: null }
+    if (body.account_number === '0987654321') return { data: { account_name: 'CHIDI EZE', matches: false, owner_name: 'Adebayo Oluwaseun', business_name: 'Femtos Barbearia' }, error: null }
+    return failed('We could not find that account. Check the number and the bank.')
+  }
   if (body.action === 'connect') return { data: { ...PAYOUT_ROWS['paystack-active'], test: true, account_name: 'ADEBAYO OLUWASEUN' }, error: null }
   return failed('Unknown action')
 }
