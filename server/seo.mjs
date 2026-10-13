@@ -111,10 +111,16 @@ export const businessMeta = (b, { services = [], hours = [], rating = null } = {
     return { title, description, image, url, type: 'business.business', noindex: Boolean(b.is_demo), ld }
 }
 
+// The company behind the site, as registered: Meta and Google check the legal name is on the site.
+const LEGAL = { name: 'Locappoint Technologies Ltd', rc: 'RC 9267124', address: 'No. 3, Military Road, Enugu, Enugu State, Nigeria', email: 'hello@locappoint.com' }
+
 const ORG_LD = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: SITE,
+    legalName: LEGAL.name,
+    email: LEGAL.email,
+    address: { '@type': 'PostalAddress', streetAddress: 'No. 3, Military Road', addressLocality: 'Enugu', addressRegion: 'Enugu State', addressCountry: 'NG' },
     url: ORIGIN,
     logo: `${ORIGIN}/brand/loca-app-icon.svg`,
     sameAs: [
@@ -164,7 +170,12 @@ export const headTags = (m) => [
     ...[].concat(m.ld || []).map((d) => `<script type="application/ld+json">${ldJson(d)}</script>`),
 ].map((t) => `  ${t}`).join('\n')
 
-export const injectHead = (html, m) => html.replace(/<!-- seo:start[\s\S]*?<!-- seo:end -->/, `<!-- seo -->\n${headTags(m)}\n  <!-- /seo -->`)
+// The legal name also sits in the page itself, for checkers that read the HTML without running the app.
+const LEGAL_LINE = `<noscript>Locappoint is operated by ${LEGAL.name} (${LEGAL.rc}), ${LEGAL.address}. Contact: ${LEGAL.email}.</noscript>`
+
+export const injectHead = (html, m) => html
+    .replace(/<!-- seo:start[\s\S]*?<!-- seo:end -->/, `<!-- seo -->\n${headTags(m)}\n  <!-- /seo -->`)
+    .replace(/<div id="root"><\/div>(?!\s*<noscript>Locappoint is operated)/, `<div id="root"></div>\n  ${LEGAL_LINE}`)
 
 export const robotsTxt = (host) => {
     if (/^status\./.test(host)) return 'User-agent: *\nDisallow: /\n'

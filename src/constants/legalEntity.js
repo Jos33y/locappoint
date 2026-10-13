@@ -5,7 +5,7 @@ export const PENDING = 'Published before public launch'
 export const LEGAL_ENTITY = {
     tradingName: 'Locappoint',
     legalName: 'Locappoint Technologies Ltd',
-    registeredAddress: null,
+    registeredAddress: 'No. 3, Military Road, Enugu, Enugu State, Nigeria',
     registry: 'Corporate Affairs Commission, Nigeria',
     registrationNumber: 'RC 9267124',
     taxId: '2621483026085',

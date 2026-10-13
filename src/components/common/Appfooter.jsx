@@ -62,7 +62,7 @@ const AppFooter = () => {
                 </div>
 
                 <div className="loca-app-footer__bottom">
-                    <span>© {year} Locappoint</span>
+                    <span>© {year} Locappoint Technologies Ltd, RC 9267124</span>
                     <span className="loca-app-footer__sep" aria-hidden="true">·</span>
                     <span>A FlowleXx Group initiative</span>
                     <span className="loca-app-footer__sep" aria-hidden="true">·</span>

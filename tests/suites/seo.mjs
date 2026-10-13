@@ -73,6 +73,7 @@ export default async ({ check, root }) => {
         check(!/seo:start/.test(r.body) && (r.body.match(/<title>/g) || []).length === 1 && (r.body.match(/name="description"/g) || []).length === 1, 'the default block is replaced, never duplicated')
         check(/<link rel="canonical" href="https:\/\/locappoint.com\/">/.test(r.body) && /index, follow/.test(meta(r.body, 'name', 'robots')), 'home is canonical and indexable')
         check(ld(r.body).some((d) => d['@type'] === 'Organization') && ld(r.body).some((d) => d['@type'] === 'WebSite'), 'home tells Google who we are')
+        check(ld(r.body).some((d) => d['@type'] === 'Organization' && d.legalName === 'Locappoint Technologies Ltd') && /<noscript>Locappoint is operated by Locappoint Technologies Ltd \(RC 9267124\)/.test(r.body), 'the legal name is on the page, for Meta and Google')
         check(/rel="manifest"/.test(r.body) && /rel="apple-touch-icon"/.test(r.body), 'icons and the manifest stay in place')
 
         // A business page

@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ""
-Write-Host "  Locappoint - Cleanup: WhatsApp agent: Porto and Lagos, and the Lagos clock" -ForegroundColor Cyan
+Write-Host "  Locappoint - Cleanup: Legal name on the website" -ForegroundColor Cyan
 Write-Host ""
 
 $root = (Get-Location).Path
@@ -14,8 +14,11 @@ $dirty = git status --porcelain -- src 2>$null
 if ($dirty) { Write-Host "  [WARN] src has uncommitted changes. Commit the patch first." -ForegroundColor Yellow }
 
 $paths = @(
-    'supabase\functions\_shared\agent.ts.backup-agentfix6',
-    'agentfix6.zip',
+    'server\seo.mjs.backup-legalname',
+    'src\components\common\Appfooter.jsx.backup-legalname',
+    'src\constants\legalEntity.js.backup-legalname',
+    'tests\suites\seo.mjs.backup-legalname',
+    'legalname.zip',
     'payload'
 )
 
