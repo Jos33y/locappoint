@@ -145,10 +145,19 @@ const play = async (p) => {
         if (!a) return [{ text: '(nothing to pay)', message: {} }]
         a.payment_status = 'paid'
         const v = fx.view(a)
-        return [C.clientNews(a.status === 'confirmed' ? 'booking_confirmed' : 'booking_requested', { ...v, lang: C.langOf(thread.lang) }, true)].filter(Boolean)
+        const out = [C.clientNews(a.status === 'confirmed' ? 'booking_confirmed' : 'booking_requested', { ...v, lang: C.langOf(thread.lang) }, true)].filter(Boolean)
+        // As notify does through wa_thread_note: the conversation learns what was sent.
+        for (const o of out) save({ ...thread, business: null, history: [...thread.history, { role: 'assistant', text: `[Locappoint] Sent to them: ${o.text}` }] })
+        return out
     }
 
     let lastButtons = []
+    // What the system did on the agent's word, shown to the reviewer (the agent's tool results are not).
+    const call = async (fn, args) => {
+        const r = await fx.call(fn, args)
+        if (fn === 'wa_set_email') x.log.push({ who: 'system', text: `The system saved ${r.email} on the booking and emailed the booking there.` })
+        return r
+    }
     const respond = async (said) => {
         if (/\[pay\]/i.test(said)) return pay()
         // A tap is its own event on WhatsApp: any words around it are dropped.
@@ -162,7 +171,7 @@ const play = async (p) => {
         if (typed) return settle(typed, thread.pending.nonce, said)
         for (let attempt = 0; ; attempt++) {
             try {
-                const turn = await agent.runAgent({ call: fx.call, claude: llm.callModel, nonce }, {
+                const turn = await agent.runAgent({ call, claude: llm.callModel, nonce }, {
                     phone, profileName: p.profileName || '', message: said, thread, directory: await fx.call('wa_directory', {}),
                 })
                 addUse(MODEL, turn.usage.input, turn.usage.output)
@@ -229,6 +238,7 @@ const general = (p, x) => {
     let lastClient = ''
     for (const m of x.log) {
         if (m.who === 'client') { lastClient = m.text; continue }
+        if (m.who !== 'agent') continue
         const t = m.text
         const first = t.split('\n')[0].slice(0, 60)
         if (/[\u2014\u2013]/.test(t)) out.push(`long dash in "${first}"`)
@@ -251,12 +261,13 @@ const general = (p, x) => {
 // ---------- the review ----------
 let judgeModel = JUDGE_MODEL
 const judge = async (p, x, found) => {
-    const transcript = x.log.map((m) => `${m.who === 'client' ? 'CLIENT' : 'LOCAPPOINT'}: ${m.text}${m.buttons?.length ? `\n[Buttons: ${m.buttons.map((b) => b.title).join(' | ')}]` : ''}`).join('\n\n')
+    const transcript = x.log.map((m) => `${m.who === 'client' ? 'CLIENT' : m.who === 'system' ? 'SYSTEM ACTION (not shown to the client)' : 'LOCAPPOINT'}: ${m.text}${m.buttons?.length ? `\n[Buttons: ${m.buttons.map((b) => b.title).join(' | ')}]` : ''}`).join('\n\n')
     const prompt = [
         "You review one WhatsApp conversation between a client and Locappoint's booking assistant, an AI agent. Messages that start with a bold title such as *Book this?*, *Request sent* or *You are booked* are built by the system from the database, not written by the agent.",
         `Today in Portugal is ${dayName(x.today)} ${x.today}.`,
         `The client: ${p.who}\nWhat they wanted: ${p.goal}`,
         `Everything the agent could know about the businesses (it must not state anything else as fact):\n${JSON.stringify(x.fx.facts(), null, 1)}`,
+        'Also true, beyond the data: Locappoint can be reached at hello@locappoint.com; every business has a page at https://locappoint.com/<slug>; the agent can save an email on a booking, after which the system emails the booking there; the agent sees the client\'s upcoming bookings with their status, staff and payment. It cannot pass messages to businesses and does not know which payment methods a business accepts.',
         `Automatic checks already found: ${found.length ? found.join('; ') : 'nothing'}`,
         `Transcript:\n${transcript}`,
         'Judge the assistant only, on: understood the person, including slang, typos and vague dates; reached their goal, or said honestly why not and offered the closest alternative; stated no fact that is not in the data above; answered in the language of the person (European Portuguese for Portuguese speakers; English for English and Pidgin); warm, short WhatsApp style; asked only what it needed and did not repeat questions; never said something was booked, moved or cancelled before the client tapped Yes; stayed polite and stayed in its role.',
@@ -335,7 +346,7 @@ const md = [
         ...(r.checks.length ? ['**Checks failed**', '', ...r.checks.map((c) => `- ${c}`), ''] : []),
         ...(r.review.problems?.length ? [`**Review (${r.review.verdict}${r.review.score ? `, ${r.review.score}/5` : ''})**`, '', ...r.review.problems.map((c) => `- ${c}`), ''] : []),
         ...(r.review.good?.length ? ['**Went well**', '', ...r.review.good.map((c) => `- ${c}`), ''] : []),
-        ...(r.x ? ['**Conversation**', '', ...r.x.log.map((m) => `${m.who === 'client' ? '> **Client:** ' : '**Locappoint:** '}${m.text.replace(/\n/g, m.who === 'client' ? '\n> ' : '  \n')}${m.buttons?.length ? `  \n[${m.buttons.map((b) => b.title).join('] [')}]` : ''}\n`)] : []),
+        ...(r.x ? ['**Conversation**', '', ...r.x.log.map((m) => m.who === 'system' ? `_System: ${m.text}_\n` : `${m.who === 'client' ? '> **Client:** ' : '**Locappoint:** '}${m.text.replace(/\n/g, m.who === 'client' ? '\n> ' : '  \n')}${m.buttons?.length ? `  \n[${m.buttons.map((b) => b.title).join('] [')}]` : ''}\n`)] : []),
         `Bookings at the end: ${r.x ? (r.x.fx.bookings.map((a) => `${a.date} ${a.time} ${a.status}${a.email ? ` ${a.email}` : ''}${a.seeded ? ' (made before)' : ''}`).join('; ') || 'none') : 'none'}`,
         '',
     ]),

@@ -98,6 +98,9 @@ const deliverWhatsApp = async (row: Row) => {
         id = await sendWa(phone, out)
     }
     await db.rpc('wa_log', { p_phone: phone, p_direction: 'out', p_kind: out.kind, p_body: out.text, p_wa_id: id })
+    // The client's conversation with the agent learns what was sent (paid, confirmed, declined, moved),
+    // so the agent never contradicts it. Never stops a delivery.
+    if (forClient) await db.rpc('wa_thread_note', { p_phone: phone, p_text: out.text }).then(() => null, () => null)
     return { id }
 }
 

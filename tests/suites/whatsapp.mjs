@@ -243,6 +243,11 @@ export default async ({ browser, url, check, server, root }) => {
     check(/"pay":"at the visit"/.test(details.seen[1].messages.at(-1).content[0].content), 'each service says how it is paid')
     check(/extra_person_minutes/.test(fs.readFileSync(path.join(root, 'supabase', 'migrations', 'agent-5.sql'), 'utf8')), 'group bookings show their real length')
 
+    // Round 6: booking news sent later reaches the agent's conversation; the live booking list wins.
+    const notifySrc = fs.readFileSync(path.join(fns, 'notify', 'index.ts'), 'utf8')
+    check(/if \(forClient\) await db\.rpc\('wa_thread_note'/.test(notifySrc) && /wa_thread_note/.test(fs.readFileSync(path.join(root, 'supabase', 'migrations', 'agent-6.sql'), 'utf8')), 'booking news sent to a client is noted in their conversation with the agent')
+    check(/the context is right/.test(r3Body.system[0].text) && /never say which payment methods/.test(r3Body.system[0].text), 'the live booking list wins over older lines, and no payment methods are made up')
+
     // Business page: Book on WhatsApp only once WhatsApp is live.
     p = await browser.newPage()
     await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
