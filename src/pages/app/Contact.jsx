@@ -150,7 +150,7 @@ const Contact = () => {
 
                                 <div className="info-card__meta">
                                     <span className="info-card__meta-dot"></span>
-                                    <span>Cohort 1 open in Porto and Lagos</span>
+                                    <span>Cohort 1 open in Porto, Lagos and Lisbon</span>
                                 </div>
                             </aside>
 

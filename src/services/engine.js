@@ -7,11 +7,11 @@ import { keptLine } from './reliability'
 // "What do you need?": one request, matched in the database (engine_match) against every live
 // business in the city. The same function serves the site, the app and, later, WhatsApp.
 
-// Porto and Lagos are live; Lisbon is open to sign-ups.
+// Porto, Lagos and Lisbon are live.
 export const MARKETS = [
     { code: 'porto', name: 'Porto', country: 'Portugal', timeZone: 'Europe/Lisbon', currency: 'EUR', live: true, street: 'Rua de Santa Catarina 120' },
     { code: 'lagos', name: 'Lagos', country: 'Nigeria', timeZone: 'Africa/Lagos', currency: 'NGN', live: true, street: '12 Admiralty Way, Lekki' },
-    { code: 'lisbon', name: 'Lisbon', country: 'Portugal', timeZone: 'Europe/Lisbon', currency: 'EUR', live: false, street: 'Rua Augusta 100' },
+    { code: 'lisbon', name: 'Lisbon', country: 'Portugal', timeZone: 'Europe/Lisbon', currency: 'EUR', live: true, street: 'Rua Augusta 100' },
 ]
 
 // The city a visitor sees: the one they picked, remembered on this device, or on a first visit the

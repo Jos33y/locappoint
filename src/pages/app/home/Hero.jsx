@@ -35,7 +35,7 @@ const Hero = () => {
                     <div className="loca-hero__content">
                         <span className="loca-eyebrow">
                             <span className="loca-eyebrow__dot" aria-hidden="true"></span>
-                            Beta · Porto and Lagos
+                            Beta · Porto, Lagos, Lisbon
                         </span>
 
                         <h1 className="loca-hero__title">
@@ -44,7 +44,7 @@ const Hero = () => {
                         </h1>
 
                         <p className="loca-hero__lede">
-                            For every kind of local business, wherever the service happens: at your place, at your client's, or online. Live in Porto and Lagos, with Lisbon next. Set your hours, share your link, fill your calendar. Free during the beta.
+                            For every kind of local business, wherever the service happens: at your place, at your client's, or online. Live in Porto, Lagos and Lisbon. Set your hours, share your link, fill your calendar. Free during the beta.
                         </p>
 
                         <div className="loca-hero__cta">

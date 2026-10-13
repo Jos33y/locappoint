@@ -2,13 +2,12 @@ import { supabase } from '../config/supabase'
 
 export const COHORT_SIZE = 10
 
-// The cities, in the order every page lists them: Porto and Lagos taking bookings, Lisbon open to
-// sign-ups. A place belongs to a city by its market (set by the database from its country and city);
+// The cities, in the order every page lists them, all three taking bookings. A place belongs to a city by its market (set by the database from its country and city);
 // pages without one yet fall back to the city name.
 export const CITIES = [
     { name: 'Porto', market: 'porto', match: ['porto', 'oporto'], later: 'Taking bookings' },
     { name: 'Lagos', market: 'lagos', match: ['lagos'], later: 'Taking bookings' },
-    { name: 'Lisbon', market: 'lisbon', match: ['lisbon', 'lisboa'], later: 'Sign-ups open' },
+    { name: 'Lisbon', market: 'lisbon', match: ['lisbon', 'lisboa'], later: 'Taking bookings' },
 ]
 
 export const fold = (text) => (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()

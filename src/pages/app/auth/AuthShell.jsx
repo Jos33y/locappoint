@@ -10,11 +10,12 @@ const HOME_PATH = import.meta.env.DEV ? '/?app' : '/'
 const SPOTS = {
     porto: { lat: '41.16\u00b0 N', lng: '8.63\u00b0 W', geo: '41.1579\u00b0 N \u00b7 8.6291\u00b0 W' },
     lagos: { lat: '6.52\u00b0 N', lng: '3.38\u00b0 E', geo: '6.5244\u00b0 N \u00b7 3.3792\u00b0 E' },
+    lisbon: { lat: '38.72\u00b0 N', lng: '9.14\u00b0 W', geo: '38.7223\u00b0 N \u00b7 9.1393\u00b0 W' },
 }
 
 const AuthShell = ({
     brandTitle = 'Booking that fills your week, not your DMs.',
-    brandSub = 'Local businesses in Porto and Lagos, with Lisbon next. Free during the beta.',
+    brandSub = 'Local businesses in Porto, Lagos and Lisbon. Free during the beta.',
     audience = 'business',
     back = null,
     children,
@@ -88,9 +89,9 @@ const AuthShell = ({
                         <span className="auth-brand__city-dot auth-brand__city-dot--live"></span>
                         Lagos
                     </span>
-                    <span className="auth-brand__city auth-brand__city--muted">
-                        <span className="auth-brand__city-dot auth-brand__city-dot--next"></span>
-                        Lisbon next
+                    <span className="auth-brand__city">
+                        <span className="auth-brand__city-dot auth-brand__city-dot--live"></span>
+                        Lisbon
                     </span>
                 </div>
             </aside>

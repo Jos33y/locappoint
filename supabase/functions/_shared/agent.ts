@@ -71,7 +71,7 @@ export type Turn = {
     usage: { input: number; output: number; cost: number }
 }
 
-const SYSTEM = `You are the Locappoint booking assistant on WhatsApp. Locappoint is where people book local businesses in Porto and Lagos, with Lisbon opening next: barbers, salons, nails, beauty and wellness, and also studios, consultants, tutors, repairs and any other business listed. The businesses taking bookings right now are in the context, with what they offer.
+const SYSTEM = `You are the Locappoint booking assistant on WhatsApp. Locappoint is where people book local businesses in Porto, Lagos and Lisbon: barbers, salons, nails, beauty and wellness, and also studios, consultants, tutors, repairs and any other business listed. The businesses taking bookings right now are in the context, with what they offer.
 
 Your job: get each person the booking they want in as few messages as possible. You find businesses, answer questions about them (services, prices, hours, address), and book, move and cancel.
 
@@ -86,7 +86,7 @@ Understanding people
 Look before you answer
 - Never say nobody offers something, or that you cannot help, before you have looked: check the live list, then business_details or search.
 - They name a business: call find_business. Not found: say it is not taking bookings on Locappoint yet, and offer what is live that fits, by name.
-- Nothing live fits: say so in one line and say what kinds of businesses they can book now in that city. Never send them to the phone of a business that is not on Locappoint.
+- Nothing live fits in their city: if the other Portuguese city has it (Porto and Lisbon are both in Portugal), offer that, saying where it is. Otherwise say so in one line and say what kinds of businesses they can book now in their city. Never send them to the phone of a business that is not on Locappoint.
 - Every fact you state (business, service, price, duration, payment, time, hours, address, availability) comes from a tool result or the context. Never guess one.
 - What you told them earlier in this conversation was checked at the time: do not re-check it, correct it or apologise for it unless they question it or a tool now says otherwise. Never say you checked something unless you called a tool for it in this reply.
 
@@ -111,12 +111,14 @@ Problems and Support
 - When something went wrong (the business did not turn up or came very late, a visit or service went badly, a payment, a refund or a double charge, rudeness or anything unsafe, a problem with Locappoint itself), call report_problem with their own words in full, the kind of problem, and the booking when it is about one (their upcoming bookings and recent visits are in the context). Then tell them the ticket number and that a person at Locappoint replies here in this chat, usually within a working day.
 - Never promise a refund, a compensation or an outcome, and never decide who was right. Support does that.
 - Anyone in danger: tell them to call the emergency number first (112 in Portugal; 112 or 767 in Lagos), then report it.
-- Their open requests to Support are in the context. When they answer one, or add to it, call support_reply with their words.
+- Their open requests to Support are in the context with their numbers. When they answer one, or add to it, call support_reply with its number and their words.
+- The request number (#1041) is the only reference they ever need. Never give them any other code or id.
 - To change or cancel a booking, use the booking tools, not Support.
 
 Their bookings
-- Their upcoming WhatsApp bookings are in the context, with ids. To move one, check free_times for the new day, then propose_move. To cancel, propose_cancel. If it is not clear which booking, ask.
+- Their upcoming WhatsApp bookings are in the context, with ids for the tools. To move one, check free_times for the new day, then propose_move. To cancel, propose_cancel. If it is not clear which booking, ask.
 - To add or correct the email on a booking, call add_email: the booking is then emailed to them.
+- Bookings made on the website or in the app are not in the context and you cannot change them. Every booking confirmation email has a Change or cancel link that works without signing in. If they cannot find that email, offer to open a request to Support (report_problem, about bookings) so a person finds the booking for them.
 - Their bookings in the context are live and always newer than the conversation: if they differ, the context is right (a booking paid, confirmed or moved since). Lines that start with [Locappoint] were written by the system and are true. After a booking, "it" and "my booking" mean that booking: never offer to book it again unless they ask for another one, and never apologise for system messages.
 
 Money
@@ -131,12 +133,13 @@ Limits
 - You cannot pass messages to a business or its staff, or see more of their diary than free times. Special requests: give the business phone.
 - When they say thanks or goodbye and nothing is waiting, answer in one short line. Do not repeat the details and do not offer anything else. If you already said goodbye and they only thank you or say bye again, write exactly (no reply).
 - When a day or time is taken, offer the nearest free time ("the nearest free time is Thursday at 10:00"), never "the earliest I can offer".
-- The first reply of a conversation opens with a short hello that says you book businesses in Porto and Lagos, then helps with what they asked. Lead with the businesses in their city (the context says which); mention the other city only if they ask.
-- A Nigerian number (+234) is in Lagos unless they say otherwise: do not ask which city.
+- The first reply of a conversation opens with a short hello as Locappoint's booking assistant, then helps with what they asked.
+- Their city: a Nigerian number (+234) is in Lagos and a Portuguese number (+351) is in Porto or Lisbon, unless they say otherwise. Offer only businesses in their country, and in their city when you know it; never a business in another country unless they ask for it. When it matters and you do not know their city, ask in the same message as everything else. Do not ask a +234 number which city.
 
 Language and style
 - Answer in the language of their latest message: English, or Portuguese from Portugal (você, not Brazilian forms). Pidgin or any other language: simple English. If they ask to switch, switch. Set language on every propose call.
 - Sound like a helpful person at a front desk: warm, natural, short. At most 5 short lines, ending with one clear next step.
+- Never write ids or codes from the tools or the context (booking_id, business_id, service_id or anything like 3f2a9c1e-...).
 - Bold with single asterisks like *this*, never double. No headings, tables, emojis or long dashes. Times as 14:30. Dates in words ("Monday 12 October"), never 2026-10-12.`
 
 const TOOLS = [
@@ -151,11 +154,13 @@ const TOOLS = [
     { name: 'answer_summary', description: 'They answered the summary waiting (book, move or cancel) in words: yes or no. The system then carries it out and tells them.', input_schema: { type: 'object', properties: { answer: { type: 'string', enum: ['yes', 'no'] } }, required: ['answer'] } },
     { name: 'propose_move', description: 'Show the person a summary to move one of their bookings (from my_bookings) to a new free time, with Yes and No.', input_schema: { type: 'object', properties: { booking_id: { type: 'string' }, date: { type: 'string' }, time: { type: 'string' }, language: { type: 'string', enum: ['en', 'pt'] } }, required: ['booking_id', 'date', 'time', 'language'] } },
     { name: 'report_problem', description: 'Open a request to Locappoint Support for something that went wrong. A person replies in this chat. Returns the request number.', input_schema: { type: 'object', properties: { about: { type: 'string', enum: ['no_show', 'service', 'payment', 'safety', 'bookings', 'account', 'other'], description: 'no_show: the business did not turn up; service: the visit or service went badly; payment: charges, refunds; safety: anything unsafe or abusive; bookings: a booking problem the tools cannot fix; account; other' }, details: { type: 'string', description: 'What happened, in their own words, complete' }, booking_id: { type: 'string', description: 'The booking it is about, from their bookings or recent visits' } }, required: ['about', 'details'] } },
-    { name: 'support_reply', description: 'Add their answer or more details to one of their open requests to Support.', input_schema: { type: 'object', properties: { ticket_id: { type: 'string' }, message: { type: 'string' } }, required: ['ticket_id', 'message'] } },
+    { name: 'support_reply', description: 'Add their answer or more details to one of their open requests to Support, by its number.', input_schema: { type: 'object', properties: { number: { type: 'integer', description: 'The request number, e.g. 1041' }, message: { type: 'string' } }, required: ['number', 'message'] } },
     { name: 'propose_cancel', description: 'Show the person a summary to cancel one of their bookings (from my_bookings), with Yes and No.', input_schema: { type: 'object', properties: { booking_id: { type: 'string' }, language: { type: 'string', enum: ['en', 'pt'] } }, required: ['booking_id', 'language'] } },
 ]
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const ID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+const IDS = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 const TIME = /^\d{2}:\d{2}$/
 
@@ -244,12 +249,14 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
     const mine: any[] = await deps.call('wa_my', { p_phone: o.phone }).catch(() => [])
     const recent: any[] = await deps.call('wa_recent', { p_phone: o.phone }).catch(() => [])
     const tickets: any[] = await deps.call('wa_tickets', { p_phone: o.phone }).catch(() => [])
-    const nigerian = String(o.phone || '').replace(/\D/g, '').startsWith('234')
+    const digits = String(o.phone || '').replace(/\D/g, '')
+    const nigerian = digits.startsWith('234')
+    const portuguese = digits.startsWith('351')
     const visitAt = (b: any) => (b.mode === 'at_client' ? `at their place, ${[b.address, b.city].filter(Boolean).join(', ')}` : b.address)
     const context = [
         `Now in ${now.place}: ${now.day} ${now.date}, ${now.time}.`,
         `Calendar: ${calendar(now.date)}.`,
-        nigerian ? 'Their number is Nigerian: they are in Lagos unless they say otherwise.' : '',
+        nigerian ? 'Their number is Nigerian: they are in Lagos unless they say otherwise.' : portuguese ? 'Their number is Portuguese: they are in Porto or Lisbon unless they say otherwise.' : '',
         o.directory?.length ? `Businesses live on Locappoint now (name, slug, city, what they do):\n${o.directory.map((b) => `- ${b.name} (${b.slug}, ${b.city}): ${b.category}; ${b.services}`).join('\n')}` : 'No businesses are live on Locappoint right now.',
         t.business ? `Business in focus: ${t.business.name} (business_id ${t.business.business_id}, slug ${t.business.slug}, ${t.business.city}).` : 'No business in focus yet.',
         name ? `Their name: ${name}.` : (o.profileName ? `Their WhatsApp name is "${o.profileName}"; confirm their name before booking.` : 'Their name is not known yet.'),
@@ -262,7 +269,7 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
             ? `Their recent visits (can be reported to Support up to 48 hours after):\n${recent.map((b) => `- booking_id ${b.id}: ${b.service_name} at ${b.business_name}, ${b.date} ${b.time}; ${b.status}`).join('\n')}`
             : '',
         Array.isArray(tickets) && tickets.length
-            ? `Their requests to Locappoint Support:\n${tickets.map((x) => `- ticket_id ${x.ticket_id}, #${x.number}: ${x.subject}; ${x.status === 'waiting' ? 'Support replied and waits for them' : x.status === 'resolved' ? 'resolved' : 'open, with Support'}${x.last_reply ? `; Support's last reply: "${x.last_reply}"` : ''}`).join('\n')}`
+            ? `Their requests to Locappoint Support:\n${tickets.map((x) => `- #${x.number}: ${x.subject}; ${x.status === 'waiting' ? 'Support replied and waits for them' : x.status === 'resolved' ? 'resolved' : 'open, with Support'}${x.last_reply ? `; Support's last reply: "${x.last_reply}"` : ''}`).join('\n')}`
             : '',
         t.history.length ? '' : 'This is the start of the conversation.',
         pending ? `A ${pending.kind} summary is waiting for their Yes or No; a new proposal replaces it.` : '',
@@ -385,10 +392,15 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
             return { ok: true, number: r?.number, added: r?.added, note: r?.added ? 'Added to their open request.' : 'Request opened. A person at Locappoint replies in this chat, usually within a working day.' }
         },
         support_reply: async (i) => {
-            need(UUID.test(String(i.ticket_id)), 'Give ticket_id from their requests in the context')
+            // The model only ever sees request numbers; the id stays here. A request opened in this
+            // same turn is not in the context yet, so the list is read again.
+            const number = Number(String(i.number ?? '').replace(/\D/g, ''))
+            let ticket = (tickets || []).find((x) => Number(x.number) === number)
+            if (!ticket && number) ticket = ((await deps.call('wa_tickets', { p_phone: o.phone }).catch(() => [])) || []).find((x: any) => Number(x.number) === number)
+            need(ticket, 'Give the number of one of their open requests in the context')
             const message = String(i.message || '').trim()
             need(message.length >= 2, 'What should be added?')
-            const r = await deps.call('wa_support_reply', { p_phone: o.phone, p_ticket: i.ticket_id, p_message: message.slice(0, 4000) })
+            const r = await deps.call('wa_support_reply', { p_phone: o.phone, p_ticket: ticket.ticket_id, p_message: message.slice(0, 4000) })
             return { ok: true, number: r?.number, note: 'Added to the request. Support sees it now.' }
         },
         propose_move: async (i) => {
@@ -475,11 +487,22 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
         if (proposed || answer) { reply = ''; break }
     }
 
-    // A model that ended without a word: asked once more for an answer, without tools.
-    if (!proposed && !answer && !tidy(reply)) {
-        const res = await ask(true, 'Your last answer was empty. Answer the person now, in words, using what the tools returned.', 4000)
+    // A model that ended without a word: asked again for an answer, without tools, up to twice.
+    for (let again = 0; again < 2 && !proposed && !answer && !tidy(reply); again++) {
+        const res = await ask(true, again === 0
+            ? 'Your last answer was empty. Answer the person now, in words, using what the tools returned.'
+            : `Your answer was empty again. Reply to their latest message now, in one to three short lines: "${o.message.slice(0, 300)}"`, 4000)
         count(res)
         reply = words(res)
+    }
+
+    // An internal id in the reply (a booking, business, service or request id): asked once more
+    // without it; if one is still there, it is cut out. The request number is the only reference.
+    if (!proposed && !answer && ID.test(reply)) {
+        const res = await ask(true, 'Your answer showed an internal id. Write the same answer again without any id or code. The request number (#1041) is the only reference the person needs.', 2000)
+        count(res)
+        const again = words(res)
+        reply = tidy(again) && !ID.test(again) ? again : reply.replace(IDS, '').replace(/\(\s*\)/g, '')
     }
 
     // Answered in words: the webhook settles it and records the conversation, exactly as for a tap.

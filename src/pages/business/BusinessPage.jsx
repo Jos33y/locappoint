@@ -777,7 +777,7 @@ const BusinessPage = () => {
                             </div>
                             {city && !inLaunchArea(form.country, city) && (
                                 <p className="biz-bp__note" role="note">
-                                    We are open in Porto and Lagos, with Lisbon next. Your page works anywhere, and we will be in touch as we grow into {city}.
+                                    We are open in Porto, Lagos and Lisbon. Your page works anywhere, and we will be in touch as we grow into {city}.
                                 </p>
                             )}
                             <Field label="Neighbourhood" optional hint={form.neighbourhood.trim() ? undefined : neighbourhoodHint(form.country)}>

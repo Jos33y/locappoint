@@ -630,7 +630,7 @@ const Setup = () => {
                                 </div>
                                 {cityOf(details) && !inLaunchArea(details.country, cityOf(details)) && (
                                     <p className="lc-setup__note" role="note">
-                                        We are open in Porto and Lagos, with Lisbon next. Your page works anywhere, and we will be in touch as we grow into {cityOf(details)}.
+                                        We are open in Porto, Lagos and Lisbon. Your page works anywhere, and we will be in touch as we grow into {cityOf(details)}.
                                     </p>
                                 )}
 

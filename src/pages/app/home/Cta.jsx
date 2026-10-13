@@ -51,12 +51,12 @@ const Cta = () => {
                     </div>
 
                     <div className="cta__city">
-                        <span className="cta__city-pill cta__city-pill--next">
-                            <span className="cta__city-dot cta__city-dot--next"></span>
-                            Next
+                        <span className="cta__city-pill cta__city-pill--live">
+                            <span className="cta__city-dot cta__city-dot--live"></span>
+                            Live
                         </span>
                         <span className="cta__city-name">Lisbon</span>
-                        <span className="cta__city-note">Sign-ups open</span>
+                        <span className="cta__city-note">Onboarding cohort 1</span>
                     </div>
                 </div>
 

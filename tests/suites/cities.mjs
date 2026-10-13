@@ -1,4 +1,4 @@
-// Cities: Porto and Lagos live, Lisbon next. The launch area takes both Portuguese metros and Lagos,
+// Cities: Porto, Lagos and Lisbon live. The launch area takes both Portuguese metros and Lagos,
 // the picked city drives Businesses, Home and Search, prices follow the business currency, and no
 // screen, email or search title still puts Lisbon first.
 
@@ -58,7 +58,7 @@ export default async ({ check, root, server }) => {
     }
 
     const engine = read('src/services/engine.js')
-    check(/code: 'porto'[^\n]*live: true/.test(engine) && /code: 'lagos'[^\n]*live: true/.test(engine) && /code: 'lisbon'[^\n]*live: false/.test(engine), 'Porto and Lagos are live, Lisbon is next')
+    check(/code: 'porto'[^\n]*live: true/.test(engine) && /code: 'lagos'[^\n]*live: true/.test(engine) && /code: 'lisbon'[^\n]*live: true/.test(engine), 'Porto, Lagos and Lisbon are live')
     check(/Africa\/Lagos/.test(engine) && /lc:city/.test(engine), 'the first city comes from the time zone and a change reaches every page')
     check(/<CitySwitcher/.test(read('src/components/common/AppHeader.jsx')) && /<CitySwitcher/.test(read('src/pages/client/ClientLayout.jsx')), 'the city switcher is in the site header and the client app')
     for (const file of ['src/pages/app/Businesses.jsx', 'src/pages/client/Home.jsx', 'src/pages/client/Search.jsx']) {
