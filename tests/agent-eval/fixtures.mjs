@@ -1,5 +1,5 @@
-// A frozen, in-memory copy of what the WhatsApp agent can see: four businesses (The Brick Dev as it is
-// live, three made-up ones with the shapes our real businesses have) and a demo page. Every wa_* function
+// A frozen, in-memory copy of what the WhatsApp agent can see: five businesses (The Brick Dev as it is
+// live, four made-up ones with the shapes our real businesses have, one in Lagos) and a demo page. Every wa_* function
 // the agent calls is answered here with the same fields the database returns, so a conversation can book,
 // move and cancel without touching Supabase. One fresh copy per conversation.
 
@@ -66,12 +66,22 @@ const BUSINESSES = [
     {
         id: id(104), slug: 'bem-estar', name: 'Bem Estar Massagens', city: 'Lisbon', market: 'lisbon', category: 'Massage and wellness',
         address: 'Avenida da Liberdade 100', area: 'Avenida', phone: '+351 912 000 104', whatsapp: null, auto: false, cutoff: 1440, currency: 'EUR', demo: false, payOnline: false, staff: 'Sofia',
-        description: 'Relaxing and sports massage, also at home.',
+        description: 'Relaxing and sports massage, also at home.', areas: ['Lisboa', 'Oeiras', 'Amadora'],
         hours: { 1: ['10:00', '20:00'], 2: ['10:00', '20:00'], 3: ['10:00', '20:00'], 4: ['10:00', '20:00'], 5: ['10:00', '20:00'], 6: ['10:00', '14:00'] }, busy: [['14:00', '15:00']],
         services: [
             { id: id(231), name: 'Massagem relaxante', minutes: 60, price: 45, per: 'booking', max: 1, ways: ['at_business'], about: 'Relaxing massage.' },
             { id: id(232), name: 'Massagem desportiva', minutes: 60, price: 50, per: 'booking', max: 1, ways: ['at_business'], about: 'Sports massage.' },
-            { id: id(233), name: 'Massagem ao domicílio', minutes: 60, price: 60, per: 'booking', max: 1, ways: ['at_client'], about: 'Massage at your home in Lisbon.' },
+            { id: id(233), name: 'Massagem ao domicílio', minutes: 60, price: 60, per: 'booking', max: 1, ways: ['at_client'], travel: 10, about: 'Massage at your home in Lisbon.' },
+        ],
+    },
+    {
+        id: id(106), slug: 'fade-lab', name: 'Fade Lab', city: 'Lagos', market: 'lagos', category: 'Barber',
+        address: '5 Admiralty Way', area: 'Lekki Phase 1', phone: '+234 801 000 1060', whatsapp: null, auto: true, cutoff: 120, currency: 'NGN', demo: false, payOnline: false, staff: 'Tunde',
+        description: 'Fades, cuts and beards in Lekki. Home service too.', areas: ['Lekki', 'Lekki Phase 1', 'Ajah', 'VGC', 'Ikoyi', 'Victoria Island'],
+        hours: { 1: ['09:00', '20:00'], 2: ['09:00', '20:00'], 3: ['09:00', '20:00'], 4: ['09:00', '20:00'], 5: ['09:00', '20:00'], 6: ['09:00', '20:00'] }, busy: [['14:00', '15:00']],
+        services: [
+            { id: id(251), name: 'Haircut', minutes: 45, price: 8000, per: 'person', max: 3, ways: ['at_business', 'at_client'], travel: 5000, about: 'Any cut, fade included.' },
+            { id: id(252), name: 'Haircut and beard', minutes: 60, price: 12000, per: 'booking', max: 1, ways: ['at_business', 'at_client'], travel: 5000, about: '' },
         ],
     },
     {
@@ -86,12 +96,13 @@ const WORDS = [
     ['corte', 'cabelo', 'haircut', 'hair', 'cut', 'barber', 'barbeiro', 'barbearia', 'fade', 'barb'],
     ['barba', 'beard', 'shave'],
     ['unhas', 'nails', 'nail', 'manicure', 'gel', 'verniz', 'pedicure', 'polish'],
-    ['massagem', 'massage', 'spa', 'relax', 'back'],
+    ['massagem', 'massage', 'spa', 'relax', 'back', 'domicilio'],
     ['website', 'site', 'web', 'developer', 'review', 'app', 'discovery'],
 ]
 
 export const makeFixtures = ({ phone }) => {
     const bookings = []
+    const tickets = []
     const now = () => lisbonNow()
     const biz = (bid) => BUSINESSES.find((b) => b.id === bid) || null
     const svc = (b, sid) => b?.services.find((s) => s.id === sid) || null
@@ -101,9 +112,10 @@ export const makeFixtures = ({ phone }) => {
         return {
             id: a.id, status: a.status, payment_status: a.payment_status, hold_until: a.hold_until,
             price: a.price, total: a.total, client_fee: 0, currency: b.currency,
-            business_id: b.id, business_name: b.name, slug: b.slug, address: b.address, city: b.city,
+            business_id: b.id, business_name: b.name, slug: b.slug,
+            address: a.mode === 'at_client' ? a.address : b.address, city: a.mode === 'at_client' ? a.zone : b.city, landmark: a.mode === 'at_client' ? a.landmark : null, travel_fee: a.travel || 0,
             service_id: s.id, service_name: s.name, date: a.date, time: a.time, minutes: a.minutes,
-            staff_name: b.staff, mode: a.mode, people: a.people, timezone: TZ, cancel_cutoff_minutes: b.cutoff,
+            staff_name: b.staff, mode: a.mode, people: a.people, timezone: b.market === 'lagos' ? 'Africa/Lagos' : TZ, cancel_cutoff_minutes: b.cutoff,
             meeting_url: a.mode === 'online' && a.status === 'confirmed' ? 'https://meet.example.com/eval' : null,
             manage_token: a.token,
         }
@@ -140,17 +152,24 @@ export const makeFixtures = ({ phone }) => {
     const upcoming = (a) => `${a.date}T${a.time}` > `${now().date}T${now().time}`
     const minutesUntil = (a) => (Date.parse(`${a.date}T${a.time}:00Z`) - Date.parse(`${now().date}T${now().time}:00Z`)) / 60_000
 
-    const book = ({ business, service, date, time, name, email, mode, people = 1, status }) => {
+    const book = ({ business, service, date, time, name, email, mode, people = 1, status, address = null, landmark = null, zone = null }) => {
         const b = biz(business), s = svc(b, service)
         if (!b || !s) throw Object.assign(new Error('This service is not available'), { code: 'P0002' })
         const m = mode || (s.ways.includes('at_business') ? 'at_business' : s.ways.includes('online') ? 'online' : s.ways[0])
-        if (m === 'at_client') throw Object.assign(new Error('Visits at your place are booked on the business page for now'), { code: '22023' })
+        let area = null
+        if (m === 'at_client') {
+            area = (b.areas || []).find((z) => z.toLowerCase() === String(zone || '').trim().toLowerCase()) || null
+            if (!area) throw Object.assign(new Error('This business does not go to that area. Pick one of the areas it lists.'), { code: '22023' })
+            if (String(address || '').trim().length < 5) throw Object.assign(new Error('Enter the address where the visit happens'), { code: '22023' })
+        }
         if (bookings.filter((a) => upcoming(a) && a.status !== 'cancelled').length >= 3) throw Object.assign(new Error('You already have three upcoming bookings from WhatsApp. Change or cancel one first.'), { code: 'P0001' })
         if (!slots(b, s, date, null, people).includes(time)) throw Object.assign(new Error('That time is no longer free. Pick another.'), { code: 'P0001' })
-        const price = s.per === 'person' ? s.price * people : s.price
+        const travel = m === 'at_client' ? s.travel || 0 : 0
+        const price = (s.per === 'person' ? s.price * people : s.price) + travel
         const a = {
             id: crypto.randomUUID(), business_id: b.id, service_id: s.id, date, time, minutes: s.minutes * people,
             people, mode: m, name, email: email ? String(email).trim().toLowerCase() : null, price, total: price,
+            address: m === 'at_client' ? String(address).trim() : null, landmark: m === 'at_client' ? landmark || null : null, zone: area, travel,
             status: status || (b.auto ? 'confirmed' : 'pending'),
             payment_status: b.payOnline && price > 0 ? 'awaiting' : 'at_visit',
             hold_until: b.payOnline && price > 0 ? new Date(Date.now() + 35 * 60_000).toISOString() : null,
@@ -175,10 +194,10 @@ export const makeFixtures = ({ phone }) => {
             const n = now()
             return {
                 business_id: b.id, name: b.name, slug: b.slug, category: b.category, address: b.address, area: b.area, city: b.city, market: b.market,
-                timezone: TZ, phone: b.phone, whatsapp: b.whatsapp, description: b.description, confirms_automatically: b.auto,
-                cancel_cutoff_minutes: b.cutoff, currency: b.currency, today: n.date, now: n.time,
+                timezone: b.market === 'lagos' ? 'Africa/Lagos' : TZ, phone: b.phone, whatsapp: b.whatsapp, description: b.description, confirms_automatically: b.auto,
+                cancel_cutoff_minutes: b.cutoff, currency: b.currency, today: n.date, now: n.time, visit_areas: b.areas || null,
                 hours: Object.entries(b.hours).map(([d, [f, t]]) => ({ day: WEEKDAYS[Number(d)], open: `${f}-${t}` })),
-                services: b.services.map((s) => ({ service_id: s.id, name: s.name, minutes: s.minutes, price: s.price, price_per: s.per, max_people: s.max, extra_person_minutes: s.max > 1 ? s.minutes : null, ways: s.ways, about: s.about })),
+                services: b.services.map((s) => ({ service_id: s.id, name: s.name, minutes: s.minutes, price: s.price, price_per: s.per, max_people: s.max, extra_person_minutes: s.max > 1 ? s.minutes : null, ways: s.ways, travel_fee: s.ways.includes('at_client') ? s.travel || 0 : null, about: s.about })),
             }
         },
         wa_times: ({ p_business, p_service, p_date, p_ignore, p_people }) => { const b = biz(p_business); return slots(b, svc(b, p_service), p_date, p_ignore, Number(p_people) || 1) },
@@ -200,9 +219,10 @@ export const makeFixtures = ({ phone }) => {
             if (!b || !s) return null
             const people = Number(p_people) || 1
             const total = s.per === 'person' ? s.price * people : s.price
-            return { online: b.payOnline && total > 0, total, currency: b.currency, price_per: s.per, service_price: s.price, currency_hint: b.currency, cancel_cutoff_minutes: b.cutoff, confirms_automatically: b.auto }
+            return { travel_fee: s.travel || 0, online: b.payOnline && total > 0, total, currency: b.currency, price_per: s.per, service_price: s.price, currency_hint: b.currency, cancel_cutoff_minutes: b.cutoff, confirms_automatically: b.auto }
         },
-        wa_search: ({ p_market, p_query, p_dates, p_window, p_at, p_people }) => {
+        wa_search: ({ p_market, p_query, p_dates, p_window, p_at, p_people, p_zone }) => {
+            const zone = String(p_zone || '').trim().toLowerCase()
             const q = String(p_query || '').toLowerCase()
             const groups = WORDS.filter((g) => g.some((w) => q.includes(w)))
             const today = now().date
@@ -217,8 +237,8 @@ export const makeFixtures = ({ phone }) => {
                 return true
             }
             const found = []
-            for (const b of BUSINESSES.filter((x) => !x.demo && x.market === String(p_market || '').toLowerCase())) {
-                for (const s of b.services.filter((x) => !x.ways.every((w) => w === 'at_client'))) {
+            for (const b of BUSINESSES.filter((x) => !x.demo && x.market === String(p_market || '').toLowerCase() && (!zone || (x.areas || []).some((z) => z.toLowerCase() === zone)))) {
+                for (const s of b.services.filter((x) => (zone ? x.ways.includes('at_client') : !x.ways.every((w) => w === 'at_client')))) {
                     const text = `${s.name} ${b.category}`.toLowerCase()
                     if (!groups.some((g) => g.some((w) => text.includes(w)))) continue
                     for (const d of dates) {
@@ -229,9 +249,9 @@ export const makeFixtures = ({ phone }) => {
                 }
             }
             const option = (x, t, label) => ({
-                km: null, city: x.b.city, date: x.d, mode: x.s.ways.includes('at_business') ? 'at_business' : 'online', slug: x.b.slug, time: t, label,
+                km: null, city: x.b.city, date: x.d, mode: zone ? 'at_client' : x.s.ways.includes('at_business') ? 'at_business' : 'online', slug: x.b.slug, time: t, label,
                 price: x.s.per === 'person' ? x.s.price * people : x.s.price, score: 0.7, people, rating: null, starts: `${x.d}T${t}:00`, minutes: x.s.minutes,
-                regular: false, reviews: 0, currency: 'EUR', kept_pct: null, logo_url: null, reliable: false, verified: false, price_per: x.s.per,
+                regular: false, reviews: 0, currency: x.b.currency, kept_pct: null, logo_url: null, reliable: false, verified: false, price_per: x.s.per,
                 rebook_pct: null, service_id: x.s.id, business_id: x.b.id, service_name: x.s.name, business_name: x.b.name,
             })
             const options = found.filter((x) => x.inside.length).slice(0, 3).map((x, i) => option(x, x.inside[0], ['best', 'earliest', 'top'][i]))
@@ -239,8 +259,28 @@ export const makeFixtures = ({ phone }) => {
             return { dates, later, words: q.split(/\s+/).filter(Boolean), matched: new Set(found.map((x) => x.b.id)).size, options, timezone: TZ }
         },
         wa_my: () => bookings.filter((a) => upcoming(a) && ['pending', 'confirmed'].includes(a.status) && a.payment_status !== 'failed').map(view),
-        wa_book: ({ p_business, p_service, p_date, p_time, p_name, p_email, p_mode, p_people }) =>
-            book({ business: p_business, service: p_service, date: p_date, time: p_time, name: p_name, email: p_email, mode: p_mode, people: Number(p_people) || 1 }),
+        wa_book: ({ p_business, p_service, p_date, p_time, p_name, p_email, p_mode, p_people, p_address, p_landmark, p_zone }) =>
+            book({ business: p_business, service: p_service, date: p_date, time: p_time, name: p_name, email: p_email, mode: p_mode, people: Number(p_people) || 1, address: p_address, landmark: p_landmark, zone: p_zone }),
+        wa_recent: () => bookings.filter((a) => !upcoming(a) && a.status !== 'cancelled').map(view),
+        wa_tickets: () => tickets.filter((t) => t.status !== 'resolved').map((t) => ({ ticket_id: t.id, number: t.number, subject: t.subject, status: t.status, last_reply: t.replies.at(-1) || null })),
+        wa_report: ({ p_category, p_message, p_appointment, p_name, p_email }) => {
+            const msg = String(p_message || '').trim()
+            if (!['payment', 'safety', 'no_show', 'service', 'bookings', 'account', 'other'].includes(p_category)) throw Object.assign(new Error('Pick what it is about'), { code: '22023' })
+            if (msg.length < 10) throw Object.assign(new Error('Tell us a little more, so we can help first time.'), { code: '22023' })
+            if (p_appointment) mine(p_appointment)
+            const open = p_appointment && tickets.find((t) => t.appointment === p_appointment && t.status !== 'resolved')
+            if (open) { open.messages.push(msg); return { ticket_id: open.id, number: open.number, added: true } }
+            const t = { id: crypto.randomUUID(), number: 1040 + tickets.length + 1, appointment: p_appointment || null, category: p_category, subject: msg.slice(0, 60), status: 'open', messages: [msg], replies: [], name: p_name, email: p_email }
+            tickets.push(t)
+            return { ticket_id: t.id, number: t.number, added: false }
+        },
+        wa_support_reply: ({ p_ticket, p_message }) => {
+            const t = tickets.find((x) => x.id === p_ticket)
+            if (!t) throw Object.assign(new Error('That ticket is not one of theirs'), { code: '42501' })
+            t.messages.push(String(p_message || ''))
+            t.status = 'open'
+            return { ticket_id: t.id, number: t.number }
+        },
         wa_move: ({ p_appointment, p_date, p_time }) => {
             const a = mine(p_appointment), b = biz(a.business_id)
             if (minutesUntil(a) < b.cutoff) throw Object.assign(new Error('It is too late to change this booking online. Contact the business.'), { code: 'P0001' })
@@ -269,6 +309,7 @@ export const makeFixtures = ({ phone }) => {
     return {
         phone,
         bookings,
+        tickets,
         view,
         businesses: BUSINESSES,
         bySlug: (slug) => BUSINESSES.find((b) => b.slug === slug),
@@ -290,7 +331,8 @@ export const makeFixtures = ({ phone }) => {
             name: b.name, slug: b.slug, city: b.city, address: b.address, area: b.area, phone: b.phone, category: b.category, description: b.description,
             confirms_automatically: b.auto, cancel_cutoff_minutes: b.cutoff, staff: b.staff,
             hours: `${Object.entries(b.hours).map(([d, [f, t]]) => `${WEEKDAYS[Number(d)]} ${f}-${t}`).join(', ')}; days not listed are closed`, no_bookings_between: b.busy.map(([f, t]) => `${f}-${t}`).join(', '),
-            services: b.services.map((s) => `${s.name}: ${s.minutes} min, ${s.price === 0 ? 'free' : `EUR ${s.price}${s.per === 'person' ? ' per person' : ''}`}, ${s.ways.join('/')}, ${s.ways.every((w) => w === 'at_client') ? 'booked on the business page' : b.payOnline && s.price > 0 ? 'paid online when booking' : 'paid at the visit'}${s.max > 1 ? `, up to ${s.max} people served one after another, each adds ${s.minutes} min` : ''}${s.about ? `. ${s.about}` : ''}`),
+            visit_areas: b.areas || null,
+            services: b.services.map((s) => `${s.name}: ${s.minutes} min, ${s.price === 0 ? 'free' : `${b.currency} ${s.price}${s.per === 'person' ? ' per person' : ''}`}, ${s.ways.join('/')}${s.ways.includes('at_client') ? `, travel fee ${b.currency} ${s.travel || 0} for visits at the client's place (areas: ${(b.areas || []).join(', ') || 'none, booked on the business page'})` : ''}, ${b.payOnline && s.price > 0 ? 'paid online when booking' : 'paid at the visit'}${s.max > 1 ? `, up to ${s.max} people served one after another, each adds ${s.minutes} min` : ''}${s.about ? `. ${s.about}` : ''}`),
         })),
     }
 }

@@ -83,6 +83,30 @@ export default async ({ browser, url, check, server, root }) => {
     check(/OUTSIDE_WINDOW/.test(notify) && /NO_TEMPLATE/.test(notify) && /'whatsapp'/.test(notify), 'notify sends WhatsApp, falls back to the template, and does not retry a template Meta has not approved')
     check(!/(EAA[A-Za-z0-9]{20,})/.test(hook + notify), 'no token in the code')
 
+    // 3c: visits at the client's place booked in the chat, Support from the chat, Lagos.
+    {
+        const c3 = await server.ssrLoadModule(path.join(fns, '_shared', 'wa-client.ts'))
+        const ag = await server.ssrLoadModule(path.join(fns, '_shared', 'agent.ts'))
+        const a7 = fs.readFileSync(path.join(root, 'supabase', 'migrations', 'agent-7.sql'), 'utf8')
+        const base = { kind: 'book', business_name: 'Fade Lab', service_name: 'Haircut', date: day(2), time: '17:00', timezone: 'Africa/Lagos', minutes: 45, people: 1, currency: 'NGN', online: false, confirms: true, cutoff: 120, name: 'Chidi', email: null }
+        const visit = c3.summary({ ...base, total: 13000, mode: 'at_client', travel: 5000, address: '14 Fola Osibo Road', area: 'Lekki Phase 1', directions: 'near the filling station' }, 'abc', 'en').text
+        check(/At your place: 14 Fola Osibo Road, Lekki Phase 1 \(near the filling station\)/.test(visit) && /₦13,000, paid at the visit/.test(visit) && /Includes travel: ₦5,000/.test(visit) && clean(visit), `a visit summary says where, in naira, with the travel fee: ${visit.replace(/\n/g, ' / ')}`)
+        const free = c3.summary({ ...base, total: 0, mode: 'online', currency: 'EUR' }, 'abc', 'en').text
+        check(/\nFree\n/.test(free) && !/0[.,]00/.test(free), 'a free service says Free')
+        const inside = c3.clientNews('support_reply', { number: 1042, body: 'We called the business.', lang: 'en' }, true)
+        const outside = c3.clientNews('support_reply', { number: 1042, body: 'We called the business.', lang: 'en' }, false)
+        check(/Locappoint Support, request #1042/.test(inside?.text || '') && outside?.kind === 'template:lc_client_support' && clean(outside.text), 'a Support reply on WhatsApp, inside and outside 24 hours')
+        check(c3.CLIENT_TEMPLATES.lc_client_support?.sample?.length === 2, 'the Support template has its sample for Meta')
+        const visitNews = c3.clientNews('booking_confirmed', { business_name: 'Fade Lab', service_name: 'Haircut', date: day(2), time: '17:00', timezone: 'Africa/Lagos', mode: 'at_client', address: '5 Admiralty Way', client_address: '14 Fola Osibo Road', client_zone: 'Lekki Phase 1', lang: 'en' }, true)
+        check(/At your place: 14 Fola Osibo Road, Lekki Phase 1/.test(visitNews.text) && !/Admiralty/.test(visitNews.text), 'a confirmed visit shows their address, not the shop')
+        const agentSrc = fs.readFileSync(path.join(fns, '_shared', 'agent.ts'), 'utf8')
+        check(/wa_report/.test(agentSrc) && /wa_support_reply/.test(agentSrc) && /Never promise a refund/.test(agentSrc), 'the agent can open a Support request and add to it, and never promises an outcome')
+        check(/enum: \['porto', 'lagos', 'lisbon'\]/.test(agentSrc) && typeof ag.runAgent === 'function', 'the agent searches Lagos')
+        check(/p_zone: a\.zone/.test(hook) && /p_address: a\.address/.test(hook), 'the Yes books the visit at the address that was shown')
+        check(/CREATE TRIGGER support_messages_whatsapp/.test(a7) && /wa_phone = coalesce\(wa_phone, p_phone\)/.test(a7) && /support_report_open\(a\)/.test(a7), 'Support replies go back to WhatsApp; reports about a visit close 48 hours after it')
+        check(/This business does not go to that area/.test(a7) && /get_available_slots\(p_business, p_service, p_date, NULL, p_ignore, NULL, greatest\(coalesce\(p_people, 1\), 1\),\s*NULLIF\(p_mode, ''\), NULLIF\(btrim\(p_zone\), ''\)\)/.test(a7), 'visits need a listed area, and their free times count the travel')
+    }
+
     // Settings: link the phone
     const open = async (extra = '', vw = 1272, vh = 900) => {
         const page = await browser.newPage()

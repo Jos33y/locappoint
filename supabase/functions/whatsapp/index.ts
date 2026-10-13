@@ -5,6 +5,8 @@
 // - Clients (3b): the booking agent (_shared/agent.ts). It proposes; a booking, move or cancel happens
 //   only when the client taps Yes (or answers yes), and then through the same database functions as
 //   the website. Paid services get a Stripe Checkout link; the payment webhook confirms them.
+// - Clients (3c): visits at their place booked here (area, address, directions), and problems
+//   reported to Locappoint Support, whose replies come back here through notify.
 // - Everyone: STOP and START.
 //
 // Deploy: npx supabase functions deploy whatsapp --no-verify-jwt
@@ -127,6 +129,7 @@ const settle = async (phone: string, thread: Thread, verb: 'yes' | 'no', code: s
             const v = await call('wa_book', {
                 p_phone: phone, p_business: a.business, p_service: a.service, p_date: a.date, p_time: a.time,
                 p_name: a.name, p_email: a.email || null, p_mode: a.mode, p_people: a.people || 1,
+                ...(a.mode === 'at_client' ? { p_address: a.address || null, p_landmark: a.landmark || null, p_zone: a.zone || null } : {}),
             })
             // Paid online: the link. Paid at the visit: the "booked" or "request sent" message comes
             // from the queue a moment later, the same news the email carries.

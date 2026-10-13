@@ -1,4 +1,4 @@
-// 25 people writing to the WhatsApp agent, each in their own way, with what a good outcome is.
+// 30 people writing to the WhatsApp agent, each in their own way, with what a good outcome is.
 // opening: their first message, word for word, so every run starts the same. After that a model plays
 // them from who, goal and style. words: they never tap buttons and always answer in their own words. expect: the checks that decide pass or fail for that person; the judge
 // adds what rules cannot see (tone, understanding, invented facts).
@@ -213,9 +213,78 @@ export const PERSONAS = [
     {
         id: 'home-visit', title: 'Wants a massage at home',
         opening: 'Can someone come to my house in Lisbon to give me a massage on Friday?',
-        who: 'Helen, back pain, English.', goal: 'A massage at home. If it has to be booked somewhere else, take the link, say thanks and finish.',
+        who: 'Helen, back pain, English, lives at Rua Garrett 50, 3rd floor, in Lisboa (the city itself).', goal: 'A massage at home on Friday, any time after 15:00. Gives the address when asked.',
         style: 'Plain English.', name: 'Helen Wright', profileName: 'Helen',
-        expect: (x) => [...said(x, /locappoint\.com\/bem-estar/, 'did not give the business page for a home visit'), ...(fresh(x).some((a) => a.mode === 'at_client') ? ['booked a home visit in the chat'] : [])],
+        expect: (x) => {
+            const a = fresh(x).find((b) => b.mode === 'at_client')
+            return [
+                ...booked(x, { slug: 'bem-estar', service: /domic/, date: (d) => weekday(d) === 5, mode: 'at_client' }),
+                ...(a && !/Rua Garrett 50/i.test(a.address || '') ? [`the visit address is "${a.address}"`] : []),
+                ...(a && a.zone !== 'Lisboa' ? [`the visit area is ${a.zone}, expected Lisboa`] : []),
+                ...(a && a.total !== 70 ? [`the visit costs ${a.total}, expected 70 with the travel fee`] : []),
+            ]
+        },
+    },
+    {
+        id: 'home-not-covered', title: 'Wants a home massage in an area the business does not cover',
+        opening: 'Olá, fazem massagens ao domicílio em Cascais?',
+        who: 'Rita, lives in Cascais, European Portuguese.', goal: 'A massage at home in Cascais. If they do not go to Cascais, ask if there is another option, then say thanks and finish without booking.',
+        style: 'European Portuguese, polite.', name: 'Rita Sousa', profileName: 'Rita', lang: 'pt',
+        expect: (x) => [...nothingBooked(x), ...said(x, /Cascais/i, 'did not say whether they go to Cascais')],
+    },
+    {
+        id: 'lagos-home-pidgin', title: 'Lagos, Pidgin, barber to come to the house in Lekki',
+        phone: '2348031234567',
+        opening: 'Abeg I need barber wey go come my house tomorrow evening',
+        who: 'Chidi, lives in Lekki Phase 1, Lagos, at 14 Fola Osibo Road, near the filling station. Writes Nigerian Pidgin.', goal: 'A haircut at home tomorrow from 17:00. Gives the address and landmark when asked.',
+        style: 'Nigerian Pidgin, short messages.', name: 'Chidi Okeke', profileName: 'Chidi',
+        expect: (x) => {
+            const a = fresh(x).find((b) => b.mode === 'at_client')
+            return [
+                ...booked(x, { slug: 'fade-lab', service: /Haircut/, ...(openOn(x, 'fade-lab', x.tomorrow) ? { date: (d) => d === x.tomorrow, time: (t) => toMin(t) >= toMin('17:00') } : {}), mode: 'at_client' }),
+                ...(a && !/Fola Osibo/i.test(a.address || '') ? [`the visit address is "${a.address}"`] : []),
+                ...(a && !/Lekki/.test(a.zone || '') ? [`the visit area is ${a.zone}`] : []),
+                ...notSaid(x, /which city|what city|where are you located|are you in (porto|lisbon)/i, 'asked which city although the number is Nigerian'),
+                ...notSaid(x, /€/, 'quoted euros in Lagos'),
+            ]
+        },
+    },
+    {
+        id: 'lagos-terse', title: 'Lagos number, two words, at the shop',
+        phone: '2348099887766',
+        opening: 'fade saturday',
+        who: 'Seun, lives in Lagos, writes as little as possible.', goal: 'A haircut at the shop on Saturday, morning if possible. Accepts the first time offered.',
+        style: 'Two or three words per message.', name: 'Seun Adeyemi', profileName: 'Seun',
+        expect: (x) => [
+            ...booked(x, { slug: 'fade-lab', service: /Haircut/, date: (d) => weekday(d) === 6, mode: 'at_business' }),
+            ...notSaid(x, /which city|what city|are you in (porto|lisbon)/i, 'asked which city although the number is Nigerian'),
+        ],
+    },
+    {
+        id: 'report-problem', title: 'The business cancelled on them rudely; wants it looked into',
+        seed: (fx, x) => fx.seed({ slug: 'barbearia-rio', service: 'Corte de cabelo', date: coming(x, 5) === x.today ? nextDow(5, x.today) : coming(x, 5), time: '16:00', name: 'Paul Costa' }),
+        opening: 'The barber just called me and was really rude, said he might not be there on Friday. I want to complain.',
+        who: 'Paul, upset but polite, booked a haircut at Barbearia Rio on Friday at 16:00 through this chat earlier.', goal: 'Report it to Locappoint and get a reference number. Asks if he gets something back for the trouble. Keeps the booking.',
+        style: 'Plain English, upset.', name: 'Paul Costa', profileName: 'Paul',
+        expect: (x) => [
+            ...(x.fx.tickets.length === 1 ? [] : [`expected one Support request, got ${x.fx.tickets.length}`]),
+            ...(x.fx.tickets[0] && x.fx.tickets[0].appointment !== x.seeded.id ? ['the request is not linked to the booking'] : []),
+            ...said(x, new RegExp(`#?${x.fx.tickets[0]?.number || 'none'}`), 'did not give the request number'),
+            ...notSaid(x, /you (will|'ll) (get|receive) (a )?(refund|discount|compensation|voucher)|we (will|'ll) refund/i, 'promised a refund or compensation'),
+            ...(x.fx.bookings.find((a) => a.id === x.seeded.id).status === 'cancelled' ? ['cancelled the booking they wanted to keep'] : []),
+        ],
+    },
+    {
+        id: 'charged-twice', title: 'Charged twice, no booking in this chat',
+        opening: 'Hello, I was charged two times for my nails at Unhas Lab last week. Who can help?',
+        who: 'Joana, booked on the website last week, not in this chat, has the bank statement.', goal: 'Get it to someone who can sort it out and get a reference. Gives her email joana@example.com if asked.',
+        style: 'Plain English.', name: 'Joana Lima', email: 'joana@example.com', profileName: 'Joana',
+        expect: (x) => [
+            ...(x.fx.tickets.length === 1 ? [] : [`expected one Support request, got ${x.fx.tickets.length}`]),
+            ...(x.fx.tickets[0] && x.fx.tickets[0].category !== 'payment' ? [`the request is about ${x.fx.tickets[0].category}, expected payment`] : []),
+            ...notSaid(x, /you (will|'ll) (get|receive) (a )?refund|we (will|'ll) refund|refund (is|has been) (on its way|issued)/i, 'promised a refund'),
+            ...nothingBooked(x),
+        ],
     },
     {
         id: 'email-then-change', title: 'Free call with an email, then a different email',

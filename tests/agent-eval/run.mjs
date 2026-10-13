@@ -85,7 +85,7 @@ const buttonsOf = (out) => (out?.message?.interactive?.action?.buttons || []).ma
 
 // ---------- one conversation, the way whatsapp/index.ts runs it ----------
 const play = async (p) => {
-    const phone = '351900000999'
+    const phone = p.phone || '351900000999'
     const fx = makeFixtures({ phone })
     const now = lisbonNow()
     const x = { fx, today: now.date, tomorrow: addDays(now.date, 1), log: [], agentText: '', problems: [] }
@@ -120,7 +120,7 @@ const play = async (p) => {
         const a = pend.args
         try {
             if (pend.kind === 'book') {
-                const v = await fx.call('wa_book', { p_phone: phone, p_business: a.business, p_service: a.service, p_date: a.date, p_time: a.time, p_name: a.name, p_email: a.email || null, p_mode: a.mode, p_people: a.people || 1 })
+                const v = await fx.call('wa_book', { p_phone: phone, p_business: a.business, p_service: a.service, p_date: a.date, p_time: a.time, p_name: a.name, p_email: a.email || null, p_mode: a.mode, p_people: a.people || 1, ...(a.mode === 'at_client' ? { p_address: a.address || null, p_landmark: a.landmark || null, p_zone: a.zone || null } : {}) })
                 // Paid online: the payment link. Otherwise the booking news the queue sends a moment later.
                 const out = v.payment_status === 'awaiting'
                     ? [C.payLink(v, 'https://checkout.stripe.com/c/pay/cs_test_eval', 35, lang)]
@@ -156,6 +156,8 @@ const play = async (p) => {
     const call = async (fn, args) => {
         const r = await fx.call(fn, args)
         if (fn === 'wa_set_email') x.log.push({ who: 'system', text: `The system saved ${r.email} on the booking and emailed the booking there.` })
+        if (fn === 'wa_report') x.log.push({ who: 'system', text: r.added ? `The system added this to Support request #${r.number}.` : `The system opened Support request #${r.number} (${args.p_category}): "${args.p_message}".` })
+        if (fn === 'wa_support_reply') x.log.push({ who: 'system', text: `The system added their words to Support request #${r.number}.` })
         return r
     }
     const respond = async (said) => {
@@ -189,7 +191,7 @@ const play = async (p) => {
 
     const sim = [{ role: 'user', content: '(You open WhatsApp and start a chat with Locappoint.)' }]
     const system = [
-        'You are role-playing a real person writing on WhatsApp to Locappoint, an automated assistant that books local businesses in Porto and Lisbon.',
+        'You are role-playing a real person writing on WhatsApp to Locappoint, an automated assistant that books local businesses in Porto and Lagos, with Lisbon next.',
         `Who you are: ${p.who}`,
         `What you want: ${p.goal}`,
         `How you write: ${p.style}`,
@@ -267,7 +269,7 @@ const judge = async (p, x, found) => {
         `Today in Portugal is ${dayName(x.today)} ${x.today}.`,
         `The client: ${p.who}\nWhat they wanted: ${p.goal}`,
         `Everything the agent could know about the businesses (it must not state anything else as fact):\n${JSON.stringify(x.fx.facts(), null, 1)}`,
-        'Also true, beyond the data: Locappoint can be reached at hello@locappoint.com; every business has a page at https://locappoint.com/<slug>; the agent can save an email on a booking, after which the system emails the booking there; the agent sees the client\'s upcoming bookings with their status, staff and payment. It cannot pass messages to businesses and does not know which payment methods a business accepts.',
+        'Also true, beyond the data: Locappoint can be reached at hello@locappoint.com; every business has a page at https://locappoint.com/<slug>; the agent can save an email on a booking, after which the system emails the booking there; the agent sees the client\'s upcoming bookings with their status, staff and payment. It can book visits at the client\'s place in the chat when the business lists the client\'s area (travel fee added; a business without areas is booked on its page). It can open a request to Locappoint Support (a person replies in the chat, usually within a working day) and add to it; it must not promise refunds or outcomes. A Nigerian number (+234) is taken to be in Lagos. It cannot pass messages to businesses and does not know which payment methods a business accepts.',
         `Automatic checks already found: ${found.length ? found.join('; ') : 'nothing'}`,
         `Transcript:\n${transcript}`,
         'Judge the assistant only, on: understood the person, including slang, typos and vague dates; reached their goal, or said honestly why not and offered the closest alternative; stated no fact that is not in the data above; answered in the language of the person (European Portuguese for Portuguese speakers; English for English and Pidgin); warm, short WhatsApp style; asked only what it needed and did not repeat questions; never said something was booked, moved or cancelled before the client tapped Yes; stayed polite and stayed in its role.',

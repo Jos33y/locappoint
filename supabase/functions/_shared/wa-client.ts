@@ -32,6 +32,8 @@ export type Booking = {
     manage_token?: string | null
     cancel_cutoff_minutes?: number
     people?: number
+    client_address?: string | null
+    client_zone?: string | null
 }
 
 const localDate = (tz: string, offsetDays = 0) => {
@@ -64,7 +66,8 @@ export const money = (amount: unknown, currency: unknown, lang: Lang) => {
     if (!Number.isFinite(n)) return ''
     const cur = String(currency || 'EUR').toUpperCase()
     try {
-        return new Intl.NumberFormat(lang === 'pt' ? 'pt-PT' : 'en-IE', { style: 'currency', currency: cur, minimumFractionDigits: cur === 'NGN' ? 0 : 2 }).format(n)
+        // Naira as Nigerians write it (₦18,000), euros as Portugal does.
+        return new Intl.NumberFormat(cur === 'NGN' ? 'en-NG' : lang === 'pt' ? 'pt-PT' : 'en-IE', { style: 'currency', currency: cur, minimumFractionDigits: cur === 'NGN' ? 0 : 2, maximumFractionDigits: cur === 'NGN' ? 0 : 2 }).format(n)
     } catch {
         return `${n.toFixed(2)} ${cur}`
     }
@@ -74,6 +77,11 @@ const manage = (b: Booking) => (b.manage_token ? `${SITE}/b/${b.manage_token}` :
 const biz = (b: Booking) => oneLine(b.business_name) || 'Locappoint'
 const svc = (b: Booking) => oneLine(b.service_name) || 'Booking'
 const where = (b: Booking, lang: Lang) => {
+    // A visit at their place: their own address (the business sees it only once it confirms).
+    if (b.mode === 'at_client') {
+        const at = [oneLine(b.client_address || b.address), oneLine(b.client_zone || b.city)].filter(Boolean).join(', ')
+        return at ? (lang === 'pt' ? `Em sua casa: ${at}` : `At your place: ${at}`) : (lang === 'pt' ? 'Em sua casa' : 'At your place')
+    }
     if (b.mode === 'online') return b.meeting_url ? (lang === 'pt' ? `Online: ${b.meeting_url}` : `Online: ${b.meeting_url}`) : (lang === 'pt' ? 'Online. O link chega antes da hora.' : 'Online. The link comes before the time.')
     return [oneLine(b.address), oneLine(b.city)].filter(Boolean).join(', ')
 }
@@ -104,6 +112,11 @@ export const CLIENT_TEMPLATES = {
         body: 'Reminder from {{1}}: {{2}}, {{3}}. Reply here if you need to change it.',
         sample: ['Barbearia Rio', 'Haircut', 'tomorrow at 10:30'],
     },
+    // Values: {{1}} ticket number, {{2}} the reply.
+    lc_client_support: {
+        body: 'Locappoint Support replied to your request #{{1}}: {{2}} Reply here to answer.',
+        sample: ['1042', 'We have refunded the second charge. It reaches your card in 5 to 10 days.'],
+    },
 } as const
 
 const CLIENT_EVENT: Record<string, keyof typeof CLIENT_TEMPLATES | null> = {
@@ -113,6 +126,7 @@ const CLIENT_EVENT: Record<string, keyof typeof CLIENT_TEMPLATES | null> = {
     booking_cancelled: 'lc_client_cancelled',
     booking_moved: 'lc_client_moved',
     booking_reminder: 'lc_client_reminder',
+    support_reply: 'lc_client_support',
 }
 
 export const clientNews = (event: string, b: Booking & { lang?: string }, inWindow: boolean): Outgoing | null => {
@@ -120,7 +134,9 @@ export const clientNews = (event: string, b: Booking & { lang?: string }, inWind
     if (!inWindow) {
         const name = CLIENT_EVENT[event]
         if (!name) return null
-        const values = [biz(b), svc(b), whenText(b, 'en')]
+        const values = event === 'support_reply'
+            ? [String((b as any).number || ''), oneLine(String((b as any).body || '')).slice(0, 700)]
+            : [biz(b), svc(b), whenText(b, 'en')]
         const shown = CLIENT_TEMPLATES[name].body.replace(/\{\{(\d)\}\}/g, (_, i) => values[Number(i) - 1])
         return template(name, 'en', values, [], shown)
     }
@@ -132,6 +148,10 @@ export const clientNews = (event: string, b: Booking & { lang?: string }, inWind
     const refund = b.payment_status === 'paid' || b.payment_status === 'refunded' || b.payment_status === 'partly_refunded'
         ? (pt ? 'O reembolso segue para o seu cartão.' : 'Your refund is on its way to your card.') : ''
     switch (event) {
+        case 'support_reply':
+            return text(lines(pt ? `*Apoio Locappoint, pedido #${(b as any).number}*` : `*Locappoint Support, request #${(b as any).number}*`,
+                String((b as any).body || '').trim().slice(0, 900),
+                pt ? 'Responda aqui para continuar.' : 'Reply here to answer.'))
         case 'booking_requested':
             return text(lines(pt ? `*Pedido enviado a ${biz(b)}*` : `*Request sent to ${biz(b)}*`, `${svc(b)}, ${at}.`, paid,
                 pt ? 'O negócio confirma em breve. Avisamos aqui.' : 'The business confirms soon. We will tell you here.', link))
@@ -158,7 +178,8 @@ export const clientNews = (event: string, b: Booking & { lang?: string }, inWind
 
 export type Proposal =
     | { kind: 'book'; business_name: string; service_name: string; date: string; time: string; timezone: string; minutes: number; people: number;
-        total: number | null; currency: string; online: boolean; confirms: boolean; cutoff: number; name: string; email: string | null; mode: string }
+        total: number | null; currency: string; online: boolean; confirms: boolean; cutoff: number; name: string; email: string | null; mode: string;
+        travel?: number; address?: string; area?: string; directions?: string | null }
     | { kind: 'move'; business_name: string; service_name: string; date: string; time: string; timezone: string; from_date: string; from_time: string }
     | { kind: 'cancel'; business_name: string; service_name: string; date: string; time: string; timezone: string; paid: boolean; cutoff: number }
 
@@ -173,12 +194,17 @@ export const summary = (p: Proposal, nonce: string, lang: Lang): Outgoing => {
     const pt = lang === 'pt'
     const at = whenText(p, lang)
     if (p.kind === 'book') {
-        const price = p.total !== null ? money(p.total, p.currency, lang) : ''
+        // Nothing to pay reads as free, never 0.00.
+        const price = p.total === null ? '' : Number(p.total) === 0 ? (pt ? 'Gratuito' : 'Free') : money(p.total, p.currency, lang)
+        const visit = p.mode === 'at_client'
         const body = lines(
             pt ? '*Confirma esta marcação?*' : '*Book this?*',
             `${p.business_name}`,
             `${p.service_name}${p.people > 1 ? (pt ? ` para ${p.people}` : ` for ${p.people}`) : ''}, ${at}${p.minutes ? ` (${p.minutes} min)` : ''}`,
-            price && (p.online ? (pt ? `${price}, pago agora online` : `${price}, paid now online`) : (pt ? `${price}, pago no local` : `${price}, paid at the visit`)),
+            visit && `${pt ? 'Em sua casa' : 'At your place'}: ${[p.address, p.area].filter(Boolean).join(', ')}${p.directions ? ` (${p.directions})` : ''}`,
+            price && Number(p.total) === 0 ? price
+                : price && (p.online ? (pt ? `${price}, pago agora online` : `${price}, paid now online`) : (pt ? `${price}, pago no local` : `${price}, paid at the visit`)),
+            visit && Number(p.travel) > 0 && (pt ? `Inclui deslocação: ${money(p.travel, p.currency, lang)}` : `Includes travel: ${money(p.travel, p.currency, lang)}`),
             p.mode === 'online' && (pt ? 'Online' : 'Online'),
             `${pt ? 'Nome' : 'Name'}: ${p.name}${p.email ? `, ${p.email}` : ''}`,
             p.confirms ? '' : (pt ? 'O negócio confirma o pedido.' : 'The business confirms the request.'),
