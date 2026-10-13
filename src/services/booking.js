@@ -44,7 +44,8 @@ export const hasTimeLeft = (day, duration, nowMinutes) =>
         return first + duration <= w.end
     })
 
-export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null, ignore = null, addonIds = [], people = null }) => {
+// mode and zone: where the booking happens, so free times leave room to travel between visits.
+export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null, ignore = null, addonIds = [], people = null, mode = null, zone = null }) => {
     const { data, error } = await supabase.rpc('get_available_slots', {
         p_business_id: businessId,
         p_service_id: serviceId,
@@ -53,6 +54,8 @@ export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null
         p_ignore_appointment: ignore,
         p_addon_ids: addonIds.length ? addonIds : null,
         p_people: people,
+        ...(mode ? { p_mode: mode } : {}),
+        ...(zone ? { p_zone: zone } : {}),
     })
     if (error) throw error
     return [...new Set((data || []).map((row) => toMinutes(row.slot_time)))].sort((a, b) => a - b)

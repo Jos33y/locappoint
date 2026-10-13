@@ -5,7 +5,7 @@ import { rowsFromWeek } from './hours'
 import { claimStoredReferral } from './referrals'
 
 export const BUSINESS_FIELDS =
-    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes, buffer_minutes, meeting_url, market, currency, service_zones, service_radius_km, lat, lng'
+    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes, buffer_minutes, meeting_url, market, currency, service_zones, service_radius_km, lat, lng, base_zone'
 
 export const slugFrom = (name) =>
     (name || '')
@@ -135,6 +135,14 @@ export const saveServices = async (businessId, services, previousIds) => {
 }
 
 // The areas a business can cover for visits at the client's place, in its city's order.
+// Whether free times in this city leave room to travel between visits (the city has regions).
+export const travelsBetween = async (market) => {
+    if (!market) return false
+    const { count, error } = await supabase.from('market_regions').select('code', { count: 'exact', head: true }).eq('market', market)
+    if (error) return false
+    return (count || 0) > 0
+}
+
 export const loadZones = async (market) => {
     if (!market) return []
     const { data, error } = await supabase.from('market_zones').select('name').eq('market', market).order('sort_order')

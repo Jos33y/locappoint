@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowUpRight, EyeOff, House, MapPin, Trash2, TriangleAlert, Video } from 'lucide-react'
-import { Button, Chip, ChipGroup, Field, Input, Sheet, Skeleton } from '../../components/ui'
+import { Button, Chip, ChipGroup, Field, Input, Picker, Sheet, Skeleton } from '../../components/ui'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { ServiceEditor, isOnline, menuPrice, serviceFromRow, serviceProblems, visitsClients } from '../../components/business/ServiceEditor'
 import SaveState from '../../components/business/SaveState'
 import { useAutosave } from '../../components/business/useAutosave'
 import { suggestionsFor } from '../../constants/categories'
-import { loadSetup, loadZones, saveServices, serviceBookingCount, serviceRow, updateBusiness } from '../../services/setup'
+import { loadSetup, loadZones, saveServices, serviceBookingCount, serviceRow, travelsBetween, updateBusiness } from '../../services/setup'
 import { pageUrl } from '../../services/links'
 import { PlaceSearch } from '../../components/common/PlaceSearch'
 import { MAP_KEY, kmLabel, loadMaps, placeShop, placesOn } from '../../services/places'
@@ -249,14 +249,49 @@ const Distance = ({ businessId, address, shop, radius, onShop, onRadius }) => {
 
 const MAX_AREAS = 40
 
+// Where the visits start from: free times leave room to get from here to each visit and back.
+const StartFrom = ({ businessId, zones, value, onSaved }) => {
+    const [error, setError] = useState('')
+    const pick = async (zone) => {
+        const before = value
+        onSaved(zone)
+        setError('')
+        try {
+            await updateBusiness(businessId, { base_zone: zone })
+        } catch (err) {
+            console.error('Start area failed:', err)
+            onSaved(before)
+            setError('Not saved. Check your connection and try again.')
+        }
+    }
+    return (
+        <div className="biz-sh__start">
+            <Field label="You start from" hint="Free times leave room to get from here to each visit and back, and more at rush hour.">
+                <Picker
+                    value={value || ''}
+                    onChange={pick}
+                    options={zones.map((z) => ({ value: z, label: z }))}
+                    title="You start from"
+                    placeholder="Pick your area"
+                    searchable={zones.length > 12}
+                    searchPlaceholder="Search your area"
+                />
+            </Field>
+            {error && <p className="biz-sh__meetwarn" role="alert"><TriangleAlert size={16} aria-hidden="true" />{error}</p>}
+        </div>
+    )
+}
+
 // Where the business travels for visits at the client's place: areas, a distance, or both. Saved on every tap.
-const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius, onShop, onRadius }) => {
+const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius, onShop, onRadius, base, onBase }) => {
     const [zones, setZones] = useState(null)
     const [picked, setPicked] = useState(value || [])
     const [error, setError] = useState('')
+    const [travels, setTravels] = useState(false)
     useEffect(() => {
         let cancelled = false
         loadZones(market).then((list) => { if (!cancelled) setZones(list) }).catch(() => { if (!cancelled) setZones([]) })
+        travelsBetween(market).then((on) => { if (!cancelled) setTravels(on) }).catch(() => {})
         return () => { cancelled = true }
     }, [market])
     const toggle = async (zone) => {
@@ -291,6 +326,7 @@ const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius,
                 </ChipGroup>
             )}
             {error && <p className="biz-sh__meetwarn" role="alert"><TriangleAlert size={16} aria-hidden="true" />{error}</p>}
+            {travels && zones?.length > 0 && <StartFrom businessId={businessId} zones={zones} value={base} onSaved={onBase} />}
             <Distance businessId={businessId} address={address} shop={shop} radius={radius} onShop={onShop} onRadius={onRadius} />
             {zones !== null && picked.length === 0 && !byDistance && !error && <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Pick at least one area or a distance, or clients cannot book a visit at their place.</p>}
         </section>
@@ -304,6 +340,7 @@ const ServicesPage = () => {
     const [meetingUrl, setMeetingUrl] = useState(null)
     const [market, setMarket] = useState(null)
     const [serviceZones, setServiceZones] = useState([])
+    const [baseZone, setBaseZone] = useState(null)
     const [shop, setShop] = useState({ lat: null, lng: null, address: '' })
     const [radius, setRadius] = useState(null)
     const [shopAddress, setShopAddress] = useState('')
@@ -326,6 +363,7 @@ const ServicesPage = () => {
             setMeetingUrl(data.business.meeting_url || null)
             setMarket(data.business.market || null)
             setServiceZones(data.business.service_zones || [])
+            setBaseZone(data.business.base_zone || null)
             setShop({ lat: data.business.lat ?? null, lng: data.business.lng ?? null, address: '' })
             setRadius(data.business.service_radius_km ?? null)
             setShopAddress([data.business.address, data.business.city].filter(Boolean).join(', '))
@@ -451,6 +489,8 @@ const ServicesPage = () => {
                         radius={radius}
                         onShop={(spot) => setShop({ lat: spot.lat, lng: spot.lng, address: spot.address })}
                         onRadius={setRadius}
+                        base={baseZone}
+                        onBase={setBaseZone}
                     />
                 )}
                 {services.some(isOnline) && <MeetingLink businessId={shellBusiness.id} value={meetingUrl} onSaved={setMeetingUrl} />}

@@ -160,6 +160,8 @@ const quiet = (flag) => new URLSearchParams(window.location.search).get(flag) ==
     DATA.businesses[0].service_zones = ['Porto', 'Matosinhos']
     DATA.businesses[0].market = 'porto'
     DATA.market_zones = ['Porto', 'Vila Nova de Gaia', 'Matosinhos', 'Maia'].map((name, i) => ({ market: 'porto', name, sort_order: i }))
+    // ?travel=1: the city has regions, so free times leave room to travel and Services asks where visits start.
+    if (quiet('travel')) DATA.market_regions = [{ market: 'porto', code: 'centre', name: 'Centre', sort_order: 1 }]
   }
   // ?radius=1: the shop is placed in Porto and the business travels up to 10 km as well as to its areas.
   if (quiet('radius')) Object.assign(DATA.businesses[0], { lat: 41.1496, lng: -8.6109, service_radius_km: 10, place_id: 'ChIJshop00000001' })
@@ -255,7 +257,8 @@ const reviewRpc = {
 
 const clientRpc = {
   my_rebook: () => rebookPlaces(),
-  get_available_slots: (args) => slots(args.p_staff_id),
+  // ?travel=1 with an area known (a visit at the client's place): the earliest time goes, the travel does not fit.
+  get_available_slots: (args) => (args.p_zone && quiet('travel') ? slots(args.p_staff_id).slice(1) : slots(args.p_staff_id)),
   booking_by_link: () => guestBooking(),
   rebook_by_link: () => ({ business: femtos(), booking: { service: { ...haircut, active: true }, staff_id: 'm2', staff_name: 'Rita', staff_count: 2, addon_ids: new URLSearchParams(window.location.search).get('extras') === '1' ? ['s2'] : null }, rhythm: rhythm(), client: { name: 'Ana Guest', email: 'ana@guest.pt', phone: '+351911111111' }, emails_stopped: false }),
   stop_emails_by_link: () => true,

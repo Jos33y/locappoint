@@ -93,6 +93,11 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
         return () => { cancelled = true }
     }, [askAddress])
     const travel = mode === 'at_client' ? Number(move ? move.travel_fee : baseService.travel_fee) || 0 : 0
+    // Free times depend on where it happens: a visit needs time to get there and back. A booking
+    // being moved keeps its own place, so the database reads it from the booking.
+    const visitZone = mode === 'at_client' ? ((visit.place && (visit.place.zone || visit.zone)) || (visit.place ? null : visit.zone) || null) : null
+    const slotMode = move || owner ? null : mode
+    const slotZone = move || owner ? null : visitZone
     const addonIds = useMemo(() => (people > 1 ? [] : chosen.filter((id) => extras.some((e) => e.id === id))), [chosen, extras, people])
     const addonKey = addonIds.join(',')
     const picked = extras.filter((e) => addonIds.includes(e.id))
@@ -173,20 +178,25 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     const fetchDay = useCallback(async (key) => {
         setBusy((b) => ({ ...b, [key]: { state: 'loading' } }))
         try {
-            const free = await loadSlots({ businessId: business.id, serviceId: service.id, dateKey: key, staffId, ignore: move?.id || null, addonIds, people: people > 1 ? people : null })
+            const free = await loadSlots({ businessId: business.id, serviceId: service.id, dateKey: key, staffId, ignore: move?.id || null, addonIds, people: people > 1 ? people : null, mode: slotMode, zone: slotZone })
             setBusy((b) => ({ ...b, [key]: { state: 'ready', free } }))
         } catch (err) {
             console.error('Busy times failed:', err)
             setBusy((b) => ({ ...b, [key]: { state: 'error' } }))
         }
-    }, [business.id, service.id, staffId, move?.id, addonIds, people])
+    }, [business.id, service.id, staffId, move?.id, addonIds, people, slotMode, slotZone])
 
     useEffect(() => {
         if (!busy[dayKey]) fetchDay(dayKey)
     }, [dayKey, busy, fetchDay])
 
     // Extras picked last time arrive after the sheet opens; the times must fit the whole booking.
-    useEffect(() => { setBusy({}) }, [addonKey, people])
+    useEffect(() => { setBusy({}) }, [addonKey, people, slotMode, slotZone])
+
+    // Picking "At your place" or the area after the time: the time is checked again with the travel,
+    // and the client is told before they confirm if it no longer works.
+    const dayFree = busy[dayKey]
+    const clash = step === 'review' && !move && !owner && minutes !== null && dayFree?.state === 'ready' && !dayFree.free.includes(minutes)
 
     const pickPeople = (n) => {
         setPeople(n)
@@ -241,6 +251,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
         if (!details.name.trim()) problems.name = 'Add the name the business should expect'
         if (!accountEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) problems.email = 'Enter the email for your confirmation'
         if (!details.phoneValid) problems.phone = 'Enter a phone number the business can call'
+        if (clash) return
         if (mode === 'at_client') {
             if (search === 'on') {
                 if (!visit.place) problems.address = 'Pick your address from the list'
@@ -517,6 +528,14 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                         </div>
                     )}
                     <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} pay={!owner} quote={online ? quote.data : movedPaid} paid={Boolean(movedPaid)} mode={mode} travel={travel} zone={move?.client_zone || visit.place?.zone || visit.zone} />
+                    {clash && (
+                        <p className="lc-bk-notice" role="alert">
+                            {slotZone
+                                ? `With the travel to ${slotZone}, ${clock(minutes)} no longer works for ${business.business_name}.`
+                                : `${clock(minutes)} is no longer free.`}
+                            {' '}<button type="button" className="lc-bk-link" onClick={() => { setMinutes(null); setStep('time') }}>Pick another time</button>
+                        </p>
+                    )}
                     {mode === 'online' && yourTime({ dateKey: dayKey, minutes, timeZone }) && (
                         <p className="lc-fmt-zone">
                             <Globe2 size={15} aria-hidden="true" />

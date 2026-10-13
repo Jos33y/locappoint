@@ -67,7 +67,7 @@ export type Turn = {
     usage: { input: number; output: number; cost: number }
 }
 
-const SYSTEM = `You are the Locappoint booking assistant on WhatsApp. Locappoint is where people book local businesses in Porto and Lisbon: barbers, salons, nails, beauty and wellness, and also studios, consultants, tutors, repairs and any other business listed. The businesses taking bookings right now are in the context, with what they offer.
+const SYSTEM = `You are the Locappoint booking assistant on WhatsApp. Locappoint is where people book local businesses in Porto and Lagos, with Lisbon opening next: barbers, salons, nails, beauty and wellness, and also studios, consultants, tutors, repairs and any other business listed. The businesses taking bookings right now are in the context, with what they offer.
 
 Your job: get each person the booking they want in as few messages as possible. You find businesses, answer questions about them (services, prices, hours, address), and book, move and cancel.
 
@@ -113,7 +113,7 @@ Limits
 - Asked if you are a person: you are Locappoint's automated assistant.
 - You cannot pass messages to a business or its staff, or see more of their diary than free times. Special requests: give the business phone.
 - When they say thanks or goodbye and nothing is waiting, answer in one short line. Do not repeat the details and do not offer anything else.
-- The first reply of a conversation opens with a short hello that says you book businesses in Porto and Lisbon, then helps with what they asked.
+- The first reply of a conversation opens with a short hello that says you book businesses in Porto and Lagos, then helps with what they asked. Lead with the businesses in their city (the clock line says which); mention the other city only if they ask.
 
 Language and style
 - Answer in the language of their latest message: English, or Portuguese from Portugal (você, not Brazilian forms). Pidgin or any other language: simple English. If they ask to switch, switch. Set language on every propose call.
@@ -141,12 +141,15 @@ const TIME = /^\d{2}:\d{2}$/
 class ToolError extends Error {}
 const need = (ok: unknown, message: string) => { if (!ok) throw new ToolError(message) }
 
-const lisbonNow = () => {
+// The clock of the city the conversation is about: the business in focus, or else the person's
+// own number (+234 is Lagos). Portugal and Lagos differ by an hour from late October to March.
+const cityNow = (lagos: boolean) => {
+    const timeZone = lagos ? 'Africa/Lagos' : 'Europe/Lisbon'
     const now = new Date()
-    const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Lisbon' }).format(now)
-    const day = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Lisbon', weekday: 'long' }).format(now)
-    const time = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now)
-    return { date, day, time }
+    const date = new Intl.DateTimeFormat('en-CA', { timeZone }).format(now)
+    const day = new Intl.DateTimeFormat('en-GB', { timeZone, weekday: 'long' }).format(now)
+    const time = new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now)
+    return { date, day, time, place: lagos ? 'Lagos' : 'Portugal' }
 }
 
 // Two weeks of dates, so "Monday" or "next Friday" becomes a date without arithmetic.
@@ -216,10 +219,10 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
     let answer: 'yes' | 'no' | null = null
     const usage = { input: 0, output: 0, cost: 0 }
 
-    const now = lisbonNow()
+    const now = cityNow(t.business ? /lagos/i.test(String(t.business.city || '')) : String(o.phone || '').replace(/\D/g, '').startsWith('234'))
     const mine: any[] = await deps.call('wa_my', { p_phone: o.phone }).catch(() => [])
     const context = [
-        `Now in Portugal: ${now.day} ${now.date}, ${now.time}.`,
+        `Now in ${now.place}: ${now.day} ${now.date}, ${now.time}.`,
         `Calendar: ${calendar(now.date)}.`,
         o.directory?.length ? `Businesses live on Locappoint now (name, slug, city, what they do):\n${o.directory.map((b) => `- ${b.name} (${b.slug}, ${b.city}): ${b.category}; ${b.services}`).join('\n')}` : 'No businesses are live on Locappoint right now.',
         t.business ? `Business in focus: ${t.business.name} (business_id ${t.business.business_id}, slug ${t.business.slug}, ${t.business.city}).` : 'No business in focus yet.',
