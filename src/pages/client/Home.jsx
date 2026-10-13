@@ -17,6 +17,8 @@ import { EngineBox } from '../../components/client/find/EngineBox'
 import { RateSheet } from '../../components/reviews/RateSheet'
 import { canReview, submitMyReview } from '../../services/reviews'
 import { loadPlaces } from '../../services/booking'
+import { inMarket } from '../../services/cohort'
+import { useCity } from '../../hooks/useCity'
 import '../../styles/client/client-bookings.css'
 import '../../styles/client/home-page.css'
 import '../../styles/client/home-overview.css'
@@ -35,6 +37,7 @@ const ClientHome = () => {
     const first = (userProfile?.full_name || '').trim().split(/\s+/)[0]
     const { state, groups, load, cancelling, busy, cancelError, toast, askCancel, keep, confirmCancel } = useMyBookings(email)
     const rebook = useRebook(Boolean(email))
+    const [market] = useCity()
     const places = rebook.places.items.slice(0, 6)
 
     const closeAgain = () => {
@@ -58,12 +61,12 @@ const ClientHome = () => {
         loadPlaces()
             .then((all) => {
                 if (cancelled) return
-                const ranked = [...all].sort((a, b) => (b.rating?.count || 0) - (a.rating?.count || 0) || (b.rating?.average || 0) - (a.rating?.average || 0))
+                const ranked = all.filter((p) => inMarket(p, market.code)).sort((a, b) => (b.rating?.count || 0) - (a.rating?.count || 0) || (b.rating?.average || 0) - (a.rating?.average || 0))
                 setPopular(ranked.slice(0, 3))
             })
             .catch(() => {})
         return () => { cancelled = true }
-    }, [brandNew])
+    }, [brandNew, market.code])
 
     const saveReview = async (row, values) => {
         const result = await submitMyReview({ id: row.id, ...values })

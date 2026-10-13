@@ -77,6 +77,8 @@ if (params.get('nohours') === '1') DATA.availability.length = 0
 if (params.get('lunch') === '1') DATA.availability.splice(0, DATA.availability.length, ...[1, 2, 3, 4, 5, 6].flatMap((d) => [['09:00:00', '13:00:00'], ['14:00:00', '19:00:00']].map(([s, e], i) => ({ id: `a${d}${i}`, business_id: 'b1', staff_id: null, day_of_week: d, start_time: s, end_time: e }))))
 if (params.get('noinbox') === '1') DATA.inbox.length = 0
 if (params.get('empty') === '1') Object.assign(DATA.businesses[0], { banner_url: null, logo_url: null, description: null, address: null, whatsapp: null })
+// The city every place list follows: Porto unless ?city= says otherwise, never the PC's own clock.
+try { localStorage.setItem('lc.city', params.get('city') || 'porto') } catch { /* noop */ }
 try { if (params.get('tour') !== '1') localStorage.setItem('locappoint_tour_done', '1'); else localStorage.removeItem('locappoint_tour_done') } catch { /* noop */ }
 
 window.__locaReportInDev = true

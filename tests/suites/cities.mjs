@@ -1,5 +1,6 @@
-// Cities: Porto first, then Lisbon, then Lagos. The launch area takes both Portuguese metros,
-// the first cohort of ten is Porto's, and no screen, email or search title still puts Lisbon first.
+// Cities: Porto and Lagos live, Lisbon next. The launch area takes both Portuguese metros and Lagos,
+// the picked city drives Businesses, Home and Search, prices follow the business currency, and no
+// screen, email or search title still puts Lisbon first.
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -24,13 +25,14 @@ const walk = (dir, out = []) => {
     return out
 }
 
-export default async ({ check, root }) => {
+export default async ({ check, root, server }) => {
     const read = (rel) => fs.readFileSync(path.join(root, ...rel.split('/')), 'utf8')
 
     const { inLaunchArea, PT_GROUPS } = await import(pathToFileURL(path.join(root, 'src', 'constants', 'locations.js')).href)
     check(['Porto', 'Matosinhos', 'Vila Nova de Gaia'].every((city) => inLaunchArea('PT', city)), 'Greater Porto is in the launch area')
     check(['Lisbon', 'Cascais'].every((city) => inLaunchArea('PT', city)), 'Greater Lisbon stays in the launch area')
-    check(!inLaunchArea('PT', 'Faro') && !inLaunchArea('NG', 'Lagos'), 'places outside both metros are told we are coming later')
+    check(inLaunchArea('NG', 'Lagos'), 'Lagos is in the launch area')
+    check(!inLaunchArea('PT', 'Faro') && !inLaunchArea('NG', 'Abuja'), 'places outside the live cities are told we are coming later')
     check(PT_GROUPS[0] === 'Greater Porto', 'the city picker lists Greater Porto first')
 
     const files = ['src', 'server', 'public', 'supabase/functions', 'supabase/email-templates', 'supabase/templates']
@@ -51,9 +53,34 @@ export default async ({ check, root }) => {
     check(!/is_demo/.test(cohort), 'the cohort count includes the demo business, as Browse does')
     for (const file of ['src/pages/app/home/Cta.jsx', 'src/pages/app/auth/AuthShell.jsx']) {
         const text = read(file)
-        check(/useCohort\(\)/.test(text) && !/COHORT_ONBOARDED/.test(text), `${file} shows the live cohort count, not a typed-in number`)
+        check(/useCohort\(/.test(text) && !/COHORT_ONBOARDED/.test(text), `${file} shows the live cohort count, not a typed-in number`)
+        check(/useCity\(\)/.test(text), `${file} follows the picked city`)
     }
+
+    const engine = read('src/services/engine.js')
+    check(/code: 'porto'[^\n]*live: true/.test(engine) && /code: 'lagos'[^\n]*live: true/.test(engine) && /code: 'lisbon'[^\n]*live: false/.test(engine), 'Porto and Lagos are live, Lisbon is next')
+    check(/Africa\/Lagos/.test(engine) && /lc:city/.test(engine), 'the first city comes from the time zone and a change reaches every page')
+    check(/<CitySwitcher/.test(read('src/components/common/AppHeader.jsx')) && /<CitySwitcher/.test(read('src/pages/client/ClientLayout.jsx')), 'the city switcher is in the site header and the client app')
+    for (const file of ['src/pages/app/Businesses.jsx', 'src/pages/client/Home.jsx', 'src/pages/client/Search.jsx']) {
+        const text = read(file)
+        check(/useCity\(\)/.test(text) && /inMarket\(/.test(text), `${file} lists places in the picked city`)
+    }
+
+    // These modules read the fake Supabase, which looks at the page address once on load.
+    const hadWindow = 'window' in globalThis
+    if (!hadWindow) globalThis.window = { location: { search: '' } }
+    const { inMarket } = await server.ssrLoadModule(path.join(root, 'src', 'services', 'cohort.js'))
+    check(inMarket({ market: 'lagos', city: 'Ikeja' }, 'lagos') && !inMarket({ market: 'porto', city: 'Porto' }, 'lagos'), 'a place belongs to its market')
+    check(inMarket({ city: 'Lisboa' }, 'lisbon') && inMarket({ city: 'Porto' }, 'porto'), 'a place with no market falls back to its city name')
+
+    const { formatMoney, menuPrice, currencySign } = await server.ssrLoadModule(path.join(root, 'src', 'services', 'business.js'))
+    const naira = formatMoney(15000, 'NGN')
+    check(naira.includes('\u20a6') && /15,000/.test(naira), `a Lagos price is written in naira (${naira})`)
+    check(formatMoney(25, 'EUR').includes('\u20ac') && formatMoney(25).includes('\u20ac'), 'a Porto price stays in euro')
+    check(menuPrice(15000, 'NGN').includes('\u20a6') && currencySign('NGN') === '\u20a6' && currencySign('EUR') === '\u20ac', 'menus and price fields use the business currency')
+    if (!hadWindow) delete globalThis.window
+    check(!/prefix="\u20ac"/.test(read('src/components/business/ServiceEditor.jsx')), 'the service price field shows the business currency')
     check(/country: 'PT',\s*city: 'Porto'/.test(read('src/pages/business/Setup.jsx')), 'a new Portuguese business starts on Porto')
     check(/Portugal time/.test(read('src/constants/support.js')), 'support hours are given in Portugal time')
-    check(/Porto, Lisbon and Lagos/.test(read('server/seo.mjs')), 'search titles name Porto first')
+    check(/Porto, Lagos and Lisbon/.test(read('server/seo.mjs')), 'search titles name the live cities first')
 }

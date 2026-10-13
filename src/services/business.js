@@ -55,28 +55,33 @@ export const shortTime = (time) => (time || '').slice(0, 5)
 export const minutesToLabel = (total) =>
     `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
 
-const money = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' })
-const wholeMoney = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
-export const formatMoney = (value) => {
-    const amount = Number(value) || 0
-    return (Number.isInteger(amount) ? wholeMoney : money).format(amount)
-}
-
-const menuFormats = new Map()
-
-export const menuPrice = (value) => {
-    const amount = Number(String(value).replace(',', '.').trim())
-    const decimals = Number.isInteger(amount) ? 0 : 2
-    if (!menuFormats.has(decimals)) {
-        menuFormats.set(decimals, new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: decimals, maximumFractionDigits: decimals }))
+// Prices in the business's own currency: euros with cents only when there are cents, whole naira.
+const priceFormats = new Map()
+const priceFormat = (currency, decimals) => {
+    const key = `${currency}:${decimals}`
+    if (!priceFormats.has(key)) {
+        priceFormats.set(key, new Intl.NumberFormat(currency === 'NGN' ? 'en-NG' : 'en-IE', { style: 'currency', currency, minimumFractionDigits: decimals, maximumFractionDigits: decimals }))
     }
-    return menuFormats.get(decimals).format(amount)
+    return priceFormats.get(key)
 }
+
+export const formatMoney = (value, currency = 'EUR') => {
+    const amount = Number(value) || 0
+    return priceFormat(currency || 'EUR', Number.isInteger(amount) ? 0 : 2).format(amount)
+}
+
+export const menuPrice = (value, currency = 'EUR') => {
+    const amount = Number(String(value).replace(',', '.').trim())
+    return priceFormat(currency || 'EUR', Number.isInteger(amount) ? 0 : 2).format(amount)
+}
+
+// The symbol a price field shows in front of the number.
+export const currencySign = (currency) => (currency === 'NGN' ? '\u20a6' : '\u20ac')
 
 export const loadWorkspace = async (businessId) => {
     const [business, members, services, hours] = await Promise.all([
         supabase.from('businesses')
-            .select('id, business_name, slug, timezone, is_active, city, phone, whatsapp, description, address, logo_url, banner_url')
+            .select('id, business_name, slug, timezone, is_active, city, country, market, currency, phone, whatsapp, description, address, logo_url, banner_url')
             .eq('id', businessId)
             .single(),
         supabase.from('business_members')

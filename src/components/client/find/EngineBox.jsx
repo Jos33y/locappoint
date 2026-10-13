@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, MapPin, RotateCw, Search } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Picker } from '../../ui'
 import { PlaceSearch } from '../../common/PlaceSearch'
-import { MARKETS, LABELS, TIMES, WHEN, WHERE, bookingLink, dayWord, findMatches, keepEnginePlace, loadPopular, marketOf, reasons, saveCity, savedCity } from '../../../services/engine'
+import { MARKETS, LABELS, TIMES, WHEN, WHERE, bookingLink, dayWord, findMatches, keepEnginePlace, loadPopular, reasons } from '../../../services/engine'
+import { useCity } from '../../../hooks/useCity'
 import { pickAddress, placesOn } from '../../../services/places'
 import { loadZones } from '../../../services/setup'
 import { payMoney } from '../../../services/payments'
@@ -37,8 +38,9 @@ const Option = ({ o, timeZone, onBook }) => {
 // different reason. A tap opens that business's booking sheet at that time.
 export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/search' }) => {
     const navigate = useNavigate()
-    const [city, setCity] = useState(savedCity)
-    const market = marketOf(city)
+    // The same city as the header switcher: changing it in either place changes both.
+    const [market, pickMarket] = useCity()
+    const city = market.code
     const [text, setText] = useState('')
     const [mode, setMode] = useState('')
     const [when, setWhen] = useState('today')
@@ -53,6 +55,9 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
 
     useEffect(() => {
         let cancelled = false
+        setPlace(null)
+        setZone('')
+        setResult({ status: 'idle', data: null, error: '' })
         loadPopular(city).then((list) => { if (!cancelled) setPopular(list) }).catch(() => { if (!cancelled) setPopular([]) })
         loadZones(city).then((list) => { if (!cancelled) setZones(list) }).catch(() => { if (!cancelled) setZones([]) })
         return () => { cancelled = true }
@@ -65,13 +70,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
         return () => { cancelled = true }
     }, [mode])
 
-    const pickCity = (code) => {
-        setCity(code)
-        saveCity(code)
-        setPlace(null)
-        setZone('')
-        setResult({ status: 'idle', data: null, error: '' })
-    }
+    const pickCity = (code) => pickMarket(code)
 
     const run = async (over = {}) => {
         const what = (over.text ?? text).trim()
@@ -141,12 +140,12 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                                     resolve={(placeId, session) => pickAddress({ market: city, placeId, session })}
                                     onPicked={(p) => { setPlace(p); if (p.zone) setZone(p.zone) }}
                                     onOff={() => setSearch('off')}
-                                    placeholder="Rua de Santa Catarina 120"
+                                    placeholder={market.street}
                                 />
                             </Field>
                         ) : search === 'off' && zones.length > 0 ? (
                             <Field label="Your area">
-                                <Picker value={zone} onChange={setZone} title="Your area" placeholder="Pick your area" options={zones.map((z) => ({ value: z, label: z }))} />
+                                <Picker value={zone} onChange={setZone} title="Your area" placeholder="Pick your area" searchable={zones.length > 12} searchPlaceholder="Search your area" options={zones.map((z) => ({ value: z, label: z }))} />
                             </Field>
                         ) : null}
                     </div>

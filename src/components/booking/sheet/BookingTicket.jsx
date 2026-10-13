@@ -32,6 +32,7 @@ const OnlineTotal = ({ quote, paid }) => (
 
 export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stampTone = 'signal', pay = true, quote = null, paid = false, mode = 'at_business', travel = 0, zone = '' }) => {
     const date = parseDateKey(dateKey)
+    const currency = business.currency || (business.country === 'NG' ? 'NGN' : 'EUR')
     const duration = Number(service.duration_minutes) || 0
     const priced = hasPrice(service.price)
     const owed = !priced || Number(String(service.price).replace(',', '.')) > 0
@@ -70,8 +71,8 @@ export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stam
             </div>
             {!online && travelFee > 0 && (
                 <dl className="lc-bk-quote">
-                    <div><dt>Price</dt><dd>{menuPrice(service.price)}</dd></div>
-                    <div><dt>Travel to you</dt><dd>{menuPrice(travelFee)}</dd></div>
+                    <div><dt>Price</dt><dd>{menuPrice(service.price, currency)}</dd></div>
+                    <div><dt>Travel to you</dt><dd>{menuPrice(travelFee, currency)}</dd></div>
                 </dl>
             )}
             {online ? <OnlineTotal quote={quote} paid={paid} /> : (priced || payHere) && (
@@ -79,7 +80,7 @@ export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stam
                     <span className="lc-bk-ticket__how">
                         {payHere ? <><Store size={14} aria-hidden="true" />{mode === 'online' ? 'Pay the business directly' : 'Pay at your visit'}</> : 'Price'}
                     </span>
-                    {priced && <b className="lc-bk-ticket__price">{menuPrice(priceNumber + travelFee)}</b>}
+                    {priced && <b className="lc-bk-ticket__price">{menuPrice(priceNumber + travelFee, currency)}</b>}
                 </div>
             )}
         </div>

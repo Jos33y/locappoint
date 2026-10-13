@@ -25,9 +25,9 @@ const AppFooter = () => {
                             </span>
                         </Link>
                         <p className="loca-app-footer__desc">
-                            The booking platform built for local businesses in Porto, Lisbon, and Lagos. Free during the beta.
+                            Book anyone, anywhere the service happens. Live in Porto and Lagos, with Lisbon next. Free during the beta.
                         </p>
-                        <div className="loca-app-footer__cities">Porto · Lisbon · Lagos</div>
+                        <div className="loca-app-footer__cities">Porto · Lagos · Lisbon</div>
                     </div>
 
                     <div className="loca-app-footer__col">

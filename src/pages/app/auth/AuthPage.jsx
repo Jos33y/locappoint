@@ -237,14 +237,14 @@ const AuthPage = () => {
         : signin
             ? ['Sign in to Locappoint', 'Welcome back.']
             : userType === 'business'
-                ? ['Be one of the first ten in Porto', 'Setup takes ten minutes.']
+                ? ['Be one of the first ten in Porto or Lagos', 'Setup takes ten minutes.']
                 : ['Find local businesses you can book', 'It takes a minute.']
 
     const [brandTitle, brandSub] = clientSide
         ? ['Your next booking, without the phone calls.', 'See the real free times at local barbers, salons and clinics, and pick one.']
         : signin
             ? ['Pick up where you left off.', 'Your bookings, reminders and hours in one place.']
-            : ['Booking that fills your week, not your DMs.', 'Local businesses in Porto, Lisbon, and Lagos. Free during the beta.']
+            : ['Booking that fills your week, not your DMs.', 'Local businesses in Porto and Lagos, with Lisbon next. Free during the beta.']
 
     return (
         <AuthShell

@@ -16,7 +16,7 @@ import { bookOnWhatsApp, loadBookNumber } from '../../services/whatsapp'
 import { trackPage, visitSource } from '../../services/pageStats'
 import '../../styles/public-page.css'
 
-const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url, auto_confirm, is_demo, service_zones, service_radius_km, lat, lng'
+const PUBLIC_FIELDS = 'id, business_name, slug, category, category_detail, city, neighbourhood, country, currency, market, timezone, phone, whatsapp, email, website, description, address, logo_url, banner_url, auto_confirm, is_demo, service_zones, service_radius_km, lat, lng'
 
 const PageSkeleton = () => (
     <div className="lc-pub lc-pub--skeleton" aria-hidden="true">

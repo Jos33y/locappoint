@@ -42,6 +42,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     const navigate = useNavigate()
     const { user, userProfile } = useAuth()
     const timeZone = business.timezone || 'Europe/Lisbon'
+    const currency = business.currency || (business.country === 'NG' ? 'NGN' : 'EUR')
     const now = useNow(timeZone)
     const nowMinutes = now?.minutes ?? 0
     // Extras come with the page; every other way in (Book again, bookings, the manage link) loads them here.
@@ -447,7 +448,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                             <span className="lc-bk-service__name">{service.service_name.trim()}</span>
                             <span className="lc-bk-service__meta">{durationLabel(duration)} at {business.business_name}</span>
                         </span>
-                        {hasPrice(service.price) && <span className="lc-bk-service__price">{menuPrice(service.price)}</span>}
+                        {hasPrice(service.price) && <span className="lc-bk-service__price">{menuPrice(service.price, currency)}</span>}
                     </div>
                     {maxPeople > 1 && (
                         <div className="lc-bk-extras lc-bk-people">
@@ -471,7 +472,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                                 {extras.map((e) => (
                                     <Chip key={e.id} selected={addonIds.includes(e.id)} onClick={() => toggleExtra(e.id)}>
                                         {`+ ${e.service_name.trim()}`}
-                                        <span className="lc-bk-extras__meta">{[durationLabel(Number(e.duration_minutes)), hasPrice(e.price) ? menuPrice(e.price) : null].filter(Boolean).join(', ')}</span>
+                                        <span className="lc-bk-extras__meta">{[durationLabel(Number(e.duration_minutes)), hasPrice(e.price) ? menuPrice(e.price, currency) : null].filter(Boolean).join(', ')}</span>
                                     </Chip>
                                 ))}
                             </ChipGroup>

@@ -177,7 +177,7 @@ const NewBookingSheet = ({ open, prefill, onClose }) => {
                                     onClick={() => set('serviceId', s.id)}
                                 >
                                     <span className="biz-option__name">{s.service_name}</span>
-                                    <span className="biz-option__meta">{durationLabel(s.duration_minutes)}, <span className="biz-num">{formatMoney(s.price)}</span></span>
+                                    <span className="biz-option__meta">{durationLabel(s.duration_minutes)}, <span className="biz-num">{formatMoney(s.price, business.currency)}</span></span>
                                 </button>
                             ))}
                         </div>

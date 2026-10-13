@@ -7,23 +7,50 @@ import { keptLine } from './reliability'
 // "What do you need?": one request, matched in the database (engine_match) against every live
 // business in the city. The same function serves the site, the app and, later, WhatsApp.
 
+// Porto and Lagos are live; Lisbon is open to sign-ups.
 export const MARKETS = [
-    { code: 'porto', name: 'Porto', timeZone: 'Europe/Lisbon' },
-    { code: 'lisbon', name: 'Lisbon', timeZone: 'Europe/Lisbon' },
-    { code: 'lagos', name: 'Lagos', timeZone: 'Africa/Lagos' },
+    { code: 'porto', name: 'Porto', country: 'Portugal', timeZone: 'Europe/Lisbon', currency: 'EUR', live: true, street: 'Rua de Santa Catarina 120' },
+    { code: 'lagos', name: 'Lagos', country: 'Nigeria', timeZone: 'Africa/Lagos', currency: 'NGN', live: true, street: '12 Admiralty Way, Lekki' },
+    { code: 'lisbon', name: 'Lisbon', country: 'Portugal', timeZone: 'Europe/Lisbon', currency: 'EUR', live: false, street: 'Rua Augusta 100' },
 ]
 
+// The city a visitor sees: the one they picked, remembered on this device, or on a first visit the
+// one their phone's clock is set to (Lagos for Africa/Lagos, otherwise Porto). Every screen that
+// shows places follows it, and changing it anywhere changes it everywhere.
 const CITY = 'lc.city'
-export const savedCity = () => {
+const CITY_EVENT = 'lc:city'
+const known = (code) => MARKETS.some((m) => m.code === code)
+export const defaultCity = () => {
     try {
-        const code = localStorage.getItem(CITY)
-        return MARKETS.some((m) => m.code === code) ? code : 'porto'
+        return Intl.DateTimeFormat().resolvedOptions().timeZone === 'Africa/Lagos' ? 'lagos' : 'porto'
     } catch {
         return 'porto'
     }
 }
+export const savedCity = () => {
+    try {
+        const code = localStorage.getItem(CITY)
+        return known(code) ? code : defaultCity()
+    } catch {
+        return defaultCity()
+    }
+}
 export const saveCity = (code) => {
+    if (!known(code)) return
     try { localStorage.setItem(CITY, code) } catch { /* private mode: asked again next time */ }
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(CITY_EVENT, { detail: code }))
+}
+// Calls back when the city changes in this tab or another one.
+export const onCityChange = (callback) => {
+    if (typeof window === 'undefined') return () => {}
+    const here = (e) => callback(e.detail)
+    const elsewhere = (e) => { if (e.key === CITY) callback(savedCity()) }
+    window.addEventListener(CITY_EVENT, here)
+    window.addEventListener('storage', elsewhere)
+    return () => {
+        window.removeEventListener(CITY_EVENT, here)
+        window.removeEventListener('storage', elsewhere)
+    }
 }
 
 export const marketOf = (code) => MARKETS.find((m) => m.code === code) || MARKETS[0]

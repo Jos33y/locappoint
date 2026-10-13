@@ -28,7 +28,7 @@ const GhostMenu = ({ children }) => (
     </div>
 )
 
-export const PublicMenu = ({ services, name, whatsapp, preview, onBook }) => {
+export const PublicMenu = ({ services, name, whatsapp, preview, onBook, currency = 'EUR' }) => {
     const visible = services.filter((s) => s.is_active !== false && s.service_name?.trim())
     return (
         <section className="lc-pub__menu" aria-labelledby="lc-pub-menu">
@@ -63,7 +63,7 @@ export const PublicMenu = ({ services, name, whatsapp, preview, onBook }) => {
                                         {onlineAs(service) && <span className="lc-fmt-tag">{(service.modes || []).includes('at_client') ? <House size={13} aria-hidden="true" /> : <Video size={13} aria-hidden="true" />}{onlineAs(service)}</span>}
                                         {groupTag(service) && <span className="lc-fmt-tag"><Users size={13} aria-hidden="true" />{groupTag(service)}</span>}
                                     </span>
-                                    {hasPrice(service.price) && <span className="lc-pub__price">{menuPrice(service.price)}</span>}
+                                    {hasPrice(service.price) && <span className="lc-pub__price">{menuPrice(service.price, currency)}</span>}
                                     <span className="lc-pub__go" aria-hidden="true"><ChevronRight size={18} /></span>
                                 </button>
                             </li>

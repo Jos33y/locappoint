@@ -5,7 +5,7 @@ import { rowsFromWeek } from './hours'
 import { claimStoredReferral } from './referrals'
 
 export const BUSINESS_FIELDS =
-    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes, buffer_minutes, meeting_url, market, service_zones, service_radius_km, lat, lng'
+    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes, buffer_minutes, meeting_url, market, currency, service_zones, service_radius_km, lat, lng'
 
 export const slugFrom = (name) =>
     (name || '')

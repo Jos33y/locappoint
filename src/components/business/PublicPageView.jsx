@@ -82,7 +82,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                         <p className="lc-pub__demo" role="note">This is a demo business that shows how Locappoint works. Please do not book it for a real visit.</p>
                     )}
                     {business.description?.trim() && <p className="lc-pub__about">{business.description.trim()}</p>}
-                    <PublicMenu services={services} name={name} whatsapp={whatsapp} preview={preview} onBook={onBook} />
+                    <PublicMenu services={services} name={name} whatsapp={whatsapp} preview={preview} onBook={onBook} currency={business.currency || (business.country === 'NG' ? 'NGN' : 'EUR')} />
                     <PublicReviews reviews={reviews} name={name} onMore={onMoreReviews} />
                     {hasHours && <PublicHours week={week} todayDow={now?.dow} />}
                 </div>

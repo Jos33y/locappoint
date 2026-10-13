@@ -4,6 +4,8 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Bell, Calendar, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../../../hooks/useAuth'
+import { useCity } from '../../../hooks/useCity'
+import { currencySign } from '../../../services/business'
 import PinMark from '../../../components/common/PinMark'
 import './Hero.css'
 
@@ -11,6 +13,7 @@ import './Hero.css'
 const Hero = () => {
     const { user, userProfile } = useAuth()
     const navigate = useNavigate()
+    const [city] = useCity()
 
     const handlePrimary = () => {
         if (user && userProfile) {
@@ -32,7 +35,7 @@ const Hero = () => {
                     <div className="loca-hero__content">
                         <span className="loca-eyebrow">
                             <span className="loca-eyebrow__dot" aria-hidden="true"></span>
-                            Beta · Porto first
+                            Beta · Porto and Lagos
                         </span>
 
                         <h1 className="loca-hero__title">
@@ -41,7 +44,7 @@ const Hero = () => {
                         </h1>
 
                         <p className="loca-hero__lede">
-                            The booking platform for local businesses in Porto, Lisbon, and Lagos. Set your hours, share your link, fill your calendar. Free during the beta.
+                            For every kind of local business, wherever the service happens: at your place, at your client's, or online. Live in Porto and Lagos, with Lisbon next. Set your hours, share your link, fill your calendar. Free during the beta.
                         </p>
 
                         <div className="loca-hero__cta">
@@ -56,7 +59,7 @@ const Hero = () => {
 
                         <div className="loca-hero__metrics">
                             <div className="loca-hero__metric">
-                                <div className="loca-hero__metric-num">€0</div>
+                                <div className="loca-hero__metric-num">{currencySign(city.currency)}0</div>
                                 <div className="loca-hero__metric-label">During the beta</div>
                             </div>
                             <div className="loca-hero__metric-sep" aria-hidden="true"></div>

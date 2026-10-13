@@ -11,7 +11,7 @@ import StreetGridCover from '../../components/business/StreetGridCover'
 import { AddressField } from '../../components/business/AddressField'
 import { COUNTRY_OPTIONS, nationalFormat, parsePhone } from '../../components/ui/PhoneField'
 import { CATEGORIES, POPULAR_CATEGORIES, categoryLabel } from '../../constants/categories'
-import { NG_CITIES, POPULAR_COUNTRIES, PT_MUNICIPALITIES, inLaunchArea, timezoneForPlace } from '../../constants/locations'
+import { NG_CITIES, POPULAR_COUNTRIES, PT_MUNICIPALITIES, inLaunchArea, neighbourhoodHint, timezoneForPlace } from '../../constants/locations'
 import { slugProblem } from '../../constants/reservedSlugs'
 import { ABOUT_MAX, OTHER_CITY, aboutExample, cityOf, countryName, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
 import { useSlugStatus } from '../../hooks/useSlugStatus'
@@ -777,10 +777,10 @@ const BusinessPage = () => {
                             </div>
                             {city && !inLaunchArea(form.country, city) && (
                                 <p className="biz-bp__note" role="note">
-                                    We are opening in Porto and Lisbon first. Your page works anywhere, and we will be in touch as we grow into {city}.
+                                    We are open in Porto and Lagos, with Lisbon next. Your page works anywhere, and we will be in touch as we grow into {city}.
                                 </p>
                             )}
-                            <Field label="Neighbourhood" optional hint={form.neighbourhood.trim() ? undefined : 'Like Anjos or Baixa'}>
+                            <Field label="Neighbourhood" optional hint={form.neighbourhood.trim() ? undefined : neighbourhoodHint(form.country)}>
                                 <Input value={form.neighbourhood} onChange={(e) => set({ neighbourhood: e.target.value })} maxLength={60} autoComplete="off" />
                             </Field>
                             <div className="biz-bp__address">

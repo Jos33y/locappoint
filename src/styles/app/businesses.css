@@ -134,13 +134,34 @@
 
 .lc-br-city {
     display: flex;
+}
+
+/* Each city is a button: tapping one lists its places, the same as the header switcher. */
+.lc-br-city__pick {
+    display: flex;
+    flex: 1;
     flex-direction: column;
+    align-items: flex-start;
     gap: 2px;
     padding: var(--space-4);
+    border: 0;
     border-radius: var(--lc-r-md);
     background: var(--lc-panel);
     box-shadow: inset 0 0 0 1px var(--lc-line);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: box-shadow var(--lc-fast) var(--lc-ease);
 }
+
+.lc-br-city__pick:hover { box-shadow: inset 0 0 0 1px var(--lc-line-strong); }
+
+.lc-br-city__pick:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 1.5px var(--azure), 0 0 0 4px var(--lc-info-tint);
+}
+
+.lc-br-city.is-here .lc-br-city__pick { box-shadow: inset 0 0 0 1.5px var(--azure); }
 
 .lc-br-city strong {
     color: var(--lc-ink-2);
@@ -349,7 +370,7 @@
     .lc-br-hero__lede { font-size: var(--lc-t-body); }
     .lc-br-count { max-width: none; }
     .lc-br-cities { gap: var(--space-2); }
-    .lc-br-city { padding: var(--space-3); }
+    .lc-br-city__pick { padding: var(--space-3); }
     .lc-br-city strong { font-size: 1rem; }
     .lc-br-cta { padding: var(--space-6) var(--space-5); }
     .lc-br-cta__buttons { width: 100%; }

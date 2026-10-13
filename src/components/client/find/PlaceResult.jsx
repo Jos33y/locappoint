@@ -27,7 +27,7 @@ export const PlaceResult = ({ place, from = '/client/search' }) => {
                             {place.is_demo && <span className="lc-cl-result__demo">Demo</span>}
                         </strong>
                         {place.fromPrice !== null && (
-                            <span className="lc-cl-result__price"><small>from</small> {menuPrice(place.fromPrice)}</span>
+                            <span className="lc-cl-result__price"><small>from</small> {menuPrice(place.fromPrice, place.currency)}</span>
                         )}
                     </span>
                     {place.rating?.count ? (

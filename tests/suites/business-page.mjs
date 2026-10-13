@@ -158,7 +158,7 @@ export default async ({ browser, url, check, cover }) => {
     await p.keyboard.type('Nigeria'); await wait(300); await p.keyboard.press('Enter'); await wait(1300)
     u = await updates(p)
     check(u.slice(-1)[0]?.country === 'NG' && u.slice(-1)[0].city === 'Lagos' && u.slice(-1)[0].timezone === 'Africa/Lagos', `country saved ${JSON.stringify(u.slice(-1))}`)
-    check(await p.evaluate(() => document.querySelector('.biz-bp__note')?.textContent.includes('Lagos')), 'launch note shown')
+    check(await p.evaluate(() => !document.querySelector('.biz-bp__note')), 'Lagos is a live city, so no coming-later note')
     check(p.errors.length === 0, `errors ${p.errors}`)
     await p.close()
 

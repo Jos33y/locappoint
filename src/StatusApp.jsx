@@ -195,7 +195,7 @@ export default function StatusApp() {
                     <div className="section__head">
                         <span className="section__eyebrow">03 / Phase 2</span>
                         <h2 className="section__title" id="phase-2-title">The launch product</h2>
-                        <p className="section__lede">Running on locappoint.com. What Porto and Lisbon launch with.</p>
+                        <p className="section__lede">Running on locappoint.com. What Porto and Lagos launch with.</p>
                     </div>
 
                     <article className="detail">
@@ -364,8 +364,8 @@ export default function StatusApp() {
                 <section className="section reveal" id="cities" aria-labelledby="cities-title">
                     <div className="section__head">
                         <span className="section__eyebrow">06 / Cities</span>
-                        <h2 className="section__title" id="cities-title">One city at a time</h2>
-                        <p className="section__lede">Porto first, Lisbon next, Lagos third.</p>
+                        <h2 className="section__title" id="cities-title">Two live, one next</h2>
+                        <p className="section__lede">Porto and Lagos live, Lisbon next.</p>
                     </div>
 
                     <div className="cities">
@@ -379,7 +379,7 @@ export default function StatusApp() {
                                     <circle cx="12" cy="10" r="1.4" fill="#DA291C" />
                                 </svg>
                             </div>
-                            <div className="city__status">Launch city. Vincent on the ground. Five in the beta, then ten live.</div>
+                            <div className="city__status">Live. Pay at the visit. Vincent on the ground.</div>
                         </div>
                         <div className="city">
                             <div className="city__head">
@@ -391,7 +391,7 @@ export default function StatusApp() {
                                     <circle cx="12" cy="10" r="1.4" fill="#DA291C" />
                                 </svg>
                             </div>
-                            <div className="city__status">Opens once Porto has ten businesses live.</div>
+                            <div className="city__status">Sign-ups open. Opens once Porto has ten businesses live.</div>
                         </div>
                         <div className="city">
                             <div className="city__head">
@@ -402,7 +402,7 @@ export default function StatusApp() {
                                     <rect x="20" width="10" height="20" fill="#008751" />
                                 </svg>
                             </div>
-                            <div className="city__status">Opens once Lisbon settles. Joseey leads on the ground.</div>
+                            <div className="city__status">Live. Paystack for paying ahead. Joseey leads on the ground.</div>
                         </div>
                     </div>
                 </section>

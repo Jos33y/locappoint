@@ -142,7 +142,7 @@ const BookingDetailSheet = ({ booking, onClose }) => {
     const whatsapp = whatsappLink(booking.client_phone)
     const paid = paidOnline(booking)
     const refund = paid ? refundOf({ ...booking, refund: money?.refund }) : null
-    const currency = booking.currency || 'EUR'
+    const currency = booking.currency || business.currency || 'EUR'
     const price = Number(booking.price ?? booking.services?.price) || 0
     let payHint = ''
     if (paid && booking.status === 'pending') payHint = 'Declining gives the client all they paid back.'
@@ -205,7 +205,7 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                     <dt>Service</dt>
                     <dd>
                         {serviceLabel(booking, 'Service removed')}{Number(booking.people) > 1 ? `, for ${booking.people} people` : ''}
-                        {(booking.price ?? booking.services?.price) != null && <span className="biz-num biz-muted"> {formatMoney(booking.price ?? booking.services.price)}</span>}
+                        {(booking.price ?? booking.services?.price) != null && <span className="biz-num biz-muted"> {formatMoney(booking.price ?? booking.services.price, currency)}</span>}
                     </dd>
                 </div>
                 {booking.mode === 'online' && (
@@ -231,7 +231,7 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                                     <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([booking.client_address, booking.client_zone].filter(Boolean).join(', '))}`} target="_blank" rel="noopener noreferrer"><Navigation size={14} aria-hidden="true" /> Directions</a>
                                 </>
                             ) : booking.status === 'pending' && <span className="biz-where__note">The full address shows once you confirm.</span>}
-                            {Number(booking.travel_fee) > 0 && <span className="biz-where__note">Travel fee {formatMoney(booking.travel_fee)}</span>}
+                            {Number(booking.travel_fee) > 0 && <span className="biz-where__note">Travel fee {formatMoney(booking.travel_fee, currency)}</span>}
                             {booking.status === 'confirmed' && <TripControl booking={booking} timeZone={business.timezone} />}
                         </dd>
                     </div>

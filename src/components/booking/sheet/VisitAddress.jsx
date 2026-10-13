@@ -51,6 +51,8 @@ export const VisitAddress = ({ value, zones, radius = null, search = 'off', busi
                 onChange={(zone) => onChange({ zone })}
                 title="Your area"
                 placeholder="Pick your area"
+                searchable={zones.length > 12}
+                searchPlaceholder="Search your area"
                 options={zones.map((z) => ({ value: z, label: z }))}
             />
         </Field>

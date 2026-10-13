@@ -1,0 +1,55 @@
+/* City switcher: a small pin and the city name, in the site header and the client app's top bar. */
+
+.lc-city {
+    position: relative;
+    flex: none;
+}
+
+.lc-city__pin {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    z-index: 1;
+    color: var(--azure);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.lc-city .ui-picker-wrap {
+    width: auto;
+}
+
+.lc-city .ui-picker-trigger {
+    width: auto;
+    min-height: 36px;
+    padding: 0 10px 0 30px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.lc-city .ui-picker-trigger svg:last-child {
+    width: 16px;
+    height: 16px;
+}
+
+/* The list opens under the switcher, aligned to its right edge so it never leaves the screen. */
+.lc-city .ui-picker-pop {
+    left: auto;
+    right: 0;
+}
+
+/* Phones: the pin and the name are enough, the chevron gives its room to the header. */
+@media (max-width: 560px) {
+    .lc-city .ui-picker-trigger {
+        gap: 0;
+        padding: 0 10px 0 28px;
+    }
+
+    .lc-city .ui-picker-trigger svg:last-child {
+        display: none;
+    }
+
+    .lc-city__pin {
+        left: 9px;
+    }
+}

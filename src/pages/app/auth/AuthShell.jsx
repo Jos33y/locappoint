@@ -2,18 +2,29 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import LogoIcon from '../../../components/LogoIcon'
 import { useCohort } from '../../../hooks/useCohort'
+import { useCity } from '../../../hooks/useCity'
 
 const HOME_PATH = import.meta.env.DEV ? '/?app' : '/'
 
+// Where the pin on the map sits, for each city taking bookings.
+const SPOTS = {
+    porto: { lat: '41.16\u00b0 N', lng: '8.63\u00b0 W', geo: '41.1579\u00b0 N \u00b7 8.6291\u00b0 W' },
+    lagos: { lat: '6.52\u00b0 N', lng: '3.38\u00b0 E', geo: '6.5244\u00b0 N \u00b7 3.3792\u00b0 E' },
+}
+
 const AuthShell = ({
     brandTitle = 'Booking that fills your week, not your DMs.',
-    brandSub = 'Local businesses in Porto, Lisbon, and Lagos. Free during the beta.',
+    brandSub = 'Local businesses in Porto and Lagos, with Lisbon next. Free during the beta.',
     audience = 'business',
     back = null,
     children,
 }) => {
     const forBusiness = audience === 'business'
-    const cohort = useCohort()
+    // The visitor's city when it is taking bookings, otherwise Porto, with its map coordinates.
+    const [picked] = useCity()
+    const city = picked.live ? picked : { code: 'porto', name: 'Porto' }
+    const spot = SPOTS[city.code] || SPOTS.porto
+    const cohort = useCohort(city.code)
     const backLink = back || { to: HOME_PATH, label: 'Back to home' }
 
     return (
@@ -42,20 +53,20 @@ const AuthShell = ({
                             <div className="auth-brand__pin-ring auth-brand__pin-ring--outer"></div>
                             <LogoIcon size={56} className="auth-brand__pin-mark" />
                         </div>
-                        <span className="auth-brand__tick auth-brand__tick--tl">41.16° N</span>
-                        <span className="auth-brand__tick auth-brand__tick--tr">8.63° W</span>
+                        <span className="auth-brand__tick auth-brand__tick--tl">{spot.lat}</span>
+                        <span className="auth-brand__tick auth-brand__tick--tr">{spot.lng}</span>
                     </div>
                     <div className="auth-brand__coords">
-                        <span className="auth-brand__coords-geo">41.1579° N · 8.6291° W</span>
+                        <span className="auth-brand__coords-geo">{spot.geo}</span>
                         <span className="auth-brand__coords-sep">·</span>
-                        <span className="auth-brand__coords-place">Porto</span>
+                        <span className="auth-brand__coords-place">{city.name}</span>
                     </div>
                 </div>
 
                 {forBusiness && cohort && (
                     <div className="auth-brand__cohort">
                         <div className="auth-brand__cohort-head">
-                            <span className="auth-brand__cohort-label">Cohort 1 in Porto</span>
+                            <span className="auth-brand__cohort-label">Cohort 1 in {city.name}</span>
                             <span className="auth-brand__cohort-count">
                                 <span className="auth-brand__cohort-num">{cohort.count}</span>
                                 <span className="auth-brand__cohort-sep">/</span>
@@ -73,13 +84,13 @@ const AuthShell = ({
                         <span className="auth-brand__city-dot auth-brand__city-dot--live"></span>
                         Porto
                     </span>
+                    <span className="auth-brand__city">
+                        <span className="auth-brand__city-dot auth-brand__city-dot--live"></span>
+                        Lagos
+                    </span>
                     <span className="auth-brand__city auth-brand__city--muted">
                         <span className="auth-brand__city-dot auth-brand__city-dot--next"></span>
                         Lisbon next
-                    </span>
-                    <span className="auth-brand__city auth-brand__city--muted">
-                        <span className="auth-brand__city-dot"></span>
-                        Lagos later
                     </span>
                 </div>
             </aside>
@@ -101,7 +112,7 @@ const AuthShell = ({
 
                 {forBusiness && cohort && (
                     <div className="auth-cohort-strip">
-                        <span>Cohort 1: {cohort.count} of {cohort.size} businesses live in Porto</span>
+                        <span>Cohort 1: {cohort.count} of {cohort.size} businesses live in {city.name}</span>
                     </div>
                 )}
 

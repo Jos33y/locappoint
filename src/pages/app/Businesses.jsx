@@ -9,7 +9,8 @@ import { PlaceResult } from '../../components/client/find/PlaceResult'
 import { EngineBox } from '../../components/client/find/EngineBox'
 import { loadPlaces } from '../../services/booking'
 import { useAuth } from '../../hooks/useAuth'
-import { CITIES, COHORT_SIZE, inCity } from '../../services/cohort'
+import { CITIES, COHORT_SIZE, inMarket } from '../../services/cohort'
+import { useCity } from '../../hooks/useCity'
 import '../../styles/client/find-page.css'
 import '../../styles/app/businesses.css'
 
@@ -55,6 +56,8 @@ const Businesses = () => {
     const [attempt, setAttempt] = useState(0)
     const { user, hasBusiness } = useAuth()
     const join = user ? START : SIGN_UP
+    // The city picked in the header (or here): only its places are listed.
+    const [market, pickMarket] = useCity()
 
     useEffect(() => {
         let cancelled = false
@@ -69,10 +72,11 @@ const Businesses = () => {
     }, [attempt])
 
     const ready = state.status === 'ready'
-    const places = state.places
-    const counts = useMemo(() => CITIES.map((c) => places.filter((p) => inCity(p, c.match)).length), [places])
-    const first = counts[0]
+    const counts = useMemo(() => CITIES.map((c) => state.places.filter((p) => inMarket(p, c.market)).length), [state.places])
+    const places = useMemo(() => state.places.filter((p) => inMarket(p, market.code)), [state.places, market.code])
+    const first = places.length
     const cohortOpen = first < COHORT_SIZE
+    const open = market.live
 
     return (
         <div className="lc-br">
@@ -81,10 +85,12 @@ const Businesses = () => {
             <main className="lc-br__main">
                 <section className="lc-br-hero">
                     <div className="lc-br-hero__text">
-                        <p className="lc-br-hero__kicker">Porto, first cohort</p>
-                        <h1 className="lc-br-hero__title">Book Porto's first businesses on Locappoint.</h1>
+                        <p className="lc-br-hero__kicker">{market.name}, {open ? 'first cohort' : 'opening soon'}</p>
+                        <h1 className="lc-br-hero__title">{open ? `Book the first businesses in ${market.name}.` : `${market.name} is opening on Locappoint.`}</h1>
                         <p className="lc-br-hero__lede">
-                            A first group of ten Porto businesses taking bookings through Locappoint. Pick a place, choose a time and you are booked in under a minute.
+                            {open
+                                ? `A first group of ten ${market.name} businesses taking bookings through Locappoint. Pick a place, choose a time and you are booked in under a minute.`
+                                : `Businesses in ${market.name} can set up their booking page now. Bookings open as the first ones go live.`}
                         </p>
                     </div>
 
@@ -97,8 +103,8 @@ const Businesses = () => {
                                 </p>
                                 <p className="lc-br-count__label">
                                     {cohortOpen
-                                        ? `${first === 1 ? 'place' : 'places'} taking bookings in Porto`
-                                        : 'places taking bookings in Porto. The first cohort is full.'}
+                                        ? `${first === 1 ? 'place' : 'places'} taking bookings in ${market.name}`
+                                        : `places taking bookings in ${market.name}. The first cohort is full.`}
                                 </p>
                                 {cohortOpen && <CohortSlots filled={first} />}
                             </>
@@ -118,10 +124,13 @@ const Businesses = () => {
                     {CITIES.map((city, i) => {
                         const n = counts[i]
                         const live = ready && n > 0
+                        const here = city.market === market.code
                         return (
-                            <li key={city.name} className={`lc-br-city${live ? ' is-live' : ''}`}>
-                                <strong>{city.name}</strong>
-                                <span><i aria-hidden="true" />{live ? placesText(n) : city.later}</span>
+                            <li key={city.name} className={`lc-br-city${live ? ' is-live' : ''}${here ? ' is-here' : ''}`}>
+                                <button type="button" className="lc-br-city__pick" onClick={() => pickMarket(city.market)} aria-pressed={here}>
+                                    <strong>{city.name}</strong>
+                                    <span><i aria-hidden="true" />{live ? placesText(n) : city.later}</span>
+                                </button>
                             </li>
                         )
                     })}
@@ -129,7 +138,7 @@ const Businesses = () => {
 
                 <section className="lc-br-places" aria-labelledby="lc-br-places-title">
                     <div className="lc-br-places__head">
-                        <h2 id="lc-br-places-title">{ready && places.length === 0 ? 'Opening soon' : 'Taking bookings now'}</h2>
+                        <h2 id="lc-br-places-title">{ready && places.length === 0 ? `Opening soon in ${market.name}` : `Taking bookings in ${market.name}`}</h2>
                         {ready && places.length > 0 && <p>{placesText(places.length)}</p>}
                     </div>
 
@@ -164,7 +173,7 @@ const Businesses = () => {
 
                 {!hasBusiness && !(ready && places.length === 0) && (
                     <section className="lc-br-cta">
-                        <h2>Run a business in Porto?</h2>
+                        <h2>Run a business in {market.name}?</h2>
                         <p>Get your own booking page on Locappoint. Free during the beta.</p>
                         <div className="lc-br-cta__buttons">
                             <Button to={join.pathname} state={join.state} iconRight={ArrowRight}>Get your booking page</Button>

@@ -15,7 +15,7 @@ import { HoursEditor } from '../../components/business/HoursEditor'
 import { PublicPageView } from '../../components/business/PublicPageView'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
 import { CATEGORIES, POPULAR_CATEGORIES, categoryLabel, suggestionsFor } from '../../constants/categories'
-import { NG_CITIES, POPULAR_COUNTRIES, PT_MUNICIPALITIES, inLaunchArea } from '../../constants/locations'
+import { NG_CITIES, POPULAR_COUNTRIES, PT_MUNICIPALITIES, inLaunchArea, neighbourhoodHint } from '../../constants/locations'
 import { COUNTRY_OPTIONS } from '../../components/ui/PhoneField'
 import { SAMPLE_BUSINESS, SAMPLE_SERVICES } from '../../constants/sampleBusiness'
 import { durationLabel, formatMoney, pageStrength } from '../../services/business'
@@ -316,6 +316,7 @@ const Setup = () => {
         city: cityOf(details),
         neighbourhood: details.neighbourhood,
         country: details.country,
+        currency: details.country === 'NG' ? 'NGN' : 'EUR',
         phone: details.phone,
         whatsapp: details.whatsappSame ? details.phone : business?.whatsapp || null,
         description: extras.description,
@@ -614,13 +615,13 @@ const Setup = () => {
                                             <Input value={details.cityOther} onChange={(e) => setDetail({ cityOther: e.target.value })} maxLength={80} autoComplete="address-level2" />
                                         </Field>
                                     )}
-                                    <Field label="Neighbourhood" optional hint="Like Anjos or Baixa">
+                                    <Field label="Neighbourhood" optional hint={neighbourhoodHint(details.country)}>
                                         <Input value={details.neighbourhood} onChange={(e) => setDetail({ neighbourhood: e.target.value })} maxLength={60} autoComplete="off" />
                                     </Field>
                                 </div>
                                 {cityOf(details) && !inLaunchArea(details.country, cityOf(details)) && (
                                     <p className="lc-setup__note" role="note">
-                                        We are opening in Porto and Lisbon first. Your page works anywhere, and we will be in touch as we grow into {cityOf(details)}.
+                                        We are open in Porto and Lagos, with Lisbon next. Your page works anywhere, and we will be in touch as we grow into {cityOf(details)}.
                                     </p>
                                 )}
 
@@ -649,6 +650,7 @@ const Setup = () => {
                                 onChange={setServices}
                                 suggestions={suggestionsFor(details.category)}
                                 showErrors={showErrors}
+                                currency={details.country === 'NG' ? 'NGN' : 'EUR'}
                             />
                         )}
 

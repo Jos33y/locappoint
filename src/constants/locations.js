@@ -335,4 +335,8 @@ export const timezoneForPlace = (country, city) => {
     return deviceZone()
 }
 
-export const inLaunchArea = (country, city) => country === 'PT' && (GREATER_PORTO.has(city) || GREATER_LISBON.has(city))
+// Where Locappoint is open: Greater Porto and Lagos live, Greater Lisbon open to sign-ups.
+export const inLaunchArea = (country, city) => (country === 'PT' && (GREATER_PORTO.has(city) || GREATER_LISBON.has(city))) || (country === 'NG' && city === 'Lagos')
+
+// An example neighbourhood for the country picked.
+export const neighbourhoodHint = (country) => (country === 'NG' ? 'Like Lekki or Yaba' : 'Like Anjos or Baixa')

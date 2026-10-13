@@ -240,7 +240,7 @@
     }
 }
 
-/* Phones: the bar has room for the mark, one action and the menu. Language comes back with translated screens. */
+/* Phones: the bar has room for the mark, the city, one action and the menu. Language comes back with translated screens. */
 @media (max-width: 420px) {
     .loca-app-header__beta,
     .loca-app-header__actions .language-switcher {
@@ -248,16 +248,48 @@
     }
 
     .loca-app-header__actions {
-        gap: 8px;
+        gap: 6px;
     }
-}
 
-@media (max-width: 360px) {
-    .loca-app-header__wm {
-        font-size: 16px;
+    .loca-app-header__brand {
+        gap: 8px;
     }
 
     .loca-app-header__btn {
         padding: 8px 10px;
+    }
+
+    .loca-app-header__city .ui-picker-trigger {
+        padding: 0 8px 0 26px;
+    }
+
+    .loca-app-header__city .lc-city__pin {
+        left: 8px;
+    }
+}
+
+/* Small Android phones, common in Lagos: the name gets smaller so the city still fits. */
+@media (max-width: 380px) {
+    .loca-app-header__wm {
+        font-size: 14px;
+    }
+
+    .loca-app-header__menu-btn {
+        padding: 6px;
+    }
+
+    .loca-app-header__brand {
+        gap: 6px;
+    }
+
+    .loca-app-header__btn {
+        padding: 8px;
+    }
+}
+
+/* The narrowest phones keep the pin mark only. */
+@media (max-width: 340px) {
+    .loca-app-header__wm {
+        display: none;
     }
 }

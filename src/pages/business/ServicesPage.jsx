@@ -19,11 +19,11 @@ const isActive = (s) => s.is_active !== false
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
 
-const summary = (services) => {
+const summary = (services, currency) => {
     const live = services.filter((s) => isActive(s) && s.service_name.trim())
     if (live.length === 0) return 'Nothing on your page yet.'
     const prices = live.map((s) => Number(String(s.price).replace(',', '.'))).filter((n) => Number.isFinite(n))
-    const from = prices.length ? `, from ${menuPrice(Math.min(...prices))}` : ''
+    const from = prices.length ? `, from ${menuPrice(Math.min(...prices), currency)}` : ''
     const hidden = services.length - live.length
     return `${plural(live.length, 'service')} on your page${from}.${hidden > 0 ? ` ${hidden} hidden.` : ''}`
 }
@@ -247,6 +247,8 @@ const Distance = ({ businessId, address, shop, radius, onShop, onRadius }) => {
     )
 }
 
+const MAX_AREAS = 40
+
 // Where the business travels for visits at the client's place: areas, a distance, or both. Saved on every tap.
 const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius, onShop, onRadius }) => {
     const [zones, setZones] = useState(null)
@@ -258,6 +260,11 @@ const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius,
         return () => { cancelled = true }
     }, [market])
     const toggle = async (zone) => {
+        // The database keeps up to 40 areas a business covers; past that, a distance says it better.
+        if (!picked.includes(zone) && picked.length >= MAX_AREAS) {
+            setError(`You can pick up to ${MAX_AREAS} areas. To cover more, set a distance below instead.`)
+            return
+        }
         const next = picked.includes(zone) ? picked.filter((z) => z !== zone) : [...picked, zone]
         const before = picked
         setPicked(next)
@@ -414,7 +421,7 @@ const ServicesPage = () => {
             <header className="biz-page__head biz-sh__head">
                 <div>
                     <h1 className="biz-page__title">Services</h1>
-                    <p className="biz-page__sub">{summary(services)}</p>
+                    <p className="biz-page__sub">{summary(services, shellBusiness?.currency)}</p>
                 </div>
                 <div className="biz-sh__headside">
                     <SaveState state={autosave.state} onRetry={autosave.retry} blockedText="Finish the highlighted service to save it" />
@@ -430,6 +437,7 @@ const ServicesPage = () => {
                     showErrors={showErrors}
                     showVisibility
                     onRemove={requestRemove}
+                    currency={shellBusiness?.currency || 'EUR'}
                 />
                 {services.length > 1 && <p className="biz-sh__tip">Clients see your services in this order. Drag the handle to move one.</p>}
                 {services.some(visitsClients) && (

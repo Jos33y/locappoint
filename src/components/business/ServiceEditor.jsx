@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, ChevronRight, GripVertical, House, Plus, Store, Trash2, Users, Video } from 'lucide-react'
 import { AffixInput, Button, Chip, ChipGroup, Field, Input, Switch, Textarea } from '../ui'
-import { durationLabel, menuPrice } from '../../services/business'
+import { currencySign, durationLabel, menuPrice } from '../../services/business'
 import { DurationDial } from './DurationDial'
 import '../../styles/business/editors.css'
 
@@ -80,7 +80,7 @@ export const serviceProblems = (service) => {
 export const servicesValid = (services) =>
     services.length > 0 && services.every((s) => Object.keys(serviceProblems(s)).length === 0)
 
-const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusField, showVisibility }) => {
+const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusField, showVisibility, currency }) => {
     const nameRef = useRef(null)
     const priceRef = useRef(null)
     const custom = !DURATIONS.includes(Number(service.duration_minutes))
@@ -139,7 +139,7 @@ const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusFie
 
             <Field label="Price" error={problems.price}>
                 <AffixInput
-                    prefix="€"
+                    prefix={currencySign(currency)}
                     mono
                     ref={priceRef}
                     inputMode="decimal"
@@ -174,7 +174,7 @@ const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusFie
             {visitsClients(service) && (
                 <Field label="Travel fee" optional error={problems.travel_fee} hint="Added to the price for visits at the client's place. Leave empty for none.">
                     <AffixInput
-                        prefix="€"
+                        prefix={currencySign(currency)}
                         mono
                         inputMode="decimal"
                         value={service.travel_fee ?? ''}
@@ -207,7 +207,7 @@ const ServiceForm = ({ service, onChange, onDone, onRemove, showErrors, focusFie
                             ))}
                         </ChipGroup>
                     </Field>
-                    <Field label="Price" hint={service.price_per === 'person' ? `Three people pay ${menuPrice(parsePrice(service.price || 0) * 3)}.` : 'The same price however many come.'}>
+                    <Field label="Price" hint={service.price_per === 'person' ? `Three people pay ${menuPrice(parsePrice(service.price || 0) * 3, currency)}.` : 'The same price however many come.'}>
                         <ChipGroup label="Price for a group">
                             <Chip selected={service.price_per === 'person'} onClick={() => set({ price_per: 'person' })}>Per person</Chip>
                             <Chip selected={service.price_per !== 'person'} onClick={() => set({ price_per: 'booking' })}>For the whole group</Chip>
@@ -325,7 +325,7 @@ const useDragOrder = (onMove) => {
     return { listRef, drag, start, move, end, offset }
 }
 
-export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors = false, showVisibility = false, onRemove }) => {
+export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors = false, showVisibility = false, onRemove, currency = 'EUR' }) => {
     const [editing, setEditing] = useState(() => (services.length === 1 && !services[0].id ? services[0].key : null))
     const [focusField, setFocusField] = useState('name')
     const handles = useRef(new Map())
@@ -404,6 +404,7 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
                                             service={service}
                                             showErrors={showErrors}
                                             showVisibility={showVisibility}
+                                            currency={currency}
                                             focusField={editing === service.key ? focusField : null}
                                             onChange={(next) => replace(service.key, next)}
                                             onDone={() => setEditing(null)}
@@ -436,7 +437,7 @@ export const ServiceEditor = ({ services, onChange, suggestions = [], showErrors
                                                     {service.description?.trim() && <span className="biz-svc__desc">{service.description.trim()}</span>}
                                                 </span>
                                                 <span className="biz-svc__time">{minutes ? durationLabel(minutes) : 'No time'}</span>
-                                                <span className="biz-svc__price">{hasPrice ? menuPrice(service.price) : 'No price'}</span>
+                                                <span className="biz-svc__price">{hasPrice ? menuPrice(service.price, currency) : 'No price'}</span>
                                                 <ChevronRight size={16} aria-hidden="true" className="biz-svc__chevron" />
                                             </button>
                                         </div>

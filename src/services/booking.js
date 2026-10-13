@@ -136,7 +136,7 @@ export const loadNextBooking = async (email) => {
     return data?.[0] || null
 }
 
-const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, mode, people, meeting_url, client_address, client_landmark, client_zone, travel_fee, payment_status, total, client_fee, currency, cancelled_by, rescheduled_from, addons, businesses (id, business_name, slug, address, city, country, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price, modes, travel_fee, max_people, price_per, extra_person_minutes), reviews (id, rating, body, reply, replied_at, created_at, status), receipts (kind, number, token)'
+const BOOKING_FIELDS = 'id, service_id, appointment_date, appointment_time, duration_minutes, status, notes, price, mode, people, meeting_url, client_address, client_landmark, client_zone, travel_fee, payment_status, total, client_fee, currency, cancelled_by, rescheduled_from, addons, businesses (id, business_name, slug, address, city, country, currency, phone, whatsapp, timezone, banner_url, logo_url, category, category_detail, auto_confirm, cancel_cutoff_minutes), services (id, service_name, duration_minutes, price, modes, travel_fee, max_people, price_per, extra_person_minutes), reviews (id, rating, body, reply, replied_at, created_at, status), receipts (kind, number, token)'
 
 export const loadMyBookings = async (email) => {
     const { data, error } = await supabase
@@ -294,7 +294,7 @@ export const USER_ERRORS = ['22023', 'P0001', 'P0002', '28000', '42501']
 export const loadPlaces = async () => {
     const [places, services, hours, ratings, trust] = await Promise.all([
         supabase.from('businesses')
-            .select('id, business_name, slug, description, category, category_detail, city, neighbourhood, timezone, banner_url, logo_url, is_demo')
+            .select('id, business_name, slug, description, category, category_detail, city, neighbourhood, timezone, market, currency, banner_url, logo_url, is_demo')
             .eq('is_active', true)
             .order('created_at', { ascending: false }),
         supabase.from('services').select('business_id, price, is_active').eq('is_active', true),

@@ -1,4 +1,6 @@
 import { Check } from 'lucide-react'
+import { useCity } from '../../../hooks/useCity'
+import { currencySign } from '../../../services/business'
 import './Pricing.css'
 
 const includes = [
@@ -12,6 +14,8 @@ const includes = [
 
 // No figures until online payments are live: only what is free and when a fee could ever apply.
 const Pricing = () => {
+    const [city] = useCity()
+    const zero = `${currencySign(city.currency)}0`
     return (
         <section className="loca-section loca-section--s1 pr">
             <div className="container">
@@ -30,7 +34,7 @@ const Pricing = () => {
                     <div className="pr__split">
                         <div className="pr__col">
                             <div className="pr__col-label">During the beta</div>
-                            <div className="pr__col-amount">€0</div>
+                            <div className="pr__col-amount">{zero}</div>
                             <div className="pr__col-per">Everything included, no card needed</div>
                         </div>
 
@@ -38,7 +42,7 @@ const Pricing = () => {
 
                         <div className="pr__col">
                             <div className="pr__col-label">First month of online payments</div>
-                            <div className="pr__col-amount">€0</div>
+                            <div className="pr__col-amount">{zero}</div>
                             <div className="pr__col-per">Then a small fee on paid bookings only</div>
                         </div>
                     </div>

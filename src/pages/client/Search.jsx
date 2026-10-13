@@ -8,6 +8,8 @@ import { openStatus } from '../../components/business/PublicPageView'
 import { loadPlaces } from '../../services/booking'
 import { weekFromRows } from '../../services/hours'
 import { CATEGORIES, categoryKey, categoryLabel } from '../../constants/categories'
+import { inMarket } from '../../services/cohort'
+import { useCity } from '../../hooks/useCity'
 import '../../styles/client/find-page.css'
 
 const fold = (text) => (text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -49,9 +51,13 @@ const ClientSearch = () => {
         setParams(next, { replace: true })
     }
 
+    // Only the places in the city picked in the header; the town filter below narrows inside it.
+    const [market] = useCity()
+    const inCityPlaces = useMemo(() => state.places.filter((p) => inMarket(p, market.code)), [state.places, market.code])
+
     const withStatus = useMemo(
-        () => state.places.map((p) => ({ ...p, isOpen: Boolean(openStatus(weekFromRows(p.hourRows), p.timezone)?.open) })),
-        [state.places],
+        () => inCityPlaces.map((p) => ({ ...p, isOpen: Boolean(openStatus(weekFromRows(p.hourRows), p.timezone)?.open) })),
+        [inCityPlaces],
     )
 
     const searched = useMemo(() => withStatus.filter((p) => matches(p, q) && (!city || p.city === city)), [withStatus, q, city])
@@ -65,7 +71,7 @@ const ClientSearch = () => {
         return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([value, count]) => ({ value, count, label: CATEGORIES.find((c) => c.value === value)?.label || 'Other' }))
     }, [searched])
 
-    const cities = useMemo(() => [...new Set(state.places.map((p) => p.city).filter(Boolean))].sort(), [state.places])
+    const cities = useMemo(() => [...new Set(inCityPlaces.map((p) => p.city).filter(Boolean))].sort(), [inCityPlaces])
 
     const results = searched.filter((p) => (!category || categoryKey(p.category) === category) && (!openNow || p.isOpen))
     const filtered = Boolean(q || category || city || openNow)
@@ -99,7 +105,7 @@ const ClientSearch = () => {
                 </form>
             </header>
 
-            {state.status === 'ready' && state.places.length > 0 && (
+            {state.status === 'ready' && inCityPlaces.length > 0 && (
                 <div className="lc-cl-find__filters">
                     <ChipGroup label="Filter">
                         <Chip selected={openNow} onClick={() => set({ open: openNow ? '' : '1' })}>Open now</Chip>
@@ -143,8 +149,8 @@ const ClientSearch = () => {
             )}
 
             {state.status === 'ready' && (
-                state.places.length === 0 ? (
-                    <NoMatch title="No places yet" body="Businesses in Porto are setting up their pages. Check back soon." />
+                inCityPlaces.length === 0 ? (
+                    <NoMatch title={`No places in ${market.name} yet`} body={`Businesses in ${market.name} are setting up their pages. Check back soon, or pick another city at the top.`} />
                 ) : results.length === 0 ? (
                     <NoMatch
                         title={q ? `Nothing matches "${q}"` : 'Nothing matches these filters'}
