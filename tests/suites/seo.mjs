@@ -126,7 +126,9 @@ export default async ({ check, root }) => {
         r = await get('/', { host: 'app.locappoint.com' })
         check(r.status === 301 && r.headers.get('location') === 'https://locappoint.com/app', 'app.locappoint.com goes to the download page')
         r = await get('/', { host: 'waitlist.locappoint.com' })
-        check(r.status === 200 && /seo:start/.test(r.body), 'the waitlist site is served as before')
+        check(r.status === 301 && r.headers.get('location') === 'https://locappoint.com/auth?tab=signup&as=business', 'the closed waitlist sends people to the beta sign-up for businesses')
+        r = await get('/assets/app-abc123.js', { host: 'waitlist.locappoint.com' })
+        check(r.status === 301, 'nothing of the old waitlist page is served any more')
 
         // Supabase down: pages still load
         fake.close()

@@ -2,6 +2,8 @@ export const UPDATED = { iso: '2026-10-14T18:30:00Z', label: '14 October 2026' }
 
 export const META_LEFT = 2
 
+export const NEXT_FIX = 'Next: the area picker for owners'
+
 export const WAVES = [
     { key: 'w1', name: 'Wave 1', title: 'The launch product', sub: 'Payments, three cities, visits at home and online, the booking engine, WhatsApp, trust and policies.', state: 'done', tag: 'Done' },
     { key: 'fixes', name: 'Now', title: 'Launch fixes and switch-ons', sub: 'Eleven small fixes, then WhatsApp live, Paystack live and the test data cleared.', state: 'now', tag: 'Building' },
@@ -70,9 +72,9 @@ export const SLIP = [
         title: 'Code fixes',
         lines: [
             { n: '1.1', text: 'Support check for payout accounts', state: 'done' },
-            { n: '1.9', text: 'WhatsApp bookings counted everywhere', state: 'now' },
-            { n: '1.10', text: 'Old purple out of the public pages', state: 'open' },
-            { n: '1.11', text: 'Waitlist site testimonials', state: 'open' },
+            { n: '1.9', text: 'WhatsApp bookings counted everywhere', state: 'done' },
+            { n: '1.10', text: 'Old purple out of the public pages', state: 'done' },
+            { n: '1.11', text: 'Waitlist retired; its address goes to the beta sign-up', state: 'done' },
             { n: '1.2', text: 'Area picker for owners', state: 'open' },
             { n: '1.3', text: 'WhatsApp agent polish', state: 'open' },
             { n: '1.4', text: 'Naira sign', state: 'open' },
@@ -200,7 +202,6 @@ export const AFTER = [
 export const LINKS = [
     { url: 'https://locappoint.com', label: 'locappoint.com', desc: 'The booking platform. Live in Porto, Lagos and Lisbon.', state: 'live', tag: 'Live' },
     { url: 'https://locappoint.com/app', label: 'locappoint.com/app', desc: 'Android, live here now. Google Play and iPhone wait on the D-U-N-S number.', state: 'part', tag: 'Android live' },
-    { url: 'https://waitlist.locappoint.com', label: 'waitlist.locappoint.com', desc: 'The waitlist.', state: 'live', tag: 'Live' },
     { url: 'https://status.locappoint.com', label: 'status.locappoint.com', desc: 'This page.', state: 'live', tag: 'Live' },
 ]
 

@@ -1,11 +1,11 @@
-import { META_LEFT, SLIP, UPDATED } from './content'
+import { META_LEFT, NEXT_FIX, SLIP, UPDATED } from './content'
 
 const count = (key, state) => SLIP.find((s) => s.key === key).lines.filter((l) => !state || l.state === state).length
 
 const Hero = () => {
     const stats = [
         { label: 'Cities live', value: '3', of: 'of 3', note: 'Porto, Lagos and Lisbon' },
-        { label: 'Launch fixes done', value: String(count('code', 'done')), of: `of ${count('code')}`, note: '1.9 is being built now' },
+        { label: 'Launch fixes done', value: String(count('code', 'done')), of: `of ${count('code')}`, note: NEXT_FIX },
         { label: 'Meta approvals left', value: String(META_LEFT), of: null, note: 'Then WhatsApp switches on' },
     ]
     return (

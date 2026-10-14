@@ -93,7 +93,7 @@
 .form-group select:focus {
     outline: none;
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(45, 127, 240, 0.1);
 }
 
 .form-group input::placeholder,
@@ -123,7 +123,7 @@
 
 .input-with-prefix:focus-within {
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(45, 127, 240, 0.1);
 }
 
 .input-prefix {
@@ -231,7 +231,7 @@
 
 .file-upload:hover {
     border-color: var(--accent-primary);
-    background: rgba(139, 92, 246, 0.05);
+    background: rgba(45, 127, 240, 0.05);
 }
 
 .file-upload input[type="file"] {

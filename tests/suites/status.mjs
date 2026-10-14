@@ -25,6 +25,7 @@ export default async ({ browser, url, check, server, root }) => {
     check(/Three cities live/.test(text), 'the page leads with three cities live')
     check(!/Porto beta|95%|Phase 2|of 4\b|Five Porto owners/.test(text), 'nothing from the 7 October page comes back')
     check(!/[\u2014\u2013]/.test(text), 'no long dashes on the page')
+    check(!/waitlist\.locappoint\.com/.test(text), 'the retired waitlist is not offered as a live link')
     const waves = await p.evaluate(() => [...document.querySelectorAll('.lc-st-wave')].map((w) => ({ now: w.classList.contains('is-now'), title: w.querySelector('.lc-st-wave__title')?.textContent })))
     check(waves.length === 6 && waves.filter((w) => w.now).length === 1, `six waves, one marked now: ${waves.length}`)
     check(waves[0]?.title === 'The launch product' && waves.findIndex((w) => w.now) === 1, 'Wave 1 is done and the launch fixes are the current step')

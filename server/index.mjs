@@ -129,6 +129,8 @@ const handle = async (req, res) => {
     // One address for search engines: www and app. move here for good.
     if (host === `www.${APEX}`) return send(req, res, 301, 'text/plain; charset=utf-8', '', { Location: `https://${APEX}${url.pathname}${url.search}` })
     if (host === `app.${APEX}`) return send(req, res, 301, 'text/plain; charset=utf-8', '', { Location: `https://${APEX}${url.pathname === '/' ? '/app' : url.pathname}${url.search}` })
+    // The waitlist is closed: its address now goes to the beta sign-up for businesses.
+    if (host.startsWith('waitlist.')) return send(req, res, 301, 'text/plain; charset=utf-8', '', { Location: `https://${APEX}/auth?tab=signup&as=business` })
     if (pathname === '/about') return send(req, res, 301, 'text/plain; charset=utf-8', '', { Location: '/' })
 
     if (pathname === '/robots.txt') return send(req, res, 200, 'text/plain; charset=utf-8', robotsTxt(host), { 'Cache-Control': 'public, max-age=3600' })
@@ -145,9 +147,9 @@ const handle = async (req, res) => {
     // A missing file (an old chunk, a typo'd image) is a real 404, not the app.
     if (path.extname(pathname)) return send(req, res, 404, 'text/plain; charset=utf-8', 'Not found', { 'Cache-Control': 'no-store' })
 
-    // The waitlist and status sites keep the page as it is; the status site stays out of search.
-    if (host.startsWith('waitlist.') || host.startsWith('status.')) {
-        return send(req, res, 200, 'text/html; charset=utf-8', template, { 'Cache-Control': 'no-cache', ...(host.startsWith('status.') ? { 'X-Robots-Tag': 'noindex' } : {}) })
+    // The status site keeps the page as it is and stays out of search.
+    if (host.startsWith('status.')) {
+        return send(req, res, 200, 'text/html; charset=utf-8', template, { 'Cache-Control': 'no-cache', 'X-Robots-Tag': 'noindex' })
     }
 
     const { status, meta, cache: cacheControl } = await page(pathname)

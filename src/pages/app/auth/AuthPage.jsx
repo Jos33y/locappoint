@@ -48,7 +48,8 @@ const AuthPage = () => {
     const queryTab = ['signin', 'signup'].includes(searchParams.get('tab')) ? searchParams.get('tab') : null
     const startEmail = (navState.email || searchParams.get('email') || '').slice(0, 254)
     const [activeTab, setActiveTab] = useState(isVerified ? 'signin' : (navState.tab || queryTab || 'signin'))
-    const [userType, setUserType] = useState(navState.userType || 'client')
+    const queryType = searchParams.get('as') === 'business' ? 'business' : null
+    const [userType, setUserType] = useState(navState.userType || queryType || 'client')
     const [formData, setFormData] = useState({
         email: startEmail,
         password: '',
@@ -68,9 +69,9 @@ const AuthPage = () => {
     // Already signed in: go where the link meant to take you instead of showing the form again.
     useEffect(() => {
         if (!user) return
-        const wantsBusiness = navState.userType === 'business' && navState.tab === 'signup'
+        const wantsBusiness = (navState.userType || queryType) === 'business' && (navState.tab || queryTab) === 'signup'
         navigate(returnTo || (wantsBusiness ? '/portal' : '/me'), { replace: true })
-    }, [user, returnTo, navState.userType, navState.tab, navigate])
+    }, [user, returnTo, navState.userType, navState.tab, queryType, queryTab, navigate])
 
     useEffect(() => {
         if (navState.tab) setActiveTab(navState.tab)
