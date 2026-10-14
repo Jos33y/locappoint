@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowUpRight, Check, Clock, CreditCard, IdCard, Landmark, Lock, RotateCw, ShieldCheck } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowUpRight, Check, Clock, CreditCard, IdCard, Landmark, LifeBuoy, Lock, RotateCw, ShieldCheck } from 'lucide-react'
 import { Button, Card, Field, Picker, Skeleton, Status } from '../../components/ui'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { callPayouts, onAppReturn, openPayoutLink, payoutTarget } from '../../services/payouts'
@@ -193,6 +194,9 @@ const BankForm = ({ onSaved, onCancel }) => {
     const [name, setName] = useState('')
     // Whose account it is: payouts go only to the owner's or the business's own account.
     const [whose, setWhose] = useState(null)
+    // A genuine account under another registered name: Support checks it and approves that one account.
+    const [review, setReview] = useState(null)
+    const [asking, setAsking] = useState(false)
     const [checking, setChecking] = useState(false)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState('')
@@ -207,6 +211,7 @@ const BankForm = ({ onSaved, onCancel }) => {
     useEffect(() => {
         setName('')
         setWhose(null)
+        setReview(null)
         setError('')
         if (!bank || number.length !== 10) return
         const key = `${bank}:${number}`
@@ -217,6 +222,20 @@ const BankForm = ({ onSaved, onCancel }) => {
             .catch((err) => { if (asked.current === key) setError(err.message) })
             .finally(() => { if (asked.current === key) setChecking(false) })
     }, [bank, number])
+
+    const askSupport = async () => {
+        setAsking(true)
+        setError('')
+        try {
+            const r = await callPayouts('review', { bank_code: bank, account_number: number })
+            if (r.matches) setWhose((w) => ({ ...w, matches: true }))
+            else setReview(r)
+        } catch (err) {
+            setError(err.message)
+        } finally {
+            setAsking(false)
+        }
+    }
 
     const save = async () => {
         setSaving(true)
@@ -258,9 +277,21 @@ const BankForm = ({ onSaved, onCancel }) => {
             </div>
             <div className="biz-pay__confirm" aria-live="polite">
                 {checking && <span className="biz-pay__checking">Checking the account with your bank</span>}
-                {name && whose?.matches === false && (
+                {name && whose?.matches === false && !review && (
                     <span className="biz-pay__alert" role="alert">
-                        This account is in the name of <b>{name}</b>. We only pay into an account in your name{whose.owner_name ? ` (${whose.owner_name})` : ''} or your business&apos;s name ({whose.business_name}).
+                        <span>
+                            This account is in the name of <b>{name}</b>. We only pay into an account in your name{whose.owner_name ? ` (${whose.owner_name})` : ''} or your business&apos;s name ({whose.business_name}).
+                            {' '}If it is your registered business name, Support can check it.
+                        </span>
+                        <Button variant="quiet" size="sm" icon={LifeBuoy} onClick={askSupport} loading={asking}>Ask Support to check it</Button>
+                    </span>
+                )}
+                {review && (
+                    <span className="biz-pay__review" role="status">
+                        <LifeBuoy size={18} aria-hidden="true" />
+                        <span>
+                            {review.again ? 'Already with Support' : 'Sent to Support'} as request <b>#{review.number}</b>. A person checks the account, usually within a working day, and replies in <Link to="/portal/support">Support</Link>. Once it is approved, save this account here again.
+                        </span>
                     </span>
                 )}
                 {name && whose?.matches !== false && (

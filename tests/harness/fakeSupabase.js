@@ -393,6 +393,7 @@ const payouts = (body) => {
     if (body.account_number === '0987654321') return { data: { account_name: 'CHIDI EZE', matches: false, owner_name: 'Adebayo Oluwaseun', business_name: 'Femtos Barbearia' }, error: null }
     return failed('We could not find that account. Check the number and the bank.')
   }
+  if (body.action === 'review') return { data: { number: 1052, again: false }, error: null }
   if (body.action === 'connect') return { data: { ...PAYOUT_ROWS['paystack-active'], test: true, account_name: 'ADEBAYO OLUWASEUN' }, error: null }
   return failed('Unknown action')
 }

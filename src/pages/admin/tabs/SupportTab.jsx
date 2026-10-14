@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowLeft, Ban, CalendarCheck, CircleCheck, CreditCard, Flag, History, LifeBuoy, MessageSquareReply, RotateCw, Search, ShieldAlert, Store, TriangleAlert, UserRound } from 'lucide-react'
+import { ArrowLeft, Ban, CalendarCheck, CircleCheck, CreditCard, Flag, History, Landmark, LifeBuoy, MessageSquareReply, RotateCw, Search, ShieldAlert, Store, TriangleAlert, UserRound } from 'lucide-react'
 import SectionHead from '../components/SectionHead'
 import { usePaged } from './usePaged'
 import {
-    BOOKING_STATUS, TICKET_PRIORITY, TICKET_STATE, adminAskOther, adminRefund, adminReply, adminSetVisit, adminSuspend, adminUnsuspend,
-    adminUpdateTicket, adminWarn, ago, loadAdminTicket, loadAdminTickets, shortDate,
+    BOOKING_STATUS, TICKET_PRIORITY, TICKET_STATE, adminAskOther, adminPayoutDecide, adminRefund, adminReply, adminSetVisit, adminSuspend, adminUnsuspend,
+    adminUpdateTicket, adminWarn, ago, loadAdminTicket, loadAdminTickets, loadPayoutReview, shortDate,
 } from '../../../services/admin'
 import { CATEGORY_LABEL } from '../../../constants/support'
 import { businessBlockFlag } from '../../../services/clientBlocks'
@@ -13,7 +13,7 @@ import '../../../styles/admin/support.css'
 const VIEWS = [['open', 'Open'], ['waiting', 'Waiting on them'], ['resolved', 'Resolved'], ['all', 'All']]
 const ACTION_LABEL = {
     refund: 'Refund', no_show: 'Marked no-show', attended: 'Marked attended', warn: 'Warning', suspend: 'Paused business',
-    unsuspend: 'Resumed business', ask_other: 'Asked the other side', status: 'Status', priority: 'Priority', outcome: 'Outcome',
+    unsuspend: 'Resumed business', ask_other: 'Asked the other side', status: 'Status', priority: 'Priority', outcome: 'Outcome', payout_name: 'Payout account',
 }
 const REFUND_REASON = {
     client_cancelled: 'Cancelled in time', client_late_cancel: 'Late cancel', business_cancelled: 'Business cancelled',
@@ -101,11 +101,13 @@ const Ticket = ({ id, onBack, onChanged }) => {
     const [sendError, setSendError] = useState('')
     const [action, setAction] = useState('')
     const [blocks, setBlocks] = useState(null)
+    const [payout, setPayout] = useState(null)
 
     const load = useCallback(async () => {
         setError('')
         try {
             setData(await loadAdminTicket(id))
+            setPayout(await loadPayoutReview(id).catch(() => null))
         } catch (err) {
             console.error('Ticket failed:', err)
             setError('Could not load this ticket. Run support-desk.sql if it has not been run.')
@@ -125,6 +127,7 @@ const Ticket = ({ id, onBack, onChanged }) => {
 
     const done = (next) => {
         setData(next)
+        if (payout?.status === 'pending') loadPayoutReview(id).then(setPayout).catch(() => {})
         setAction('')
         onChanged()
     }
@@ -201,6 +204,19 @@ const Ticket = ({ id, onBack, onChanged }) => {
             submit: 'Resume business',
             fields: [{ name: 'detail', label: 'Why (staff only)', optional: true }],
             run: (v) => adminUnsuspend({ id, detail: v.detail }),
+        },
+        payout_ok: {
+            title: `Approve ${payout?.account_name} (${payout?.bank_name || 'bank'}, ending ${payout?.account_last4}) for ${biz?.name}'s payouts. Only this account; the owner is told to save it again.`,
+            submit: 'Approve account',
+            fields: [{ name: 'detail', label: 'Added to the reply', optional: true, placeholder: 'We matched it to your CAC certificate.' }],
+            run: (v) => adminPayoutDecide({ id, approve: true, detail: v.detail }),
+        },
+        payout_no: {
+            title: `Decline ${payout?.account_name}. The owner is told payouts go to an account in their name or the business's name.`,
+            submit: 'Decline account',
+            danger: true,
+            fields: [{ name: 'detail', label: 'Added to the reply', optional: true }],
+            run: (v) => adminPayoutDecide({ id, approve: false, detail: v.detail }),
         },
         ask: {
             title: `Ask the ${t.side === 'client' ? 'business' : 'client'} for their side, in a linked ticket.`,
@@ -304,6 +320,8 @@ const Ticket = ({ id, onBack, onChanged }) => {
                                 <ActionForm key={action} {...open} onRun={async (v) => done(await open.run(v))} onCancel={() => setAction('')} />
                             ) : (
                                 <>
+                                    {payout?.status === 'pending' && <button type="button" className="btn btn--primary btn--sm" onClick={() => setAction('payout_ok')}><Landmark size={13} aria-hidden="true" /><span>Approve payout account</span></button>}
+                                    {payout?.status === 'pending' && <button type="button" className="btn btn--secondary btn--sm" onClick={() => setAction('payout_no')}><Ban size={13} aria-hidden="true" /><span>Decline payout account</span></button>}
                                     {pay && left > 0 && !supportRefunded && <button type="button" className="btn btn--secondary btn--sm" onClick={() => setAction('refund')}><CreditCard size={13} aria-hidden="true" /><span>Refund</span></button>}
                                     {b?.started && ['confirmed', 'completed'].includes(b.status) && <button type="button" className="btn btn--secondary btn--sm" onClick={() => setAction('no_show')}><Ban size={13} aria-hidden="true" /><span>Mark no-show</span></button>}
                                     {b?.started && b.status === 'no_show' && <button type="button" className="btn btn--secondary btn--sm" onClick={() => setAction('attended')}><CircleCheck size={13} aria-hidden="true" /><span>Mark attended</span></button>}
@@ -316,6 +334,25 @@ const Ticket = ({ id, onBack, onChanged }) => {
                             )}
                         </div>
                     </section>
+
+                    {payout && (
+                        <section className="panel">
+                            <div className="panel__head">
+                                <h3 className="panel__title"><Landmark size={12} className="panel__title-icon" aria-hidden="true" />Payout account</h3>
+                                <Pill pair={{ pending: ['Waiting', 'warning'], approved: ['Approved', 'success'], declined: ['Declined', 'danger'] }[payout.status]} />
+                            </div>
+                            <div className="panel__body">
+                                <dl className="adm-facts">
+                                    <div><dt>Bank says</dt><dd>{payout.account_name}</dd></div>
+                                    <div><dt>Account</dt><dd>{payout.bank_name || 'Bank'}, ending {payout.account_last4}</dd></div>
+                                    <div><dt>Owner on Locappoint</dt><dd>{payout.owner_name || 'No name given'}</dd></div>
+                                    <div><dt>Business</dt><dd>{payout.business_name}</dd></div>
+                                    {payout.decided_at && <div><dt>Decided</dt><dd>{payout.decided_by || 'Support'}, {ago(payout.decided_at)}</dd></div>}
+                                </dl>
+                                {payout.status === 'pending' && <p className="adm-quiet">Check the name against their CAC certificate or business registration before approving. Approval covers this one account only.</p>}
+                            </div>
+                        </section>
+                    )}
 
                     {b && (
                         <section className="panel">

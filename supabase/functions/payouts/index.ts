@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
 
         if (action === 'banks') return reply(200, { banks: await loadBanks() })
 
-        if (action === 'resolve' || action === 'connect') {
+        if (action === 'resolve' || action === 'connect' || action === 'review') {
             const account = nigerianAccount(input.account_number)
             const code = bankCode(input.bank_code)
             if (!account || !code) return reply(400, { error: 'Enter your 10-digit account number and pick your bank' })
@@ -245,8 +245,23 @@ Deno.serve(async (req) => {
             // Only an account in the owner's or the business's name: no paying into someone else's account.
             const { data: owner } = await db.from('users').select('full_name').eq('id', user.id).maybeSingle()
             const ownerName = String(owner?.full_name || '').trim()
-            const matches = nameMatches(accountName, ownerName, business.business_name)
+            // Or this exact account was checked and approved by Support (payout-review.sql).
+            const approved = async () => {
+                const { data, error } = await db.rpc('payout_review_ok', { p_business: business.id, p_account_name: accountName, p_bank_code: code, p_last4: account.slice(-4) })
+                if (error) console.error('payout_review_ok failed', error.message)
+                return data === true
+            }
+            const matches = nameMatches(accountName, ownerName, business.business_name) || await approved()
             if (action === 'resolve') return reply(200, { account_name: accountName, matches, owner_name: ownerName || null, business_name: business.business_name })
+            if (action === 'review') {
+                if (matches) return reply(200, { matches: true })
+                const bankName = (await loadBanks()).find((b) => b.code === code)?.name || null
+                const { data, error } = await db.rpc('payout_review_open', {
+                    p_business: business.id, p_user: user.id, p_account_name: accountName, p_bank_code: code, p_bank_name: bankName, p_last4: account.slice(-4),
+                })
+                if (error) return reply(error.code === '54000' ? 429 : 400, { error: error.message })
+                return reply(200, { number: data?.number, again: Boolean(data?.again) })
+            }
             if (!matches) {
                 return reply(409, { error: `This account is in the name of ${accountName}. We only pay into an account in your name${ownerName ? ` (${ownerName})` : ''} or your business's name (${business.business_name}).` })
             }

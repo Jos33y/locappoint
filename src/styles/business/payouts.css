@@ -700,6 +700,28 @@
     flex: none;
 }
 
+/* Sent to Support for a check: the request number and what happens next. */
+.biz-pay__review {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-info-tint);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-pay__review > svg {
+    flex: none;
+    color: var(--lc-info);
+}
+
+.biz-pay__review a {
+    color: var(--lc-info);
+}
+
 .biz-pay__name span {
     display: flex;
     flex-direction: column;

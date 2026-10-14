@@ -55,6 +55,9 @@ export const adminWarn = ({ id, target, message }) => call('admin_warn', { p_tic
 export const adminSuspend = ({ id, reason }) => call('admin_suspend', { p_ticket: id, p_reason: reason })
 export const adminUnsuspend = ({ id, detail = '' }) => call('admin_unsuspend', { p_ticket: id, p_detail: detail || null })
 export const adminAskOther = ({ id, message }) => call('admin_ask_other', { p_ticket: id, p_message: message })
+// A payout account under another name, sent by the owner for a check (payout-review.sql).
+export const loadPayoutReview = (id) => call('admin_payout_review', { p_ticket: id })
+export const adminPayoutDecide = ({ id, approve, detail = '' }) => call('admin_payout_decide', { p_ticket: id, p_approve: approve, p_detail: detail || null })
 
 export const TICKET_PRIORITY = { 1: ['Money or safety', 'danger'], 2: ['Visit or bill', 'warning'], 3: ['General', 'muted'] }
 export const TICKET_STATE = { open: ['Open', 'info'], waiting: ['Waiting on them', 'warning'], resolved: ['Resolved', 'muted'] }
