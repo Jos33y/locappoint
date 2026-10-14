@@ -67,6 +67,28 @@
     --lc-font-display: var(--font-display);
     --lc-font-body: var(--font-body);
     --lc-font-mono: var(--font-mono);
+
+    --lc-lagos-indigo: #24307A;
+    --lc-lagos-lagoon: #14857F;
+    --lc-lagos-ember: #F06A3C;
+    --lc-lagos-sand: #F3D9A8;
+    --lc-porto-cobalt: #1D4FB8;
+    --lc-porto-porcelain: #F3EFE6;
+    --lc-porto-vinho: #7C1F3C;
+    --lc-porto-granito: #6E6A64;
+    --lc-lisbon-eletrico: #F2B705;
+    --lc-lisbon-telha: #C8553D;
+    --lc-lisbon-fachada: #F2C4BC;
+    --lc-lisbon-tejo: #3E7CB1;
+
+    --lc-paper: #F5F1E8;
+    --lc-paper-ink: #0B1530;
+    --lc-paper-ink-2: #4A5470;
+    --lc-paper-line: rgba(11, 21, 48, 0.16);
+    --lc-stamp: #9A5210;
+
+    --lc-glow-dawn: rgba(232, 154, 62, 0.16);
+    --lc-glow-sky: rgba(45, 127, 240, 0.2);
 }
 
 .lc-skel {

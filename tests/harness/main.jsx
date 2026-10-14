@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import { useMemo, useState } from 'react'
+import { Suspense, lazy, useMemo, useState } from 'react'
 import { MemoryRouter, Routes, Route, useLocation, useParams } from 'react-router-dom'
 import '@fontsource/inter/latin-400.css'
 import '@fontsource/inter/latin-500.css'
@@ -196,4 +196,6 @@ const App = () => (
   </Auth>
 )
 
-createRoot(document.getElementById('root')).render(<App />)
+// ?status=1 shows the status page alone; lazy, so its stylesheet never reaches the other screens.
+const StatusApp = lazy(() => import('@src/StatusApp'))
+createRoot(document.getElementById('root')).render(params.get('status') === '1' ? <Suspense fallback={null}><StatusApp /></Suspense> : <App />)
