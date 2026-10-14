@@ -1,6 +1,6 @@
 // Insights: the headline number, the period switch, charts with hover and keyboard, the empty state, and fit.
 
-export default async ({ browser, url, check }) => {
+export default async ({ browser, url, check, root }) => {
     const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms))
     const open = async (vw = 1272, vh = 588, extra = '') => {
         const page = await browser.newPage()
@@ -85,4 +85,14 @@ export default async ({ browser, url, check }) => {
         check(!r.gaps, `headline tiles leave no empty box at ${w}px`)
         await p.close()
     }
+
+    // Launch fix 1.9: a booking the client made counts on every channel; the page funnel stays web only.
+    const fs = await import('node:fs')
+    const path = await import('node:path')
+    const sql = fs.readFileSync(path.join(root, 'supabase', 'migrations', 'real-bookings.sql'), 'utf8')
+    check(/p_source NOT IN \('manual', 'assistant'\)/.test(sql), 'a real booking is any source except manual and assistant')
+    for (const fn of ['real_booking_count', 'statement_week', 'business_insights', 'queue_visit_followups']) {
+        check(new RegExp(`'public\\.${fn}\\(`).test(sql), `${fn} reads the one rule`)
+    }
+    check(!/'public\.insights_period\(/.test(sql), 'the page funnel is left on web bookings')
 }
