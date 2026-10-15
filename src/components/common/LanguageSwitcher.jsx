@@ -28,10 +28,13 @@ const FlagPT = () => (
     </svg>
 )
 
-const languages = [
-    { code: 'en', name: 'English', Flag: FlagGB },
-    { code: 'pt', name: 'Português', Flag: FlagPT },
+// live: offered in the list. Portuguese joins when its translation ships (doc 32), together
+// with supportedLngs in i18n.js.
+const ALL_LANGUAGES = [
+    { code: 'en', name: 'English', Flag: FlagGB, live: true },
+    { code: 'pt', name: 'Português', Flag: FlagPT, live: false },
 ]
+const languages = ALL_LANGUAGES.filter((lang) => lang.live)
 
 
 const LanguageSwitcher = () => {

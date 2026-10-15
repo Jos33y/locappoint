@@ -344,6 +344,10 @@ i18n
     .use(initReactI18next)
     .init({
         resources,
+        // Only English is live. The Portuguese strings above wait for the translation work
+        // (doc 32); until then a Portuguese phone or an old saved choice still gets English.
+        // Turn Portuguese on here and in LanguageSwitcher.jsx together.
+        supportedLngs: ['en'],
         fallbackLng: 'en',
         interpolation: {
             escapeValue: false

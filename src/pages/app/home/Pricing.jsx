@@ -8,7 +8,7 @@ import './Pricing.css'
 const Pricing = () => {
     const [city] = useCity()
     return (
-        <section className="lc-home-section" aria-labelledby="lc-home-price">
+        <section className="lc-home-section" id="pricing" aria-labelledby="lc-home-price">
             <div className="lc-home__wrap">
                 <Head id="lc-home-price" title="Free until your clients pay online" lede="No subscription and no card. When online payments arrive, a small fee applies only to bookings clients pay for on Locappoint." />
                 <div className="lc-home-price">

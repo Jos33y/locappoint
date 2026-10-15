@@ -43,6 +43,7 @@ const AppFooter = () => {
                     <div className="loca-app-footer__col">
                         <h3 className="loca-app-footer__col-title">Contact</h3>
                         <ul className="loca-app-footer__list">
+                            <li><Link to="/contact">Contact us</Link></li>
                             <li><a href="mailto:hello@locappoint.com">hello@locappoint.com</a></li>
                             <li><a href="tel:+351934695914">+351 934 695 914</a></li>
                         </ul>

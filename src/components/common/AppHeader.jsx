@@ -11,6 +11,8 @@ import '../../styles/app/header.css'
 
 // Dev preserves app mode through wordmark clicks. Prod relies on hostname.
 const HOME_PATH = import.meta.env.DEV ? '/?app' : '/'
+// Pricing is the receipt on the home page; AppHome scrolls to it from any page.
+const PRICING_PATH = `${HOME_PATH}#pricing`
 
 
 const AppHeader = () => {
@@ -42,7 +44,7 @@ const AppHeader = () => {
     }
 
     return (
-        <header className="loca-app-header" role="banner">
+        <header className={`loca-app-header${user ? ' is-signed-in' : ''}`} role="banner">
             <div className="container">
                 <div className="loca-app-header__inner">
 
@@ -55,35 +57,54 @@ const AppHeader = () => {
                         <span className="loca-app-header__beta" aria-label="Beta">Beta</span>
                     </Link>
 
-                    <nav className={`loca-app-header__nav ${open ? 'is-open' : ''}`} aria-label="Primary">
-                        <Link to="/businesses" className="loca-app-header__navlink" onClick={closeMenu}>
-                            {t('nav.browse', 'Browse')}
-                        </Link>
-                        <Link to="/contact" className="loca-app-header__navlink" onClick={closeMenu}>
-                            {t('nav.contact', 'Contact')}
-                        </Link>
-                        <Link to="/partnership" className="loca-app-header__navlink" onClick={closeMenu}>
-                            {t('nav.partner', 'Partner')}
-                        </Link>
-                    </nav>
+                    {/* Wide screens: the nav sits in the bar. Under 900px it is the menu, with sign-in and
+                        language at the bottom, so the bar keeps only the mark, the city and one button. */}
+                    <div className={`loca-app-header__drawer ${open ? 'is-open' : ''}`}>
+                        <nav className="loca-app-header__nav" aria-label="Primary">
+                            <Link to="/businesses" className="loca-app-header__navlink" onClick={closeMenu}>
+                                {t('nav.browse', 'Browse')}
+                            </Link>
+                            <Link to={PRICING_PATH} className="loca-app-header__navlink" onClick={closeMenu}>
+                                {t('nav.pricing', 'Pricing')}
+                            </Link>
+                            <Link to="/app" className="loca-app-header__navlink" onClick={closeMenu}>
+                                {t('nav.app', 'Get the app')}
+                            </Link>
+                        </nav>
+                        <div className="loca-app-header__menu-extra">
+                            <LanguageSwitcher />
+                            {!user && (
+                                <div className="loca-app-header__menu-actions">
+                                    <button onClick={handleSignIn} className="loca-app-header__btn loca-app-header__btn--ghost">
+                                        {t('nav.signIn', 'Sign in')}
+                                    </button>
+                                    <button onClick={handleGetStarted} className="loca-app-header__btn loca-app-header__btn--primary">
+                                        {t('nav.signUp', 'Get started')}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     <div className="loca-app-header__actions">
                         <CitySwitcher className="loca-app-header__city" />
-                        <LanguageSwitcher />
+                        <div className="loca-app-header__bar-only">
+                            <LanguageSwitcher />
+                        </div>
 
                         {user ? (
-                            <button onClick={handleDashboard} className="loca-app-header__btn loca-app-header__btn--primary">
+                            <button onClick={handleDashboard} className="loca-app-header__btn loca-app-header__btn--primary loca-app-header__dash">
                                 {t('nav.dashboard', 'Dashboard')}
                             </button>
                         ) : (
-                            <>
+                            <div className="loca-app-header__bar-only">
                                 <button onClick={handleSignIn} className="loca-app-header__btn loca-app-header__btn--ghost">
                                     {t('nav.signIn', 'Sign in')}
                                 </button>
                                 <button onClick={handleGetStarted} className="loca-app-header__btn loca-app-header__btn--primary">
                                     {t('nav.signUp', 'Get started')}
                                 </button>
-                            </>
+                            </div>
                         )}
 
                         <button

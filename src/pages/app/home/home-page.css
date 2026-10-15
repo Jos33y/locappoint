@@ -41,6 +41,8 @@ body:has(.lc-home) {
 
 .lc-home-section {
     padding: clamp(4rem, 9vw, 7rem) 0 0;
+    /* A jump from the header (Pricing) leaves the title clear of the sticky bar. */
+    scroll-margin-top: var(--space-4);
 }
 
 .lc-home-head {

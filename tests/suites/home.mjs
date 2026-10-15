@@ -11,11 +11,17 @@ const SETUP = 'https://wa.me/2348068007905'
 export default async ({ browser, url, check, root }) => {
     const read = (rel) => fs.readFileSync(path.join(root, ...rel.split('/')), 'utf8')
     const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms))
-    const open = async (city, vw = 1272, vh = 800, reduced = false) => {
+    const open = async (city, vw = 1272, vh = 800, reduced = false, langs = null) => {
         const page = await browser.newPage()
         page.errors = []
         page.on('pageerror', (e) => page.errors.push(e.message))
         await page.evaluateOnNewDocument((c) => { try { localStorage.setItem('lc.city', c) } catch { /* private mode */ } }, city)
+        if (langs) {
+            await page.evaluateOnNewDocument((l) => {
+                Object.defineProperty(navigator, 'languages', { get: () => l })
+                Object.defineProperty(navigator, 'language', { get: () => l[0] })
+            }, langs)
+        }
         if (reduced) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
         await page.setViewport({ width: vw, height: vh, isMobile: vw < 1024, hasTouch: vw < 1272 })
         await page.goto(`${url}/`, { waitUntil: 'networkidle0' })
@@ -93,6 +99,38 @@ export default async ({ browser, url, check, root }) => {
     check(calm.folded && calm.still, 'with reduced motion the ticket fades in without moving')
     await p.close()
 
+    // The header for launch: three links, Pricing lands on the receipt.
+    p = await open('porto', 390, 844)
+    const nav = await p.evaluate(() => [...document.querySelectorAll('.loca-app-header__navlink')].map((a) => [a.textContent.trim(), a.getAttribute('href')]))
+    check(nav.map((n) => n[0]).join() === 'Browse,Pricing,Get the app' && /#pricing$/.test(nav[1][1]) && nav[2][1] === '/app', `the header links are Browse, Pricing and Get the app: ${JSON.stringify(nav)}`)
+    // On a phone the bar keeps the mark, the city and the menu; sign-in and language are in the menu.
+    const seen = (sel) => p.evaluate((q) => [...document.querySelectorAll(q)].filter((e) => e.getBoundingClientRect().height > 0).map((e) => e.textContent.trim()), sel)
+    const bar = await seen('.loca-app-header__actions button')
+    check(!bar.includes('Get started') && !bar.includes('Sign in'), `the phone bar has no sign-up buttons: ${bar.join(', ')}`)
+    await p.click('.loca-app-header__menu-btn')
+    await wait(300)
+    const menu = await seen('.loca-app-header__drawer a, .loca-app-header__drawer button')
+    const sizes = await p.evaluate(() => [...document.querySelectorAll('.loca-app-header__drawer a, .loca-app-header__drawer button')].filter((e) => e.getBoundingClientRect().height > 0).map((e) => Math.round(e.getBoundingClientRect().height)))
+    check(['Browse', 'Pricing', 'Get the app', 'Sign in', 'Get started'].every((x) => menu.includes(x)) && sizes.every((h) => h >= 44), `the menu holds the links, language and sign-in, all easy to tap: ${menu.join(', ')} / ${sizes.join(', ')}`)
+    await p.evaluate(() => [...document.querySelectorAll('.loca-app-header__navlink')].find((a) => a.textContent.trim() === 'Pricing').click())
+    await wait(2500)
+    const landed = await p.evaluate(() => {
+        const title = document.querySelector('#lc-home-price').getBoundingClientRect()
+        const bar = document.querySelector('.loca-app-header').getBoundingClientRect()
+        return { below: title.top >= bar.bottom, near: title.top < bar.bottom + 120 }
+    })
+    check(landed.below && landed.near, `Pricing lands on the receipt, clear of the header: ${JSON.stringify(landed)}`)
+    await p.close()
+
+    // Only English is live: a Portuguese phone gets the English header, and Portuguese is not offered.
+    p = await open('lisbon', 1272, 800, false, ['pt-PT', 'pt'])
+    const pt = await p.evaluate(() => ({ links: [...document.querySelectorAll('.loca-app-header__navlink')].map((a) => a.textContent.trim()).join(), code: document.querySelector('.loca-app-header__bar-only .language-code')?.textContent }))
+    await p.click('.loca-app-header__bar-only .language-btn')
+    await wait(200)
+    const offered = await p.evaluate(() => [...document.querySelectorAll('.language-option')].map((o) => o.textContent.trim()))
+    check(pt.links === 'Browse,Pricing,Get the app' && pt.code === 'EN' && offered.join() === 'English', `a Portuguese phone still gets English, and only English is offered: ${JSON.stringify({ ...pt, offered })}`)
+    await p.close()
+
     p = await open('lagos')
     const lagos = await p.evaluate(() => document.querySelector('.lc-home main')?.innerText || '')
     check(/₦0/.test(lagos) && /₦25,000/.test(lagos) && !/€/.test(lagos), 'Lagos prices are in naira, with no euro left over')
@@ -133,4 +171,5 @@ export default async ({ browser, url, check, root }) => {
     check(fonts.length === 4 && !/\.otf/.test(tokens) && fonts.every((f) => fs.existsSync(path.join(root, 'src', 'assets', 'fonts', f))), 'Switzer loads as woff2 from the build, all four weights')
     check(/manifest:\s*true/.test(read('vite.config.js')), 'the build writes the manifest the server reads')
     check(!fs.existsSync(path.join(root, 'src', 'pages', 'app', 'home', 'BuiltFor.jsx')), 'the old category grid is gone')
+    check(/supportedLngs:\s*\['en'\]/.test(read('src/i18n.js')) && /code: 'pt'[^}]*live: false/.test(read('src/components/common/LanguageSwitcher.jsx')), 'Portuguese stays off in both places until its translation ships')
 }
