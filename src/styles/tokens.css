@@ -2,7 +2,7 @@
 
 @font-face {
     font-family: 'Switzer';
-    src: url('/fonts/Switzer-Regular.otf') format('opentype');
+    src: url('../assets/fonts/Switzer-Regular.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -10,7 +10,7 @@
 
 @font-face {
     font-family: 'Switzer';
-    src: url('/fonts/Switzer-Medium.otf') format('opentype');
+    src: url('../assets/fonts/Switzer-Medium.woff2') format('woff2');
     font-weight: 500;
     font-style: normal;
     font-display: swap;
@@ -18,7 +18,7 @@
 
 @font-face {
     font-family: 'Switzer';
-    src: url('/fonts/Switzer-Semibold.otf') format('opentype');
+    src: url('../assets/fonts/Switzer-Semibold.woff2') format('woff2');
     font-weight: 600;
     font-style: normal;
     font-display: swap;
@@ -26,7 +26,7 @@
 
 @font-face {
     font-family: 'Switzer';
-    src: url('/fonts/Switzer-Bold.otf') format('opentype');
+    src: url('../assets/fonts/Switzer-Bold.woff2') format('woff2');
     font-weight: 700;
     font-style: normal;
     font-display: swap;

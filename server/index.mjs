@@ -9,6 +9,7 @@ import path from 'node:path'
 import zlib from 'node:zlib'
 import { fileURLToPath } from 'node:url'
 import { businessMeta, injectHead, notFoundMeta, pageMeta, robotsTxt, sitemapXml, slugOf } from './seo.mjs'
+import { loadManifest, preloadTags, withPreload } from './preload.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const DIST = path.resolve(process.env.DIST_DIR || path.join(here, '..', 'dist'))
@@ -28,6 +29,10 @@ const TYPES = {
 const COMPRESS = /^(text\/|application\/(json|javascript|manifest\+json|xml)|image\/svg)/
 
 const template = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8')
+
+// Read once at start: which files each landing screen needs, and the Supabase host to warm up early.
+const manifest = loadManifest(DIST)
+const PRELOAD = Object.fromEntries(['home', 'businesses', 'business'].map((kind) => [kind, preloadTags(manifest, kind, SUPABASE_URL)]))
 
 // ---------- Business data, cached so a busy page costs Supabase one call every few minutes ----------
 
@@ -105,16 +110,17 @@ const staticFile = (rel) => {
 
 const page = async (pathname) => {
     const meta = pageMeta(pathname)
-    if (meta) return { status: 200, meta, cache: 'no-cache' }
+    const clean = pathname.length > 1 ? pathname.replace(/\/+$/, '') : '/'
+    if (meta) return { status: 200, meta, cache: 'no-cache', kind: clean === '/' ? 'home' : clean === '/businesses' ? 'businesses' : null }
     const slug = slugOf(pathname)
     if (!slug) return { status: 200, meta: { ...pageMeta('/'), url: `https://${APEX}${pathname}`, noindex: true }, cache: 'no-cache' }
     try {
         const found = await loadBusiness(slug)
         if (found.missing) return { status: 404, meta: notFoundMeta(pathname), cache: 'no-cache' }
-        return { status: 200, meta: businessMeta(found.business, found), cache: 'no-cache' }
+        return { status: 200, meta: businessMeta(found.business, found), cache: 'no-cache', kind: 'business' }
     } catch (err) {
         console.error('Business lookup failed:', slug, err.message)
-        return { status: 200, meta: { ...pageMeta('/'), url: `https://${APEX}/${slug}` }, cache: 'no-store' }
+        return { status: 200, meta: { ...pageMeta('/'), url: `https://${APEX}/${slug}` }, cache: 'no-store', kind: 'business' }
     }
 }
 
@@ -139,6 +145,8 @@ const handle = async (req, res) => {
         return send(req, res, 200, 'application/xml; charset=utf-8', sitemapXml(all), { 'Cache-Control': 'public, max-age=3600' })
     }
 
+    // The build manifest is for the server only.
+    if (pathname.startsWith('/.vite/')) return send(req, res, 404, 'text/plain; charset=utf-8', 'Not found', { 'Cache-Control': 'no-store' })
     const file = pathname !== '/' && !pathname.endsWith('/') && staticFile(pathname.replace(/^\/+/, ''))
     if (file) {
         const immutable = pathname.startsWith('/assets/')
@@ -152,8 +160,8 @@ const handle = async (req, res) => {
         return send(req, res, 200, 'text/html; charset=utf-8', template, { 'Cache-Control': 'no-cache', 'X-Robots-Tag': 'noindex' })
     }
 
-    const { status, meta, cache: cacheControl } = await page(pathname)
-    return send(req, res, status, 'text/html; charset=utf-8', injectHead(template, meta), {
+    const { status, meta, cache: cacheControl, kind } = await page(pathname)
+    return send(req, res, status, 'text/html; charset=utf-8', withPreload(injectHead(template, meta), PRELOAD[kind]), {
         'Cache-Control': cacheControl,
         ...(meta.noindex ? { 'X-Robots-Tag': 'noindex' } : {}),
     })

@@ -1,286 +1,202 @@
-/* HowItWorks - 3 step cards with inline UI mockups */
-
-.hiw__head {
-    margin-bottom: 56px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    max-width: 720px;
-}
-
-.hiw__grid {
+.lc-home-steps {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+    padding: 0;
+    list-style: none;
 }
 
-.hiw__card {
-    background: var(--surface-2);
-    border: 1px solid var(--border-subtle);
-    border-radius: 16px;
-    padding: 26px 24px 22px;
+@media (min-width: 1024px) {
+    .lc-home-steps {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-8);
+    }
+}
+
+/* One surface: the drawing sits on a single flat panel, the words on the canvas below it. */
+.lc-home-steps__art {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    transition: border-color 200ms ease, transform 200ms ease;
+    align-items: center;
+    justify-content: center;
+    min-height: 236px;
+    padding: var(--space-6) var(--space-5);
 }
 
-.hiw__card:hover {
-    border-color: var(--border-medium);
-    transform: translateY(-2px);
+@media (max-width: 1023px) {
+    .lc-home-steps__art {
+        min-height: 0;
+        padding: var(--space-5) var(--space-4);
+    }
+    border: 1px solid var(--lc-line);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-panel);
 }
 
-.hiw__num {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    color: var(--azure);
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-subtle);
-    width: fit-content;
-    padding-right: 14px;
-}
-
-.hiw__title {
-    font-family: var(--font-display);
-    font-size: 19px;
+.lc-home-steps__title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: 1.25rem;
     font-weight: 600;
-    letter-spacing: -0.015em;
-    color: var(--text-primary);
-    margin: 0;
-    line-height: 1.25;
+    line-height: var(--lc-lh-snug);
+    letter-spacing: var(--lc-track-title);
 }
 
-.hiw__body {
-    font-size: 14px;
-    line-height: 1.55;
-    color: var(--text-secondary);
-    margin: 0;
-}
-
-
-/* Mockup zone */
-
-.hiw__mock {
-    margin-top: 14px;
-    background: var(--surface-3);
-    border: 1px solid var(--border-subtle);
-    border-radius: 10px;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.hiw__mock-head {
-    font-family: var(--font-mono);
-    font-size: 9px;
+.lc-home-steps__title span {
+    flex: none;
+    color: var(--lc-info);
+    font-family: var(--lc-font-mono);
+    font-size: 1.25rem;
     font-weight: 500;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
 }
 
-
-/* Step 1 - working hours mockup */
-
-.hiw__hours {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.lc-home-steps__text {
+    margin-top: var(--space-2);
+    color: var(--lc-ink-2);
+    line-height: var(--lc-lh-body);
 }
 
-.hiw__hour-row {
-    display: grid;
-    grid-template-columns: 40px 1fr 28px;
-    gap: 10px;
-    align-items: center;
-    padding: 6px 8px;
-    background: var(--surface-2);
-    border-radius: 6px;
-    font-size: 11px;
-    opacity: 0.55;
-}
-
-.hiw__hour-row--on {
-    opacity: 1;
-    background: rgba(45, 127, 240, 0.08);
-}
-
-.hiw__hour-day {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-primary);
-}
-
-.hiw__hour-range {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-secondary);
-}
-
-.hiw__hour-toggle {
-    width: 22px;
-    height: 12px;
-    background: var(--surface-4);
-    border-radius: 999px;
+/* Step 1: the door sign. */
+.lc-home-sign {
     position: relative;
+    width: 100%;
+    max-width: 240px;
+    padding: var(--space-6) var(--space-5) var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-paper);
+    color: var(--lc-paper-ink);
+    transform: rotate(-2deg);
 }
 
-.hiw__hour-toggle::before {
-    content: "";
+.lc-home-sign__hook {
     position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 8px;
-    height: 8px;
-    background: var(--text-muted);
+    top: 8px;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--lc-paper-ink-2);
     border-radius: 50%;
-    transition: left 200ms ease;
+    transform: translateX(-50%);
 }
 
-.hiw__hour-toggle--on {
-    background: var(--azure);
+.lc-home-sign__open {
+    display: block;
+    margin-top: var(--space-2);
+    color: var(--lc-stamp);
+    font-family: var(--lc-font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
 }
 
-.hiw__hour-toggle--on::before {
-    left: 12px;
-    background: #fff;
+.lc-home-sign__hours {
+    margin-top: var(--space-3);
+    border-top: 2px dashed var(--lc-paper-line);
 }
 
-
-/* Step 2 - share link mockup */
-
-.hiw__link {
+.lc-home-sign__hours div {
     display: flex;
-    align-items: center;
-    gap: 0;
-    background: var(--surface-2);
-    border: 1px solid var(--border-medium);
-    border-radius: 8px;
-    padding: 8px 10px 8px 12px;
-    font-family: var(--font-mono);
-    font-size: 12px;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-top: var(--space-2);
+    font-size: var(--lc-t-label);
 }
 
-.hiw__link-base {
-    color: var(--text-muted);
+.lc-home-sign__hours dt {
+    color: var(--lc-paper-ink-2);
 }
 
-.hiw__link-slug {
-    color: var(--azure);
+.lc-home-sign__hours dd {
+    font-family: var(--lc-font-mono);
     font-weight: 500;
-    flex: 1;
+    font-variant-numeric: tabular-nums;
 }
 
-.hiw__link-copy {
-    background: var(--surface-3);
-    border: 1px solid var(--border-subtle);
-    border-radius: 5px;
-    padding: 4px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 180ms ease, color 180ms ease;
+/* Step 2: the link, sent in a chat. */
+.lc-home-share {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    max-width: 280px;
 }
 
-.hiw__link-copy:hover {
-    background: var(--surface-4);
-    color: var(--text-primary);
-}
-
-.hiw__link-meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-}
-
-.hiw__link-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--success);
-    border-radius: 50%;
-    box-shadow: 0 0 0 3px rgba(43, 140, 90, 0.16);
-}
-
-
-/* Step 3 - notification feed mockup */
-
-.hiw__notif {
-    display: grid;
-    grid-template-columns: 22px 1fr auto;
-    gap: 10px;
-    align-items: center;
-    padding: 8px 10px;
-    background: var(--surface-2);
-    border-radius: 6px;
-}
-
-.hiw__notif-ico {
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    background: var(--surface-4);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-}
-
-.hiw__notif-ico--new {
-    background: rgba(43, 140, 90, 0.18);
-    color: var(--success);
-}
-
-.hiw__notif-text {
+.lc-home-share__bubble {
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    min-width: 0;
+    gap: 2px;
+    width: 100%;
+    padding: var(--space-2);
+    border-radius: var(--lc-r-md);
+    border-bottom-right-radius: 4px;
+    background: var(--lc-info-tint);
 }
 
-.hiw__notif-title {
+.lc-home-share__card {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    column-gap: var(--space-3);
+    align-items: center;
+    margin-bottom: var(--space-2);
+    padding: var(--space-2);
+    border-radius: var(--lc-r-sm);
+    background: var(--lc-card);
+}
+
+.lc-home-share__tile {
+    grid-row: 1 / span 2;
+    width: 40px;
+    height: 40px;
+    max-width: none;
+    border-radius: 6px;
+}
+
+.lc-home-share__name {
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: 600;
+}
+
+.lc-home-share__meta {
+    color: var(--lc-ink-3);
     font-size: 12px;
-    font-weight: 500;
-    color: var(--text-primary);
-    line-height: 1.2;
 }
 
-.hiw__notif-sub {
-    font-size: 11px;
-    color: var(--text-muted);
-    line-height: 1.2;
+.lc-home-share__text {
+    padding: 0 var(--space-1);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
 }
 
-.hiw__notif-time {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-muted);
-    letter-spacing: 0.04em;
+.lc-home-share__url {
+    padding: 0 var(--space-1);
+    color: var(--lc-info);
+    font-family: var(--lc-font-mono);
+    font-size: 12px;
+    overflow-wrap: anywhere;
 }
 
-
-@media (max-width: 980px) {
-    .hiw__grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
+.lc-home-share__time {
+    align-self: flex-end;
+    padding: 0 var(--space-1);
+    color: var(--lc-ink-3);
+    font-family: var(--lc-font-mono);
+    font-size: 12px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .hiw__card:hover {
-        transform: none;
-    }
+/* Step 3: what lands on the owner's phone. */
+.lc-home-arrivals {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    width: 100%;
+    max-width: 280px;
+}
+
+.lc-home-arrivals .is-quiet {
+    opacity: 0.7;
+    transform: scale(0.96);
 }

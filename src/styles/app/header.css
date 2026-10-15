@@ -148,14 +148,14 @@
 }
 
 .loca-app-header__btn--primary {
-    background: var(--azure);
-    color: #fff;
-    border-color: var(--azure);
+    background: var(--lc-azure-button);
+    color: var(--lc-on-accent);
+    border-color: var(--lc-azure-button);
 }
 
 .loca-app-header__btn--primary:hover {
-    background: var(--azure-soft);
-    border-color: var(--azure-soft);
+    background: var(--lc-azure-hover);
+    border-color: var(--lc-azure-hover);
 }
 
 

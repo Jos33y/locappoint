@@ -17,7 +17,7 @@ const AppFooter = () => {
                 <div className="loca-app-footer__grid">
 
                     <div className="loca-app-footer__brand-col">
-                        <Link to={HOME_PATH} className="loca-app-footer__brand" aria-label="Locappoint home">
+                        <Link to={HOME_PATH} className="loca-app-footer__brand">
                             <PinMark className="loca-app-footer__mark" />
                             <span className="loca-app-footer__wm">
                                 <span className="loca-app-footer__wm-loc">Loc</span>

@@ -1,5 +1,5 @@
 import { MapPin } from 'lucide-react'
-import { Picker } from '../ui'
+import { Picker } from '../ui/Picker'
 import { MARKETS } from '../../services/engine'
 import { useCity } from '../../hooks/useCity'
 import '../../styles/app/city.css'

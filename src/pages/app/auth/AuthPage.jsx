@@ -238,7 +238,7 @@ const AuthPage = () => {
         : signin
             ? ['Sign in to Locappoint', 'Welcome back.']
             : userType === 'business'
-                ? ['Be one of the first ten in Porto, Lagos or Lisbon', 'Setup takes ten minutes.']
+                ? ['Get found and booked in Porto, Lagos and Lisbon', 'Free during the beta. No card needed.']
                 : ['Find local businesses you can book', 'It takes a minute.']
 
     const [brandTitle, brandSub] = clientSide

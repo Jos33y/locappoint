@@ -18,8 +18,8 @@ const clip = (text, n) => {
 const ldJson = (data) => JSON.stringify(data).replace(/</g, '\\u003c')
 
 const HOME = {
-    title: 'Locappoint: book local businesses in Porto, Lagos and Lisbon',
-    description: 'Find barbers, salons, clinics and studios near you and book in seconds. Businesses get a free booking page, reminders that cut no-shows, and their day in one app.',
+    title: 'Locappoint: get found and booked in Porto, Lagos and Lisbon',
+    description: 'A free booking page for local businesses during the beta. Clients find you, pick a real free time and book while you work, with reminders before every visit.',
 }
 
 // Public pages that are not a business.

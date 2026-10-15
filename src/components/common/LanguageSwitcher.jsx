@@ -51,7 +51,8 @@ const LanguageSwitcher = () => {
             <button
                 className="language-btn"
                 onClick={() => setIsOpen(!isOpen)}
-                aria-label="Change language">
+                aria-expanded={isOpen}
+                aria-label={`${currentLanguage.code.toUpperCase()}, change language`}>
                 <span className="language-flag" aria-hidden="true">
                     <CurrentFlag />
                 </span>

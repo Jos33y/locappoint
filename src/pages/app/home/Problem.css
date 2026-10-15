@@ -1,0 +1,205 @@
+.lc-home-problem__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+    align-items: center;
+}
+
+@media (min-width: 960px) {
+    .lc-home-problem__grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: var(--space-16);
+    }
+}
+
+.lc-home-pains {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: 0;
+    list-style: none;
+}
+
+.lc-home-pains li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-left: var(--space-5);
+    border-left: 2px solid var(--lc-line-strong);
+}
+
+/* The pain is struck through: the line beneath it is what replaces it. */
+.lc-home-pains__pain {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-heading);
+    font-weight: 500;
+    text-decoration-color: var(--lc-danger);
+    text-decoration-thickness: 2px;
+}
+
+.lc-home-pains__fix {
+    color: var(--lc-ink-1);
+    font-size: 1.0625rem;
+    line-height: var(--lc-lh-body);
+}
+
+/* The stage: a morning in a chat, then the same booking as one ticket. */
+.lc-home-fold {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 380px;
+    padding: var(--space-6);
+    border: 1px solid var(--lc-line);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-well);
+}
+
+.lc-home-fold__thread,
+.lc-home-fold__booked {
+    grid-area: 1 / 1;
+}
+
+.lc-home-fold__thread {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-3);
+}
+
+.lc-home-msg,
+.lc-home-fold__gone {
+    transition: opacity var(--lc-base) var(--lc-ease), transform var(--lc-base) var(--lc-ease);
+    transition-delay: calc(var(--i) * 50ms);
+}
+
+.lc-home-msg {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-3);
+    max-width: 82%;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--lc-r-md);
+    font-size: var(--lc-t-body);
+    line-height: 1.4;
+}
+
+.lc-home-msg time {
+    flex: none;
+    color: var(--lc-ink-3);
+    font-family: var(--lc-font-mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-home-msg.is-client {
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    background: var(--lc-raised);
+    color: var(--lc-ink-1);
+}
+
+.lc-home-msg.is-you {
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    background: var(--lc-info-tint);
+    color: var(--lc-ink-1);
+}
+
+.lc-home-fold__gone {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px dashed var(--lc-danger);
+    border-radius: var(--lc-r-sm);
+    color: var(--lc-danger);
+    font-size: var(--lc-t-label);
+    font-weight: 600;
+}
+
+.lc-home-fold__gone time {
+    font-family: var(--lc-font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-home-fold__booked {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity var(--lc-base) var(--lc-ease), transform var(--lc-base) var(--lc-ease);
+    pointer-events: none;
+}
+
+.lc-home-fold__ticket {
+    width: min(320px, 100%);
+}
+
+.lc-home-fold__sent {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    text-align: center;
+}
+
+.lc-home-fold.is-folded .lc-home-msg,
+.lc-home-fold.is-folded .lc-home-fold__gone {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.97);
+}
+
+.lc-home-fold.is-folded .lc-home-fold__booked {
+    opacity: 1;
+    transform: none;
+    transition-delay: 260ms;
+}
+
+/* The stamp lands once the ticket is there. */
+.lc-home-fold .lc-home-ticket__stamp {
+    opacity: 0;
+    transform: rotate(-7deg) scale(1.5);
+    transition: opacity 160ms var(--lc-ease), transform 220ms var(--lc-ease);
+}
+
+.lc-home-fold.is-folded .lc-home-ticket__stamp {
+    opacity: 1;
+    transform: rotate(-7deg);
+    transition-delay: 620ms;
+}
+
+@media (max-width: 479px) {
+    .lc-home-fold {
+        min-height: 360px;
+        padding: var(--space-4);
+    }
+
+    .lc-home-msg {
+        max-width: 92%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lc-home-msg,
+    .lc-home-fold__gone,
+    .lc-home-fold__booked,
+    .lc-home-fold .lc-home-ticket__stamp {
+        transform: none;
+        transition: opacity var(--lc-base) linear;
+        transition-delay: 0ms;
+    }
+
+    .lc-home-fold.is-folded .lc-home-msg,
+    .lc-home-fold.is-folded .lc-home-fold__gone,
+    .lc-home-fold.is-folded .lc-home-fold__booked {
+        transform: none;
+        transition-delay: 0ms;
+    }
+
+    .lc-home-fold .lc-home-ticket__stamp {
+        transform: rotate(-7deg);
+    }
+}

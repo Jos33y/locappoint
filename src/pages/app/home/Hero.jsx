@@ -1,158 +1,54 @@
-// src/pages/app/home/Hero.jsx
-// Hero - left copy, right layered visual (portal snippet + confirmation card).
-
-import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Bell, Calendar, CheckCircle2 } from 'lucide-react'
-import { useAuth } from '../../../hooks/useAuth'
 import { useCity } from '../../../hooks/useCity'
-import { currencySign } from '../../../services/business'
-import PinMark from '../../../components/common/PinMark'
+import CityPattern from '../../../components/brand/CityPattern'
+import Actions from './Actions'
+import { Alert, Ring } from './Drawings'
+import { CITY_SAMPLE, HERO } from './content'
+import { money } from './useSignUp'
 import './Hero.css'
 
+// The owner's phone in the afternoon: the day nearly full, and a booking that just landed.
+const OwnerPhone = ({ sample, currency }) => (
+    <div className="lc-home-phone" aria-hidden="true">
+        <div className="lc-home-phone__screen">
+            <div className="lc-home-phone__bar"><span>15:10</span><i /></div>
+            <p className="lc-home-phone__hello">Good afternoon, {sample.owner}</p>
+            <p className="lc-home-phone__day">Today</p>
+            <Ring size={196} className="lc-home-phone__ring" />
+            <ul className="lc-home-phone__next">
+                <li className="is-new"><b>15:30</b><span>{sample.client}</span><em>{sample.service}</em></li>
+                <li><b>17:15</b><span>{sample.regular}</span><em>{sample.service}</em></li>
+            </ul>
+        </div>
+        <Alert
+            className="lc-home-phone__alert"
+            title="New booking"
+            line={`${sample.client}, today 15:30`}
+            sub={`${sample.service}, ${money(sample.price, currency)}`}
+        />
+    </div>
+)
 
 const Hero = () => {
-    const { user, userProfile } = useAuth()
-    const navigate = useNavigate()
     const [city] = useCity()
-
-    const handlePrimary = () => {
-        if (user && userProfile) {
-            const path = '/me'
-            navigate(path)
-            return
-        }
-        navigate('/auth', { state: { tab: 'signup', userType: 'business' } })
-    }
-
+    const sample = CITY_SAMPLE[city.code] || CITY_SAMPLE.porto
     return (
-        <section className="loca-hero">
-            <div className="loca-hero__radial" aria-hidden="true"></div>
-            <div className="loca-hero__grid-bg" aria-hidden="true"></div>
-
-            <div className="container">
-                <div className="loca-hero__grid">
-
-                    <div className="loca-hero__content">
-                        <span className="loca-eyebrow">
-                            <span className="loca-eyebrow__dot" aria-hidden="true"></span>
-                            Beta · Porto, Lagos, Lisbon
-                        </span>
-
-                        <h1 className="loca-hero__title">
-                            Your booking page.<br />
-                            <span className="loca-hero__title-accent">Live in ten minutes.</span>
-                        </h1>
-
-                        <p className="loca-hero__lede">
-                            For every kind of local business, wherever the service happens: at your place, at your client's, or online. Live in Porto, Lagos and Lisbon. Set your hours, share your link, fill your calendar. Free during the beta.
-                        </p>
-
-                        <div className="loca-hero__cta">
-                            <button onClick={handlePrimary} className="loca-btn loca-btn--primary loca-btn--lg">
-                                {user ? 'Go to dashboard' : 'Get your booking page'}
-                                <ArrowRight size={18} strokeWidth={2} />
-                            </button>
-                            <Link to="/businesses" className="loca-btn loca-btn--ghost loca-btn--lg">
-                                Browse businesses
-                            </Link>
-                        </div>
-
-                        <div className="loca-hero__metrics">
-                            <div className="loca-hero__metric">
-                                <div className="loca-hero__metric-num">{currencySign(city.currency)}0</div>
-                                <div className="loca-hero__metric-label">During the beta</div>
-                            </div>
-                            <div className="loca-hero__metric-sep" aria-hidden="true"></div>
-                            <div className="loca-hero__metric">
-                                <div className="loca-hero__metric-num">10<span className="loca-hero__metric-sub">min</span></div>
-                                <div className="loca-hero__metric-label">To go live</div>
-                            </div>
-                            <div className="loca-hero__metric-sep" aria-hidden="true"></div>
-                            <div className="loca-hero__metric">
-                                <div className="loca-hero__metric-num">2</div>
-                                <div className="loca-hero__metric-label">Reminders per booking</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <aside className="loca-hero__visual" aria-hidden="true">
-
-                        {/* Back layer - portal "Today" snippet */}
-                        <div className="hero-portal">
-                            <div className="hero-portal__head">
-                                <div className="hero-portal__title">
-                                    <Calendar size={13} strokeWidth={2} />
-                                    <span>Today</span>
-                                </div>
-                                <div className="hero-portal__date">SAT 28 JUN</div>
-                            </div>
-                            <div className="hero-portal__list">
-                                <div className="hero-portal__row">
-                                    <div className="hero-portal__time">09:00</div>
-                                    <div className="hero-portal__name">Ana Costa</div>
-                                    <div className="hero-portal__svc">Cut</div>
-                                </div>
-                                <div className="hero-portal__row hero-portal__row--active">
-                                    <div className="hero-portal__time">10:30</div>
-                                    <div className="hero-portal__name">João Pereira</div>
-                                    <div className="hero-portal__svc">Cut + Beard</div>
-                                </div>
-                                <div className="hero-portal__row">
-                                    <div className="hero-portal__time">12:00</div>
-                                    <div className="hero-portal__name">Sofia Ramos</div>
-                                    <div className="hero-portal__svc">Color</div>
-                                </div>
-                                <div className="hero-portal__row">
-                                    <div className="hero-portal__time">14:30</div>
-                                    <div className="hero-portal__name">Maria Silva</div>
-                                    <div className="hero-portal__svc">Cut + Style</div>
-                                </div>
-                                <div className="hero-portal__row hero-portal__row--new">
-                                    <div className="hero-portal__time">16:00</div>
-                                    <div className="hero-portal__name">Bruno Alves</div>
-                                    <div className="hero-portal__svc">Beard trim</div>
-                                </div>
-                            </div>
-                            <div className="hero-portal__foot">
-                                <Bell size={11} strokeWidth={2} />
-                                <span>5 booked · 2 reminders sent</span>
-                            </div>
-                        </div>
-
-                        {/* Front layer - confirmation card */}
-                        <div className="hero-confirm">
-                            <div className="hero-confirm__head">
-                                <span className="hero-confirm__status">
-                                    <CheckCircle2 size={12} strokeWidth={2.5} />
-                                    Confirmed
-                                </span>
-                                <span className="hero-confirm__id">#A472</span>
-                            </div>
-                            <div className="hero-confirm__divider"></div>
-                            <div className="hero-confirm__row">
-                                <div className="hero-confirm__label">Client</div>
-                                <div className="hero-confirm__value">Maria Silva</div>
-                            </div>
-                            <div className="hero-confirm__row">
-                                <div className="hero-confirm__label">When</div>
-                                <div className="hero-confirm__value">Sat 28 Jun · 14:30</div>
-                            </div>
-                            <div className="hero-confirm__row">
-                                <div className="hero-confirm__label">Where</div>
-                                <div className="hero-confirm__value">
-                                    Femto&apos;s Hair Studio
-                                    <span className="hero-confirm__sub">Rua Garrett 12, Lisbon</span>
-                                </div>
-                            </div>
-                            <div className="hero-confirm__divider"></div>
-                            <div className="hero-confirm__foot">
-                                <PinMark width="11" height="11" />
-                                <span>Booked via locappoint.com</span>
-                            </div>
-                        </div>
-
-                    </aside>
-
+        <section className="lc-home-hero" aria-labelledby="lc-home-title">
+            <div className="lc-home-hero__glow" aria-hidden="true" />
+            <div className="lc-home__wrap lc-home-hero__grid">
+                <div className="lc-home-hero__copy">
+                    <p className="lc-home-hero__eyebrow">{HERO.eyebrow}</p>
+                    <h1 className="lc-home-hero__title" id="lc-home-title">
+                        Get found. <span>Get booked.</span>
+                    </h1>
+                    <p className="lc-home-hero__lede">{HERO.lede}</p>
+                    <Actions />
+                    <ul className="lc-home-hero__promises">
+                        {HERO.promises.map((p) => <li key={p}>{p}</li>)}
+                    </ul>
+                </div>
+                <div className={`lc-home-hero__world is-${city.code}`}>
+                    <CityPattern city={city.code} centred className="lc-home-hero__pattern" />
+                    <OwnerPhone sample={sample} currency={city.currency} />
                 </div>
             </div>
         </section>

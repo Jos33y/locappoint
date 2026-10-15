@@ -7,6 +7,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    // dist/.vite/manifest.json: the server reads it to tell the browser which files a page needs (server/preload.mjs).
+    manifest: true,
     rollupOptions: {
       output: {
         // Libraries every screen needs sit in their own long-cached files,

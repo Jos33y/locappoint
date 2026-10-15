@@ -1,0 +1,46 @@
+.lc-home-places {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8) var(--space-12);
+    padding: 0;
+    list-style: none;
+}
+
+@media (min-width: 820px) {
+    .lc-home-places {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.lc-home-places__item {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+}
+
+.lc-home-places__scene svg {
+    display: block;
+    width: 96px;
+    height: 72px;
+    max-width: none;
+}
+
+.lc-home-places__title {
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: 600;
+    letter-spacing: var(--lc-track-title);
+}
+
+.lc-home-places__text {
+    margin-top: var(--space-1);
+    color: var(--lc-ink-2);
+    line-height: var(--lc-lh-body);
+}
+
+/* The city's own colour on the business in each scene. */
+.lc-home-scene__city.is-porto { fill: var(--lc-porto-porcelain); }
+.lc-home-scene__city.is-lagos { fill: var(--lc-lagos-sand); }
+.lc-home-scene__city.is-lisbon { fill: var(--lc-lisbon-eletrico); }

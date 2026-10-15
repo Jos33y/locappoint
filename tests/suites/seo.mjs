@@ -40,6 +40,16 @@ export default async ({ check, root }) => {
     fs.copyFileSync(path.join(root, 'index.html'), path.join(dist, 'index.html'))
     fs.mkdirSync(path.join(dist, 'assets'))
     fs.writeFileSync(path.join(dist, 'assets', 'app-abc123.js'), 'console.log("app");'.repeat(200))
+    // A build manifest in the shape vite writes: the entry, the home screen with a shared chunk, the heading font.
+    fs.mkdirSync(path.join(dist, '.vite'))
+    fs.writeFileSync(path.join(dist, '.vite', 'manifest.json'), JSON.stringify({
+        'index.html': { file: 'assets/app-abc123.js', isEntry: true, imports: ['_react-1.js'], dynamicImports: ['src/pages/app/AppHome.jsx'] },
+        '_react-1.js': { file: 'assets/react-1.js' },
+        '_shared-2.js': { file: 'assets/shared-2.js', imports: ['_react-1.js'] },
+        'src/pages/app/AppHome.jsx': { file: 'assets/AppHome-3.js', isDynamicEntry: true, imports: ['_shared-2.js', '_react-1.js'], css: ['assets/AppHome-3.css'] },
+        'src/pages/app/PublicBusinessPage.jsx': { file: 'assets/PublicBusinessPage-4.js', isDynamicEntry: true, imports: ['_shared-2.js'] },
+        'src/assets/fonts/Switzer-Bold.woff2': { file: 'assets/Switzer-Bold-5.woff2' },
+    }))
 
     const port = 40000 + Math.floor(Math.random() * 20000)
     const proc = spawn(process.execPath, [path.join(root, 'server', 'index.mjs')], {
@@ -69,12 +79,17 @@ export default async ({ check, root }) => {
 
         // Home
         let r = await get('/')
-        check(r.status === 200 && /<div id="root">/.test(r.body) && /<title>Locappoint: book local businesses in Porto, Lagos and Lisbon<\/title>/.test(r.body), 'the home page is the app, with its own title')
+        check(r.status === 200 && /<div id="root">/.test(r.body) && /<title>Locappoint: get found and booked in Porto, Lagos and Lisbon<\/title>/.test(r.body), 'the home page is the app, with its own title')
         check(!/seo:start/.test(r.body) && (r.body.match(/<title>/g) || []).length === 1 && (r.body.match(/name="description"/g) || []).length === 1, 'the default block is replaced, never duplicated')
         check(/<link rel="canonical" href="https:\/\/locappoint.com\/">/.test(r.body) && /index, follow/.test(meta(r.body, 'name', 'robots')), 'home is canonical and indexable')
         check(ld(r.body).some((d) => d['@type'] === 'Organization') && ld(r.body).some((d) => d['@type'] === 'WebSite'), 'home tells Google who we are')
         check(ld(r.body).some((d) => d['@type'] === 'Organization' && d.legalName === 'Locappoint Technologies Ltd') && /<noscript>Locappoint is operated by Locappoint Technologies Ltd \(RC 9267124\)/.test(r.body), 'the legal name is on the page, for Meta and Google')
         check(/rel="manifest"/.test(r.body) && /rel="apple-touch-icon"/.test(r.body), 'icons and the manifest stay in place')
+        const head = r.body.split('</head>')[0]
+        check(head.includes('<link rel="modulepreload" href="/assets/AppHome-3.js">') && head.includes('<link rel="modulepreload" href="/assets/shared-2.js">') && head.includes('<link rel="preload" href="/assets/AppHome-3.css" as="style">'), 'the home screen and what it needs are fetched with the page, not after the app starts')
+        check(!head.includes('href="/assets/react-1.js"') && !head.includes('modulepreload" href="/assets/app-abc123.js"'), 'files the page already loads are not asked for twice')
+        check(head.includes('<link rel="preload" href="/assets/Switzer-Bold-5.woff2" as="font" type="font/woff2" crossorigin>'), 'the heading font starts downloading at once')
+        check(new RegExp(`<link rel="preconnect" href="http://127\\.0\\.0\\.1:${supa}" crossorigin>`).test(head), 'the connection to Supabase is opened early')
 
         // A business page
         r = await get('/femtos-barbearia')
@@ -82,6 +97,7 @@ export default async ({ check, root }) => {
         check(r.status === 200 && meta(r.body, 'property', 'og:title') === 'Femtos &lt;Barbearia&gt;, Lisbon: book online | Locappoint', `a shared business link previews the business: ${meta(r.body, 'property', 'og:title')}`)
         check(meta(r.body, 'property', 'og:image') === 'https://cdn.example/banner.jpg' && meta(r.body, 'property', 'og:url') === 'https://locappoint.com/femtos-barbearia', 'with its own photo and address')
         check(/^Barbershop in Bairro Alto, Lisbon\. See prices/.test(meta(r.body, 'name', 'description')), `without a description of its own it still reads well: ${meta(r.body, 'name', 'description')}`)
+        check(r.body.split('</head>')[0].includes('<link rel="modulepreload" href="/assets/PublicBusinessPage-4.js">') && !r.body.includes('AppHome-3.js'), 'a business link fetches the business screen early, not the home screen')
         check(b && b.name === 'Femtos <Barbearia>' && b.address.addressLocality === 'Lisbon' && b.telephone === '+351 912 345 678', 'Google gets the business name, address and phone')
         check(b?.aggregateRating?.ratingValue === 4.8 && b.aggregateRating.reviewCount === 12, 'and its star rating')
         check(b?.openingHoursSpecification?.[0]?.dayOfWeek === 'https://schema.org/Monday' && b.openingHoursSpecification[0].opens === '09:00', 'and its opening hours')
@@ -100,6 +116,7 @@ export default async ({ check, root }) => {
         r = await get('/app')
         check(/<title>Get the Locappoint app for Android and iPhone<\/title>/.test(r.body), 'the download page has its own title')
         r = await get('/privacy/')
+        check(!/modulepreload/.test(r.body), 'other pages are served as before')
         check(/<link rel="canonical" href="https:\/\/locappoint.com\/privacy">/.test(r.body), 'a trailing slash points to the one canonical address')
         for (const p of ['/portal', '/portal/calendar', '/client/profile', '/admin', '/auth', '/b/abc123', '/me', '/join/XYZ']) {
             r = await get(p)
@@ -111,12 +128,16 @@ export default async ({ check, root }) => {
         check(/Disallow: \/portal/.test(r.body) && /Sitemap: https:\/\/locappoint.com\/sitemap.xml/.test(r.body) && !/Disallow: \/\n/.test(r.body), 'robots.txt opens the site, closes private screens, points to the sitemap')
         r = await get('/robots.txt', { host: 'status.locappoint.com' })
         check(/Disallow: \/\n/.test(r.body), 'the status site stays out of search')
+        r = await get('/', { host: 'status.locappoint.com' })
+        check(r.status === 200 && !/modulepreload|preconnect/.test(r.body), 'the status site is served as it is')
         r = await get('/sitemap.xml')
         check(r.status === 200 && /<loc>https:\/\/locappoint.com\/femtos-barbearia<\/loc>/.test(r.body) && !/demo-studio/.test(r.body) && /<loc>https:\/\/locappoint.com\/businesses<\/loc>/.test(r.body), 'the sitemap lists live businesses and public pages, not the demo')
 
         // Files and hosts
         r = await get('/assets/app-abc123.js', { 'accept-encoding': 'gzip, br' })
         check(r.status === 200 && /immutable/.test(r.headers.get('cache-control')) && r.headers.get('content-encoding') === 'br', 'built files are compressed and cached for a year')
+        r = await get('/.vite/manifest.json')
+        check(r.status === 404 && !/AppHome/.test(r.body), 'the build manifest is not served')
         r = await get('/assets/old-chunk.js')
         check(r.status === 404, 'a missing file is a 404, not the app')
         r = await get('/../../etc/passwd')

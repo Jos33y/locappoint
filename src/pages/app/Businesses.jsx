@@ -44,7 +44,7 @@ const JoinCard = ({ join, wide = false }) => (
             </span>
             <span className="lc-br-join__body">
                 <strong>{wide ? 'Be the first place people can book here' : 'Your business here'}</strong>
-                <span>Free during the beta. Set up takes about ten minutes.</span>
+                <span>Free during the beta. No card, no subscription.</span>
                 <span className="lc-br-join__cta">Get your booking page <ArrowRight size={14} aria-hidden="true" /></span>
             </span>
         </Link>

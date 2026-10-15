@@ -46,7 +46,7 @@ const AppHeader = () => {
             <div className="container">
                 <div className="loca-app-header__inner">
 
-                    <Link to={HOME_PATH} className="loca-app-header__brand" onClick={closeMenu} aria-label="Locappoint home">
+                    <Link to={HOME_PATH} className="loca-app-header__brand" onClick={closeMenu}>
                         <PinMark className="loca-app-header__mark" />
                         <span className="loca-app-header__wm">
                             <span className="loca-app-header__wm-loc">Loc</span>

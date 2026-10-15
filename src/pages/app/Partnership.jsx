@@ -10,7 +10,7 @@ import '../../styles/app/home.css'
 import '../../styles/app/partnership.css'
 
 
-// Aligned to AppHome BuiltFor categories.
+// The kinds of business a partner can bring.
 const organizationTypes = [
     'Salons & Hair',
     'Barbershops',
