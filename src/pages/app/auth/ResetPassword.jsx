@@ -9,6 +9,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react'
 import { supabase } from '../../../config/supabase'
 import AuthShell from './AuthShell'
+import PasswordInput from './PasswordInput'
 import '../../../styles/auth/auth.css'
 
 
@@ -106,6 +107,7 @@ const ResetPassword = () => {
     if (linkInvalid && !recoveryReady && !success) {
         return (
             <AuthShell
+                scene="calm"
                 brandTitle="That link cannot be used."
                 brandSub="Request a fresh reset link from the sign-in page.">
 
@@ -142,6 +144,7 @@ const ResetPassword = () => {
     if (success) {
         return (
             <AuthShell
+                scene="calm"
                 brandTitle="You're set."
                 brandSub="Sign in with your new password.">
 
@@ -167,6 +170,7 @@ const ResetPassword = () => {
     // Form state (default)
     return (
         <AuthShell
+            scene="calm"
             brandTitle="Set a new password."
             brandSub="Choose something at least 6 characters. You will sign in with this from now on.">
 
@@ -192,8 +196,7 @@ const ResetPassword = () => {
             <form onSubmit={handleSubmit} className="auth-form" noValidate>
                 <div className="auth-field">
                     <label htmlFor="password">New password</label>
-                    <input
-                        type="password"
+                    <PasswordInput
                         id="password"
                         name="password"
                         value={password}
@@ -210,8 +213,7 @@ const ResetPassword = () => {
 
                 <div className="auth-field">
                     <label htmlFor="confirmPassword">Confirm new password</label>
-                    <input
-                        type="password"
+                    <PasswordInput
                         id="confirmPassword"
                         name="confirmPassword"
                         value={confirmPassword}
@@ -229,7 +231,7 @@ const ResetPassword = () => {
                     type="submit"
                     className="auth-submit"
                     disabled={loading || !recoveryReady}>
-                    {loading ? 'Updating...' : (
+                    {loading ? 'Updating…' : (
                         <>
                             Update password
                             <ArrowRight size={16} strokeWidth={2} />

@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../../../hooks/useAuth'
-import { User, Building2, AlertCircle, CheckCircle2, ArrowRight, MailCheck, CalendarCheck } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ArrowRight, MailCheck, CalendarCheck } from 'lucide-react'
 import AuthShell from './AuthShell'
+import PasswordInput from './PasswordInput'
 import { isNative, platform } from '../../../services/native'
 import { rememberNext } from '../../../services/nextPath'
+import { useCity } from '../../../hooks/useCity'
 import '../../../styles/auth/auth.css'
 
 // Google is set up in Supabase. Apple waits for the Apple developer account; VITE_APPLE_SIGNIN=true turns it on.
@@ -34,6 +36,9 @@ const authError = (err, fallback) => {
 
 const pathOf = (from) => (typeof from === 'string' ? from : from ? `${from.pathname || ''}${from.search || ''}` : null)
 
+// The example number in the phone field follows the visitor's city.
+const PHONE_EXAMPLE = { lagos: '+234 803 123 4567', porto: '+351 912 345 678', lisbon: '+351 912 345 678' }
+
 const AuthPage = () => {
     const location = useLocation()
     const navigate = useNavigate()
@@ -49,7 +54,14 @@ const AuthPage = () => {
     const startEmail = (navState.email || searchParams.get('email') || '').slice(0, 254)
     const [activeTab, setActiveTab] = useState(isVerified ? 'signin' : (navState.tab || queryTab || 'signin'))
     const queryType = searchParams.get('as') === 'business' ? 'business' : null
-    const [userType, setUserType] = useState(navState.userType || queryType || 'client')
+    // Nobody is asked whether they are a client or a business. Where they came from says it: the home
+    // page, Browse's sign-up and ?as=business mean an owner; a booking, a team invite or anywhere else
+    // means a client account, which can start a business from its menu at any time. The type is still
+    // saved, because it picks the welcome email and the first screen after confirming.
+    const fromPath = pathOf(navState.from)
+    const ownerIntent = !booking && ((navState.userType || queryType) === 'business' || HOME_PATHS.includes(fromPath))
+    const userType = ownerIntent ? 'business' : 'client'
+    const [city] = useCity()
     const [formData, setFormData] = useState({
         email: startEmail,
         password: '',
@@ -69,18 +81,17 @@ const AuthPage = () => {
     // Already signed in: go where the link meant to take you instead of showing the form again.
     useEffect(() => {
         if (!user) return
-        const wantsBusiness = (navState.userType || queryType) === 'business' && (navState.tab || queryTab) === 'signup'
+        const wantsBusiness = ownerIntent && (navState.tab || queryTab) === 'signup'
         navigate(returnTo || (wantsBusiness ? '/portal' : '/me'), { replace: true })
-    }, [user, returnTo, navState.userType, navState.tab, queryType, queryTab, navigate])
+    }, [user, returnTo, ownerIntent, navState.tab, queryTab, navigate])
 
     useEffect(() => {
         if (navState.tab) setActiveTab(navState.tab)
-        if (navState.userType) setUserType(navState.userType)
         if (isVerified) {
             setActiveTab('signin')
             setMessage('Email verified. Sign in to continue.')
         }
-    }, [location.state, location.key, isVerified, navState.tab, navState.userType])
+    }, [location.state, location.key, isVerified, navState.tab])
 
     useEffect(() => {
         if (!error && !message) return
@@ -231,27 +242,29 @@ const AuthPage = () => {
     const showGoogle = GOOGLE_READY && !(isNative() && platform() === 'ios' && !APPLE_READY)
 
     const signin = activeTab === 'signin'
-    const clientSide = Boolean(booking) || (!signin && userType === 'client')
 
     const [headline, sub] = booking
         ? (signin ? ['Sign in to finish your booking', 'We take you straight back to confirm it.'] : ['Create your account to book', 'It takes a minute. We take you straight back to confirm.'])
         : signin
             ? ['Sign in to Locappoint', 'Welcome back.']
-            : userType === 'business'
+            : ownerIntent
                 ? ['Get found and booked in Porto, Lagos and Lisbon', 'Free during the beta. No card needed.']
-                : ['Find local businesses you can book', 'It takes a minute.']
+                : ['Create your Locappoint account', 'Book local businesses in a few taps. Set up your own business whenever you are ready.']
 
-    const [brandTitle, brandSub] = clientSide
-        ? ['Your next booking, without the phone calls.', 'See the real free times at local barbers, salons and clinics, and pick one.']
-        : signin
-            ? ['Pick up where you left off.', 'Your bookings, reminders and hours in one place.']
-            : ['Booking that fills your week, not your DMs.', 'Local businesses in Porto, Lagos and Lisbon. Free during the beta.']
+    // The side panel: the owner's day for owners, that day waiting for anyone signing in, the ticket for clients.
+    const scene = booking ? 'ticket' : signin ? 'welcome' : ownerIntent ? 'owner' : 'ticket'
+    const [brandTitle, brandSub] = {
+        owner: ['This is where your day fills up.', 'Set your hours, share your link, and bookings arrive with reminders sent for you.'],
+        welcome: ['Pick up where you left off.', 'Your bookings, reminders and hours in one place.'],
+        ticket: ['Your next booking, without the phone calls.', 'See the real free times at local barbers, salons and clinics, and pick one.'],
+    }[scene]
 
     return (
         <AuthShell
             brandTitle={brandTitle}
             brandSub={brandSub}
-            audience={clientSide ? 'client' : 'business'}
+            scene={scene}
+            booking={booking}
             back={booking && returnTo ? { to: returnTo, label: `Back to ${booking.business}` } : null}>
 
             {booking && (
@@ -300,7 +313,7 @@ const AuthPage = () => {
 
             {error && unconfirmed && (
                 <button type="button" className="auth-resend" onClick={resend} disabled={resending}>
-                    {resending ? 'Sending...' : `Send a new link to ${unconfirmed}`}
+                    {resending ? 'Sending…' : `Send a new link to ${unconfirmed}`}
                 </button>
             )}
 
@@ -312,44 +325,28 @@ const AuthPage = () => {
             )}
             </div>
 
-            {activeTab === 'signup' && !booking && (
-                <div className="auth-toggle">
-                    <span className="auth-toggle__label">I am a</span>
-                    <div className="auth-toggle__options">
-                        <label className={`auth-toggle__option ${userType === 'client' ? 'auth-toggle__option--active' : ''}`}>
-                            <input
-                                type="radio"
-                                name="userType"
-                                value="client"
-                                checked={userType === 'client'}
-                                onChange={(e) => setUserType(e.target.value)}
-                            />
-                            <span className="auth-toggle__ico">
-                                <User size={16} strokeWidth={1.8} />
-                            </span>
-                            <span className="auth-toggle__copy">
-                                <span className="auth-toggle__name">Client</span>
-                                <span className="auth-toggle__note">Looking to book</span>
-                            </span>
-                        </label>
-                        <label className={`auth-toggle__option ${userType === 'business' ? 'auth-toggle__option--active' : ''}`}>
-                            <input
-                                type="radio"
-                                name="userType"
-                                value="business"
-                                checked={userType === 'business'}
-                                onChange={(e) => setUserType(e.target.value)}
-                            />
-                            <span className="auth-toggle__ico">
-                                <Building2 size={16} strokeWidth={1.8} />
-                            </span>
-                            <span className="auth-toggle__copy">
-                                <span className="auth-toggle__name">Business</span>
-                                <span className="auth-toggle__note">Accepting bookings</span>
-                            </span>
-                        </label>
+            {/* Google first: one tap, no password, the fastest way to a live page. Email below. */}
+            {(showGoogle || APPLE_READY) && (
+                <>
+                    <div className={`auth-oauth-stack${isApplePlatform ? '' : ' is-google-first'}`}>
+                        {APPLE_READY && (
+                            <button type="button" onClick={handleAppleSignIn} className="auth-oauth auth-oauth--apple" disabled={loading}>
+                                <AppleLogo />
+                                <span>Continue with Apple</span>
+                            </button>
+                        )}
+                        {showGoogle && (
+                            <button type="button" onClick={handleGoogleSignIn} className="auth-oauth auth-oauth--google" disabled={loading}>
+                                <GoogleG />
+                                <span>Continue with Google</span>
+                            </button>
+                        )}
                     </div>
-                </div>
+
+                    <div className="auth-divider">
+                        <span>or with email</span>
+                    </div>
+                </>
             )}
 
             <form onSubmit={handleSubmit} className="auth-form" noValidate>
@@ -377,7 +374,7 @@ const AuthPage = () => {
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleInputChange}
-                                placeholder="+351 912 345 678"
+                                placeholder={PHONE_EXAMPLE[city.code] || PHONE_EXAMPLE.porto}
                                 required
                                 autoComplete="tel"
                             />
@@ -406,8 +403,7 @@ const AuthPage = () => {
                             <Link to="/forgot-password" className="auth-field__aux">Forgot?</Link>
                         )}
                     </label>
-                    <input
-                        type="password"
+                    <PasswordInput
                         id="password"
                         name="password"
                         value={formData.password}
@@ -421,8 +417,7 @@ const AuthPage = () => {
                 {activeTab === 'signup' && (
                     <div className="auth-field">
                         <label htmlFor="confirmPassword">Confirm password</label>
-                        <input
-                            type="password"
+                        <PasswordInput
                             id="confirmPassword"
                             name="confirmPassword"
                             value={formData.confirmPassword}
@@ -435,7 +430,7 @@ const AuthPage = () => {
                 )}
 
                 <button type="submit" className="auth-submit" disabled={loading}>
-                    {loading ? 'Please wait...' : (
+                    {loading ? 'Please wait…' : (
                         <>
                             {activeTab === 'signin' ? 'Sign in' : 'Create account'}
                             <ArrowRight size={16} strokeWidth={2} />
@@ -443,29 +438,6 @@ const AuthPage = () => {
                     )}
                 </button>
             </form>
-
-            {(showGoogle || APPLE_READY) && (
-                <>
-                    <div className="auth-divider">
-                        <span>or</span>
-                    </div>
-
-                    <div className={`auth-oauth-stack${isApplePlatform ? '' : ' is-google-first'}`}>
-                        {APPLE_READY && (
-                            <button type="button" onClick={handleAppleSignIn} className="auth-oauth auth-oauth--apple" disabled={loading}>
-                                <AppleLogo />
-                                <span>Continue with Apple</span>
-                            </button>
-                        )}
-                        {showGoogle && (
-                            <button type="button" onClick={handleGoogleSignIn} className="auth-oauth auth-oauth--google" disabled={loading}>
-                                <GoogleG />
-                                <span>Continue with Google</span>
-                            </button>
-                        )}
-                    </div>
-                </>
-            )}
 
             <p className="auth-switch">
                 {activeTab === 'signin' ? "Don't have an account?" : 'Already have an account?'}{' '}

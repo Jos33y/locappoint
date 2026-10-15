@@ -1,67 +1,68 @@
-/* Auth pages - split panel layout */
-/* Brand panel left (desktop), form panel right. Mobile hides brand panel. */
-
+/* Sign in, sign up, password and email-link screens.
+   The form keeps its order and its fields; the side panel carries the visitor's city and picks up
+   where the home page left off (the owner's day, or the ticket a client keeps). Built on the
+   --lc tokens; drawings come from pages/app/home/drawings.css. */
 
 .auth-page {
-    min-height: 100vh;
     display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-    background: var(--surface-0);
-    color: var(--text-primary);
-    font-family: var(--font-body);
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--lc-canvas);
+    color: var(--lc-ink-1);
+}
+
+@media (min-width: 981px) {
+    .auth-page {
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    }
 }
 
 
-/* Brand panel (desktop) */
+/* The side panel: brand, one line, the city world with its scene, the three cities. */
 
 .auth-brand {
-    position: relative;
-    overflow: hidden;
-    background: var(--surface-1);
-    border-right: 1px solid var(--border-subtle);
-    padding: 48px 56px;
-    display: flex;
+    position: sticky;
+    top: 0;
+    display: none;
     flex-direction: column;
-    gap: 32px;
-}
-
-.auth-brand__radial {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
+    gap: var(--space-8);
+    height: 100vh;
+    height: 100dvh;
+    padding: var(--space-10) clamp(2rem, 4vw, 3.5rem);
+    overflow: hidden;
+    border-right: 1px solid var(--lc-line);
     background:
-        radial-gradient(ellipse 60% 50% at 15% 10%, rgba(45, 127, 240, 0.12), transparent 65%),
-        radial-gradient(ellipse 40% 50% at 90% 95%, rgba(232, 154, 62, 0.05), transparent 65%);
+        radial-gradient(90% 50% at 20% 0%, var(--lc-glow-sky), transparent 70%),
+        var(--lc-panel);
 }
 
-.auth-brand > * {
-    position: relative;
+@media (min-width: 981px) {
+    .auth-brand {
+        display: flex;
+    }
 }
 
-.auth-brand__wordmark {
+.auth-brand__wordmark,
+.auth-mobile-top__brand {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
+    gap: var(--space-2);
     width: fit-content;
-    transition: opacity 180ms ease;
-}
-
-.auth-brand__wordmark:hover {
-    opacity: 0.85;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: 1.1875rem;
+    font-weight: 600;
+    letter-spacing: var(--lc-track-title);
+    text-decoration: none;
 }
 
 .auth-brand__mark {
-    flex-shrink: 0;
+    flex: none;
 }
 
 .auth-brand__loc {
-    color: var(--text-primary);
+    color: var(--lc-ink-1);
 }
 
 .auth-brand__appoint {
@@ -71,377 +72,197 @@
 .auth-brand__copy {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    max-width: 440px;
+    gap: var(--space-3);
+    max-width: 30rem;
 }
 
 .auth-brand__title {
-    font-family: var(--font-display);
-    font-size: clamp(24px, 2.4vw, 32px);
-    font-weight: 600;
-    line-height: 1.15;
-    letter-spacing: -0.022em;
-    color: var(--text-primary);
     margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: clamp(1.75rem, 1.2rem + 1.4vw, 2.375rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
 }
 
 .auth-brand__lede {
-    font-size: 14.5px;
-    line-height: 1.55;
-    color: var(--text-secondary);
     margin: 0;
+    color: var(--lc-ink-2);
+    font-size: 1rem;
+    line-height: var(--lc-lh-body);
 }
 
-
-/* Brand visual - map + pin + coords */
-
-.auth-brand__visual {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.auth-brand__map {
+/* The city world: a wall of the city's pattern, fading into the panel, the scene in front of it. */
+.auth-brand__world {
     position: relative;
-    width: 100%;
-    max-width: 420px;
-    aspect-ratio: 16 / 10;
-    background: var(--surface-2);
-    border: 1px solid var(--border-subtle);
-    border-radius: 14px;
-    overflow: hidden;
-}
-
-.auth-brand__map-grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(244, 246, 251, 0.045) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(244, 246, 251, 0.045) 1px, transparent 1px);
-    background-size: 28px 28px;
-    background-position: center center;
-    mask-image: radial-gradient(ellipse 80% 80% at center, #000 30%, transparent 90%);
-    -webkit-mask-image: radial-gradient(ellipse 80% 80% at center, #000 30%, transparent 90%);
-}
-
-.auth-brand__map-glow {
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(circle 140px at center, rgba(45, 127, 240, 0.18), transparent 70%),
-        radial-gradient(circle 80px at center, rgba(43, 140, 90, 0.10), transparent 60%);
-}
-
-
-/* Pin - the real brand mark with pulse ring */
-
-.auth-brand__pin {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 56px;
-    height: 56px;
     display: flex;
+    flex: 1;
     align-items: center;
     justify-content: center;
+    min-height: 0;
 }
 
-.auth-brand__pin-ring {
+.auth-brand__wall {
     position: absolute;
-    inset: -14px;
-    border-radius: 50%;
-    border: 1px solid rgba(43, 140, 90, 0.45);
-    animation: auth-pin-ring 2.4s ease-in-out infinite;
+    top: 0;
+    right: 8%;
+    bottom: 0;
+    left: 8%;
+    width: 84%;
+    height: 100%;
+    border-radius: var(--lc-r-xl);
+    opacity: 0.8;
+    -webkit-mask-image: linear-gradient(180deg, black 40%, transparent);
+    mask-image: linear-gradient(180deg, black 40%, transparent);
 }
 
-.auth-brand__pin-ring--outer {
-    inset: -30px;
-    border-color: rgba(43, 140, 90, 0.20);
-    animation-delay: 0.4s;
-}
-
-.auth-brand__pin-mark {
+.auth-brand__scene {
     position: relative;
     z-index: 1;
-    filter: drop-shadow(0 0 12px rgba(45, 127, 240, 0.35));
-}
-
-@keyframes auth-pin-ring {
-    0%, 100% { transform: scale(1); opacity: 0.55; }
-    50% { transform: scale(1.12); opacity: 0.85; }
-}
-
-
-/* Corner ticks - mono coordinates */
-
-.auth-brand__tick {
-    position: absolute;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    color: var(--text-muted);
-    padding: 4px 7px;
-    background: var(--surface-1);
-    border: 1px solid var(--border-subtle);
-    border-radius: 4px;
-}
-
-.auth-brand__tick--tl { top: 12px; left: 12px; }
-.auth-brand__tick--tr { top: 12px; right: 12px; }
-
-
-/* Coordinates strip below the map */
-
-.auth-brand__coords {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.16em;
-    color: var(--text-muted);
-}
-
-.auth-brand__coords-place {
-    font-family: var(--font-body);
-    font-size: 12px;
-    letter-spacing: 0;
-    color: var(--text-secondary);
-}
-
-.auth-brand__coords-sep {
-    color: var(--text-subtle);
-}
-
-.auth-brand__coords-geo {
-    color: var(--text-secondary);
-}
-
-
-
-/* Cohort progress strip */
-
-.auth-brand__cohort {
-    background: var(--surface-2);
-    border: 1px solid var(--border-subtle);
-    border-radius: 10px;
-    padding: 14px 16px;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-width: 420px;
+    justify-content: center;
+    width: 100%;
+    padding-top: var(--space-12);
 }
 
-.auth-brand__cohort-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+/* The phone has to fit short laptop screens: it scales down with the panel's height. */
+.auth-brand__scene .lc-home-phone {
+    width: min(280px, 100%);
 }
 
-.auth-brand__cohort-label {
-    font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
+@media (max-height: 820px) {
+    .auth-brand__scene .lc-home-phone {
+        transform: scale(0.86);
+        transform-origin: top center;
+    }
 }
 
-.auth-brand__cohort-count {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 3px;
-    font-family: var(--font-mono);
-    font-size: 12px;
+@media (max-height: 700px) {
+    .auth-brand__scene .lc-home-phone {
+        transform: scale(0.72);
+    }
 }
 
-.auth-brand__cohort-num {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--signal);
+.auth-brand.is-ticket .auth-brand__scene,
+.auth-brand.is-calm .auth-brand__scene {
+    padding-top: 0;
 }
 
-.auth-brand__cohort-sep {
-    color: var(--text-subtle);
+.auth-scene__ticket {
+    width: min(340px, 100%);
 }
 
-.auth-brand__cohort-target {
-    color: var(--text-secondary);
+.auth-brand.is-calm .auth-brand__wall {
+    opacity: 0.55;
 }
-
-.auth-brand__cohort-bar {
-    height: 5px;
-    background: var(--surface-3);
-    border-radius: 999px;
-    overflow: hidden;
-}
-
-.auth-brand__cohort-fill {
-    height: 100%;
-    background: var(--signal);
-    border-radius: 999px;
-}
-
-
-/* Cities row - pushed to bottom */
 
 .auth-brand__cities {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-top: auto;
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
 }
 
-.auth-brand__city {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-body);
-    font-size: 13px;
+.auth-brand__cities b {
+    color: var(--lc-ink-2);
     font-weight: 500;
-    color: var(--text-primary);
 }
 
-.auth-brand__city--muted {
-    color: var(--text-muted);
-}
-
-.auth-brand__city-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--text-subtle);
-}
-
-.auth-brand__city-dot--live {
-    background: var(--success);
-    box-shadow: 0 0 0 3px rgba(43, 140, 90, 0.18);
-}
-
-.auth-brand__city-dot--next {
-    background: var(--signal);
+.auth-brand__cities b.is-here {
+    color: var(--lc-ink-1);
+    font-weight: 600;
 }
 
 
-/* Form panel */
+/* The form panel */
 
 .auth-form-panel {
     position: relative;
-    padding: 32px 56px;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background: var(--surface-0);
+    min-height: 100dvh;
+    padding: var(--space-8) clamp(1.25rem, 5vw, 3.5rem);
+    background: var(--lc-canvas);
 }
 
 .auth-form-panel__inner {
+    display: flex;
     flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-5);
     width: 100%;
     max-width: 420px;
     margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    justify-content: center;
-    padding: 24px 0;
+    padding: var(--space-6) 0;
 }
 
 .auth-form-panel__terms {
-    text-align: center;
-    font-size: 11.5px;
-    color: var(--text-muted);
+    margin: var(--space-6) 0 0;
+    color: var(--lc-ink-3);
+    font-size: 12px;
     line-height: 1.5;
-    margin: 24px 0 0;
+    text-align: center;
 }
 
 .auth-form-panel__terms a {
-    color: var(--text-secondary);
-    text-decoration: none;
-    transition: color 180ms ease;
+    color: var(--lc-ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--lc-line-strong);
+    text-underline-offset: 2px;
 }
 
-.auth-form-panel__terms a:hover {
-    color: var(--azure-link);
+@media (hover: hover) {
+    .auth-form-panel__terms a:hover {
+        color: var(--lc-info);
+    }
 }
 
 
-/* Mobile top strip - hidden on desktop */
+/* Phones: brand and back link on one row, then one row of the city's pattern. */
 
 .auth-mobile-top {
     display: none;
 }
 
-.auth-mobile-top__brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: -0.018em;
+.auth-mobile-band {
+    display: none;
 }
-
-
-/* Back link */
 
 .auth-back {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    min-height: 44px;
-    font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    text-decoration: none;
-    transition: color 180ms ease;
+    gap: var(--space-2);
     width: fit-content;
+    min-height: 44px;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    font-weight: 500;
+    text-decoration: none;
 }
 
-.auth-back:hover {
-    color: var(--text-primary);
+@media (hover: hover) {
+    .auth-back:hover {
+        color: var(--lc-ink-1);
+    }
 }
 
 .auth-back--inline {
-    margin-bottom: 6px;
+    margin-bottom: calc(-1 * var(--space-2));
 }
 
 
-/* Mobile-only cohort strip - hidden on desktop */
-
-.auth-cohort-strip {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    background: var(--surface-1);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin: 16px auto 0;
-    max-width: 420px;
-    width: 100%;
-}
-
-
-
-/* Booking the client is finishing */
+/* The booking a guest is finishing */
 
 .auth-booking {
     display: grid;
     grid-template-columns: 40px minmax(0, 1fr);
-    column-gap: 14px;
-    padding: 14px 16px;
-    background: var(--surface-1);
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
+    column-gap: var(--space-4);
+    padding: var(--space-4);
+    border: 1px solid var(--lc-line-strong);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-card);
 }
 
 .auth-booking__icon {
@@ -449,38 +270,40 @@
     place-items: center;
     width: 40px;
     height: 40px;
-    border-radius: 999px;
-    background: rgba(45, 127, 240, 0.12);
-    color: var(--azure-link);
+    border-radius: 50%;
+    background: var(--lc-info-tint);
+    color: var(--lc-info);
 }
 
-.auth-booking__text p { margin: 0; }
+.auth-booking__text p {
+    margin: 0;
+}
 
 .auth-booking__label {
+    color: var(--lc-ink-3);
     font-size: 12px;
     font-weight: 500;
-    color: var(--text-muted);
 }
 
 .auth-booking__when {
     margin-top: 2px;
-    font-family: var(--font-display);
-    font-size: 18px;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: 1.125rem;
     font-weight: 600;
-    letter-spacing: -0.015em;
+    letter-spacing: var(--lc-track-title);
     font-variant-numeric: tabular-nums;
-    color: var(--text-primary);
 }
 
 .auth-booking__what {
-    font-size: 13px;
-    color: var(--text-secondary);
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
     overflow-wrap: anywhere;
 }
 
 .auth-booking__what b {
+    color: var(--lc-ink-1);
     font-weight: 600;
-    color: var(--text-primary);
 }
 
 
@@ -489,74 +312,77 @@
 .auth-head {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-2);
 }
 
 .auth-head__title {
-    font-family: var(--font-display);
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.022em;
-    line-height: 1.15;
-    color: var(--text-primary);
     margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.025em;
 }
 
 .auth-head__sub {
-    font-size: 14px;
-    color: var(--text-secondary);
     margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
 }
 
 
-/* Tabs with sliding indicator */
+/* Tabs: a filled track with a raised thumb (doc 21, rule 18). */
 
 .auth-tabs {
     position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: var(--surface-1);
-    border: 1px solid var(--border-subtle);
-    border-radius: 10px;
     padding: 4px;
     overflow: hidden;
+    border: 1px solid var(--lc-line);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
 }
 
 .auth-tab {
     position: relative;
     z-index: 1;
-    padding: 9px 16px;
-    background: transparent;
+    min-height: 40px;
     border: none;
+    border-radius: var(--lc-r-sm);
+    background: transparent;
+    color: var(--lc-ink-3);
+    font-family: var(--lc-font-body);
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    color: var(--text-muted);
-    border-radius: 7px;
-    transition: color 200ms ease;
+    transition: color var(--lc-fast) var(--lc-ease);
 }
 
 .auth-tab--active {
-    color: var(--text-primary);
+    color: var(--lc-ink-1);
 }
 
-.auth-tab:not(.auth-tab--active):hover {
-    color: var(--text-secondary);
+@media (hover: hover) {
+    .auth-tab:not(.auth-tab--active):hover {
+        color: var(--lc-ink-2);
+    }
 }
 
 .auth-tabs__indicator {
     position: absolute;
+    z-index: 0;
     top: 4px;
     bottom: 4px;
     left: 4px;
     width: calc(50% - 4px);
-    background: var(--surface-3);
-    border: 1px solid var(--border-medium);
-    border-radius: 7px;
-    transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
-    z-index: 0;
+    border: 1px solid var(--lc-line-strong);
+    border-radius: var(--lc-r-sm);
+    background: var(--lc-raised);
+    box-shadow: var(--lc-shadow-raised);
+    transition: transform var(--lc-base) var(--lc-ease);
 }
 
 .auth-tabs__indicator--right {
@@ -564,470 +390,46 @@
 }
 
 
-/* Alerts */
+/* Messages */
+
+.auth-alerts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    scroll-margin: var(--space-6);
+}
+
+.auth-alerts:empty {
+    display: none;
+}
 
 .auth-alert {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    font-size: 13px;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid transparent;
+    border-radius: var(--lc-r-md);
+    font-size: 14px;
     font-weight: 500;
-    line-height: 1.4;
-}
-
-.auth-alert--success {
-    background: rgba(43, 140, 90, 0.10);
-    border: 1px solid rgba(43, 140, 90, 0.28);
-    color: var(--success);
-}
-
-.auth-alert--error {
-    background: rgba(180, 62, 51, 0.10);
-    border: 1px solid rgba(180, 62, 51, 0.28);
-    color: var(--danger);
+    line-height: 1.45;
 }
 
 .auth-alert svg {
     flex-shrink: 0;
+    margin-top: 2px;
 }
 
-
-/* User type toggle */
-
-.auth-toggle {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.auth-alert--success {
+    border-color: var(--lc-success-tint);
+    background: var(--lc-success-tint);
+    color: var(--lc-success);
 }
 
-.auth-toggle__label {
-    font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-}
-
-.auth-toggle__options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.auth-toggle__option {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    background: var(--surface-1);
-    border: 1px solid var(--border-subtle);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: border-color 180ms ease, background 180ms ease;
-}
-
-.auth-toggle__option:hover {
-    border-color: var(--border-medium);
-}
-
-.auth-toggle__option--active {
-    background: var(--surface-2);
-    border-color: var(--azure);
-}
-
-.auth-toggle__option input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.auth-toggle__ico {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: var(--surface-3);
-    border: 1px solid var(--border-subtle);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    flex-shrink: 0;
-    transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
-}
-
-.auth-toggle__option--active .auth-toggle__ico {
-    background: rgba(45, 127, 240, 0.10);
-    border-color: rgba(45, 127, 240, 0.32);
-    color: var(--azure);
-}
-
-.auth-toggle__copy {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-}
-
-.auth-toggle__name {
-    font-family: var(--font-display);
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--text-primary);
-    line-height: 1.2;
-}
-
-.auth-toggle__note {
-    font-size: 11px;
-    color: var(--text-muted);
-    line-height: 1.3;
-}
-
-
-/* Form fields */
-
-.auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.auth-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-}
-
-.auth-field label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-}
-
-.auth-field__aux {
-    font-family: var(--font-body);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    color: var(--azure-link);
-    text-transform: none;
-    text-decoration: none;
-    transition: color 180ms ease;
-}
-
-.auth-field__aux:hover {
-    color: var(--azure-soft);
-}
-
-.auth-field input {
-    background: var(--surface-2);
-    border: 1px solid var(--border-subtle);
-    border-radius: 9px;
-    padding: 11px 13px;
-    color: var(--text-primary);
-    font-family: var(--font-body);
-    font-size: 14px;
-    line-height: 1.4;
-    transition: border-color 180ms ease, background 180ms ease;
-    width: 100%;
-}
-
-.auth-field input::placeholder {
-    color: var(--text-subtle);
-}
-
-.auth-field input:focus {
-    outline: none;
-    border-color: var(--azure);
-    background: var(--surface-3);
-}
-
-.auth-field input:focus-visible {
-    box-shadow: 0 0 0 3px rgba(45, 127, 240, 0.18);
-}
-
-
-/* Submit button */
-
-.auth-submit {
-    margin-top: 6px;
-    width: 100%;
-    padding: 12px 18px;
-    background: var(--lc-azure-button);
-    color: var(--lc-on-accent);
-    border: 1px solid var(--lc-azure-button);
-    border-radius: 10px;
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: background 180ms ease, transform 180ms ease;
-    text-decoration: none;
-}
-
-.auth-submit:hover:not(:disabled) {
-    background: var(--lc-azure-hover);
-    border-color: var(--lc-azure-hover);
-    color: var(--lc-on-accent);
-    transform: translateY(-1px);
-}
-
-.auth-submit:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.auth-submit--ghost {
-    background: transparent;
-    color: var(--text-primary);
-    border-color: var(--border-medium);
-}
-
-.auth-submit--ghost:hover:not(:disabled) {
-    background: var(--surface-1);
-    border-color: var(--border-strong);
-}
-
-
-/* Divider */
-
-.auth-divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-muted);
-    margin: 2px 0;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border-subtle);
-}
-
-
-/* OAuth buttons - Apple + Google, ordered by platform */
-
-.auth-oauth-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-/* Apple devices see Apple first; everyone else sees Google first. */
-.auth-oauth-stack.is-google-first {
-    flex-direction: column-reverse;
-}
-
-.auth-oauth {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    padding: 11px 18px;
-    border-radius: 10px;
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    cursor: pointer;
-    transition: background 180ms ease, border-color 180ms ease;
-}
-
-.auth-oauth:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.auth-oauth--google {
-    background: var(--surface-2);
-    color: var(--text-primary);
-    border: 1px solid var(--border-medium);
-}
-
-.auth-oauth--google:hover:not(:disabled) {
-    background: var(--surface-3);
-    border-color: var(--border-strong);
-}
-
-.auth-oauth--apple {
-    background: #000;
-    color: #fff;
-    border: 1px solid #000;
-}
-
-.auth-oauth--apple:hover:not(:disabled) {
-    background: #1a1a1a;
-    border-color: #1a1a1a;
-}
-
-.auth-oauth--apple svg {
-    color: #fff;
-}
-
-
-/* Switch text at bottom */
-
-.auth-switch {
-    text-align: center;
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin: 4px 0 0;
-}
-
-.auth-switch__link {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: var(--azure-link);
-    font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: color 180ms ease;
-}
-
-.auth-switch__link:hover {
-    color: var(--azure-soft);
-    text-decoration: underline;
-}
-
-
-/* Success state (forgot password) */
-
-.auth-success-state {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    text-align: center;
-    align-items: center;
-}
-
-.auth-success-state .auth-head__title,
-.auth-success-state .auth-head__sub {
-    text-align: center;
-}
-
-.auth-success-state__ico {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: rgba(43, 140, 90, 0.10);
-    border: 1px solid rgba(43, 140, 90, 0.28);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--success);
-    margin-bottom: 4px;
-}
-
-
-/* Mobile - hide brand panel, show cohort strip above form */
-
-@media (max-width: 980px) {
-    .auth-page {
-        grid-template-columns: 1fr;
-    }
-
-    .auth-brand {
-        display: none;
-    }
-
-    .auth-mobile-top {
-        display: flex;
-        align-items: center;
-        margin: 0 auto 8px;
-        max-width: 420px;
-        width: 100%;
-    }
-
-    .auth-cohort-strip {
-        display: inline-flex;
-    }
-
-    .auth-form-panel {
-        padding: 28px 32px 32px;
-        min-height: 100vh;
-    }
-
-    .auth-form-panel__inner {
-        padding: 16px 0;
-    }
-}
-
-@media (max-width: 480px) {
-    .auth-form-panel {
-        padding: 22px 18px 28px;
-    }
-
-    .auth-form-panel__inner {
-        padding: 12px 0;
-        gap: 16px;
-    }
-
-    .auth-head__title {
-        font-size: 22px;
-    }
-
-    .auth-toggle__options {
-        grid-template-columns: 1fr;
-    }
-
-    .auth-cohort-strip {
-        padding: 10px;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .auth-tabs__indicator,
-    .auth-brand__pin-ring {
-        animation: none;
-        transition: none;
-    }
-
-    .auth-submit:hover {
-        transform: none;
-    }
-}
-
-
-.auth-success-state__ico--warn {
-    background: var(--lc-warning-tint);
-    border-color: var(--lc-warning-tint);
-    color: var(--lc-warning);
-}
-
-.auth-confirm__spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--lc-line-strong);
-    border-top-color: var(--azure);
-    border-radius: 50%;
-    animation: auth-confirm-spin 0.8s linear infinite;
-}
-
-@keyframes auth-confirm-spin {
-    to { transform: rotate(360deg); }
+.auth-alert--error {
+    border-color: var(--lc-danger-tint);
+    background: var(--lc-danger-tint);
+    color: var(--lc-danger);
 }
 
 .auth-resend {
@@ -1044,21 +446,399 @@
     cursor: pointer;
 }
 
-.auth-resend:disabled { opacity: 0.6; cursor: default; }
+.auth-resend:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
 
 @media (hover: hover) {
-    .auth-resend:hover:not(:disabled) { background: var(--lc-raised); }
+    .auth-resend:hover:not(:disabled) {
+        background: var(--lc-raised);
+    }
+}
+
+
+/* Google and Apple: first on the page, the fastest way in. */
+
+.auth-oauth-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+/* Apple devices see Apple first; everyone else sees Google first. */
+.auth-oauth-stack.is-google-first {
+    flex-direction: column-reverse;
+}
+
+.auth-oauth {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 48px;
+    padding: 0 var(--space-5);
+    border-radius: var(--lc-r-md);
+    font-family: var(--lc-font-body);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--lc-fast) var(--lc-ease), border-color var(--lc-fast) var(--lc-ease), transform var(--lc-fast) var(--lc-ease);
+}
+
+.auth-oauth:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.auth-oauth:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Google's own button: white with its coloured G, as Google asks; it reads as the main way in. */
+.auth-oauth--google {
+    border: 1px solid var(--lc-line-strong);
+    background: var(--lc-ink-1);
+    color: var(--lc-paper-ink);
+}
+
+@media (hover: hover) {
+    .auth-oauth--google:hover:not(:disabled) {
+        background: var(--lc-ink-2);
+    }
+}
+
+/* Apple's button is black with a white mark, per Apple's guidelines: their colours, not ours. */
+.auth-oauth--apple {
+    border: 1px solid var(--lc-line-strong);
+    background: black;
+    color: white;
+}
+
+.auth-oauth--apple svg {
+    color: white;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--lc-ink-3);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--lc-line-strong);
+}
+
+
+/* The form */
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.auth-field label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    color: var(--lc-ink-2);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* "Forgot?" is the link people hunt for: full size and a proper tap target. */
+.auth-field__aux {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    margin: -6px 0;
+    color: var(--lc-info);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+@media (hover: hover) {
+    .auth-field__aux:hover {
+        text-decoration: underline;
+    }
+}
+
+.auth-field input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--lc-line-strong);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-card);
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-body);
+    font-size: 15px;
+    transition: border-color var(--lc-fast) var(--lc-ease), box-shadow var(--lc-fast) var(--lc-ease);
+}
+
+.auth-field input::placeholder {
+    color: var(--lc-ink-4);
+}
+
+.auth-field input:focus {
+    outline: none;
+    border-color: var(--azure);
+    box-shadow: 0 0 0 3px var(--lc-info-tint);
+}
+
+/* The password box carries its show and hide button inside it. */
+.auth-field__wrap {
+    position: relative;
+}
+
+.auth-field__wrap input {
+    padding-right: 52px;
+}
+
+.auth-field__eye {
+    position: absolute;
+    top: 50%;
+    right: 2px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: var(--lc-r-sm);
+    background: none;
+    color: var(--lc-ink-3);
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.auth-field__eye[aria-pressed='true'] {
+    color: var(--lc-info);
+}
+
+.auth-field__eye:focus-visible {
+    outline: 2px solid var(--azure);
+    outline-offset: -4px;
+}
+
+@media (hover: hover) {
+    .auth-field__eye:hover {
+        color: var(--lc-ink-1);
+    }
+}
+
+.auth-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: 48px;
+    margin-top: var(--space-1);
+    padding: 0 var(--space-5);
+    border: 1px solid var(--lc-azure-button);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-azure-button);
+    color: var(--lc-on-accent);
+    font-family: var(--lc-font-body);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--lc-fast) var(--lc-ease), transform var(--lc-fast) var(--lc-ease);
+}
+
+.auth-submit:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+@media (hover: hover) {
+    .auth-submit:hover:not(:disabled) {
+        border-color: var(--lc-azure-hover);
+        background: var(--lc-azure-hover);
+        color: var(--lc-on-accent);
+    }
+}
+
+.auth-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.auth-submit--ghost {
+    border-color: var(--lc-line-strong);
+    background: transparent;
+    color: var(--lc-ink-1);
+}
+
+@media (hover: hover) {
+    .auth-submit--ghost:hover:not(:disabled) {
+        border-color: var(--lc-ink-3);
+        background: var(--lc-highlight);
+        color: var(--lc-ink-1);
+    }
+}
+
+.auth-switch {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: 14px;
+    text-align: center;
+}
+
+.auth-switch__link {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--lc-info);
+    font-family: var(--lc-font-body);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .auth-switch__link:hover {
+        text-decoration: underline;
+    }
+}
+
+
+/* Done, sent, expired: one message, one way on. */
+
+.auth-success-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    text-align: center;
+}
+
+.auth-success-state .auth-head__title,
+.auth-success-state .auth-head__sub {
+    text-align: center;
+}
+
+.auth-success-state__ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: var(--space-1);
+    border: 1px solid var(--lc-success-tint);
+    border-radius: 50%;
+    background: var(--lc-success-tint);
+    color: var(--lc-success);
+}
+
+.auth-success-state__ico--warn {
+    border-color: var(--lc-warning-tint);
+    background: var(--lc-warning-tint);
+    color: var(--lc-warning);
+}
+
+.auth-confirm__spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--lc-line-strong);
+    border-top-color: var(--azure);
+    border-radius: 50%;
+    animation: auth-confirm-spin 0.8s linear infinite;
+}
+
+@keyframes auth-confirm-spin {
+    to { transform: rotate(360deg); }
+}
+
+
+/* Tablets and phones: no side panel. The brand, the back link and a row of the city's pattern
+   sit above the form. */
+
+@media (max-width: 980px) {
+    .auth-mobile-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+    }
+
+    .auth-back--wide {
+        display: none;
+    }
+
+    .auth-mobile-band {
+        display: block;
+        width: 100%;
+        max-width: 420px;
+        height: 48px;
+        margin: var(--space-3) auto 0;
+        border-radius: var(--lc-r-sm);
+    }
+
+    /* One whole row of tiles: 48px for Porto and Lagos, two waves of 20px for Lisbon. */
+    .auth-page.is-lisbon .auth-mobile-band {
+        height: 40px;
+    }
+
+    .auth-form-panel {
+        padding: var(--space-5) var(--space-5) var(--space-8);
+    }
+
+    .auth-form-panel__inner {
+        justify-content: flex-start;
+        padding: var(--space-6) 0 0;
+    }
+}
+
+/* Phones: inputs at 16px, so iPhones do not zoom the page when a field is tapped. */
+@media (max-width: 480px) {
+    .auth-form-panel {
+        padding: var(--space-4) var(--space-4) var(--space-6);
+    }
+
+    .auth-form-panel__inner {
+        gap: var(--space-4);
+    }
+
+    .auth-head__title {
+        font-size: 1.5rem;
+    }
+
+    .auth-field input {
+        font-size: 16px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .auth-confirm__spinner { animation-duration: 2.4s; }
-}
+    .auth-tabs__indicator,
+    .auth-submit,
+    .auth-oauth {
+        transition: none;
+    }
 
-.auth-alerts {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    scroll-margin: 24px;
+    .auth-confirm__spinner {
+        animation-duration: 2.4s;
+    }
 }
-
-.auth-alerts:empty { display: none; }

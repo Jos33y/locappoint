@@ -44,7 +44,7 @@ const AuthConfirm = () => {
 
     if (state === 'changed') {
         return (
-            <AuthShell audience="client" brandTitle="Email updated." brandSub="Sign in with your new email from now on.">
+            <AuthShell scene="calm" brandTitle="Email updated." brandSub="Sign in with your new email from now on.">
                 <div className="auth-success-state">
                     <div className="auth-success-state__ico" aria-hidden="true">
                         <CheckCircle size={28} strokeWidth={1.8} />
@@ -62,7 +62,7 @@ const AuthConfirm = () => {
 
     if (state === 'invalid') {
         return (
-            <AuthShell audience="client" brandTitle="That link cannot be used." brandSub="Email links work once and expire after a while.">
+            <AuthShell scene="calm" brandTitle="That link cannot be used." brandSub="Email links work once and expire after a while.">
                 <div className="auth-success-state">
                     <div className="auth-success-state__ico auth-success-state__ico--warn" aria-hidden="true">
                         <AlertCircle size={28} strokeWidth={1.8} />
@@ -85,7 +85,7 @@ const AuthConfirm = () => {
     }
 
     return (
-        <AuthShell audience="client" brandTitle="One moment." brandSub="Checking your link.">
+        <AuthShell scene="calm" brandTitle="One moment." brandSub="Checking your link.">
             <div className="auth-success-state" role="status" aria-live="polite">
                 <span className="auth-confirm__spinner" aria-hidden="true" />
                 <h1 className="auth-head__title">Checking your link</h1>

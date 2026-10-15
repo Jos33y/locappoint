@@ -49,6 +49,7 @@ const ForgotPassword = () => {
 
     return (
         <AuthShell
+            scene="calm"
             brandTitle="Resetting takes a minute."
             brandSub="Enter your email below. We send a reset link straight to your inbox.">
 
@@ -118,7 +119,7 @@ const ForgotPassword = () => {
                         </div>
 
                         <button type="submit" className="auth-submit" disabled={loading}>
-                            {loading ? 'Sending...' : (
+                            {loading ? 'Sending…' : (
                                 <>
                                     Send reset link
                                     <ArrowRight size={16} strokeWidth={2} />

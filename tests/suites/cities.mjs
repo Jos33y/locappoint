@@ -51,11 +51,9 @@ export default async ({ check, root, server }) => {
     const cohort = read('src/services/cohort.js')
     check(/export const CITIES = \[\s*\{ name: 'Porto'/.test(cohort), 'the first cohort is counted in Porto')
     check(!/is_demo/.test(cohort), 'the cohort count includes the demo business, as Browse does')
-    for (const file of ['src/pages/app/auth/AuthShell.jsx']) {
-        const text = read(file)
-        check(/useCohort\(/.test(text) && !/COHORT_ONBOARDED/.test(text), `${file} shows the live cohort count, not a typed-in number`)
-        check(/useCity\(\)/.test(text), `${file} follows the picked city`)
-    }
+    // Sign-up shows no business count until businesses are onboarded, like the home page; it still follows the city.
+    const shell = read('src/pages/app/auth/AuthShell.jsx')
+    check(/useCity\(\)/.test(shell) && !/useCohort|COHORT_ONBOARDED|Cohort 1/.test(shell), 'sign-up follows the picked city and shows no business count')
     // The home page shows no business counts until businesses are onboarded; it still speaks to the picked city.
     const cta = read('src/pages/app/home/Cta.jsx')
     check(/useCity\(\)/.test(cta) && !/useCohort|COHORT_ONBOARDED|first ten/i.test(cta), 'the home page closer follows the picked city and shows no business count')

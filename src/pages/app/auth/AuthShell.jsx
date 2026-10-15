@@ -1,38 +1,59 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import LogoIcon from '../../../components/LogoIcon'
-import { useCohort } from '../../../hooks/useCohort'
+import CityPattern from '../../../components/brand/CityPattern'
 import { useCity } from '../../../hooks/useCity'
+import { OwnerPhone } from '../home/Drawings'
+import Ticket from '../home/Ticket'
+import { CITY_SAMPLE } from '../home/content'
 
 const HOME_PATH = import.meta.env.DEV ? '/?app' : '/'
 
-// Where the pin on the map sits, for each city taking bookings.
-const SPOTS = {
-    porto: { lat: '41.16\u00b0 N', lng: '8.63\u00b0 W', geo: '41.1579\u00b0 N \u00b7 8.6291\u00b0 W' },
-    lagos: { lat: '6.52\u00b0 N', lng: '3.38\u00b0 E', geo: '6.5244\u00b0 N \u00b7 3.3792\u00b0 E' },
-    lisbon: { lat: '38.72\u00b0 N', lng: '9.14\u00b0 W', geo: '38.7223\u00b0 N \u00b7 9.1393\u00b0 W' },
+// "Thursday 16 October at 15:30" becomes the ticket's day and time.
+const splitWhen = (when = '') => {
+    const m = /^(.*?)\s+at\s+(\d{1,2}:\d{2})$/.exec(when.trim())
+    return m ? [m[1], m[2]] : [when, null]
+}
+
+// What the side panel shows, picking up where the home page left off, in the visitor's city:
+// owner: the owner's day filling up; welcome: that day, waiting; ticket: what a client keeps;
+// calm: the city alone, for password and email-link screens.
+const Scene = ({ scene, city, booking }) => {
+    const sample = CITY_SAMPLE[city.code] || CITY_SAMPLE.porto
+    if (scene === 'owner') return <OwnerPhone sample={sample} currency={city.currency} />
+    if (scene === 'welcome') return <OwnerPhone sample={sample} currency={city.currency} alert={false} greeting={`Welcome back, ${sample.owner}`} />
+    if (scene === 'ticket') {
+        if (!booking) return <Ticket city={city.code} sample={sample} currency={city.currency} className="auth-scene__ticket" />
+        const [day, time] = splitWhen(booking.when)
+        return (
+            <Ticket
+                city={city.code}
+                sample={{ service: booking.service }}
+                className="auth-scene__ticket"
+                day={day}
+                time={time}
+                who={booking.business}
+                where=""
+            />
+        )
+    }
+    return null
 }
 
 const AuthShell = ({
-    brandTitle = 'Booking that fills your week, not your DMs.',
-    brandSub = 'Local businesses in Porto, Lagos and Lisbon. Free during the beta.',
-    audience = 'business',
+    brandTitle = 'This is where your day fills up.',
+    brandSub = 'Set your hours, share your link, and bookings arrive with reminders sent for you.',
+    scene = 'owner',
+    booking = null,
     back = null,
     children,
 }) => {
-    const forBusiness = audience === 'business'
-    // The visitor's city when it is taking bookings, otherwise Porto, with its map coordinates.
-    const [picked] = useCity()
-    const city = picked.live ? picked : { code: 'porto', name: 'Porto' }
-    const spot = SPOTS[city.code] || SPOTS.porto
-    const cohort = useCohort(city.code)
+    const [city] = useCity()
     const backLink = back || { to: HOME_PATH, label: 'Back to home' }
 
     return (
-        <div className="auth-page">
-            <aside className="auth-brand" aria-hidden="true">
-                <div className="auth-brand__radial"></div>
-
+        <div className={`auth-page is-${city.code}`}>
+            <aside className={`auth-brand is-${scene}`} aria-hidden="true">
                 <Link to={HOME_PATH} className="auth-brand__wordmark" tabIndex={-1}>
                     <LogoIcon size={28} className="auth-brand__mark" />
                     <span>
@@ -45,55 +66,16 @@ const AuthShell = ({
                     <p className="auth-brand__lede">{brandSub}</p>
                 </div>
 
-                <div className="auth-brand__visual">
-                    <div className="auth-brand__map">
-                        <div className="auth-brand__map-grid"></div>
-                        <div className="auth-brand__map-glow"></div>
-                        <div className="auth-brand__pin">
-                            <div className="auth-brand__pin-ring"></div>
-                            <div className="auth-brand__pin-ring auth-brand__pin-ring--outer"></div>
-                            <LogoIcon size={56} className="auth-brand__pin-mark" />
-                        </div>
-                        <span className="auth-brand__tick auth-brand__tick--tl">{spot.lat}</span>
-                        <span className="auth-brand__tick auth-brand__tick--tr">{spot.lng}</span>
-                    </div>
-                    <div className="auth-brand__coords">
-                        <span className="auth-brand__coords-geo">{spot.geo}</span>
-                        <span className="auth-brand__coords-sep">·</span>
-                        <span className="auth-brand__coords-place">{city.name}</span>
+                <div className="auth-brand__world">
+                    <CityPattern city={city.code} centred className="auth-brand__wall" />
+                    <div className="auth-brand__scene">
+                        <Scene scene={scene} city={city} booking={booking} />
                     </div>
                 </div>
 
-                {forBusiness && cohort && (
-                    <div className="auth-brand__cohort">
-                        <div className="auth-brand__cohort-head">
-                            <span className="auth-brand__cohort-label">Cohort 1 in {city.name}</span>
-                            <span className="auth-brand__cohort-count">
-                                <span className="auth-brand__cohort-num">{cohort.count}</span>
-                                <span className="auth-brand__cohort-sep">/</span>
-                                <span className="auth-brand__cohort-target">{cohort.size}</span>
-                            </span>
-                        </div>
-                        <div className="auth-brand__cohort-bar">
-                            <div className="auth-brand__cohort-fill" style={{ width: `${cohort.pct}%` }}></div>
-                        </div>
-                    </div>
-                )}
-
-                <div className="auth-brand__cities">
-                    <span className="auth-brand__city">
-                        <span className="auth-brand__city-dot auth-brand__city-dot--live"></span>
-                        Porto
-                    </span>
-                    <span className="auth-brand__city">
-                        <span className="auth-brand__city-dot auth-brand__city-dot--live"></span>
-                        Lagos
-                    </span>
-                    <span className="auth-brand__city">
-                        <span className="auth-brand__city-dot auth-brand__city-dot--live"></span>
-                        Lisbon
-                    </span>
-                </div>
+                <p className="auth-brand__cities">
+                    Live in <b className={city.code === 'porto' ? 'is-here' : ''}>Porto</b>, <b className={city.code === 'lagos' ? 'is-here' : ''}>Lagos</b> and <b className={city.code === 'lisbon' ? 'is-here' : ''}>Lisbon</b>
+                </p>
             </aside>
 
             <main className="auth-form-panel">
@@ -104,18 +86,18 @@ const AuthShell = ({
                             <span className="auth-brand__loc">Loc</span><span className="auth-brand__appoint">Appoint</span>
                         </span>
                     </Link>
+                    <Link to={backLink.to} className="auth-back">
+                        <ArrowLeft size={14} strokeWidth={2} aria-hidden="true" />
+                        <span>{backLink.label}</span>
+                    </Link>
                 </div>
+                {/* Phones: one row of the city's pattern, so the brand shows without pushing the form down. */}
+                <CityPattern city={city.code} centred className="auth-mobile-band" />
 
-                <Link to={backLink.to} className="auth-back">
-                    <ArrowLeft size={14} strokeWidth={2} />
+                <Link to={backLink.to} className="auth-back auth-back--wide">
+                    <ArrowLeft size={14} strokeWidth={2} aria-hidden="true" />
                     <span>{backLink.label}</span>
                 </Link>
-
-                {forBusiness && cohort && (
-                    <div className="auth-cohort-strip">
-                        <span>Cohort 1: {cohort.count} of {cohort.size} businesses live in {city.name}</span>
-                    </div>
-                )}
 
                 <div className="auth-form-panel__inner">
                     {children}

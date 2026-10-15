@@ -135,7 +135,7 @@ const Auth = ({ children }) => {
     signInWithGoogle: async () => { window.__oauth = 'google'; return { data: {}, error: null } },
     signInWithApple: async () => { window.__oauth = 'apple'; return { data: {}, error: null } },
     signIn: async () => ({ data: null, error: null }),
-    signUp: async () => ({ data: null, error: null }),
+    signUp: async (email, password, data) => { window.__signup = { email, data }; return { data: null, error: null } },
     resendConfirmation: async () => ({ error: null }),
   }), [mode])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
