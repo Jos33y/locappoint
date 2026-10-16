@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
 import AppHeader from '../../../components/common/AppHeader'
 import AppFooter from '../../../components/common/Appfooter'
+import CityPattern from '../../../components/brand/CityPattern'
 import { LEGAL_UPDATED } from '../../../constants/legalEntity'
-import '../../../styles/app/home.css'
+import { useCity } from '../../../hooks/useCity'
 import '../../../styles/app/legal.css'
 
 export const LEGAL_PAGES = [
@@ -19,22 +20,24 @@ export const LEGAL_PAGES = [
 const LegalLayout = ({ title, lede, sections }) => {
     const { pathname } = useLocation()
     const related = LEGAL_PAGES.filter((page) => page.to !== pathname)
+    const [city] = useCity()
 
     return (
-        <div className="legal-page">
+        <div className={`legal-page is-${city.code}`}>
             <AppHeader />
 
             <main>
-                <section className="loca-section loca-section--s0 legal__hero">
+                <section className="legal__hero">
+                    <CityPattern city={city.code} centred className="legal__band" />
                     <div className="container container--legal">
-                        <span className="loca-eyebrow">Legal</span>
+                        <p className="legal__eyebrow">Legal</p>
                         <h1 className="legal__title">{title}</h1>
                         <p className="legal__meta">Last updated: {LEGAL_UPDATED}</p>
                         <p className="legal__lede">{lede}</p>
                     </div>
                 </section>
 
-                <section className="loca-section loca-section--s0 legal__body">
+                <section className="legal__body">
                     <div className="container container--legal">
                         {sections.length > 2 && (
                             <nav className="legal__toc" aria-label="Table of contents">

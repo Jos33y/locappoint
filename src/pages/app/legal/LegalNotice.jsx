@@ -22,7 +22,6 @@ const sections = [
                         <Row label="Registry" value={orPending(LEGAL_ENTITY.registry)} />
                         <Row label="Registration number" value={orPending(LEGAL_ENTITY.registrationNumber)} />
                         <Row label="Tax number" value={orPending(LEGAL_ENTITY.taxId)} />
-                        <Row label="Based in" value={LEGAL_ENTITY.city} />
                         <Row label="Email" value={<a href={`mailto:${LEGAL_ENTITY.email}`}>{LEGAL_ENTITY.email}</a>} />
                     </tbody>
                 </table>

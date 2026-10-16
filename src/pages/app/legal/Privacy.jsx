@@ -8,7 +8,7 @@ const sections = [
         label: 'Who we are',
         body: (
             <>
-                <p>Locappoint is a booking platform for local service businesses, based in {LEGAL_ENTITY.city}. The operating company is <strong>{orPending(LEGAL_ENTITY.legalName)}</strong>. Full company details are on the <Link to="/legal/notice">Legal Notice</Link>.</p>
+                <p>Locappoint is a booking platform for local service businesses. The operating company is <strong>{orPending(LEGAL_ENTITY.legalName)}</strong>. Full company details are on the <Link to="/legal/notice">Legal Notice</Link>.</p>
                 <p>We have two roles, depending on the data:</p>
                 <ul className="legal__list">
                     <li><strong>Controller</strong> for your account, your business profile, anything you send us through the waitlist, partnership or contact forms, and analytics on our waitlist site.</li>
