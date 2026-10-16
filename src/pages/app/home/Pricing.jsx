@@ -24,7 +24,7 @@ const Pricing = () => {
                             <li><span>New clients we send you</span><b>No extra charge</b></li>
                             <li><span>Walk-ins and bookings you add yourself</span><b>Never a fee</b></li>
                             <li>
-                                <span>When online payments arrive <small>A small fee on paid bookings only. Your first month of it is free, and you hear at least 30 days before.</small></span>
+                                <span>When online payments arrive <small>A small fee on paid bookings only. The first month of it is free for our first 100 businesses, and everyone hears at least 30 days before.</small></span>
                                 <b>Later</b>
                             </li>
                         </ul>

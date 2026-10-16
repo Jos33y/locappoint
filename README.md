@@ -111,7 +111,7 @@ LocAppoint is a clean, easy-to-use booking page for **local service providers** 
 
 * © 2026 LocAppoint. All rights reserved.
 * Terms of Use and Privacy Policy will be published at launch.
-
+ 
 ---
 
 ### At a glance

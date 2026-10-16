@@ -4,10 +4,21 @@
 
 export default async ({ browser, url, check }) => {
     const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms))
-    const open = async (path, vw = 1272, vh = 900, extra = '') => {
+    const open = async (path, vw = 1272, vh = 900, extra = '', hour = null) => {
         const page = await browser.newPage()
         page.errors = []
         page.on('pageerror', (e) => page.errors.push(e.message))
+        // The visitor's clock, fixed to an hour, for the daylight on sign-in.
+        if (hour != null) {
+            await page.evaluateOnNewDocument((hr) => {
+                const D = Date
+                const fixed = new D(2026, 9, 16, hr, 12)
+                globalThis.Date = class extends D {
+                    constructor(...a) { return a.length ? new D(...a) : new D(fixed) }
+                    static now() { return fixed.getTime() }
+                }
+            }, hour)
+        }
         await page.setViewport({ width: vw, height: vh, isMobile: vw < 1024, hasTouch: vw < 1024 })
         await page.goto(`${url}/?path=${encodeURIComponent(path)}&guest=1&nobiz=1${extra}`, { waitUntil: 'networkidle0' })
         await wait(900)
@@ -51,6 +62,8 @@ export default async ({ browser, url, check }) => {
     }))
     check(/Create your Locappoint account/.test(view.title || ''), `a neutral sign-up has a neutral headline: ${view.title}`)
     check(/is-ticket/.test(view.scene || ''), 'and shows the ticket a client keeps')
+    const stub = await p.evaluate(() => document.querySelector('.auth-brand .lc-home-ticket__who')?.textContent)
+    check(stub && stub !== 'Your business', `a client's ticket names a business, not the owner's "Your business": ${stub}`)
     check(view.phone === '+234 803 123 4567', `the phone example follows the city: ${view.phone}`)
     await fill(p, { full_name: 'Tolu Bello', phone: '+234 803 000 0000', email: 'tolu@example.com', password: 'secret12', confirmPassword: 'secret12' })
     await p.click('.auth-submit')
@@ -59,9 +72,22 @@ export default async ({ browser, url, check }) => {
     check(sent?.data?.user_type === 'client', `a neutral sign-up is saved as a client account: ${JSON.stringify(sent?.data)}`)
     await p.close()
 
-    // Sign in: the owner's day waiting, the password can be shown, Forgot is easy to find.
+    // Sign in: the owner's day at the visitor's own hour.
+    for (const [hour, light, hello] of [[8, 'dawn', 'Good morning'], [14, 'day', 'Good afternoon'], [20, 'ember', 'Good evening']]) {
+        p = await open('/auth?tab=signin', 1272, 900, '', hour)
+        const day = await p.evaluate(() => ({
+            panel: document.querySelector('.auth-brand')?.className,
+            phone: document.querySelector('.auth-brand .lc-home-phone')?.className,
+            hello: document.querySelector('.auth-brand .lc-home-phone__hello')?.textContent,
+            hand: Boolean(document.querySelector('.auth-brand .lc-home-ring__now')),
+        }))
+        const trading = hour >= 9 && hour < 19
+        check(/is-welcome/.test(day.panel) && day.phone.includes(`is-${light}`) && day.hello.startsWith(hello) && day.hand === trading, `at ${hour}:12 sign-in shows ${light}, "${hello}", and the clock hand only while open: ${JSON.stringify(day)}`)
+        await p.close()
+    }
+
+    // The password can be shown, Forgot is easy to find.
     p = await open('/auth?tab=signin')
-    check(/is-welcome/.test(await p.evaluate(() => document.querySelector('.auth-brand')?.className)), 'sign-in shows the day waiting')
     await p.type('.auth-form input[name="password"]', 'secret12')
     const before = await p.evaluate(() => document.querySelector('.auth-form input[name="password"]').type)
     await p.click('.auth-field__eye')
@@ -72,9 +98,9 @@ export default async ({ browser, url, check }) => {
     check(!p.errors.length, `no page errors: ${p.errors.join(' | ')}`)
     await p.close()
 
-    // Every phone: no side panel, the city row on top, nothing off the side, no text under 12px,
+    // Every phone and portrait tablet: no side panel, the city row on top, nothing off the side, no text under 12px,
     // and inputs at 16px so iPhones do not zoom in.
-    for (const [vw, vh] of [[320, 640], [390, 844], [820, 1180]]) {
+    for (const [vw, vh] of [[320, 640], [390, 844], [820, 1180], [1024, 1366]]) {
         p = await open('/auth?tab=signup&as=business', vw, vh, '&city=porto')
         const fit = await p.evaluate(() => {
             const shown = (e) => e && e.getBoundingClientRect().height > 0

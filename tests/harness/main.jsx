@@ -72,6 +72,8 @@ const params = new URLSearchParams(window.location.search)
 const start = params.get('path') || '/portal'
 if (params.get('logo') === '1') DATA.businesses[0].logo_url = '/brand/loca-app-icon.svg'
 if (params.get('setup') === '1') DATA.businesses[0].launched_at = null
+// A new owner on setup: signed in, no business anywhere yet.
+if (params.get('newowner') === '1') DATA.businesses.length = 0
 if (params.get('noservices') === '1') DATA.services.length = 0
 if (params.get('nohours') === '1') DATA.availability.length = 0
 if (params.get('lunch') === '1') DATA.availability.splice(0, DATA.availability.length, ...[1, 2, 3, 4, 5, 6].flatMap((d) => [['09:00:00', '13:00:00'], ['14:00:00', '19:00:00']].map(([s, e], i) => ({ id: `a${d}${i}`, business_id: 'b1', staff_id: null, day_of_week: d, start_time: s, end_time: e }))))
@@ -141,11 +143,15 @@ const Auth = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// ?path=/ is the home page; lazy, so its stylesheets reach only that screen.
+const AppHome = lazy(() => import('@src/pages/app/AppHome'))
+
 const App = () => (
   <Auth>
     <MemoryRouter initialEntries={[start]}>
       <Where />
       <Routes>
+        <Route path="/" element={<Suspense fallback={null}><AppHome /></Suspense>} />
         <Route path="/portal" element={<BusinessShell />}>
           <Route index element={<Today />} />
           <Route path="calendar" element={<Calendar />} />

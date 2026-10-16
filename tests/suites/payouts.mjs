@@ -139,7 +139,7 @@ export default async ({ browser, url, check, server, root }) => {
     v = await view(p)
     check(v.title === 'Where should we pay you?' && /Paystack/.test(v.text) && /By transfer or card/.test(v.text), 'a Lagos owner sees the Paystack route')
     check(/Bank/.test(v.text) && /Account number/.test(v.text) && /Next working day/.test(v.text), 'bank and account number on our screen, and when money arrives')
-    check(await p.evaluate(() => [...document.querySelectorAll('.biz-pay button')].find((b) => /Pay me here/.test(b.textContent))?.disabled), 'nothing can be saved before the bank confirms the name')
+    check(await p.evaluate(() => [...document.querySelectorAll('.biz-pay button')].find((b) => /pay me here/i.test(b.textContent))?.disabled), 'nothing can be saved before the bank confirms the name')
     await p.evaluate(() => document.querySelector('.biz-pay__form button[aria-haspopup]')?.click())
     await wait(300)
     await p.evaluate(() => [...document.querySelectorAll('[role=option]')].find((o) => o.textContent.includes('Access Bank'))?.click())
@@ -147,7 +147,25 @@ export default async ({ browser, url, check, server, root }) => {
     await p.type('.biz-pay__nuban', '0987654321')
     await wait(900)
     v = await view(p)
-    check(/in the name of CHIDI EZE/.test(v.text) && /your name \(Adebayo Oluwaseun\)/.test(v.text) && await p.evaluate(() => [...document.querySelectorAll('.biz-pay button')].find((b) => /Pay me here/.test(b.textContent))?.disabled), `an account in someone else's name is refused before saving: ${v.text.match(/This account[^.]*\./)?.[0]}`)
+    check(/in the name of CHIDI EZE/.test(v.text) && /your name \(Adebayo Oluwaseun\)/.test(v.text) && await p.evaluate(() => [...document.querySelectorAll('.biz-pay button')].find((b) => /pay me here/i.test(b.textContent))?.disabled), `an account in someone else's name is refused before saving: ${v.text.match(/This account[^.]*\./)?.[0]}`)
+    // Changing the bank clears the account number, so no check runs on the old number with the new bank.
+    const resolvesBefore = await p.evaluate(() => window.__calls.filter((c) => c[0] === 'fn' && c[2]?.action === 'resolve').length)
+    await p.evaluate(() => document.querySelector('.biz-pay__form button[aria-haspopup]')?.click())
+    await wait(300)
+    await p.evaluate(() => [...document.querySelectorAll('[role=option]')].find((o) => !o.textContent.includes('Access Bank'))?.click())
+    await wait(900)
+    const switched = await p.evaluate((n) => ({
+        number: document.querySelector('.biz-pay__nuban')?.value,
+        resolves: window.__calls.filter((c) => c[0] === 'fn' && c[2]?.action === 'resolve').length - n,
+        warned: /in the name of/.test(document.querySelector('.biz-pay')?.textContent || ''),
+    }), resolvesBefore)
+    check(switched.number === '' && switched.resolves === 0 && !switched.warned, `a new bank clears the account number and checks nothing: ${JSON.stringify(switched)}`)
+    await p.evaluate(() => document.querySelector('.biz-pay__form button[aria-haspopup]')?.click())
+    await wait(300)
+    await p.evaluate(() => [...document.querySelectorAll('[role=option]')].find((o) => o.textContent.includes('Access Bank'))?.click())
+    await wait(200)
+    await p.type('.biz-pay__nuban', '0987654321')
+    await wait(900)
     await click(p, 'Ask Support to check it')
     await wait(500)
     v = await view(p)

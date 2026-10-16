@@ -121,7 +121,7 @@ const sections = [
         body: (
             <>
                 <p><strong>During the beta.</strong> Locappoint is free for businesses. There is no subscription and nothing to pay.</p>
-                <p><strong>When online payments arrive.</strong> Clients will be able to pay for bookings on Locappoint. From then on, clients pay a small service fee on bookings they pay online, and businesses pay a small fee on each booking a client pays through Locappoint. The first month after online payments start for your account carries no business fee. Walk-ins and bookings you add yourself never carry a fee.</p>
+                <p><strong>When online payments arrive.</strong> Clients will be able to pay for bookings on Locappoint. From then on, clients pay a small service fee on bookings they pay online, and businesses pay a small fee on each booking a client pays through Locappoint. For the first 100 businesses to go live on Locappoint, across all our cities, the first month after online payments start for their account carries no business fee. Walk-ins and bookings you add yourself never carry a fee.</p>
                 <p><strong>Notice.</strong> We will tell you the exact fees, and whether VAT applies, at least 30 days before any fee applies to your account. You can stop using Locappoint before then at no cost.</p>
                 <p><strong>Weekly statement.</strong> Each week we send you a statement of the bookings made on Locappoint. During the beta it shows what a fee would have been and that nothing is owed. It is not an invoice.</p>
                 <p><strong>Fee changes.</strong> We will tell you at least 30 days before any fee changes take effect. You can stop using Locappoint before the new fee applies.</p>

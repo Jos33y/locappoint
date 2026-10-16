@@ -208,7 +208,7 @@ export const LINKS = [
 export const NEEDS = [
     { who: 'Vincent', title: 'Porto and Lisbon owners', when: 'Before launch', text: 'Barbers, salons, clinics and home services ready to go live. The goal is 20 or more businesses taking real bookings every week across the three cities.' },
     { who: 'Vincent', title: 'Portuguese company', when: 'Before paying online in Portugal', text: 'A Lda run by Vincent, for Stripe, euro invoices and EU data rules. Nigeria stays with Locappoint Technologies Ltd and Paystack. Needs a certified accountant from day one.' },
-    { who: 'Vincent', title: 'Lock the fees', when: 'Before payments go live', text: 'Proposed: client fee 2% (EUR 0.49 to 4.90), business fee 1.5%, first month free, and founding terms for the first 20 businesses. Built and waiting for Vincent\'s yes.' },
+    { who: 'Vincent', title: 'Lock the fees', when: 'Before payments go live', text: 'Proposed: client fee 2% (EUR 0.49 to 4.90) and business fee 1.5%. Built and waiting for Vincent\'s yes. Decided: the first 100 businesses across all three cities get their first month of fees free, with no rate lock.' },
     { who: 'Vincent', title: 'Stripe Identity live', when: 'Before launch', text: 'One switch in the live Stripe dashboard, so the gold Verified badge works for real.' },
     { who: 'Vincent', title: 'Stripe tax reporting', when: 'With the Lda', text: 'Request access to Stripe\'s tax reporting preview. Stripe collects each business\'s tax number and prepares the yearly EU report (DAC7); the accountant files it by 31 January.' },
     { who: 'Meta', title: 'Two approvals', when: 'Any day', text: 'The last WhatsApp template and the display name. Then one switch turns WhatsApp on for every business and client.' },

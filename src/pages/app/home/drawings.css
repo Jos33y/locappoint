@@ -220,6 +220,19 @@
     box-shadow: var(--lc-shadow-overlay), 0 0 0 6px var(--lc-well);
 }
 
+/* The visitor's hour on the screen: dawn warms the top, evening glows ember, midday stays clear. */
+.lc-home-phone.is-dawn .lc-home-phone__screen {
+    background:
+        radial-gradient(120% 60% at 50% 0%, var(--lc-glow-dawn), transparent 70%),
+        var(--lc-panel);
+}
+
+.lc-home-phone.is-ember .lc-home-phone__screen {
+    background:
+        radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--lc-lagos-ember) 26%, transparent), transparent 72%),
+        var(--lc-panel);
+}
+
 .lc-home-phone__bar {
     display: flex;
     justify-content: space-between;

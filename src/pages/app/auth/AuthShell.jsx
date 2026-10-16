@@ -1,9 +1,10 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import LogoIcon from '../../../components/LogoIcon'
 import CityPattern from '../../../components/brand/CityPattern'
 import { useCity } from '../../../hooks/useCity'
-import { OwnerPhone } from '../home/Drawings'
+import { OwnerPhone, daylightOf } from '../home/Drawings'
 import Ticket from '../home/Ticket'
 import { CITY_SAMPLE } from '../home/content'
 
@@ -16,14 +17,14 @@ const splitWhen = (when = '') => {
 }
 
 // What the side panel shows, picking up where the home page left off, in the visitor's city:
-// owner: the owner's day filling up; welcome: that day, waiting; ticket: what a client keeps;
-// calm: the city alone, for password and email-link screens.
-const Scene = ({ scene, city, booking }) => {
+// owner: the owner's day filling up; welcome: that day at the visitor's own hour; ticket: what a
+// client keeps, at a business in their city; calm: the city alone, for password and email-link screens.
+const Scene = ({ scene, city, booking, daylight }) => {
     const sample = CITY_SAMPLE[city.code] || CITY_SAMPLE.porto
     if (scene === 'owner') return <OwnerPhone sample={sample} currency={city.currency} />
-    if (scene === 'welcome') return <OwnerPhone sample={sample} currency={city.currency} alert={false} greeting={`Welcome back, ${sample.owner}`} />
+    if (scene === 'welcome') return <OwnerPhone sample={sample} currency={city.currency} alert={false} daylight={daylight} greeting={`${daylight.greeting}, ${sample.owner}`} />
     if (scene === 'ticket') {
-        if (!booking) return <Ticket city={city.code} sample={sample} currency={city.currency} className="auth-scene__ticket" />
+        if (!booking) return <Ticket city={city.code} sample={sample} currency={city.currency} className="auth-scene__ticket" who={sample.trade} where={sample.area} tileName={`${sample.trade} in ${sample.area}`} />
         const [day, time] = splitWhen(booking.when)
         return (
             <Ticket
@@ -50,10 +51,12 @@ const AuthShell = ({
 }) => {
     const [city] = useCity()
     const backLink = back || { to: HOME_PATH, label: 'Back to home' }
+    // Read once per visit: the light does not change while the page is open.
+    const [daylight] = useState(() => daylightOf())
 
     return (
         <div className={`auth-page is-${city.code}`}>
-            <aside className={`auth-brand is-${scene}`} aria-hidden="true">
+            <aside className={`auth-brand is-${scene}${scene === 'welcome' ? ` is-light-${daylight.light}` : ''}`} aria-hidden="true">
                 <Link to={HOME_PATH} className="auth-brand__wordmark" tabIndex={-1}>
                     <LogoIcon size={28} className="auth-brand__mark" />
                     <span>
@@ -69,7 +72,7 @@ const AuthShell = ({
                 <div className="auth-brand__world">
                     <CityPattern city={city.code} centred className="auth-brand__wall" />
                     <div className="auth-brand__scene">
-                        <Scene scene={scene} city={city} booking={booking} />
+                        <Scene scene={scene} city={city} booking={booking} daylight={daylight} />
                     </div>
                 </div>
 

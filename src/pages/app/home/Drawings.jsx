@@ -22,7 +22,7 @@ export const OPEN = ['09:00', '19:00']
 export const DAY = [['09:00', '09:45'], ['10:00', '11:00'], ['11:15', '12:00'], ['13:00', '14:30'], ['15:30', '17:00', 'new'], ['17:15', '18:15']]
 export const NOW = '15:10'
 
-export const Ring = ({ size = 220, className = '' }) => {
+export const Ring = ({ size = 220, className = '', now = NOW }) => {
     const open = hm(OPEN[0])
     const span = hm(OPEN[1]) - open
     const turn = (t) => (hm(t) - open) / span
@@ -30,8 +30,10 @@ export const Ring = ({ size = 220, className = '' }) => {
     const stroke = size * 0.075
     const r = c - stroke / 2 - 6
     const booked = DAY.reduce((sum, [a, b]) => sum + hm(b) - hm(a), 0)
-    const [hx, hy] = point(c, r, turn(NOW))
-    const [ix, iy] = point(c, r - stroke * 1.1, turn(NOW))
+    // The hand shows only while the business is open; before opening and after closing there is no now.
+    const showNow = now && hm(now) >= open && hm(now) <= open + span
+    const [hx, hy] = showNow ? point(c, r, turn(now)) : [c, c]
+    const [ix, iy] = showNow ? point(c, r - stroke * 1.1, turn(now)) : [c, c]
     const ticks = []
     for (let m = open; m < open + span; m += 60) ticks.push(m)
     return (
@@ -56,10 +58,12 @@ export const Ring = ({ size = 220, className = '' }) => {
                         />
                     )
                 })}
-                <g className="lc-home-ring__now">
-                    <line x1={ix} y1={iy} x2={hx} y2={hy} />
-                    <circle cx={hx} cy={hy} r={stroke * 0.42} />
-                </g>
+                {showNow && (
+                    <g className="lc-home-ring__now">
+                        <line x1={ix} y1={iy} x2={hx} y2={hy} />
+                        <circle cx={hx} cy={hy} r={stroke * 0.42} />
+                    </g>
+                )}
             </svg>
             <div className="lc-home-ring__centre">
                 <b>{Math.round((booked / span) * 100)}<small>%</small></b>
@@ -195,14 +199,25 @@ const CityMap = ({ city }) => (
 
 export const SCENES = { link: Poster, google: Search, whatsapp: Chat, browse: CityMap }
 
-// The owner's phone in the afternoon: the day nearly full, and, with alert, a booking that just landed.
-export const OwnerPhone = ({ sample, currency, alert = true, greeting }) => (
-    <div className="lc-home-phone" aria-hidden="true">
+// Today takes its light from the visitor's own clock, chosen once at load and never animated
+// (doc 30, Today has daylight): cool dawn in the morning, clear through the day, warm ember after five.
+export const daylightOf = (date = new Date()) => {
+    const h = date.getHours()
+    const clock = `${String(h).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+    if (h < 12) return { light: 'dawn', greeting: 'Good morning', clock }
+    if (h < 17) return { light: 'day', greeting: 'Good afternoon', clock }
+    return { light: 'ember', greeting: 'Good evening', clock }
+}
+
+// The owner's phone: the day nearly full, and, with alert, a booking that just landed. Without a
+// daylight it is the afternoon the home page shows; with one, it is the visitor's own hour.
+export const OwnerPhone = ({ sample, currency, alert = true, greeting, daylight = null }) => (
+    <div className={`lc-home-phone${daylight ? ` is-${daylight.light}` : ''}`} aria-hidden="true">
         <div className="lc-home-phone__screen">
-            <div className="lc-home-phone__bar"><span>15:10</span><i /></div>
+            <div className="lc-home-phone__bar"><span>{daylight ? daylight.clock : NOW}</span><i /></div>
             <p className="lc-home-phone__hello">{greeting || `Good afternoon, ${sample.owner}`}</p>
             <p className="lc-home-phone__day">Today</p>
-            <Ring size={196} className="lc-home-phone__ring" />
+            <Ring size={196} className="lc-home-phone__ring" now={daylight ? daylight.clock : NOW} />
             <ul className="lc-home-phone__next">
                 <li className="is-new"><b>15:30</b><span>{sample.client}</span><em>{sample.service}</em></li>
                 <li><b>17:15</b><span>{sample.regular}</span><em>{sample.service}</em></li>

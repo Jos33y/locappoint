@@ -12,7 +12,9 @@
     color: var(--lc-ink-1);
 }
 
-@media (min-width: 981px) {
+/* The side panel is for wide screens held landscape. A portrait tablet gets the phone layout,
+   centred, instead of a squeezed split. */
+@media (min-width: 981px) and (orientation: landscape) {
     .auth-page {
         grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
     }
@@ -37,10 +39,23 @@
         var(--lc-panel);
 }
 
-@media (min-width: 981px) {
+@media (min-width: 981px) and (orientation: landscape) {
     .auth-brand {
         display: flex;
     }
+}
+
+/* Sign-in at the visitor's hour: the panel's light follows the phone's. */
+.auth-brand.is-light-dawn {
+    background:
+        radial-gradient(90% 50% at 20% 0%, var(--lc-glow-dawn), transparent 70%),
+        var(--lc-panel);
+}
+
+.auth-brand.is-light-ember {
+    background:
+        radial-gradient(90% 55% at 20% 0%, color-mix(in srgb, var(--lc-lagos-ember) 20%, transparent), transparent 70%),
+        var(--lc-panel);
 }
 
 .auth-brand__wordmark,
@@ -157,6 +172,18 @@
     opacity: 0.55;
 }
 
+/* Porto's and Lisbon's patterns are light: at full strength they glare on the dark panel and
+   outshine the scene, so they sit back. Lagos's indigo is dark and keeps its strength. */
+.auth-page.is-porto .auth-brand__wall,
+.auth-page.is-lisbon .auth-brand__wall {
+    opacity: 0.42;
+}
+
+.auth-page.is-porto .auth-brand.is-calm .auth-brand__wall,
+.auth-page.is-lisbon .auth-brand.is-calm .auth-brand__wall {
+    opacity: 0.3;
+}
+
 .auth-brand__cities {
     margin: 0;
     color: var(--lc-ink-3);
@@ -246,6 +273,12 @@
     .auth-back:hover {
         color: var(--lc-ink-1);
     }
+}
+
+.auth-back--wide {
+    align-self: center;
+    width: 100%;
+    max-width: 420px;
 }
 
 .auth-back--inline {
@@ -773,7 +806,7 @@
 /* Tablets and phones: no side panel. The brand, the back link and a row of the city's pattern
    sit above the form. */
 
-@media (max-width: 980px) {
+@media (max-width: 980px), (orientation: portrait) {
     .auth-mobile-top {
         display: flex;
         align-items: center;

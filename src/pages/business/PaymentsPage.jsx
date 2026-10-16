@@ -213,7 +213,12 @@ const BankForm = ({ onSaved, onCancel }) => {
         setWhose(null)
         setReview(null)
         setError('')
-        if (!bank || number.length !== 10) return
+        if (!bank || number.length !== 10) {
+            // An answer still on its way is for a number that is no longer there.
+            asked.current = ''
+            setChecking(false)
+            return
+        }
         const key = `${bank}:${number}`
         asked.current = key
         setChecking(true)
@@ -222,6 +227,12 @@ const BankForm = ({ onSaved, onCancel }) => {
             .catch((err) => { if (asked.current === key) setError(err.message) })
             .finally(() => { if (asked.current === key) setChecking(false) })
     }, [bank, number])
+
+    // A new bank means a new account: the old number is cleared, so nothing is checked against the wrong bank.
+    const pickBank = (code) => {
+        if (code !== bank) setNumber('')
+        setBank(code)
+    }
 
     const askSupport = async () => {
         setAsking(true)
@@ -260,7 +271,7 @@ const BankForm = ({ onSaved, onCancel }) => {
                 ) : (
                     <Field label="Bank">
                         {banks
-                            ? <Picker value={bank} onChange={setBank} searchable title="Your bank" placeholder="Choose your bank" searchPlaceholder="Search banks" options={banks.map((b) => ({ value: b.code, label: b.name }))} />
+                            ? <Picker value={bank} onChange={pickBank} searchable title="Your bank" placeholder="Choose your bank" searchPlaceholder="Search banks" options={banks.map((b) => ({ value: b.code, label: b.name }))} />
                             : <Skeleton height={44} radius={10} />}
                     </Field>
                 )}

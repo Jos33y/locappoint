@@ -14,11 +14,10 @@ import { ServiceEditor, serviceFromRow, servicesValid } from '../../components/b
 import { HoursEditor } from '../../components/business/HoursEditor'
 import { PublicPageView } from '../../components/business/PublicPageView'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
-import { CATEGORIES, POPULAR_CATEGORIES, categoryLabel, suggestionsFor } from '../../constants/categories'
+import { CATEGORIES, POPULAR_CATEGORIES, suggestionsFor } from '../../constants/categories'
 import { NG_CITIES, POPULAR_COUNTRIES, PT_MUNICIPALITIES, inLaunchArea, neighbourhoodHint } from '../../constants/locations'
 import { COUNTRY_OPTIONS } from '../../components/ui/PhoneField'
-import { SAMPLE_BUSINESS, SAMPLE_SERVICES } from '../../constants/sampleBusiness'
-import { durationLabel, formatMoney, pageStrength } from '../../services/business'
+import { pageStrength } from '../../services/business'
 import { defaultWeek, hasOpenDay, rowsFromWeek, weekFromRows, weekProblems } from '../../services/hours'
 import { MEDIA_SHAPES, prepareImage, removeBusinessImage, uploadBusinessImage } from '../../services/media'
 import {
@@ -27,6 +26,7 @@ import {
 import { ABOUT_MAX, OTHER_CITY, aboutExample, cityOf, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
 import { useSlugStatus } from '../../hooks/useSlugStatus'
 import { savedCity } from '../../services/engine'
+import { CityWall, ExamplePage, GoLiveCard, worldOf } from './SetupScenes'
 import { isNative, shareLink } from '../../services/native'
 import '../../styles/business/setup.css'
 
@@ -75,7 +75,7 @@ const Welcome = ({ onStart, onLater }) => (
     <section className="lc-setup__welcome" aria-labelledby="lc-setup-welcome">
         <h1 id="lc-setup-welcome" className="lc-setup__hero">Let's get you booked.</h1>
         <p className="lc-setup__lede lc-setup__lede--lg">
-            <span>Set up your booking page in a few minutes.</span>
+            <span>Set it up once. Clients book your free times while you work.</span>
             <span>Free during the beta.</span>
         </p>
         <ol className="lc-setup__promise">
@@ -95,58 +95,12 @@ const Welcome = ({ onStart, onLater }) => (
     </section>
 )
 
-const DEMO_SLOTS = ['10:30', '11:15', '14:45', '16:00']
-const DEMO_PICKED = '14:45'
-
-const DemoShowcase = () => (
-    <figure className="lc-demo" aria-label="Demo of a booking page on Locappoint">
-        <figcaption className="lc-demo__tag">Demo</figcaption>
-        <div className="lc-demo__stage" aria-hidden="true">
-            <PhoneFrame fit label="Demo booking page">
-                <div className="lc-demo__page">
-                    <div className="lc-demo__cover"><StreetGridCover seed={SAMPLE_BUSINESS.slug} tint="azure" /></div>
-                    <div className="lc-demo__id">
-                        <span className="lc-demo__logo">{initials(SAMPLE_BUSINESS.business_name)}</span>
-                        <strong className="lc-demo__name">{SAMPLE_BUSINESS.business_name}</strong>
-                        <span className="lc-demo__meta">{categoryLabel(SAMPLE_BUSINESS.category)} in {SAMPLE_BUSINESS.city}</span>
-                    </div>
-                    <div className="lc-demo__block">
-                        <span className="lc-demo__label">Next free today</span>
-                        <span className="lc-demo__slots">
-                            {DEMO_SLOTS.map((t) => (
-                                <span key={t} className={`lc-demo__slot${t === DEMO_PICKED ? ' is-picked' : ''}`}>{t}</span>
-                            ))}
-                        </span>
-                    </div>
-                    <ul className="lc-demo__services">
-                        {SAMPLE_SERVICES.slice(0, 3).map((s) => (
-                            <li key={s.key}>
-                                <span className="lc-demo__svc">
-                                    <span className="lc-demo__svcname">{s.service_name}</span>
-                                    <span className="lc-demo__svcmeta">{durationLabel(s.duration_minutes)}</span>
-                                </span>
-                                <span className="lc-demo__price">{formatMoney(Number(s.price))}</span>
-                            </li>
-                        ))}
-                    </ul>
-                    <span className="lc-demo__cta">Book {DEMO_PICKED}</span>
-                </div>
-            </PhoneFrame>
-            <div className="lc-demo__ticket">
-                <Status tone="success" size="sm">Booked</Status>
-                <strong>{SAMPLE_SERVICES[0].service_name}</strong>
-                <span>Ana M., today at {DEMO_PICKED}</span>
-            </div>
-        </div>
-    </figure>
-)
-
 const NUDGE = {
     logo: { label: 'Add a logo', text: 'A logo makes your page unmistakably yours.' },
     cover: { label: 'Add a cover photo', text: 'A photo of your space is the first thing clients look at.' },
 }
 
-const LiveScreen = ({ business, strength, onDone, finishing, media, onPickImage }) => {
+const LiveScreen = ({ business, world, strength, onDone, finishing, media, onPickImage }) => {
     const link = pageUrl(business.slug)
     const [copied, setCopied] = useState(false)
     const percent = useCountUp(strength.percent)
@@ -172,37 +126,35 @@ const LiveScreen = ({ business, strength, onDone, finishing, media, onPickImage 
     return (
         <section className="lc-live" aria-labelledby="lc-setup-live">
             <header className="lc-live__head">
-                <span className="lc-live__badge"><span className="lc-live__beacon" aria-hidden="true" />Live now</span>
                 <h1 id="lc-setup-live" className="lc-setup__hero">You're live.</h1>
                 <p className="lc-setup__lede">{business.business_name} is open for bookings. Share your page where clients already find you.</p>
             </header>
 
-            <div className="lc-live__pass">
-                <span className="lc-live__map" aria-hidden="true"><StreetGridCover seed={business.slug} tint="azure" /></span>
-                <span className="lc-live__label">Your booking page</span>
+            <GoLiveCard business={business} world={world}>
                 <a className="lc-live__url" href={link} target="_blank" rel="noopener noreferrer" aria-label={`Open your page, ${link}`}>
                     <span className="lc-live__host">{publicHost()}/</span>
                     <span className="lc-live__slug">{business.slug}</span>
-                    <ArrowUpRight className="lc-live__open" size={22} aria-hidden="true" />
+                    <ArrowUpRight className="lc-live__open" size={20} aria-hidden="true" />
                 </a>
-                <div className="lc-live__actions">
-                    <Button icon={copied ? Check : Copy} onClick={copy}>{copied ? 'Copied' : 'Copy link'}</Button>
-                    <Button
-                        variant="secondary"
-                        icon={MessageCircle}
-                        href={`https://wa.me/?text=${encodeURIComponent(`Book with ${business.business_name}: ${link}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        WhatsApp
-                    </Button>
-                    {canShare && <Button variant="secondary" icon={Share2} onClick={share}>Share</Button>}
-                </div>
+            </GoLiveCard>
+
+            <div className="lc-live__actions">
+                <Button icon={copied ? Check : Copy} onClick={copy}>{copied ? 'Copied' : 'Copy link'}</Button>
+                <Button
+                    variant="secondary"
+                    icon={MessageCircle}
+                    href={`https://wa.me/?text=${encodeURIComponent(`Book with ${business.business_name}: ${link}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    WhatsApp
+                </Button>
+                {canShare && <Button variant="secondary" icon={Share2} onClick={share}>Share</Button>}
             </div>
 
             <div className="lc-live__row">
                 <span className="lc-live__sticker">
-                    <QrCode value={pageUrl(business.slug, 'qr')} label={`QR code for ${link}`} size={60} />
+                    <QrCode value={pageUrl(business.slug, 'qr')} label={`QR code for ${link}`} size={64} />
                     <span className="lc-live__stickercap">Scan to book</span>
                 </span>
                 <span className="lc-live__rowtext">
@@ -460,6 +412,8 @@ const Setup = () => {
     const preview = <PublicPageView business={draftBusiness} services={services} week={week} preview />
     const inSteps = typeof phase === 'number'
     const staged = inSteps || phase === 'welcome' || phase === 'live'
+    // The city behind the phone: the visitor's on welcome, then the one the business is in.
+    const world = phase === 'welcome' ? worldOf() : worldOf(phase === 'live' ? business : { city: cityOf(details), country: details.country })
 
     return (
         <div className={`lc-setup${staged ? '' : ' lc-setup--solo'}${inSteps ? ' lc-setup--steps' : ''}`}>
@@ -485,7 +439,10 @@ const Setup = () => {
 
                 {phase === 'welcome' && <Welcome onStart={() => go(0)} onLater={() => navigate('/client')} />}
                 {phase === 'welcome' && !isDesktop && (
-                    <div className="lc-setup__showcase"><DemoShowcase /></div>
+                    <div className="lc-setup__showcase">
+                        <CityWall world={world} />
+                        <ExamplePage world={world} />
+                    </div>
                 )}
 
                 {phase === 'failed' && (
@@ -496,7 +453,7 @@ const Setup = () => {
                     </section>
                 )}
 
-                {phase === 'live' && <LiveScreen business={business} strength={strength} onDone={finish} finishing={finishing} media={media} onPickImage={pickImage} />}
+                {phase === 'live' && <LiveScreen business={business} world={world} strength={strength} onDone={finish} finishing={finishing} media={media} onPickImage={pickImage} />}
 
                 {typeof phase === 'number' && (
                     <form
@@ -765,8 +722,8 @@ const Setup = () => {
             </div>
 
             {isDesktop && staged && (
-                <aside className="lc-setup__stage" aria-label={phase === 'welcome' ? 'Demo booking page' : 'Your page on a phone'}>
-                    <span className="lc-setup__grid" aria-hidden="true"><StreetGridCover seed="locappoint-lisboa" tint="azure" /></span>
+                <aside className="lc-setup__stage" aria-label={phase === 'welcome' ? 'Example booking page' : 'Your page on a phone'}>
+                    <CityWall world={world} />
                     {phase !== 'welcome' && <div className="lc-setup__stagehead">
                         {inSteps && (
                             <>
@@ -781,7 +738,7 @@ const Setup = () => {
                             <span className="lc-setup__stagelabel"><span className="lc-setup__pulse" aria-hidden="true" />Your page is live</span>
                         )}
                     </div>}
-                    {phase === 'welcome' ? <DemoShowcase /> : <PhoneFrame label="Your page on a phone">{preview}</PhoneFrame>}
+                    {phase === 'welcome' ? <ExamplePage world={world} /> : <PhoneFrame label="Your page on a phone">{preview}</PhoneFrame>}
                 </aside>
             )}
 

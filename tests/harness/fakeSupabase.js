@@ -144,6 +144,17 @@ const slots = (staff) => {
   for (let m = from; m <= 18 * 60 + 30; m += 15) out.push({ slot_time: `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}:00`, staff_id: staff || 'm1', staff_name: staff === 'm2' ? 'Rita' : 'Miles Farra' })
   return out
 }
+const lisbonToday = () => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Lisbon', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).map((x) => [x.type, x.value]))
+  return { key: `${p.year}-${p.month}-${p.day}`, minutes: Number(p.hour) * 60 + Number(p.minute) }
+}
+const withoutFirstPickable = (list, date) => {
+  const now = lisbonToday()
+  if (date !== now.key) return list.slice(1)
+  // The sheet shows today's times after now on its own step, so the first one shown falls within the hour.
+  const mins = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5))
+  return list.filter((s) => mins(s.slot_time) > now.minutes + 60)
+}
 const quiet = (flag) => new URLSearchParams(window.location.search).get(flag) === '1'
 // Online sessions: ?online=1 offers Haircut in person or online; ?online=only offers it online only.
 // ?onlinebooking=1 adds a confirmed online booking with its meeting link to the client's bookings.
@@ -257,8 +268,9 @@ const reviewRpc = {
 
 const clientRpc = {
   my_rebook: () => rebookPlaces(),
-  // ?travel=1 with an area known (a visit at the client's place): the earliest time goes, the travel does not fit.
-  get_available_slots: (args) => (args.p_zone && quiet('travel') ? slots(args.p_staff_id).slice(1) : slots(args.p_staff_id)),
+  // ?travel=1 with an area known (a visit at the client's place): the earliest time the client could have
+  // picked goes, so the travel does not fit. Today that is the next hour in Lisbon, at any time of day.
+  get_available_slots: (args) => (args.p_zone && quiet('travel') ? withoutFirstPickable(slots(args.p_staff_id), args.p_date) : slots(args.p_staff_id)),
   booking_by_link: () => guestBooking(),
   rebook_by_link: () => ({ business: femtos(), booking: { service: { ...haircut, active: true }, staff_id: 'm2', staff_name: 'Rita', staff_count: 2, addon_ids: new URLSearchParams(window.location.search).get('extras') === '1' ? ['s2'] : null }, rhythm: rhythm(), client: { name: 'Ana Guest', email: 'ana@guest.pt', phone: '+351911111111' }, emails_stopped: false }),
   stop_emails_by_link: () => true,

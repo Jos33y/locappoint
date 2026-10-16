@@ -41,9 +41,11 @@ export default async ({ check, root }) => {
 
     const pricing = read('src/pages/app/home/Pricing.jsx')
     check(/during the beta/i.test(pricing) && /first month/i.test(pricing) && /Walk-ins/.test(pricing), 'the Pricing section says free now, first month free, walk-ins never')
+    check(/first 100 businesses/.test(pricing), 'the free first month is for the first 100 businesses, not everyone')
     check(!/\d+(\.\d+)?\s?%/.test(pricing) && !/€\s?[1-9]/.test(pricing), 'the Pricing section shows no fee figures')
 
     const terms = read('src/pages/app/legal/Terms.jsx')
+    check(/first 100 businesses/.test(terms) && !/first month after online payments start for your account/.test(terms), 'the Terms give the free first month to the first 100 businesses only')
     check(/at least 30 days before any fee applies/.test(terms) && /It is not an invoice/.test(terms), 'the Terms promise 30 days of notice and say the statement is not an invoice')
     check(!/subscription at any time|billing period/.test(terms), 'the Terms no longer describe a subscription')
 }

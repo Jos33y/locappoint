@@ -24,7 +24,7 @@ export default async ({ browser, url, check, root }) => {
         }
         if (reduced) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
         await page.setViewport({ width: vw, height: vh, isMobile: vw < 1024, hasTouch: vw < 1272 })
-        await page.goto(`${url}/`, { waitUntil: 'networkidle0' })
+        await page.goto(`${url}/?path=${encodeURIComponent('/')}&guest=1&city=${city}`, { waitUntil: 'networkidle0' })
         await page.waitForSelector('.lc-home-hero', { timeout: 15000 }).catch(() => {})
         await wait(1800)
         return page
