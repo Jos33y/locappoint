@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowDownRight, ArrowUpRight, Check } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Check, Plus, QrCode } from 'lucide-react'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import Agenda from '../../components/business/Agenda'
 import StaffFilter from '../../components/business/StaffFilter'
 import { DayRing } from '../../components/business/DayRing'
 import { WeekRings } from '../../components/business/WeekRings'
 import { PageCard, ReviewsCard } from '../../components/business/TodayCards'
+import ShareLink from '../../components/business/ShareLink'
+import { DaySlip, Tomorrow, freeGaps } from '../../components/business/TodayEvening'
+import PosterSheet from '../../components/business/PosterSheet'
+import { useDaylight } from '../../components/business/useDaylight'
+import { pageUrl } from '../../services/links'
 import { dayFigures, weekFigures, weekKeys } from '../../services/day'
 import { moneyFor, loadInsights } from '../../services/insights'
 import { loadOwnerReviews } from '../../services/reviews'
@@ -14,6 +19,7 @@ import {
     addDays,
     bookingStart,
     friendlyError,
+    hasAnyBooking,
     loadBlocks,
     loadBookings,
     minutesToLabel,
@@ -37,6 +43,9 @@ const Today = () => {
     const [error, setError] = useState('')
     const [reviews, setReviews] = useState(null)
     const [pageStats, setPageStats] = useState(null)
+    const [ever, setEver] = useState(null)
+    const [poster, setPoster] = useState(false)
+    const daylight = useDaylight(business)
     const navigate = useNavigate()
     const money = useMemo(() => moneyFor(business.country), [business.country])
 
@@ -48,11 +57,17 @@ const Today = () => {
     useEffect(() => {
         let cancelled = false
         const keys = weekKeys(now.dateKey)
-        Promise.all([loadBookings(business.id, addDays(keys[0], -7), keys[6]), loadBlocks(business.id, now.dateKey, now.dateKey)])
-            .then(([rows, blockRows]) => {
+        // Through tomorrow as well, which on a Sunday is already next week.
+        const until = addDays(now.dateKey, 1) > keys[6] ? addDays(now.dateKey, 1) : keys[6]
+        Promise.all([loadBookings(business.id, addDays(keys[0], -7), until), loadBlocks(business.id, now.dateKey, now.dateKey)])
+            .then(async ([rows, blockRows]) => {
+                // Nothing in these two weeks: look once for any booking at all, so a new business
+                // starts on its first-booking state instead of a page of zeros.
+                const any = rows.length > 0 || (await hasAnyBooking(business.id).catch(() => true))
                 if (cancelled) return
                 setBookings(rows)
                 setBlocks(blockRows)
+                setEver(any)
                 setError('')
             })
             .catch(() => { if (!cancelled) setError('Could not load today. Check your connection and reload.') })
@@ -96,9 +111,34 @@ const Today = () => {
     const closedNow = todayWindows.length === 0 || now.minutes >= todayWindows[todayWindows.length - 1][1]
     const opensAt = todayWindows.length ? minutesToLabel(todayWindows[0][0]) : null
 
+    const closesAt = todayWindows.length ? minutesToLabel(todayWindows[todayWindows.length - 1][1]) : null
+    const fresh = !loading && ever === false
+
+    // The evening: once the doors close the day goes on paper, and tomorrow comes forward.
+    const tomorrowKey = addDays(now.dateKey, 1)
+    const tomorrowWindows = windowsFor(hours, staff?.id, parseDateKey(tomorrowKey).getDay())
+    const tomorrowRows = scoped
+        .filter((b) => b.appointment_date === tomorrowKey && ['pending', 'confirmed'].includes(b.status))
+        .sort((a, b) => bookingStart(a) - bookingStart(b))
+    const tomorrow = dayFigures({ bookings: scoped, hours, members, dateKey: tomorrowKey, now })
+    const shortest = Math.min(...activeServices.map((x) => Number(x.duration_minutes) || 30), 120)
+    const tomorrowFree = freeGaps(tomorrowWindows, tomorrowRows, shortest)
+    const evening = !loading && !fresh && todayWindows.length > 0 && closedNow && counted.length > 0
+    const showTomorrow = !loading && !fresh && closedNow
+    const visits = visible.filter((b) => b.status === 'completed' || b.status === 'confirmed').length
+    const online = counted.filter((b) => b.source === 'online').length
+
     const date = parseDateKey(now.dateKey)
     const weekday = date.toLocaleDateString('en-GB', { weekday: 'long' })
     const dayMonth = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
+    const firstName = String(me?.display_name || '').trim().split(/\s+/)[0]
+    const status = todayWindows.length === 0
+        ? <>Closed today.</>
+        : now.minutes < todayWindows[0][0]
+            ? <>You open at <b className="biz-num">{opensAt}</b>.</>
+            : closedNow ? <>Closed for the day.</> : <>Open until <b className="biz-num">{closesAt}</b>.</>
+    const sunAt = daylight.light === 'dawn' ? daylight.sunrise : daylight.light === 'golden' ? daylight.sunset : null
+    const sun = sunAt && <> {daylight.light === 'dawn' ? 'Sunrise' : 'Sunset'} <b className="biz-num">{sunAt}</b>{daylight.place ? ` in ${daylight.place}` : ''}.</>
 
     const confirm = async (booking) => {
         try {
@@ -115,10 +155,8 @@ const Today = () => {
     return (
         <div className="biz-page biz-today">
             <header className="biz-dayhead biz-ov__head">
-                <h1 className="biz-dayhead__date">
-                    <span className="biz-dayhead__weekday">{weekday}</span>
-                    {dayMonth}
-                </h1>
+                <h1 className="biz-dayhead__hello">{firstName ? `${daylight.greeting}, ${firstName}` : daylight.greeting}</h1>
+                <p className="biz-dayhead__line">{weekday} {dayMonth}. {status}{sun}</p>
             </header>
 
             {!setupDone && (
@@ -144,20 +182,40 @@ const Today = () => {
                 </section>
             )}
 
-            <div className="biz-ov__grid">
-                <section className="biz-ovpanel biz-ov__day" aria-label="How today is going">
-                    <DayRing
-                        dateKey={now.dateKey}
-                        bookings={visible}
-                        hours={hours}
-                        staff={staff}
-                        figures={day}
-                        nowMinutes={now.minutes}
-                        money={money}
-                        onBook={(minutes) => book(minutes, staff?.id || bookableMembers[0]?.id)}
-                    />
+            <div className={`biz-ov__grid${fresh ? ' is-fresh' : ''}`}>
+                <section className={`biz-ovpanel biz-ov__day${evening ? ' is-evening' : ''}`} aria-label="How today is going">
+                    {evening ? (
+                        <DaySlip dateKey={now.dateKey} bookings={visible} hours={hours} staff={staff} figures={day} money={money} country={business.country} visits={visits} online={online} />
+                    ) : (
+                        <DayRing
+                            dateKey={now.dateKey}
+                            bookings={visible}
+                            hours={hours}
+                            staff={staff}
+                            figures={day}
+                            nowMinutes={now.minutes}
+                            money={money}
+                            country={business.country}
+                            centre={loading ? 'hours' : fresh ? 'fresh' : 'figures'}
+                            onBook={(minutes) => book(minutes, staff?.id || bookableMembers[0]?.id)}
+                        />
+                    )}
                     <div className="biz-ov__dayside">
-                        {pending.length > 0 ? (
+                        {fresh ? (
+                            <div className="biz-first">
+                                <h2 className="biz-ov__h2">Get your first booking</h2>
+                                <p className="biz-first__lede">Clients pick a free time on your page, day or night, and it lands on this ring. Start with the people who already come to you.</p>
+                                <ShareLink business={business} />
+                                <div className="biz-first__more">
+                                    <button type="button" className="btn btn--secondary" onClick={() => setPoster(true)}>
+                                        <QrCode size={16} aria-hidden="true" /> QR poster for your counter
+                                    </button>
+                                    <button type="button" className="btn btn--ghost" onClick={() => openNewBooking({ date: now.dateKey })}>
+                                        <Plus size={16} aria-hidden="true" /> Took one by phone? Add it
+                                    </button>
+                                </div>
+                            </div>
+                        ) : pending.length > 0 ? (
                             <div className="biz-ov__needs">
                                 <h2 className="biz-ov__h2">{pending.length === 1 ? '1 booking waits for you' : `${pending.length} bookings wait for you`}</h2>
                                 <ul className="biz-pending">
@@ -172,7 +230,7 @@ const Today = () => {
                                     ))}
                                 </ul>
                             </div>
-                        ) : (
+                        ) : showTomorrow ? null : (
                             <p className="biz-ov__calm">{counted.length ? 'Nothing needs you right now.' : 'Nothing booked today yet. Share your link to fill the ring.'}</p>
                         )}
                         {next && (
@@ -182,11 +240,14 @@ const Today = () => {
                                 <span>{next.client_name}{next.services?.service_name ? `, ${next.services.service_name}` : ''}</span>
                             </button>
                         )}
-                        {day.lost > 0 && <p className="biz-ov__lost">{money(day.lost)} lost to no-shows today</p>}
+                        {showTomorrow && (
+                            <Tomorrow business={business} dateKey={tomorrowKey} figures={tomorrow} rows={tomorrowRows} windows={tomorrowWindows} free={tomorrowFree} />
+                        )}
+                        {day.lost > 0 && !evening && <p className="biz-ov__lost">{money(day.lost)} lost to no-shows today</p>}
                     </div>
                 </section>
 
-                <section className="biz-ovpanel biz-ov__week" aria-labelledby="week-title">
+                {!fresh && <section className="biz-ovpanel biz-ov__week" aria-labelledby="week-title">
                     <header className="biz-ov__weekhead">
                         <h2 id="week-title" className="biz-ov__h2">This week</h2>
                         <p className="biz-ov__weekfigs">
@@ -202,7 +263,7 @@ const Today = () => {
                         </p>
                     </header>
                     <WeekRings week={week} todayKey={now.dateKey} money={money} onPick={(key) => navigate(`/portal/calendar?date=${key}`)} />
-                </section>
+                </section>}
 
                 <section className="biz-ov__timeline" aria-label="Today's schedule">
                     <StaffFilter members={isOwner ? bookableMembers : []} value={staffFilter} onChange={setStaffFilter} />
@@ -243,10 +304,12 @@ const Today = () => {
                 </section>
 
                 <aside className="biz-ov__side">
-                    {isOwner && <ReviewsCard reviews={reviews} />}
-                    <PageCard business={business} stats={isOwner ? pageStats : null} />
+                    {isOwner && !fresh && <ReviewsCard reviews={reviews} />}
+                    {(isOwner || !fresh) && <PageCard business={business} stats={isOwner ? pageStats : null} share={!fresh} />}
                 </aside>
             </div>
+
+            <PosterSheet open={poster} onClose={() => setPoster(false)} business={business} link={pageUrl(business.slug)} qrLink={pageUrl(business.slug, 'qr')} notify={notify} />
         </div>
     )
 }

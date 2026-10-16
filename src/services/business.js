@@ -114,6 +114,17 @@ export const loadWorkspace = async (businessId) => {
     }
 }
 
+// Has this business ever had a booking, at any date and in any state? Today starts from here.
+export const hasAnyBooking = async (businessId) => {
+    const { data, error } = await supabase
+        .from('appointments')
+        .select('id')
+        .eq('business_id', businessId)
+        .limit(1)
+    if (error) throw error
+    return (data || []).length > 0
+}
+
 export const loadBookings = async (businessId, fromKey, toKey) => {
     const { data, error } = await supabase
         .from('appointments')

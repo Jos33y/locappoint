@@ -41,11 +41,11 @@ const MonthGrid = ({ anchor, range, bookings, blocks, hours, members, today, onP
                         >
                             <span className="lc-month__num biz-num">{date.getDate()}</span>
                             {closed ? (
-                                <span className="lc-month__closed">{closedByBlock ? 'Closed' : 'Off'}</span>
+                                <span className="lc-month__closed">Closed</span>
                             ) : (
                                 <>
                                     <span className="lc-month__count biz-num">
-                                        {f.count || ''}
+                                        {f.count ? <>{f.count}<span className="lc-month__word"> booked</span></> : ''}
                                         {f.pending.length > 0 && <i className="lc-month__pending" aria-hidden="true" />}
                                     </span>
                                     <span className="lc-month__bar" aria-hidden="true"><span style={{ width: `${pct}%` }} /></span>

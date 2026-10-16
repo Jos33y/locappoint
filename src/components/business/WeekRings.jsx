@@ -23,7 +23,7 @@ export const WeekRings = ({ week, todayKey, money, onPick, selected }) => (
                         <Ring value={closed ? 0 : d.fill} size={48} stroke={5} label={closed ? "Closed" : `${pct}% booked`} tone="brand">
                             <span className="biz-weekrings__num biz-num">{formatDay(d.dateKey, { day: 'numeric' })}</span>
                         </Ring>
-                        <span className="biz-weekrings__fig biz-num">{closed ? 'Closed' : `${pct}%`}</span>
+                        <span className={`biz-weekrings__fig${!closed && d.count ? ' biz-num' : ''}`}>{closed ? 'Closed' : d.count ? `${pct}%` : past ? 'No visits' : 'Open'}</span>
                         <span className="biz-weekrings__money biz-num">{closed || !amount ? '' : money(amount)}</span>
                     </button>
                 </li>

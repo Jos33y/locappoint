@@ -20,6 +20,7 @@ import CommandPalette from './CommandPalette'
 import HubNav from './HubNav'
 import PushSetup from '../common/PushSetup'
 import AccountMenu from './AccountMenu'
+import { useDaylight } from './useDaylight'
 import '../../styles/business/shell.css'
 import '../../styles/support.css'
 
@@ -107,14 +108,6 @@ const TopClock = ({ timeZone = 'Europe/Lisbon' }) => {
     )
 }
 
-const ambientTone = (timeZone = 'Europe/Lisbon') => {
-    const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', hourCycle: 'h23' }).format(new Date()))
-    if (hour >= 5 && hour < 11) return 'morning'
-    if (hour >= 11 && hour < 16) return 'day'
-    if (hour >= 16 && hour < 21) return 'evening'
-    return 'night'
-}
-
 const BusinessShell = () => {
     const { user, userProfile, business: ownedBusiness, signOut, setMode } = useAuth()
     const location = useLocation()
@@ -167,6 +160,9 @@ const BusinessShell = () => {
     }, [])
 
     const staffOnly = Boolean(ownedBusiness?.staff)
+    // The glow at the top of every page follows the real sun over the shop; Today gets the full sky.
+    const daylight = useDaylight(workspace?.business || ownedBusiness)
+    const onToday = location.pathname === '/portal' || location.pathname === '/portal/'
     const supportUnread = useSupportUnread({ side: 'business', businessId: ownedBusiness?.id || null, enabled: Boolean(ownedBusiness?.launched_at) })
 
     useEffect(() => {
@@ -293,7 +289,7 @@ const BusinessShell = () => {
                     </div>
                 </aside>
 
-                <div className={`biz-main biz-main--${ambientTone(value?.business?.timezone)}`}>
+                <div className={`biz-main biz-main--${daylight.light}${onToday ? ' is-today' : ''}`}>
                     <div className="biz-ambient" aria-hidden="true" />
                     <header className="biz-topbar">
                         <span className="biz-topbar__brand">

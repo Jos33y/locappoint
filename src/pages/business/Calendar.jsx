@@ -1,19 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Ban, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Ban, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import DayRail from '../../components/business/DayRail'
 import Agenda from '../../components/business/Agenda'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
 import StaffFilter from '../../components/business/StaffFilter'
-import { WeekRings } from '../../components/business/WeekRings'
+import WeekBoard from '../../components/business/WeekBoard'
 import BlockSheet from '../../components/business/BlockSheet'
 import MonthGrid from '../../components/business/MonthGrid'
 import { Button } from '../../components/ui'
-import { monthRange, shiftMonth, weekFigures } from '../../services/day'
+import { dayFigures, monthRange, shiftMonth, weekFigures } from '../../services/day'
 import { moneyFor } from '../../services/insights'
 import {
-    STATUS_LABEL,
     addDays,
     formatDay,
     friendlyError,
@@ -23,8 +22,10 @@ import {
     loadBookings,
     shortTime,
     startOfWeek,
+    windowsFor,
     zonedNow,
 } from '../../services/business'
+import { parseDateKey } from '../../services/dates'
 import '../../styles/business/day.css'
 import '../../styles/business/calendar.css'
 
@@ -41,6 +42,7 @@ const Calendar = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [blockSheet, setBlockSheet] = useState(null)
+    const picker = useRef(null)
 
     const range = useMemo(() => {
         if (view === 'day') return [anchor, anchor]
@@ -92,16 +94,40 @@ const Calendar = () => {
         ? formatDay(anchor)
         : view === 'month'
             ? formatDay(anchor, { month: 'long', year: 'numeric' })
-            : `${formatDay(range[0], { day: 'numeric', month: 'short' })} to ${formatDay(range[1], { day: 'numeric', month: 'short' })}`
+            : range[0].slice(0, 7) === range[1].slice(0, 7)
+                ? `${formatDay(range[0], { day: 'numeric' })} to ${formatDay(range[1], { day: 'numeric', month: 'long' })}`
+                : `${formatDay(range[0], { day: 'numeric', month: 'long' })} to ${formatDay(range[1], { day: 'numeric', month: 'long' })}`
 
-    const days = view === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(range[0], i)) : []
+    // One line under the date that says what the range holds, in words, never a row of zeros.
+    const inRange = visible.filter((b) => b.status !== 'cancelled' && b.appointment_date >= range[0] && b.appointment_date <= range[1])
+    const toConfirm = inRange.filter((b) => b.status === 'pending').length
+    const booked = inRange.length === 0 ? 'Nothing booked yet' : inRange.length === 1 ? '1 booking' : `${inRange.length} bookings`
+    const confirmLine = toConfirm ? `, ${toConfirm} to confirm` : ''
+    let summary = `${booked}${confirmLine}.`
+    if (view === 'day') {
+        const staff = staffFilter === 'all' ? null : columns[0] || null
+        const windows = windowsFor(hours, staff?.id, parseDateKey(anchor).getDay())
+        const fill = Math.round(dayFigures({ bookings: visible, hours, members: columns, dateKey: anchor, now: today }).fill * 100)
+        summary = windows.length === 0
+            ? `Closed.${inRange.length ? ` ${booked}${confirmLine}.` : ''}`
+            : `Open ${minutesToLabel(windows[0][0])} to ${minutesToLabel(windows[windows.length - 1][1])}. ${booked}${confirmLine}${inRange.length ? `, ${fill}% of the day` : ''}.`
+    } else if (view === 'week' && week && inRange.length) {
+        summary = `${booked}${confirmLine}, ${Math.round(week.fill * 100)}% of the week.`
+    }
+
+    const pickDate = () => {
+        const input = picker.current
+        if (!input) return
+        try { input.showPicker() } catch { input.focus() }
+    }
 
     return (
         <div className="biz-page">
-            <header className="biz-page__head">
-                <div>
-                    <h1 className="biz-page__title">Calendar</h1>
-                    <p className="biz-page__sub">{title}</p>
+            <header className="biz-calhead">
+                <div className="biz-calhead__text">
+                    <p className="biz-calhead__kicker">Calendar</p>
+                    <h1 className="biz-calhead__title">{title}</h1>
+                    <p className="biz-calhead__sum">{loading && bookings.length === 0 ? '\u00a0' : summary}</p>
                 </div>
                 <div className="biz-seg" role="radiogroup" aria-label="View">
                     {['day', 'week', 'month'].map((option) => (
@@ -120,19 +146,31 @@ const Calendar = () => {
             </header>
 
             <div className="biz-datenav">
-                <button type="button" className="biz-icon-btn" aria-label={`Previous ${unit}`} onClick={() => move(-1)}>
-                    <ChevronLeft size={20} />
-                </button>
-                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAnchor(today.dateKey)} disabled={anchor === today.dateKey}>
-                    Today
-                </button>
-                <button type="button" className="biz-icon-btn" aria-label={`Next ${unit}`} onClick={() => move(1)}>
-                    <ChevronRight size={20} />
-                </button>
-                <label className="biz-datenav__pick">
-                    <span className="biz-visually-hidden">Go to date</span>
-                    <input className="biz-input" type="date" value={anchor} onChange={(event) => event.target.value && setAnchor(event.target.value)} />
-                </label>
+                <div className="biz-datenav__step">
+                    <button type="button" className="biz-icon-btn" aria-label={`Previous ${unit}`} onClick={() => move(-1)}>
+                        <ChevronLeft size={20} />
+                    </button>
+                    <button type="button" className="btn btn--ghost btn--sm biz-datenav__today" onClick={() => setAnchor(today.dateKey)} aria-pressed={anchor === today.dateKey}>
+                        Today
+                    </button>
+                    <button type="button" className="biz-icon-btn" aria-label={`Next ${unit}`} onClick={() => move(1)}>
+                        <ChevronRight size={20} />
+                    </button>
+                </div>
+                <div className="biz-datenav__pick">
+                    <button type="button" className="biz-icon-btn" aria-label="Go to a date" onClick={pickDate}>
+                        <CalendarDays size={20} aria-hidden="true" />
+                    </button>
+                    <input
+                        ref={picker}
+                        className="biz-datenav__input"
+                        type="date"
+                        value={anchor}
+                        aria-label="Go to date"
+                        tabIndex={-1}
+                        onChange={(event) => event.target.value && setAnchor(event.target.value)}
+                    />
+                </div>
                 {view === 'day' && (
                     <Button variant="secondary" icon={Ban} className="biz-datenav__block" onClick={() => setBlockSheet({ dateKey: anchor, start: today.dateKey === anchor ? Math.ceil(today.minutes / 15) * 15 : null })}>
                         Block time
@@ -152,7 +190,7 @@ const Calendar = () => {
             {view === 'day' && !(loading && bookings.length === 0) && !isDesktop && (
                 <Agenda
                     dateKey={anchor}
-                    bookings={visible}
+                    bookings={visible.filter((b) => b.appointment_date === anchor)}
                     blocks={blocks}
                     hours={hours}
                     staff={staffFilter === 'all' ? null : bookableMembers.find((m) => m.id === staffFilter) || null}
@@ -193,6 +231,7 @@ const Calendar = () => {
                     blocks={blocks}
                     hours={hours}
                     nowMinutes={anchor === today.dateKey ? today.minutes : null}
+                    past={anchor < today.dateKey}
                     onSlotTap={(staffId, minutes) => openNewBooking({
                         staffId,
                         date: anchor,
@@ -216,55 +255,16 @@ const Calendar = () => {
                 />
             )}
 
-            {view === 'week' && week && (
-                <WeekRings week={week} todayKey={today.dateKey} money={money} onPick={(key) => { setAnchor(key); setView('day') }} />
-            )}
-
-            {view === 'week' && (
-                <div className="biz-week">
-                    {days.map((dateKey) => {
-                        const dayBookings = visible
-                            .filter((b) => b.appointment_date === dateKey && b.status !== 'cancelled')
-                            .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time))
-                        const isToday = dateKey === today.dateKey
-                        return (
-                            <section key={dateKey} className={`biz-week__day${isToday ? ' is-today' : ''}`} aria-label={formatDay(dateKey)}>
-                                <button
-                                    type="button"
-                                    className="biz-week__head"
-                                    onClick={() => { setAnchor(dateKey); setView('day') }}
-                                >
-                                    <span className="biz-week__dow">{formatDay(dateKey, { weekday: 'short' })}</span>
-                                    <span className="biz-num biz-week__date">{formatDay(dateKey, { day: 'numeric' })}</span>
-                                    <span className="biz-week__count">{dayBookings.length || ''}</span>
-                                </button>
-                                <ul className="biz-week__list">
-                                    {dayBookings.map((booking) => (
-                                        <li key={booking.id}>
-                                            <button
-                                                type="button"
-                                                className={`biz-week__item biz-week__item--${booking.status}`}
-                                                onClick={() => openBooking(booking)}
-                                                aria-label={`${shortTime(booking.appointment_time)} ${booking.client_name}, ${STATUS_LABEL[booking.status]}`}
-                                            >
-                                                <span className="biz-num">{shortTime(booking.appointment_time)}</span>
-                                                <span className="biz-week__client">{booking.client_name}</span>
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                                <button
-                                    type="button"
-                                    className="biz-week__add"
-                                    onClick={() => openNewBooking({ date: dateKey, staffId: staffFilter !== 'all' ? staffFilter : undefined })}
-                                    aria-label={`Add a booking on ${formatDay(dateKey)}`}
-                                >
-                                    Add
-                                </button>
-                            </section>
-                        )
-                    })}
-                </div>
+            {view === 'week' && week && !(loading && bookings.length === 0) && (
+                <WeekBoard
+                    week={week}
+                    bookings={visible}
+                    todayKey={today.dateKey}
+                    money={money}
+                    onPickDay={(key) => { setAnchor(key); setView('day') }}
+                    onOpen={openBooking}
+                    onAdd={(key) => openNewBooking({ date: key, staffId: staffFilter !== 'all' ? staffFilter : undefined })}
+                />
             )}
             <BlockSheet
                 open={Boolean(blockSheet)}

@@ -69,7 +69,7 @@
 }
 
 .biz-bkl__date span { color: var(--lc-ink-3); font-family: var(--lc-font-body); font-size: 12px; font-weight: var(--font-weight-medium); }
-.biz-bkl__date.is-today { color: var(--signal); }
+.biz-bkl__date.is-today { color: var(--lc-ink-1); }
 
 .biz-bkl__rows {
     display: flex;
@@ -101,7 +101,9 @@
     cursor: pointer;
 }
 
-.biz-bkl-row:hover { background: var(--lc-well); }
+@media (hover: hover) {
+    .biz-bkl-row:hover { background: var(--lc-raised); }
+}
 .biz-bkl-row:focus-visible { outline: 2px solid var(--azure); outline-offset: -2px; }
 .biz-bkl-row.is-pending { box-shadow: inset 3px 0 0 var(--lc-warning); }
 .biz-bkl-row.is-cancelled .biz-bkl-row__client,

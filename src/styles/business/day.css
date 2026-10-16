@@ -1,25 +1,31 @@
 .biz-dayhead {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-1);
 }
 
-.biz-dayhead__date {
+/* The greeting follows the shop's clock; the line under it says what the day is doing. */
+.biz-dayhead__hello {
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    font-family: var(--font-display);
-    font-size: var(--text-4xl);
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-title);
     font-weight: var(--font-weight-semibold);
-    letter-spacing: var(--tracking-tight);
-    line-height: var(--leading-tight);
+    letter-spacing: var(--lc-track-display);
+    line-height: var(--lc-lh-tight);
+    overflow-wrap: anywhere;
 }
 
-.biz-dayhead__weekday {
+.biz-dayhead__line {
+    margin: 0;
     color: var(--lc-ink-2);
-    font-size: var(--text-base);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.biz-dayhead__line b {
+    color: var(--lc-ink-1);
     font-weight: var(--font-weight-medium);
-    letter-spacing: 0;
 }
 
 .biz-stats {
@@ -505,6 +511,42 @@
     pointer-events: none;
 }
 
+/* Free time in open hours, from now on: a quiet outline you can tap to book its first minute. */
+.biz-rail__free {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-height: 0;
+    padding: var(--space-2) var(--space-3);
+    overflow: hidden;
+    border: 1px dashed var(--lc-line-strong);
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--lc-ink-2);
+    font: inherit;
+    font-size: var(--lc-t-label);
+    text-align: left;
+    cursor: pointer;
+}
+
+.biz-rail__free b { color: var(--lc-ink-1); font-weight: var(--font-weight-medium); }
+
+.biz-rail__len { color: var(--lc-ink-3); white-space: nowrap; }
+
+.biz-rail__free:focus-visible {
+    outline: 2px solid var(--azure);
+    outline-offset: 1px;
+}
+
+@media (hover: hover) {
+    .biz-rail__free:hover { border-color: var(--azure); background: var(--lc-info-tint); color: var(--lc-ink-1); }
+}
+
 .biz-rail__block {
     position: absolute;
     left: 6px;
@@ -617,12 +659,6 @@
 }
 
 @media (min-width: 1024px) {
-    .biz-dayhead {
-        flex-direction: row;
-        align-items: flex-end;
-        justify-content: space-between;
-    }
-
     .biz-stats {
         min-width: 420px;
         border: 0;
@@ -649,8 +685,6 @@
 }
 
 @media (min-width: 1024px) {
-    .biz-dayhead__date { font-size: 34px; }
-    .biz-dayhead__weekday { font-size: 13px; }
     .biz-stats dt { font-size: 11px; }
     .biz-stats dd { font-size: 20px; }
     .biz-stats div { padding: 8px 0; }

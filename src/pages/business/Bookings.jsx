@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CalendarPlus, Download, RotateCw, Search, X } from 'lucide-react'
+import { Download, RotateCw, Search, X } from 'lucide-react'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import StaffFilter from '../../components/business/StaffFilter'
 import { Button, Segmented, Skeleton, Status } from '../../components/ui'
-import { STATUS_LABEL, shortTime, zonedNow } from '../../services/business'
+import { STATUS_LABEL, addDays, shortTime, zonedNow } from '../../services/business'
 import { payMoney } from '../../services/payments'
 import { BOOKING_VIEWS, PAGE, bookingsCsv, loadBookingCounts, loadBookingList } from '../../services/bookingList'
 import { shortDay } from '../../services/inbox'
@@ -22,7 +22,8 @@ const EMPTY = {
 
 const Row = ({ b, currency, staffName, onOpen }) => {
     const paid = PAID.includes(b.payment_status)
-    const price = b.price != null && b.price !== '' ? payMoney(b.price, b.currency || currency) : ''
+    const amount = b.price ?? b.services?.price
+    const price = amount != null && amount !== '' ? payMoney(amount, b.currency || currency) : ''
     const tone = b.status === 'pending' ? 'warning' : b.status === 'confirmed' ? 'info' : b.status === 'completed' ? 'success' : b.status === 'no_show' ? 'danger' : 'neutral'
     const label = b.status === 'cancelled' && b.cancelled_by ? (b.cancelled_by === 'client' ? 'Cancelled by client' : 'Cancelled by you') : STATUS_LABEL[b.status] || b.status
     return (
@@ -48,7 +49,7 @@ const Row = ({ b, currency, staffName, onOpen }) => {
 // Bookings: every booking made with the business as a list, by day. Tap one to confirm, move or
 // cancel it in the same sheet as the calendar.
 const Bookings = () => {
-    const { business, bookableMembers, members, me, isOwner, bookingsVersion, openBooking, openNewBooking } = useWorkspace()
+    const { business, bookableMembers, members, me, isOwner, bookingsVersion, openBooking } = useWorkspace()
     const [view, setView] = useState('upcoming')
     const [query, setQuery] = useState('')
     const [search, setSearch] = useState('')
@@ -125,7 +126,16 @@ const Bookings = () => {
     }, [state.rows])
 
     const options = BOOKING_VIEWS.map((v) => ({ value: v.value, label: counts && counts[v.value] > 0 ? `${v.label} ${counts[v.value]}` : v.label }))
-    const dayLabel = (date) => (date === today ? 'Today' : shortDay(date))
+    const tomorrow = addDays(today, 1)
+    const dayLabel = (date) => (date === today ? 'Today' : date === tomorrow ? 'Tomorrow' : shortDay(date))
+    // What the list holds, in one line: never a generic description, never a zero.
+    const coming = counts?.upcoming || 0
+    const waiting = counts?.pending || 0
+    const summary = !counts
+        ? '\u00a0'
+        : coming === 0 && waiting === 0
+            ? 'Nothing coming up yet. New bookings land here the moment they are made.'
+            : [coming ? `${coming} coming up` : '', waiting ? `${waiting} to confirm` : ''].filter(Boolean).join(', ') + '.'
     const [emptyTitle, emptyBody] = EMPTY[view]
 
     return (
@@ -133,11 +143,10 @@ const Bookings = () => {
             <header className="biz-page__head biz-bkl__head">
                 <div>
                     <h1 className="biz-page__title">Bookings</h1>
-                    <p className="biz-page__sub">Every booking made with you, online or added by you.</p>
+                    <p className="biz-page__sub">{summary}</p>
                 </div>
                 <div className="biz-bkl__actions">
                     {isOwner && <Button variant="secondary" size="sm" icon={Download} loading={busy && state.status === 'ready'} onClick={download}>Download</Button>}
-                    <Button size="sm" icon={CalendarPlus} onClick={() => openNewBooking()}>New booking</Button>
                 </div>
             </header>
 

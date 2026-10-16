@@ -196,6 +196,13 @@ if (quiet('worst')) {
   Object.assign(DATA.businesses[0], { business_name: "Adeola's Hair, Nails and Lash Studio, Lekki Phase 1", city: 'Lagos', country: 'NG', market: 'lagos', timezone: 'Africa/Lagos', currency: 'NGN', neighbourhood: 'Opposite the yellow Mobil filling station, Ikota', address: 'Plot 12, Admiralty Way, after the second roundabout, by the mosque with the green gate', banner_url: null, logo_url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#111"/></svg>') })
   Object.assign(DATA.services[0], { service_name: 'Knotless braids, waist length, with curls (bring your own hair)', duration_minutes: 480, price: 1250000 })
 }
+// ?tomorrow=1: two visits tomorrow, the first at 09:00, so the evening has a tomorrow to show.
+if (quiet('tomorrow')) DATA.appointments = [...DATA.appointments,
+  { id: 't1', business_id: 'b1', staff_id: 'm1', service_id: 's1', appointment_date: dk(1), appointment_time: '09:00:00', duration_minutes: 30, status: 'confirmed', source: 'online', client_name: 'Ana Ferreira', client_phone: '', client_email: '', notes: '', services: { service_name: 'Haircut', price: 18 } },
+  { id: 't2', business_id: 'b1', staff_id: 'm1', service_id: 's2', appointment_date: dk(1), appointment_time: '09:30:00', duration_minutes: 20, status: 'pending', source: 'online', client_name: 'Rui Costa', client_phone: '', client_email: '', notes: '', services: { service_name: 'Beard trim', price: 12 } },
+]
+// ?fresh=1: a business on its first day, with no booking ever.
+if (quiet('fresh')) DATA.appointments = []
 if (quiet('demo')) DATA.businesses[0].is_demo = true
 // ?opentoday=1: open today as well (the test business is closed on Sundays).
 if (quiet('opentoday')) {

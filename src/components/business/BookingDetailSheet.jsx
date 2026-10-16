@@ -5,6 +5,7 @@ import { Sheet } from '../ui'
 import { useWorkspace } from './WorkspaceContext'
 import {
     STATUS_LABEL,
+    durationLabel,
     formatDay,
     formatMoney,
     friendlyError,
@@ -29,6 +30,16 @@ import { canReport } from '../../services/support'
 import { shortDay } from '../../services/inbox'
 import '../../styles/business/booking-pay.css'
 import '../../styles/business/formats.css'
+
+// Where the booking came from, said the way an owner would.
+const SOURCE_LINE = {
+    manual: 'Added by you',
+    assistant: 'Added by you',
+    web: 'Booked online',
+    whatsapp: 'Booked on WhatsApp',
+    google: 'Booked through Google',
+    ai_assistant: 'Booked through an assistant',
+}
 
 const ACTIONS = {
     pending: [
@@ -144,6 +155,9 @@ const BookingDetailSheet = ({ booking, onClose }) => {
     const refund = paid ? refundOf({ ...booking, refund: money?.refund }) : null
     const currency = booking.currency || business.currency || 'EUR'
     const price = Number(booking.price ?? booking.services?.price) || 0
+    const statusText = booking.status === 'cancelled' && booking.cancelled_by
+        ? (booking.cancelled_by === 'client' ? 'Cancelled by the client' : 'Cancelled by you')
+        : STATUS_LABEL[booking.status]
     let payHint = ''
     if (paid && booking.status === 'pending') payHint = 'Declining gives the client all they paid back.'
     if (paid && booking.status === 'confirmed') {
@@ -193,21 +207,21 @@ const BookingDetailSheet = ({ booking, onClose }) => {
 
     return (
         <Sheet open={Boolean(booking)} onClose={onClose} title={booking.client_name}>
+            <section className={`biz-bkhead is-${booking.status}`} aria-label="The booking">
+                <div className="biz-bkhead__when">
+                    <b className="biz-bkhead__time biz-num">{shortTime(booking.appointment_time)}</b>
+                    <span className="biz-bkhead__day">
+                        {formatDay(booking.appointment_date, { weekday: 'long', day: 'numeric', month: 'long' })}, {durationLabel(Number(booking.duration_minutes) || 0)}
+                    </span>
+                </div>
+                <span className={`biz-status biz-status--${booking.status}`}>{statusText}</span>
+                <p className="biz-bkhead__what">
+                    <span>{serviceLabel(booking, 'Service removed')}{Number(booking.people) > 1 ? `, for ${booking.people} people` : ''}</span>
+                    {(booking.price ?? booking.services?.price) != null && <b className="biz-num">{formatMoney(booking.price ?? booking.services.price, currency)}</b>}
+                </p>
+                <p className="biz-bkhead__from">{SOURCE_LINE[booking.source] || 'Booked online'}{staff && bookableMembers.length > 1 ? `, with ${staff.display_name}` : ''}</p>
+            </section>
             <dl className="biz-facts">
-                <div>
-                    <dt>When</dt>
-                    <dd>
-                        {formatDay(booking.appointment_date, { weekday: 'short', day: 'numeric', month: 'short' })},{' '}
-                        <span className="biz-num">{shortTime(booking.appointment_time)}</span> for {booking.duration_minutes} min
-                    </dd>
-                </div>
-                <div>
-                    <dt>Service</dt>
-                    <dd>
-                        {serviceLabel(booking, 'Service removed')}{Number(booking.people) > 1 ? `, for ${booking.people} people` : ''}
-                        {(booking.price ?? booking.services?.price) != null && <span className="biz-num biz-muted"> {formatMoney(booking.price ?? booking.services.price, currency)}</span>}
-                    </dd>
-                </div>
                 {booking.mode === 'online' && (
                     <div>
                         <dt>Where</dt>
@@ -234,12 +248,6 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                             {Number(booking.travel_fee) > 0 && <span className="biz-where__note">Travel fee {formatMoney(booking.travel_fee, currency)}</span>}
                             {booking.status === 'confirmed' && <TripControl booking={booking} timeZone={business.timezone} />}
                         </dd>
-                    </div>
-                )}
-                {staff && bookableMembers.length > 1 && (
-                    <div>
-                        <dt>With</dt>
-                        <dd>{staff.display_name}</dd>
                     </div>
                 )}
                 {paid && (
@@ -272,10 +280,6 @@ const BookingDetailSheet = ({ booking, onClose }) => {
                         </dd>
                     </div>
                 )}
-                <div>
-                    <dt>Status</dt>
-                    <dd><span className={`biz-status biz-status--${booking.status}`}>{STATUS_LABEL[booking.status]}</span></dd>
-                </div>
                 {booking.notes && (
                     <div>
                         <dt>Notes</dt>

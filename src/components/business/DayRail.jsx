@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { parseDateKey, toMinutes } from '../../services/dates'
-import { STATUS_LABEL, bookingStart, minutesToLabel, serviceLabel, shortTime } from '../../services/business'
+import { STATUS_LABEL, bookingStart, durationLabel, minutesToLabel, serviceLabel, shortTime } from '../../services/business'
 
 const PX_PER_MINUTE = 1.4
 const SNAP = 15
@@ -20,20 +20,40 @@ const blockRange = (block, dateKey) => {
     return [start, end]
 }
 
-const DayRail = ({ dateKey, columns, bookings, blocks, hours, nowMinutes, onSlotTap, onBookingTap, onBlockTap }) => {
+// Free stretches of 30 minutes or more in open hours, from now on today, none on a past day.
+const freeIn = (windows, busy, floor) => {
+    const out = []
+    windows.forEach(([a, b]) => {
+        let cursor = Math.max(a, floor)
+        busy.forEach(([from, to]) => {
+            if (to <= cursor || from >= b) return
+            if (from - cursor >= 30) out.push([cursor, from])
+            cursor = Math.max(cursor, to)
+        })
+        if (b - cursor >= 30) out.push([cursor, b])
+    })
+    return out
+}
+
+const DayRail = ({ dateKey, columns, bookings, blocks, hours, nowMinutes, past = false, onSlotTap, onBookingTap, onBlockTap }) => {
     const scrollRef = useRef(null)
     const weekday = parseDateKey(dateKey).getDay()
 
     const layout = useMemo(() => {
-        const perColumn = columns.map((member) => ({
-            member,
-            windows: windowsFor(hours, member.id, weekday),
-            bookings: bookings.filter((b) => b.staff_id === member.id && b.status !== 'cancelled'),
-            blocks: blocks
+        const floor = nowMinutes != null ? Math.ceil(nowMinutes / 15) * 15 : 0
+        const perColumn = columns.map((member) => {
+            const windows = windowsFor(hours, member.id, weekday)
+            const own = bookings.filter((b) => b.staff_id === member.id && b.status !== 'cancelled' && (!b.appointment_date || b.appointment_date === dateKey))
+            const held = blocks
                 .filter((b) => b.staff_id === member.id || !b.staff_id)
                 .map((b) => ({ ...b, range: blockRange(b, dateKey) }))
-                .filter((b) => b.range[1] > b.range[0]),
-        }))
+                .filter((b) => b.range[1] > b.range[0])
+            const busy = [
+                ...own.filter((b) => b.status !== 'no_show').map((b) => [bookingStart(b), bookingStart(b) + (Number(b.duration_minutes) || 0)]),
+                ...held.map((b) => b.range),
+            ].sort((x, y) => x[0] - y[0])
+            return { member, windows, bookings: own, blocks: held, free: past ? [] : freeIn(windows, busy, floor) }
+        })
 
         const marks = perColumn.flatMap((c) => [
             ...c.windows.flat(),
@@ -42,7 +62,7 @@ const DayRail = ({ dateKey, columns, bookings, blocks, hours, nowMinutes, onSlot
         const start = marks.length ? Math.floor(Math.min(...marks) / 60) * 60 : 9 * 60
         const end = marks.length ? Math.ceil(Math.max(...marks) / 60) * 60 : 18 * 60
         return { perColumn, start: Math.max(0, start), end: Math.min(24 * 60, Math.max(end, start + 60)) }
-    }, [columns, bookings, blocks, hours, weekday, dateKey, nowMinutes])
+    }, [columns, bookings, blocks, hours, weekday, dateKey, nowMinutes, past])
 
     const { perColumn, start, end } = layout
     const height = (end - start) * PX_PER_MINUTE
@@ -99,6 +119,20 @@ const DayRail = ({ dateKey, columns, bookings, blocks, hours, nowMinutes, onSlot
 
                         {column.windows.map(([from, to]) => (
                             <span key={`${from}-${to}`} className="biz-rail__open" style={{ top: y(from), height: (to - from) * PX_PER_MINUTE }} />
+                        ))}
+
+                        {onSlotTap && column.free.map(([a, b]) => (
+                            <button
+                                type="button"
+                                key={`free${a}`}
+                                className="biz-rail__free"
+                                style={{ top: y(a) + 3, height: (b - a) * PX_PER_MINUTE - 6 }}
+                                onClick={(event) => { event.stopPropagation(); onSlotTap(column.member.id, a) }}
+                                aria-label={`Free ${minutesToLabel(a)} to ${minutesToLabel(b)}${columns.length > 1 ? ` for ${column.member.display_name}` : ''}. Book ${minutesToLabel(a)}.`}
+                            >
+                                <span>Free until <b className="biz-num">{minutesToLabel(b)}</b></span>
+                                <span className="biz-rail__len">{durationLabel(b - a)}</span>
+                            </button>
                         ))}
 
                         {column.blocks.map((block) => (

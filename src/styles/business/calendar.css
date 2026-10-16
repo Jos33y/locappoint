@@ -1,3 +1,42 @@
+.biz-calhead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-4);
+}
+
+.biz-calhead__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.biz-calhead__kicker {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* The date is the title: it is what the owner came to look at. */
+.biz-calhead__title {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-title);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--lc-track-display);
+    line-height: var(--lc-lh-tight);
+}
+
+.biz-calhead__sum {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+}
+
 .biz-datenav {
     display: flex;
     flex-wrap: wrap;
@@ -5,137 +44,228 @@
     gap: var(--space-2);
 }
 
-@media (max-width: 559px) {
-    .biz-datenav__block { flex: 1 1 100%; }
+.biz-datenav__step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.biz-datenav__today[aria-pressed="true"] {
+    color: var(--lc-ink-3);
 }
 
 .biz-datenav__pick {
-    margin-left: auto;
+    position: relative;
 }
 
-.biz-datenav__pick .biz-input {
-    min-height: 44px;
-    width: auto;
-}
-
-.biz-week {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-}
-
-.biz-week__day {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border: 1px solid var(--lc-line);
-    border-radius: var(--radius-md);
-    background: var(--lc-card);
-}
-
-.biz-week__day.is-today {
-    border-color: var(--signal);
-}
-
-.biz-week__head {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
+/* The native picker stays for its calendar, out of sight behind the icon. */
+.biz-datenav__input {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 1px;
+    height: 1px;
     padding: 0;
     border: 0;
-    background: none;
-    color: var(--lc-ink-1);
-    font-family: var(--font-body);
-    text-align: left;
-    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
 }
 
-.biz-week__head:focus-visible,
-.biz-week__item:focus-visible,
-.biz-week__add:focus-visible {
-    outline: 2px solid var(--azure);
-    outline-offset: 2px;
-}
-
-.biz-week__dow {
-    color: var(--lc-ink-2);
-    font-size: var(--text-sm);
-}
-
-.biz-week__date {
-    font-size: var(--text-lg);
-}
-
-.biz-week__count {
+.biz-datenav__block {
     margin-left: auto;
-    color: var(--lc-ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
 }
 
-.biz-week__list {
+@media (max-width: 559px) {
+    .biz-datenav__block { flex: 1 1 100%; margin-left: 0; }
+}
+
+/* The week board: one list per day, headed by that day's ring. */
+.biz-wb {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.biz-week__item {
+.biz-wb__day {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.biz-wb__day.is-today {
+    background: var(--lc-raised);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong), var(--lc-shadow-raised);
+}
+
+.biz-wb__head {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    width: 100%;
-    min-height: 40px;
-    padding: 0 var(--space-2);
+}
+
+.biz-wb__open {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    min-height: 48px;
+    padding: 0;
     border: 0;
-    border-left: 3px solid var(--azure);
-    border-radius: var(--radius-xs);
-    background: var(--lc-raised);
+    border-radius: var(--lc-r-md);
+    background: none;
     color: var(--lc-ink-1);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
+    font: inherit;
     text-align: left;
     cursor: pointer;
 }
 
-.biz-week__item--pending { border-left-color: var(--signal); }
-.biz-week__item--completed { border-left-color: var(--lc-success); color: var(--lc-ink-2); }
-.biz-week__item--no_show { border-left-color: var(--lc-danger); color: var(--lc-ink-3); }
+.biz-wb__what {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px var(--space-2);
+    min-width: 0;
+}
 
-.biz-week__client {
+.biz-wb__num {
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-wb__dow {
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-wb__state {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.biz-wb__money {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+.biz-wb__day.is-closed .biz-wb__dow,
+.biz-wb__day.is-closed .biz-wb__state,
+.biz-wb__day.is-closed .biz-wb__num { color: var(--lc-ink-4); }
+
+.biz-wb__add {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-full);
+    background: none;
+    color: var(--lc-ink-2);
+    cursor: pointer;
+}
+
+.biz-wb__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0 0 var(--space-1);
+    list-style: none;
+}
+
+.biz-wb__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: 44px;
+    padding: 0 var(--space-3);
+    border: 0;
+    border-left: 3px solid var(--azure);
+    border-radius: var(--radius-sm);
+    background: var(--lc-raised-hover);
+    color: var(--lc-ink-1);
+    font: inherit;
+    font-size: var(--lc-t-label);
+    text-align: left;
+    cursor: pointer;
+}
+
+.biz-wb__item .biz-num { color: var(--lc-ink-2); }
+
+.biz-wb__item.is-pending { border-left-color: var(--signal); }
+.biz-wb__item.is-completed { border-left-color: var(--lc-success); color: var(--lc-ink-2); }
+.biz-wb__item.is-no_show { border-left-color: var(--lc-danger); color: var(--lc-ink-3); }
+
+.biz-wb__client {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.biz-week__add {
-    align-self: flex-start;
-    min-height: 36px;
-    padding: 0 var(--space-3);
-    border: 1px dashed var(--lc-line-strong);
-    border-radius: var(--radius-sm);
-    background: none;
-    color: var(--lc-ink-2);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    cursor: pointer;
+.biz-wb__open:focus-visible,
+.biz-wb__add:focus-visible,
+.biz-wb__item:focus-visible {
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+}
+
+@media (hover: hover) {
+    .biz-wb__add:hover { background: var(--lc-raised-hover); color: var(--lc-ink-1); }
+    .biz-wb__item:hover { background: var(--lc-raised); }
 }
 
 @media (min-width: 1024px) {
-    .biz-week {
+    .biz-wb {
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
-        align-items: start;
+        align-items: stretch;
     }
 
-    .biz-week__day {
-        min-height: 320px;
+    .biz-wb__day {
+        min-height: 360px;
+        padding: var(--space-3) var(--space-2);
     }
 
-    .biz-week__item {
+    .biz-wb__head {
+        position: relative;
+        justify-content: center;
+    }
+
+    .biz-wb__open {
+        flex-direction: column;
+        gap: var(--space-1);
+        text-align: center;
+    }
+
+    .biz-wb__what {
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+
+    .biz-wb__add {
+        position: absolute;
+        top: -4px;
+        right: -2px;
+        width: 36px;
+        height: 36px;
+    }
+
+    .biz-wb__item {
         flex-direction: column;
         align-items: flex-start;
         justify-content: center;
@@ -144,14 +274,7 @@
         padding: var(--space-1) var(--space-2);
     }
 
-    .biz-week__item .biz-num {
-        color: var(--lc-ink-2);
-        font-size: var(--text-xs);
-    }
-
-    .biz-week__client {
-        width: 100%;
-    }
+    .biz-wb__client { width: 100%; }
 }
 
 .biz-cal-needs {

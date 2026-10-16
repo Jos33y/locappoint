@@ -28,7 +28,7 @@ export default async ({ browser, url, check }) => {
         check(sheet[0]?.label === 'Move' && sheet[0]?.primary, 'before the start, Move leads')
         check(await p.evaluate(() => /open once it starts at 10:00/.test(document.body.textContent)), 'and it says when they open')
     }
-    check(!(await p.evaluate(() => /Sept\b/.test(document.querySelector('.biz-facts')?.textContent || ''))), 'dates say Sep, as the emails do')
+    check(!(await p.evaluate(() => /Sept\b/.test(document.querySelector('.biz-bkhead')?.textContent || ''))), 'dates say Sep, as the emails do')
     check(p.errors.length === 0, `no page errors on Today: ${p.errors.join(' | ')}`)
     await p.close()
 

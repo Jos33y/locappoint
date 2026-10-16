@@ -21,15 +21,17 @@
     padding: var(--space-2);
     border: 0;
     border-radius: var(--lc-r-md);
-    background: var(--lc-well);
+    background: var(--lc-raised);
     color: var(--lc-ink-1);
     font: inherit;
     text-align: left;
     cursor: pointer;
-    transition: background var(--lc-fast) var(--lc-ease);
+    transition: background-color var(--lc-fast) var(--lc-ease);
 }
 
-.lc-month__day:hover { background: var(--lc-raised-hover); }
+@media (hover: hover) {
+    .lc-month__day:hover { background: var(--lc-raised-hover); }
+}
 
 .lc-month__day.is-out { opacity: 0.4; }
 
@@ -45,6 +47,8 @@
 
 .lc-month__count { display: inline-flex; align-items: center; gap: 4px; min-height: 16px; color: var(--lc-ink-2); font-size: var(--lc-t-label); }
 
+.lc-month__word { display: none; }
+
 .lc-month__pending { width: 6px; height: 6px; border-radius: var(--radius-full); background: var(--signal); }
 
 .lc-month__closed { color: var(--lc-ink-4); font-size: var(--lc-t-micro); }
@@ -57,4 +61,11 @@
     .lc-month__day { min-height: 88px; padding: var(--space-3); }
 
     .lc-month__num { font-size: var(--lc-t-body); }
+
+    .lc-month__word { display: inline; }
+}
+
+.lc-month__day:focus-visible {
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
 }

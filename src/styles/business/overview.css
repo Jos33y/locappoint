@@ -57,6 +57,28 @@
 
 .biz-ov__needs .biz-ov__h2 { font-size: var(--lc-t-body); }
 
+/* A business with no booking yet: the ring shows the open day, and beside it the way to fill it. */
+.biz-first {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.biz-first__lede {
+    margin: 0;
+    max-width: 46ch;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.biz-first__more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
 .biz-ov__calm {
     margin: 0;
     color: var(--lc-ink-2);
@@ -151,6 +173,9 @@
     .biz-ring__gap:hover { stroke: var(--lc-info-tint); }
 }
 
+/* Before the first booking, the time still free today shows as a soft band you can tap to book. */
+.biz-ring__free { fill: none; stroke: var(--lc-info-tint); pointer-events: none; }
+
 .biz-ring__now line { stroke: var(--signal); stroke-width: 3; stroke-linecap: round; }
 
 /* The one glow in the product: the live tip of the now-hand. */
@@ -211,6 +236,27 @@
 .biz-ring__money b { color: var(--lc-ink-1); font-size: var(--lc-t-body); }
 
 .biz-ring__money .is-soft b { color: var(--lc-info); }
+
+/* Before the first booking: the open hours stand where the numbers will be. No zeros. */
+.biz-ring__span {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-ring__span b {
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.biz-ring__first {
+    max-width: 17ch;
+    margin-top: var(--space-2);
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
 
 .biz-ring.is-full .biz-ring__tip { animation: biz-ring-full 1.4s var(--lc-ease) 1; }
 
@@ -410,6 +456,10 @@
     .biz-ov__day .biz-ring { align-self: center; }
 
     .biz-ov__week { align-self: stretch; }
+
+    .biz-ov__grid.is-fresh { grid-template-areas: "day day" "timeline side"; }
+
+    .biz-ov__grid.is-fresh .biz-ov__day { flex-direction: row; align-items: center; }
 }
 
 @media (min-width: 1180px) {
@@ -422,3 +472,125 @@
     .biz-ring__booked { transition: none; }
     .biz-ring.is-full .biz-ring__tip { animation: none; }
 }
+
+/* The evening slip: the day on paper once the doors close. */
+.biz-slip {
+    display: flex;
+    flex: 1 1 300px;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-paper);
+    color: var(--lc-paper-ink);
+    overflow: hidden;
+}
+
+.biz-slip__top {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+}
+
+.biz-slip__figure {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.biz-slip__label {
+    color: var(--lc-paper-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.biz-slip__money {
+    font-size: var(--lc-t-title);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--lc-track-title);
+    line-height: var(--lc-lh-tight);
+    overflow-wrap: anywhere;
+}
+
+.biz-slip__rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    border-top: 1.5px dashed var(--lc-paper-line);
+    font-size: var(--lc-t-body);
+}
+
+.biz-slip__rows div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.biz-slip__rows dt { color: var(--lc-paper-ink-2); }
+
+.biz-slip__rows dd { margin: 0; font-weight: var(--font-weight-semibold); }
+
+/* The small ring on the slip: no ticks, no opening label, drawn for paper. */
+.biz-ring.is-small .biz-ring__tick,
+.biz-ring.is-small .biz-ring__open-at { display: none; }
+
+.biz-ring.is-small .biz-ring__centre { inset: 12%; }
+
+.biz-ring.is-small .biz-ring__pct { font-size: var(--lc-t-title); }
+
+.biz-ring.is-paper .biz-ring__base { stroke: color-mix(in srgb, var(--lc-paper-ink) 7%, transparent); }
+
+.biz-ring.is-paper .biz-ring__open,
+.biz-ring.is-paper .biz-ring__break { stroke: var(--lc-paper-line); }
+
+.biz-ring.is-paper .biz-ring__pct { color: var(--lc-paper-ink); }
+
+/* Tomorrow, brought forward after closing. */
+.biz-tomorrow {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-raised);
+    box-shadow: var(--lc-shadow-raised);
+}
+
+.biz-tomorrow__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.biz-tomorrow__fill {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.biz-tomorrow__text {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.biz-tomorrow__text b { color: var(--lc-ink-1); font-weight: var(--font-weight-medium); }
+
+.biz-tomorrow__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+/* After closing the day panel stacks: the slip, then what needs doing and tomorrow. */
+.biz-ov__day.is-evening,
+.biz-ov__grid .biz-ov__day.is-evening { flex-direction: column; align-items: stretch; }
+
+.biz-ov__day.is-evening .biz-slip { flex: none; }
+
+.biz-ring.is-closed .biz-ring__pct { font-size: var(--lc-t-title); }

@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useCountUp } from '../ui'
+import { RollMoney, RollNumber } from './Rolling'
 import { bookingStart, minutesToLabel, windowsFor } from '../../services/business'
 import { parseDateKey } from '../../services/dates'
 import '../../styles/business/overview.css'
 
 const TAU = Math.PI * 2
-
-// Counting figures show whole amounts; the last frame shows the exact one, cents included.
-const settle = (shown, target) => (Math.abs(shown - target) < 0.005 ? target : Math.round(shown))
 
 const point = (c, r, turn) => [c + r * Math.cos(turn * TAU - Math.PI / 2), c + r * Math.sin(turn * TAU - Math.PI / 2)]
 
@@ -20,11 +17,11 @@ const arc = (c, r, from, to) => {
 
 // The day as a circle: open hours all the way round, each booking an arc, a hand for now.
 // Booked time shifts from azure to amber as the day goes on: the one gradient the product uses.
-export const DayRing = ({ dateKey, bookings, hours, staff, figures, nowMinutes, money, onBook, size = 248 }) => {
+// centre: 'figures' shows how full the day is and the money; 'hours' only the open hours (while loading);
+// 'fresh' the open hours and where the first booking will land, for a business with none yet;
+// 'pct' only how full the day was, for the small ring on the evening slip. paper draws it for the slip.
+export const DayRing = ({ dateKey, bookings, hours, staff, figures, nowMinutes, money, country, onBook, centre = 'figures', paper = false, size = 248 }) => {
     const windows = windowsFor(hours, staff?.id, parseDateKey(dateKey).getDay())
-    const shownFill = useCountUp(Math.round(figures.fill * 100))
-    const earned = useCountUp(figures.earned)
-    const toCome = useCountUp(figures.toCome)
     const [drawn, setDrawn] = useState(false)
     useEffect(() => {
         const frame = requestAnimationFrame(() => setDrawn(true))
@@ -82,10 +79,14 @@ export const DayRing = ({ dateKey, bookings, hours, staff, figures, nowMinutes, 
     const hours24 = []
     for (let m = Math.ceil(open / 60) * 60; m < close; m += 60) hours24.push(m)
     const pct = Math.round(figures.fill * 100)
-    const label = `${pct}% of today's open time is booked. ${money(figures.earned)} earned, ${money(figures.toCome)} still to come.`
+    const counts = centre === 'figures' || centre === 'pct'
+    const openSpan = `${minutesToLabel(open)} to ${minutesToLabel(close)}`
+    const label = counts
+        ? `${pct}% of today's open time is booked. ${money(figures.earned)} earned, ${money(figures.toCome)} still to come.`
+        : `Open today from ${openSpan}.${centre === 'fresh' ? ' No bookings yet.' : ''}`
 
     return (
-        <div className={`biz-ring${drawn ? ' is-drawn' : ''}${pct >= 100 ? ' is-full' : ''}`} style={{ width: size, height: size }}>
+        <div className={`biz-ring${drawn ? ' is-drawn' : ''}${counts && pct >= 100 ? ' is-full' : ''}${counts ? '' : ' is-quiet'}${paper ? ' is-paper' : ''}${centre === 'pct' ? ' is-small' : ''}`} style={{ width: size, height: size }}>
             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={label}>
                 <circle className="biz-ring__base" cx={c} cy={c} r={r} strokeWidth={stroke} />
                 {windows.map(([a, b]) => (
@@ -108,6 +109,9 @@ export const DayRing = ({ dateKey, bookings, hours, staff, figures, nowMinutes, 
                         style={a.status === 'confirmed' || a.status === 'completed' ? { stroke: `color-mix(in srgb, var(--signal) ${a.mix}%, var(--azure))` } : undefined}
                     />
                 ))}
+                {!counts && gaps.map(([a, b]) => (
+                    <path key={`f${a}`} className="biz-ring__free" d={arc(c, r, turn(a), turn(b))} strokeWidth={stroke} />
+                ))}
                 {onBook && gaps.map(([a, b]) => (
                     <path
                         key={`g${a}`}
@@ -127,14 +131,26 @@ export const DayRing = ({ dateKey, bookings, hours, staff, figures, nowMinutes, 
                 )}
             </svg>
             <span className="biz-ring__open-at biz-num" aria-hidden="true">{minutesToLabel(open)}</span>
-            <div className="biz-ring__centre">
-                <b className="biz-ring__pct biz-num">{Math.round(shownFill)}<small>%</small></b>
-                <span className="biz-ring__sub">of today booked</span>
-                <span className="biz-ring__money">
-                    <span><b className="biz-num">{money(settle(earned, figures.earned))}</b> earned</span>
-                    <span className="is-soft"><b className="biz-num">{money(settle(toCome, figures.toCome))}</b> to come</span>
-                </span>
-            </div>
+            {centre === 'pct' ? (
+                <div className="biz-ring__centre">
+                    <b className="biz-ring__pct biz-num"><RollNumber value={pct} /><small>%</small></b>
+                </div>
+            ) : counts ? (
+                <div className="biz-ring__centre">
+                    <b className="biz-ring__pct biz-num"><RollNumber value={pct} /><small>%</small></b>
+                    <span className="biz-ring__sub">of today booked</span>
+                    <span className="biz-ring__money">
+                        <span><b className="biz-num"><RollMoney value={figures.earned} country={country} /></b> earned</span>
+                        <span className="is-soft"><b className="biz-num"><RollMoney value={figures.toCome} country={country} /></b> to come</span>
+                    </span>
+                </div>
+            ) : (
+                <div className="biz-ring__centre">
+                    <span className="biz-ring__sub">Open today</span>
+                    <span className="biz-ring__span"><b className="biz-num">{minutesToLabel(open)}</b> to <b className="biz-num">{minutesToLabel(close)}</b></span>
+                    {centre === 'fresh' && <span className="biz-ring__first">Your first booking lands here</span>}
+                </div>
+            )}
         </div>
     )
 }

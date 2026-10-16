@@ -32,7 +32,7 @@ export const ReviewsCard = ({ reviews }) => {
     )
 }
 
-export const PageCard = ({ business, stats }) => (
+export const PageCard = ({ business, stats, share = true }) => (
     <section className="biz-ovcard" aria-label="Your page">
         <span className="biz-ovcard__head">
             <Eye size={16} aria-hidden="true" />
@@ -44,6 +44,6 @@ export const PageCard = ({ business, stats }) => (
                 <span><b className="biz-num">{stats.booked}</b> booked online</span>
             </span>
         )}
-        <ShareLink business={business} />
+        {share && <ShareLink business={business} />}
     </section>
 )
