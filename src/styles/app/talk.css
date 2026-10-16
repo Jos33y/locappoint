@@ -1,0 +1,235 @@
+/* Contact and Partnership: the visitor's city across the top, the ways to reach a person as a flat
+   list (information), and one raised card for the form (the thing you act on). */
+
+.lc-talk {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--lc-canvas);
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-body);
+}
+
+.lc-talk__main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-10);
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--space-10) var(--space-6) var(--space-16);
+}
+
+.lc-talk__main.is-narrow { max-width: 760px; }
+
+.lc-talk__hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: 84px;
+}
+
+.lc-talk__band {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 56px;
+    overflow: hidden;
+    border-radius: var(--lc-r-xl);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+}
+
+.lc-talk__band svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+}
+
+.lc-talk.is-porto .lc-talk__band,
+.lc-talk.is-lisbon .lc-talk__band { opacity: 0.85; }
+
+.lc-talk__title {
+    margin: 0;
+    font-family: var(--lc-font-display);
+    font-size: clamp(2rem, 1.4rem + 1.8vw, 2.75rem);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--lc-track-title);
+    line-height: var(--lc-lh-tight);
+    text-wrap: balance;
+}
+
+.lc-talk__lede {
+    max-width: 56ch;
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: 1.0625rem;
+    line-height: var(--lc-lh-body);
+}
+
+.lc-talk__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-10);
+}
+
+/* The ways to reach a person: information, so no boxes; a line between each. */
+.lc-talk__ways {
+    display: flex;
+    flex-direction: column;
+}
+
+.lc-talk__way {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    column-gap: var(--space-3);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--lc-line);
+}
+
+.lc-talk__way.is-first { border-top: 0; padding-top: 0; }
+
+.lc-talk__way > svg {
+    margin-top: 2px;
+    color: var(--lc-ink-3);
+}
+
+.lc-talk__way > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 0;
+}
+
+.lc-talk__waylabel,
+.lc-talk__waynote {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+.lc-talk__wayvalue {
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+    overflow-wrap: anywhere;
+    text-decoration: none;
+}
+
+a.lc-talk__wayvalue:focus-visible {
+    border-radius: var(--lc-r-sm);
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+}
+
+@media (hover: hover) {
+    a.lc-talk__wayvalue:hover { color: var(--azure-link); }
+}
+
+.lc-talk__way .ui-btn { margin-top: var(--space-2); }
+
+/* The form: the one raised thing on the page. */
+.lc-talk__card {
+    padding: var(--space-6);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-raised);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong), var(--lc-shadow-raised);
+}
+
+.lc-talk__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.lc-talk__h2 {
+    margin: 0;
+    padding: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.01em;
+}
+
+.lc-talk__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.lc-talk__group + .lc-talk__group { padding-top: var(--space-4); }
+
+.lc-talk__group > legend { margin-bottom: var(--space-4); }
+
+.lc-talk__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+}
+
+.lc-talk__failed {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-danger-tint);
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-talk__foot {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    text-align: center;
+}
+
+.lc-talk__done {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+}
+
+.lc-talk__done p {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-talk__doneicon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-full);
+    background: var(--lc-success-tint);
+    color: var(--lc-success);
+}
+
+@media (max-width: 899px) {
+    .lc-talk__grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); }
+}
+
+@media (max-width: 559px) {
+    .lc-talk__main { gap: var(--space-8); padding: var(--space-8) var(--space-4) var(--space-12); }
+    .lc-talk__hero { padding-top: 60px; }
+    .lc-talk__band { height: 40px; }
+    .lc-talk__lede { font-size: var(--lc-t-body); }
+    .lc-talk__card { padding: var(--space-5) var(--space-4); }
+    .lc-talk__row { grid-template-columns: minmax(0, 1fr); }
+}

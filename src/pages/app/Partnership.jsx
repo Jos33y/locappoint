@@ -1,309 +1,157 @@
 // src/pages/app/Partnership.jsx
-// Partnership - multi-section form. Supabase insert into partnership_requests.
+// Founding partners: who applies, their business, and what they need. Saves to partnership_requests.
 
-import { useState } from 'react'
-import { Handshake, User, AtSign, Building2, MessageSquare, Send, Check, AlertCircle } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Check, Send } from 'lucide-react'
 import { supabase } from '../../config/supabase'
 import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
-import '../../styles/app/home.css'
-import '../../styles/app/partnership.css'
+import CityPattern from '../../components/brand/CityPattern'
+import { Button, Field, Input, Picker, Textarea } from '../../components/ui'
+import { useCity } from '../../hooks/useCity'
+import '../../styles/app/talk.css'
 
-
-// The kinds of business a partner can bring.
-const organizationTypes = [
-    'Salons & Hair',
-    'Barbershops',
-    'Spas & Wellness',
-    'Fitness',
-    'Beauty & Photo',
-    'Pet Services',
-    'Tutoring',
-    'Consulting',
-    'Other',
+// The kinds of business a partner can bring. The stored value stays as before, so past rows still read.
+const TYPES = [
+    { value: 'Salons & Hair', label: 'Salons and hair' },
+    { value: 'Barbershops', label: 'Barbershops' },
+    { value: 'Spas & Wellness', label: 'Spas and wellness' },
+    { value: 'Fitness', label: 'Fitness' },
+    { value: 'Beauty & Photo', label: 'Beauty and photography' },
+    { value: 'Pet Services', label: 'Pet services' },
+    { value: 'Tutoring', label: 'Tutoring' },
+    { value: 'Consulting', label: 'Consulting' },
+    { value: 'Other', label: 'Something else' },
 ]
-
+const EMPTY = { firstName: '', lastName: '', email: '', phone: '', organizationType: '', organizationName: '', city: '', country: '', partnershipInterest: '' }
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const Partnership = () => {
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        organizationType: '',
-        organizationName: '',
-        city: '',
-        country: '',
-        partnershipInterest: '',
-    })
-    const [loading, setLoading] = useState(false)
-    const [success, setSuccess] = useState(false)
-    const [error, setError] = useState('')
+    const [city] = useCity()
+    const [form, setForm] = useState(EMPTY)
+    const [errors, setErrors] = useState({})
+    const [sending, setSending] = useState(false)
+    const [sent, setSent] = useState(false)
+    const [failed, setFailed] = useState('')
+    const formRef = useRef(null)
 
-    const handleChange = (e) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({ ...prev, [name]: value }))
-        if (error) setError('')
+    const put = (key, value) => {
+        setForm((f) => ({ ...f, [key]: value }))
+        setErrors((x) => ({ ...x, [key]: undefined }))
+        setFailed('')
     }
+    const set = (key) => (e) => put(key, e.target.value)
 
-    const handleSubmit = async (e) => {
+    const submit = async (e) => {
         e.preventDefault()
-
-        if (!formData.firstName || !formData.lastName || !formData.email ||
-            !formData.phone || !formData.organizationType) {
-            setError('First name, last name, email, phone, and organization type are required.')
+        const problems = {}
+        if (!form.firstName.trim()) problems.firstName = 'Add your first name'
+        if (!form.lastName.trim()) problems.lastName = 'Add your last name'
+        if (!EMAIL.test(form.email.trim())) problems.email = 'Enter an email we can reply to'
+        if (form.phone.replace(/\D/g, '').length < 7) problems.phone = 'Enter a phone number we can call'
+        if (!form.organizationType) problems.organizationType = 'Pick the kind of business'
+        setErrors(problems)
+        if (Object.keys(problems).length) {
+            requestAnimationFrame(() => formRef.current?.querySelector('[aria-invalid="true"]')?.focus())
             return
         }
-
-        setLoading(true)
-        setError('')
-
+        setSending(true)
+        setFailed('')
         try {
-            const { error: dbError } = await supabase
-                .from('partnership_requests')
-                .insert([{
-                    first_name: formData.firstName,
-                    last_name: formData.lastName,
-                    email: formData.email,
-                    phone: formData.phone,
-                    organization_type: formData.organizationType,
-                    organization_name: formData.organizationName,
-                    city: formData.city,
-                    country: formData.country,
-                    partnership_interest: formData.partnershipInterest,
-                }])
-
-            if (dbError) throw dbError
-
-            setSuccess(true)
-            setFormData({
-                firstName: '', lastName: '', email: '', phone: '',
-                organizationType: '', organizationName: '', city: '', country: '',
-                partnershipInterest: '',
-            })
-            setTimeout(() => setSuccess(false), 6000)
+            const { error } = await supabase.from('partnership_requests').insert([{
+                first_name: form.firstName.trim(),
+                last_name: form.lastName.trim(),
+                email: form.email.trim(),
+                phone: form.phone.trim(),
+                organization_type: form.organizationType,
+                organization_name: form.organizationName.trim(),
+                city: form.city.trim(),
+                country: form.country.trim(),
+                partnership_interest: form.partnershipInterest.trim(),
+            }])
+            if (error) throw error
+            setSent(true)
+            setForm(EMPTY)
         } catch (err) {
             console.error('Partnership submit failed:', err)
-            setError('Could not submit. Try again, or email partners@locappoint.com.')
+            setFailed('We could not send that. Try again, or email hello@locappoint.com.')
         } finally {
-            setLoading(false)
+            setSending(false)
         }
     }
 
     return (
-        <div className="partnership-page">
+        <div className={`lc-talk is-${city.code}`}>
             <AppHeader />
 
-            <main>
+            <main className="lc-talk__main is-narrow">
+                <section className="lc-talk__hero">
+                    <span className="lc-talk__band" aria-hidden="true"><CityPattern city={city.code} centred size={28} /></span>
+                    <h1 className="lc-talk__title">Become a founding partner.</h1>
+                    <p className="lc-talk__lede">Founding partners shape what we build next, get it first, and appear with us when we open their city. Tell us about your business below.</p>
+                </section>
 
-                {/* Hero */}
-                <section className="loca-section loca-section--s0 part__hero">
-                    <div className="container">
-                        <div className="part__hero-inner">
-                            <span className="part__hero-icon" aria-hidden="true">
-                                <Handshake size={20} strokeWidth={1.8} />
-                            </span>
-                            <span className="loca-eyebrow">
-                                <span className="loca-eyebrow__dot" aria-hidden="true"></span>
-                                Founding partners program
-                            </span>
-                            <h1 className="part__hero-title">
-                                Help us build the booking platform <span className="loca-section__title-accent">for your industry.</span>
-                            </h1>
-                            <p className="part__hero-lede">
-                                Founding partners get direct input on features, early access to what we build next, and a co-marketing slot when we open their city. Apply below.
-                            </p>
+                <div className="lc-talk__card">
+                    {sent ? (
+                        <div className="lc-talk__done" role="status">
+                            <span className="lc-talk__doneicon" aria-hidden="true"><Check size={22} /></span>
+                            <h2 className="lc-talk__h2">Application sent</h2>
+                            <p>A person reads every application and replies within 48 hours.</p>
+                            <Button variant="secondary" onClick={() => setSent(false)}>Send another</Button>
                         </div>
-                    </div>
-                </section>
-
-                {/* Form */}
-                <section className="loca-section loca-section--s1 part__main">
-                    <div className="container">
-                        <form onSubmit={handleSubmit} className="part-form" noValidate>
-
-                            {success && (
-                                <div className="form-alert form-alert--success" role="status">
-                                    <Check size={14} strokeWidth={2.5} />
-                                    <span>Application received. We will review and reply within 48 hours.</span>
+                    ) : (
+                        <form ref={formRef} className="lc-talk__form" onSubmit={submit} noValidate>
+                            <fieldset className="lc-talk__group">
+                                <legend className="lc-talk__h2">About you</legend>
+                                <div className="lc-talk__row">
+                                    <Field label="First name" error={errors.firstName}>
+                                        <Input value={form.firstName} onChange={set('firstName')} autoComplete="given-name" maxLength={80} />
+                                    </Field>
+                                    <Field label="Last name" error={errors.lastName}>
+                                        <Input value={form.lastName} onChange={set('lastName')} autoComplete="family-name" maxLength={80} />
+                                    </Field>
                                 </div>
-                            )}
-
-                            {error && (
-                                <div className="form-alert form-alert--error" role="alert">
-                                    <AlertCircle size={14} strokeWidth={2.2} />
-                                    <span>{error}</span>
-                                </div>
-                            )}
-
-                            {/* Personal */}
-                            <fieldset className="part-form__group">
-                                <legend className="part-form__legend">
-                                    <span className="part-form__legend-num">01</span>
-                                    <span className="part-form__legend-ico"><User size={14} strokeWidth={2} /></span>
-                                    <span className="part-form__legend-text">Personal</span>
-                                </legend>
-                                <div className="form-row">
-                                    <div className="form-field">
-                                        <label htmlFor="firstName">First name *</label>
-                                        <input
-                                            type="text"
-                                            id="firstName"
-                                            name="firstName"
-                                            value={formData.firstName}
-                                            onChange={handleChange}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="form-field">
-                                        <label htmlFor="lastName">Last name *</label>
-                                        <input
-                                            type="text"
-                                            id="lastName"
-                                            name="lastName"
-                                            value={formData.lastName}
-                                            onChange={handleChange}
-                                            required
-                                        />
-                                    </div>
+                                <div className="lc-talk__row">
+                                    <Field label="Email" error={errors.email}>
+                                        <Input type="email" value={form.email} onChange={set('email')} autoComplete="email" inputMode="email" spellCheck={false} maxLength={200} />
+                                    </Field>
+                                    <Field label="Phone" error={errors.phone}>
+                                        <Input type="tel" value={form.phone} onChange={set('phone')} autoComplete="tel" inputMode="tel" maxLength={40} />
+                                    </Field>
                                 </div>
                             </fieldset>
 
-                            {/* Contact */}
-                            <fieldset className="part-form__group">
-                                <legend className="part-form__legend">
-                                    <span className="part-form__legend-num">02</span>
-                                    <span className="part-form__legend-ico"><AtSign size={14} strokeWidth={2} /></span>
-                                    <span className="part-form__legend-text">Contact</span>
-                                </legend>
-                                <div className="form-row">
-                                    <div className="form-field">
-                                        <label htmlFor="email">Email *</label>
-                                        <input
-                                            type="email"
-                                            id="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            placeholder="you@example.com"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="form-field">
-                                        <label htmlFor="phone">Phone *</label>
-                                        <input
-                                            type="tel"
-                                            id="phone"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleChange}
-                                            placeholder="+351 912 345 678"
-                                            required
-                                        />
-                                    </div>
+                            <fieldset className="lc-talk__group">
+                                <legend className="lc-talk__h2">Your business</legend>
+                                <Field label="Kind of business" error={errors.organizationType}>
+                                    <Picker value={form.organizationType} onChange={(v) => put('organizationType', v)} title="Kind of business" placeholder="Pick one" options={TYPES} />
+                                </Field>
+                                <Field label="Business name" optional>
+                                    <Input value={form.organizationName} onChange={set('organizationName')} autoComplete="organization" maxLength={160} />
+                                </Field>
+                                <div className="lc-talk__row">
+                                    <Field label="City" optional>
+                                        <Input value={form.city} onChange={set('city')} autoComplete="address-level2" maxLength={80} />
+                                    </Field>
+                                    <Field label="Country" optional>
+                                        <Input value={form.country} onChange={set('country')} autoComplete="country-name" maxLength={80} />
+                                    </Field>
                                 </div>
                             </fieldset>
 
-                            {/* Organization */}
-                            <fieldset className="part-form__group">
-                                <legend className="part-form__legend">
-                                    <span className="part-form__legend-num">03</span>
-                                    <span className="part-form__legend-ico"><Building2 size={14} strokeWidth={2} /></span>
-                                    <span className="part-form__legend-text">Organization</span>
-                                </legend>
-                                <div className="form-field">
-                                    <label htmlFor="organizationType">Category *</label>
-                                    <select
-                                        id="organizationType"
-                                        name="organizationType"
-                                        value={formData.organizationType}
-                                        onChange={handleChange}
-                                        required>
-                                        <option value="">Select category...</option>
-                                        {organizationTypes.map((type) => (
-                                            <option key={type} value={type}>{type}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="form-field">
-                                    <label htmlFor="organizationName">Business name</label>
-                                    <input
-                                        type="text"
-                                        id="organizationName"
-                                        name="organizationName"
-                                        value={formData.organizationName}
-                                        onChange={handleChange}
-                                        placeholder="If applicable"
-                                    />
-                                </div>
-                                <div className="form-row">
-                                    <div className="form-field">
-                                        <label htmlFor="city">City</label>
-                                        <input
-                                            type="text"
-                                            id="city"
-                                            name="city"
-                                            value={formData.city}
-                                            onChange={handleChange}
-                                            placeholder="Porto, Lisbon, Lagos..."
-                                        />
-                                    </div>
-                                    <div className="form-field">
-                                        <label htmlFor="country">Country</label>
-                                        <input
-                                            type="text"
-                                            id="country"
-                                            name="country"
-                                            value={formData.country}
-                                            onChange={handleChange}
-                                            placeholder="Portugal, Nigeria..."
-                                        />
-                                    </div>
-                                </div>
+                            <fieldset className="lc-talk__group">
+                                <legend className="lc-talk__h2">What you need</legend>
+                                <Field label="How would Locappoint fit your business?" optional>
+                                    <Textarea value={form.partnershipInterest} onChange={set('partnershipInterest')} rows={5} maxLength={5000} placeholder="What works today, what does not, and what would make this a yes." />
+                                </Field>
                             </fieldset>
 
-                            {/* Interest */}
-                            <fieldset className="part-form__group">
-                                <legend className="part-form__legend">
-                                    <span className="part-form__legend-num">04</span>
-                                    <span className="part-form__legend-ico"><MessageSquare size={14} strokeWidth={2} /></span>
-                                    <span className="part-form__legend-text">Interest</span>
-                                </legend>
-                                <div className="form-field">
-                                    <label htmlFor="partnershipInterest">
-                                        How do you see Locappoint fitting your business?
-                                    </label>
-                                    <textarea
-                                        id="partnershipInterest"
-                                        name="partnershipInterest"
-                                        value={formData.partnershipInterest}
-                                        onChange={handleChange}
-                                        rows="5"
-                                        maxLength={5000}
-                                        placeholder="Goals, what is broken today, what would make this a yes..."
-                                    />
-                                </div>
-                            </fieldset>
-
-                            <button
-                                type="submit"
-                                className="loca-btn loca-btn--primary loca-btn--lg part-form__submit"
-                                disabled={loading}>
-                                {loading ? 'Submitting...' : (
-                                    <>
-                                        <Send size={16} strokeWidth={2} />
-                                        Submit application
-                                    </>
-                                )}
-                            </button>
-
-                            <p className="part-form__foot">
-                                We review every application. Reply within 48 hours.
-                            </p>
+                            {failed && <p className="lc-talk__failed" role="alert">{failed}</p>}
+                            <Button type="submit" full icon={Send} loading={sending}>Send application</Button>
+                            <p className="lc-talk__foot">A person reads every application and replies within 48 hours.</p>
                         </form>
-                    </div>
-                </section>
-
+                    )}
+                </div>
             </main>
 
             <AppFooter />

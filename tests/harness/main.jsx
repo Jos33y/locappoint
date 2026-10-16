@@ -146,6 +146,8 @@ const Auth = ({ children }) => {
 // ?path=/ is the home page; lazy, so its stylesheets reach only that screen.
 const AppHome = lazy(() => import('@src/pages/app/AppHome'))
 const Businesses = lazy(() => import('@src/pages/app/Businesses'))
+const Contact = lazy(() => import('@src/pages/app/Contact'))
+const Partnership = lazy(() => import('@src/pages/app/Partnership'))
 const Privacy = lazy(() => import('@src/pages/app/legal/Privacy'))
 const Terms = lazy(() => import('@src/pages/app/legal/Terms'))
 const LegalNotice = lazy(() => import('@src/pages/app/legal/LegalNotice'))
@@ -198,6 +200,8 @@ const App = () => (
         <Route path="/admin-view/:section" element={<AdminView />} />
         <Route path="/legal/policies" element={<Policies />} />
         <Route path="/businesses" element={<Suspense fallback={null}><Businesses /></Suspense>} />
+        <Route path="/contact" element={<Suspense fallback={null}><Contact /></Suspense>} />
+        <Route path="/partnership" element={<Suspense fallback={null}><Partnership /></Suspense>} />
         <Route path="/privacy" element={<Suspense fallback={null}><Privacy /></Suspense>} />
         <Route path="/terms" element={<Suspense fallback={null}><Terms /></Suspense>} />
         <Route path="/legal/notice" element={<Suspense fallback={null}><LegalNotice /></Suspense>} />

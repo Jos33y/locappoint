@@ -1,21 +1,17 @@
 $ErrorActionPreference = 'Stop'
-$name = 'browse1'
+$name = 'contact1'
 $root = (Get-Location).Path
 $pj = Join-Path $root 'package.json'
 if (-not (Test-Path $pj) -or (Get-Content $pj -Raw | ConvertFrom-Json).name -ne 'locappoint') { Write-Host 'Run this from the locappoint repo root.'; exit 1 }
 
 $paths = @(
-  'src/components/client/find/EngineBox.jsx.backup-browse1',
-  'src/components/client/find/PlaceResult.jsx.backup-browse1',
-  'src/pages/app/Businesses.jsx.backup-browse1',
-  'src/pages/app/Contact.jsx.backup-browse1',
-  'src/services/booking.js.backup-browse1',
-  'src/styles/app/businesses.css.backup-browse1',
-  'src/styles/client/engine.css.backup-browse1',
-  'src/styles/trust.css.backup-browse1',
-  'tests/harness/main.jsx.backup-browse1',
-  'tests/run.mjs.backup-browse1',
-  'browse1.zip',
+  'src/pages/app/Contact.jsx.backup-contact1',
+  'src/pages/app/Partnership.jsx.backup-contact1',
+  'src/styles/app/contact.css.backup-contact1',
+  'src/styles/app/partnership.css.backup-contact1',
+  'tests/harness/main.jsx.backup-contact1',
+  'tests/run.mjs.backup-contact1',
+  'contact1.zip',
   'payload'
 )
 
