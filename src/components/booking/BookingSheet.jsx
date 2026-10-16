@@ -5,7 +5,7 @@ import { Button, Chip, ChipGroup, Segmented, Sheet } from '../ui'
 import { DurationDial } from '../business/DurationDial'
 import { useNow } from '../business/ShopClock'
 import { useAuth } from '../../hooks/useAuth'
-import { durationLabel, menuPrice, zonedNow } from '../../services/business'
+import { durationLabel, menuPrice, shownPrice, zonedNow } from '../../services/business'
 import { trackPage } from '../../services/pageStats'
 import { USER_ERRORS, bookingDays, clearPending, firstOnOrAfter, hasTimeLeft, loadExtras, loadSlots, monthShort, requestBooking, rescheduleMyBooking, savePending, windowsFor } from '../../services/booking'
 import { parsePhone } from '../ui/PhoneField'
@@ -459,7 +459,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                             <span className="lc-bk-service__name">{service.service_name.trim()}</span>
                             <span className="lc-bk-service__meta">{durationLabel(duration)} at {business.business_name}</span>
                         </span>
-                        {hasPrice(service.price) && <span className="lc-bk-service__price">{menuPrice(service.price, currency)}</span>}
+                        {hasPrice(service.price) && <span className="lc-bk-service__price">{shownPrice(service.price, currency)}</span>}
                     </div>
                     {maxPeople > 1 && (
                         <div className="lc-bk-extras lc-bk-people">

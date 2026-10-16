@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
-import StreetGridCover from '../../business/StreetGridCover'
-import { initials } from '../../business/Brand'
+import { BusinessCover, BusinessMark } from '../../brand/BusinessFace'
 import { openStatus } from '../../business/PublicPageView'
 import { menuPrice } from '../../../services/business'
 import { weekFromRows } from '../../../services/hours'
@@ -17,8 +16,8 @@ export const PlaceResult = ({ place, from = '/client/search' }) => {
         <li className="lc-cl-result">
             <Link to={`/${place.slug}`} state={{ from }} className="lc-cl-result__link">
                 <span className="lc-cl-result__cover" aria-hidden="true">
-                    {place.banner_url ? <img src={place.banner_url} alt="" loading="lazy" /> : <StreetGridCover seed={place.slug} tint="azure" focus />}
-                    <span className="lc-cl-result__logo">{place.logo_url ? <img src={place.logo_url} alt="" loading="lazy" /> : initials(place.business_name)}</span>
+                    <BusinessCover business={place} lazy />
+                    <span className="lc-cl-result__logo"><BusinessMark business={place} lazy /></span>
                 </span>
                 <span className="lc-cl-result__body">
                     <span className="lc-cl-result__top">

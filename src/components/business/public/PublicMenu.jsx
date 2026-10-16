@@ -1,7 +1,7 @@
 import { ChevronRight, House, MessageCircle, Users, Video } from 'lucide-react'
 import { Button } from '../../ui'
 import { DurationDial } from '../DurationDial'
-import { durationLabel, menuPrice } from '../../../services/business'
+import { durationLabel, shownPrice } from '../../../services/business'
 import { groupTag } from '../../../services/formats'
 import '../../../styles/public-page.css'
 import '../../../styles/client/formats.css'
@@ -63,7 +63,7 @@ export const PublicMenu = ({ services, name, whatsapp, preview, onBook, currency
                                         {onlineAs(service) && <span className="lc-fmt-tag">{(service.modes || []).includes('at_client') ? <House size={13} aria-hidden="true" /> : <Video size={13} aria-hidden="true" />}{onlineAs(service)}</span>}
                                         {groupTag(service) && <span className="lc-fmt-tag"><Users size={13} aria-hidden="true" />{groupTag(service)}</span>}
                                     </span>
-                                    {hasPrice(service.price) && <span className="lc-pub__price">{menuPrice(service.price, currency)}</span>}
+                                    {hasPrice(service.price) && <span className="lc-pub__price">{shownPrice(service.price, currency)}</span>}
                                     <span className="lc-pub__go" aria-hidden="true"><ChevronRight size={18} /></span>
                                 </button>
                             </li>

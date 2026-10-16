@@ -19,7 +19,16 @@ export const RatingLine = ({ reviews }) => {
 
 export const PublicReviews = ({ reviews, name, onMore }) => {
     const [loading, setLoading] = useState(false)
-    if (!reviews?.count) return null
+    if (!reviews) return null
+    // A business with no reviews yet: say how reviews come, rather than leaving a gap.
+    if (!reviews.count) {
+        return (
+            <section id="reviews" className="lc-pub__card lc-pub__reviews is-new" aria-labelledby="lc-pub-reviews-title">
+                <h2 id="lc-pub-reviews-title" className="lc-pub__h2">Reviews</h2>
+                <p className="lc-pubrv__newtext">{name} joined recently. Reviews show here after visits, written only by people who booked.</p>
+            </section>
+        )
+    }
     const more = async () => {
         setLoading(true)
         try { await onMore() } finally { setLoading(false) }

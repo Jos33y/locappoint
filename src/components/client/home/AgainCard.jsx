@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, RotateCcw } from 'lucide-react'
 import { Button } from '../../ui'
-import { initials } from '../../business/Brand'
+import { BusinessMark } from '../../brand/BusinessFace'
 import { categoryLabel } from '../../../constants/categories'
 import { dueLabel, shortDate } from '../../../services/booking'
 import { parseDateKey } from '../../../services/dates'
@@ -19,7 +19,7 @@ export const AgainCard = ({ item, onBook }) => {
     return (
         <li className="lc-again">
             <div className="lc-again__top">
-                <span className="lc-again__logo" aria-hidden="true">{b.logo_url ? <img src={b.logo_url} alt="" /> : initials(b.business_name)}</span>
+                <span className="lc-again__logo" aria-hidden="true"><BusinessMark business={b} /></span>
                 <span className="lc-again__id">
                     <strong>{b.business_name}</strong>
                     <span>{[categoryLabel(b.category, b.category_detail), b.city].filter(Boolean).join(' in ')}</span>

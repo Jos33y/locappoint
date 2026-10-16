@@ -48,14 +48,15 @@
 }
 
 .lc-pub__head { order: 1; }
-.lc-pub__status { order: 2; }
+.lc-pub__book { order: 2; }
 .lc-pub__actions { order: 3; }
 .lc-pub__wabook { order: 3; }
 .lc-pub__demo { order: 4; }
 .lc-pub__about { order: 4; }
 .lc-pub__menu { order: 5; }
-.lc-pub__hours { order: 6; }
-.lc-pub__find { order: 7; }
+.lc-pub__reviews { order: 6; }
+.lc-pub__hours { order: 7; }
+.lc-pub__find { order: 8; }
 
 .lc-pub__head {
     display: flex;
@@ -137,24 +138,24 @@
     overflow-wrap: anywhere;
 }
 
+/* Contact as words, never bare icons: WhatsApp, Call, Directions. */
 .lc-pub__actions {
-    display: grid;
-    grid-auto-columns: minmax(0, 1fr);
-    grid-auto-flow: column;
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
 }
 
 .lc-pub__actions .ui-btn {
     min-width: 0;
-    min-height: 60px;
-    padding: var(--space-2) var(--space-1);
-    border-radius: var(--lc-r-lg);
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-full);
     font-size: var(--lc-t-label);
 }
 
 .lc-pub__actions .ui-btn__content {
-    flex-direction: column;
-    gap: 5px;
+    flex-direction: row;
+    gap: var(--space-2);
 }
 
 .lc-pub__actions svg { flex: none; }
@@ -294,7 +295,7 @@
     width: 14px;
     height: 14px;
     margin-left: -7px;
-    color: var(--signal);
+    color: var(--lc-ink-2);
 }
 
 .lc-pub__stripnow {
@@ -304,7 +305,7 @@
     width: 2px;
     margin-left: -1px;
     border-radius: var(--radius-full);
-    background: var(--signal);
+    background: var(--lc-ink-1);
     box-shadow: 0 0 0 2px var(--lc-card);
 }
 
@@ -313,7 +314,7 @@
     justify-content: space-between;
     color: var(--lc-ink-3);
     font-family: var(--lc-font-mono);
-    font-size: var(--lc-t-micro);
+    font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
 }
 
@@ -644,19 +645,6 @@
     overflow: hidden;
 }
 
-.lc-pub__map {
-    display: block;
-    height: 88px;
-    background: var(--lc-well);
-}
-
-.lc-pub__map svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-    max-width: none;
-}
-
 .lc-pub__findtext {
     display: flex;
     flex-direction: column;
@@ -738,18 +726,13 @@
     .lc-pub__price { font-size: 1.1875rem; }
     .lc-pub__list > li + li::before { left: calc(var(--space-2) + 30px + var(--space-3)); }
 
-    .lc-pub__actions .ui-btn {
-        min-height: 56px;
-        font-size: 12px;
-    }
+    .lc-pub__actions .ui-btn { padding: 0 var(--space-3); }
 
     .lc-pub__range b { font-size: 1rem; }
     .lc-pub__dayname { font-size: var(--lc-t-label); }
 }
 
 @container (max-width: 250px) {
-    .lc-pub__actions .ui-btn { min-height: 48px; }
-    .lc-pub__actions .ui-btn__content { gap: 0; font-size: 0; }
     .lc-pub__when b { font-size: 1.375rem; }
     .lc-pub__statusrow .biz-clock { width: 44px; height: 44px; }
 }
@@ -775,21 +758,7 @@
 
     .lc-pub__id { padding-top: var(--space-3); }
 
-    .lc-pub__actions {
-        grid-auto-columns: max-content;
-        justify-content: start;
-    }
-
-    .lc-pub__actions .ui-btn {
-        min-height: 48px;
-        padding: 0 var(--space-4);
-        border-radius: var(--radius-full);
-    }
-
-    .lc-pub__actions .ui-btn__content {
-        flex-direction: row;
-        gap: var(--space-2);
-    }
+    .lc-pub__actions .ui-btn { min-height: 48px; }
 
     .lc-pub__svc { padding: var(--space-3) var(--space-4); }
     .lc-pub__list > li + li::before { left: calc(var(--space-4) + 36px + var(--space-3)); right: var(--space-4); }
@@ -829,23 +798,17 @@
     .lc-pub__main { grid-area: main; gap: var(--space-6); }
 
     .lc-pub__aside {
-        position: sticky;
-        top: calc(64px + var(--space-4));
         grid-area: aside;
+        align-self: stretch;
         gap: var(--space-4);
     }
-}
 
-@container (min-width: 1000px) {
-    .lc-pub__days {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows: repeat(4, auto);
-        grid-auto-flow: column;
-        column-gap: var(--space-10);
+    /* Only the book panel follows the scroll; hours and directions stay where they are. */
+    .lc-pub__book {
+        position: sticky;
+        top: calc(64px + var(--space-4));
+        z-index: 1;
     }
-
-    .lc-pub__day:nth-child(5)::before { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -913,3 +876,227 @@
 
 /* An extra says so on the menu, so clients know before they open a service. */
 .lc-pub__svcextra { margin-top: 2px; color: var(--signal); font-size: var(--lc-t-label); }
+
+/* Until the owner adds photos, the page wears its city: the pattern as the cover, the business's
+   tile as its logo, framed on the canvas like an uploaded logo (doc 30). */
+.lc-pub__cover.is-city {
+    aspect-ratio: 4 / 1;
+    background: var(--lc-canvas);
+}
+
+.lc-pub__cover.is-city .lc-face {
+    -webkit-mask-image: linear-gradient(to bottom, black 35%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 35%, transparent 100%);
+}
+
+.lc-pub__logo.is-tile {
+    background: var(--lc-canvas);
+}
+
+.lc-pub__route {
+    align-self: flex-start;
+    margin-top: var(--space-2);
+    color: var(--azure-link);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 3px;
+    transition: text-decoration-color var(--lc-fast) var(--lc-ease);
+}
+
+@media (hover: hover) {
+    .lc-pub__route:hover { text-decoration-color: currentColor; }
+}
+
+.lc-pub__route:focus-visible {
+    border-radius: var(--lc-r-sm);
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+}
+
+@container (min-width: 600px) {
+    .lc-pub__cover.is-city {
+        height: clamp(120px, 20vh, 200px);
+    }
+}
+
+/* The door in one line under the name. */
+.lc-pub__open {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--space-2);
+    row-gap: 2px;
+    margin: var(--space-1) 0 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-pub__open b { color: var(--lc-ink-1); font-weight: var(--font-weight-semibold); }
+.lc-pub__open.is-open b { color: var(--lc-success); }
+.lc-pub__open.is-lunch b { color: var(--lc-warning); }
+
+.lc-pub__opendot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--lc-ink-4);
+}
+
+.lc-pub__open.is-open .lc-pub__opendot { background: var(--lc-success); box-shadow: 0 0 0 3px var(--lc-success-tint); }
+.lc-pub__open.is-lunch .lc-pub__opendot { background: var(--lc-warning); }
+
+/* Book: next free time and one button. */
+.lc-pub__book {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-raised);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong), var(--lc-shadow-raised);
+}
+
+.lc-pub__booktext {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.lc-pub__booklabel {
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+.lc-pub__booktime {
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: 1.75rem;
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--lc-track-title);
+    line-height: 1.1;
+}
+
+.lc-pub__booktime.is-quiet {
+    color: var(--lc-ink-2);
+    font-family: var(--lc-font-body);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0;
+}
+
+.lc-pub__bookfor {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.lc-pub__bookbar {
+    position: fixed;
+    right: var(--space-3);
+    bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+    left: var(--space-3);
+    z-index: 30;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-raised);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong), var(--lc-shadow-overlay);
+}
+
+.lc-pub__bookbar .lc-pub__booktime { font-size: 1.125rem; }
+.lc-pub__bookbar .lc-pub__booktime.is-quiet { font-size: var(--lc-t-label); }
+.lc-pub__bookbar .ui-btn { flex: none; }
+
+@container (max-width: 799px) {
+    .lc-pub__book { display: none; }
+    .lc-pub__bookbar { display: flex; }
+    .lc-pub.has-bookbar { padding-bottom: 88px; }
+}
+
+/* Reviews read as part of the page, not one more box. */
+.lc-pub .lc-pub__reviews {
+    padding: var(--space-6) 0 0;
+    border-top: 1px solid var(--lc-line);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.lc-pub .lc-starbars__track i { background: var(--lc-ink-2); }
+
+.lc-pubrv__newtext {
+    max-width: 52ch;
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+/* Hours sit in the side column on a wide screen: one list, today's strip on top. */
+.lc-pub__hours .lc-pub__strip { margin: var(--space-2) 0 var(--space-1); }
+
+/* The page closes in its city. */
+.lc-pub__city {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin: var(--space-10) var(--lc-pub-gutter) 0;
+    padding: var(--space-8) var(--space-5) var(--space-5);
+    overflow: hidden;
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-pub__cityband {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: -1;
+    height: 20px;
+}
+
+.lc-pub__cityband svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+}
+
+.lc-pub__city.is-porto .lc-pub__cityband,
+.lc-pub__city.is-lisbon .lc-pub__cityband { opacity: 0.6; }
+
+.lc-pub__citymark {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    overflow: hidden;
+    border-radius: var(--lc-r-md);
+    box-shadow: 0 0 0 1px var(--lc-line-strong);
+}
+
+.lc-pub__citytext {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-pub__citytext b {
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-body);
+    font-weight: var(--font-weight-semibold);
+}

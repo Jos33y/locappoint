@@ -75,6 +75,9 @@ export const menuPrice = (value, currency = 'EUR') => {
     return priceFormat(currency || 'EUR', Number.isInteger(amount) ? 0 : 2).format(amount)
 }
 
+// What a client reads: a service that costs nothing is Free, never a zero.
+export const shownPrice = (value, currency = 'EUR') => (Number(String(value).replace(',', '.').trim()) === 0 ? 'Free' : menuPrice(value, currency))
+
 // The symbol a price field shows in front of the number.
 export const currencySign = (currency) => (currency === 'NGN' ? '\u20a6' : '\u20ac')
 

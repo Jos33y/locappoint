@@ -3,24 +3,11 @@ import CityPattern from '../../components/brand/CityPattern'
 import BusinessTile from '../../components/brand/BusinessTile'
 import { PublicPageView } from '../../components/business/PublicPageView'
 import { categoryLabel } from '../../constants/categories'
-import { PT_MUNICIPALITIES } from '../../constants/locations'
 import { SAMPLE_PAGES } from '../../constants/sampleBusiness'
-import { savedCity } from '../../services/engine'
+import { worldOf } from '../../components/brand/world'
 import Ticket from '../app/home/Ticket'
 
-const WORLDS = ['porto', 'lagos', 'lisbon']
-const GROUP_WORLD = { 'Greater Porto': 'porto', 'Greater Lisbon': 'lisbon' }
-
-// Which city's world a business lives in: its own city when it is one of ours (or next to one),
-// otherwise the city the visitor picked in the header.
-export const worldOf = ({ city, country } = {}) => {
-    const name = String(city || '').trim()
-    if (country === 'NG' || name.toLowerCase() === 'lagos') return 'lagos'
-    const group = PT_MUNICIPALITIES.find((m) => m.value === name)?.group
-    if (GROUP_WORLD[group]) return GROUP_WORLD[group]
-    const saved = savedCity()
-    return WORLDS.includes(saved) ? saved : 'porto'
-}
+export { worldOf }
 
 // The city's pattern behind the phone. Still: it sets the place, it does not perform.
 export const CityWall = ({ world, className = '' }) => (

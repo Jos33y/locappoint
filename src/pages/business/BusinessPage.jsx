@@ -6,8 +6,7 @@ import {
 } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
-import { initials } from '../../components/business/Brand'
-import StreetGridCover from '../../components/business/StreetGridCover'
+import { BusinessCover, BusinessMark } from '../../components/brand/BusinessFace'
 import { AddressField } from '../../components/business/AddressField'
 import { COUNTRY_OPTIONS, nationalFormat, parsePhone } from '../../components/ui/PhoneField'
 import { CATEGORIES, POPULAR_CATEGORIES, categoryLabel } from '../../constants/categories'
@@ -215,14 +214,12 @@ const Hero = ({ business, form, problems, media, set, nameRef, aboutRef, logoInp
     const left = ABOUT_MAX - form.description.length
     const photoError = media.logo.error || media.cover.error
 
-    const logoFace = business.logo_url
-        ? <img src={business.logo_url} alt="" />
-        : <span className="biz-bp__initials">{initials(form.business_name)}</span>
+    const logoFace = <BusinessMark business={{ ...business, business_name: form.business_name }} />
 
     return (
         <section id="photos" className="biz-bp__hero" aria-label="Your page as clients see it">
             <div className={`biz-bp__cover${coverOver ? ' is-over' : ''}${business.banner_url ? '' : ' is-empty'}`} {...coverDrop}>
-                {business.banner_url ? <img src={business.banner_url} alt="" /> : <StreetGridCover seed={business.slug} tint="azure" />}
+                <BusinessCover business={business} />
                 {media.cover.busy && <Busy />}
                 {!media.cover.busy && (business.banner_url ? (
                     <span className="biz-bp__coveractions">

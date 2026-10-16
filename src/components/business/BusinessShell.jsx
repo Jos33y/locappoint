@@ -9,7 +9,8 @@ import { InboxBell } from '../inbox/InboxBell'
 import { WorkspaceContext } from './WorkspaceContext'
 import { HUBS, NAV_FOOT, NAV_ITEMS, SUPPORT_NAV, hubFor, staffCanSee } from './nav'
 import { useSupportUnread } from '../support/useSupportUnread'
-import { BrandLoader, Mark, Ring, Wordmark, initials } from './Brand'
+import { BrandLoader, Mark, Ring, Wordmark } from './Brand'
+import { BusinessMark } from '../brand/BusinessFace'
 import { Sheet } from '../ui'
 import NewBookingSheet from './NewBookingSheet'
 import BookingDetailSheet from './BookingDetailSheet'
@@ -264,9 +265,7 @@ const BusinessShell = () => {
                     </div>
 
                     <Link to={staffOnly ? '/portal' : '/portal/page'} className="biz-bizcard">
-                        {business.logo_url
-                            ? <span className="biz-avatar biz-avatar--business biz-avatar--logo"><img src={business.logo_url} alt="" /></span>
-                            : <span className="biz-avatar biz-avatar--business">{initials(business.business_name)}</span>}
+                        <span className="biz-avatar biz-avatar--business biz-avatar--logo"><BusinessMark business={business} /></span>
                         <span className="biz-bizcard__text">
                             <strong>{business.business_name}</strong>
                             <small className={business.is_active === false ? 'is-paused' : ''}>

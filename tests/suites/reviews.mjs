@@ -36,7 +36,7 @@ export default async ({ browser, url, check }) => {
     await p.close()
 
     p = await open('/femtos-barbearia', 390, 844, '&noreviews=1')
-    check(await text(p, '.lc-pub__head .lc-rating') === 'New on Locappoint' && !(await p.evaluate(() => Boolean(document.querySelector('#reviews')))), 'a business without reviews reads as new, not as unrated')
+    check(await text(p, '.lc-pub__head .lc-rating') === 'New on Locappoint' && await p.evaluate(() => Boolean(document.querySelector('#reviews.is-new')) && !document.querySelector('#reviews .lc-starbars, #reviews .lc-rv')), 'a business without reviews reads as new, not as unrated: no stars, no empty bars')
     check(await p.evaluate(() => { const pill = document.querySelector('.lc-pub__head .lc-rating.is-new'); const span = document.createRange(); span.selectNodeContents(pill); return pill.getBoundingClientRect().width < span.getBoundingClientRect().width + 40 }), 'the New on Locappoint pill is as wide as its words, not a bar across the page')
     await p.close()
 

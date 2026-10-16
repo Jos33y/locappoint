@@ -7,6 +7,7 @@ import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
 import { BookingSheet } from '../../components/booking/BookingSheet'
 import { PublicPageView } from '../../components/business/PublicPageView'
+import { useNextFree } from '../../components/business/public/nextFree'
 import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { weekFromRows } from '../../services/hours'
 import { clearPending, readBookParam, readPending } from '../../services/booking'
@@ -41,14 +42,10 @@ const PageSkeleton = () => (
                 </div>
             </div>
             <div className="lc-pub__aside">
-                <div className="lc-pub__card lc-pub__status">
-                    <div className="lc-pub__statusrow">
-                        <Skeleton circle height={56} />
-                        <div className="lc-pub__statustext">
-                            <Skeleton width={96} height={14} />
-                            <Skeleton width={150} height={28} />
-                        </div>
-                    </div>
+                <div className="lc-pub__book">
+                    <Skeleton width={96} height={14} />
+                    <Skeleton width={150} height={28} />
+                    <Skeleton height={44} />
                 </div>
             </div>
         </div>
@@ -148,6 +145,7 @@ const PublicBusinessPage = () => {
     }, [state])
 
     const owner = state.status === 'ready' && Boolean(ownBusiness?.id) && ownBusiness.id === state.business.id
+    const nextFree = useNextFree({ business: state.business, services: state.services, week: state.week, skip: state.status !== 'ready' || state.business.is_demo })
 
     const visitedId = state.status === 'ready' && !owner ? state.business.id : null
     const cameFromApp = Boolean(location.state?.from)
@@ -205,6 +203,12 @@ const PublicBusinessPage = () => {
                         bookOnWhatsApp={state.waBook || null}
                         onMoreReviews={moreReviews}
                         onBook={(service) => { setResume(null); setBooking(service) }}
+                        nextFree={nextFree}
+                        onBookNext={() => {
+                            setResume({ serviceId: nextFree.service.id, addonIds: [], mode: null, people: 1, dateKey: nextFree.dateKey, minutes: nextFree.minutes })
+                            setBooking(nextFree.service)
+                        }}
+                        bookBar={!booking}
                     />
                 )}
             </main>

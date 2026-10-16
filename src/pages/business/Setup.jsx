@@ -6,8 +6,8 @@ import {
     AffixInput, Button, Field, ImagePicker, Input, PhoneField, PhoneFrame, Picker, QrCode, Ring, Sheet, Status, Stepper, Switch, Textarea,
     downloadQr, useCountUp,
 } from '../../components/ui'
-import { Mark, Wordmark, AppLoader, initials } from '../../components/business/Brand'
-import StreetGridCover from '../../components/business/StreetGridCover'
+import { Mark, Wordmark, AppLoader } from '../../components/business/Brand'
+import { BusinessCover, BusinessMark } from '../../components/brand/BusinessFace'
 import { AddressField } from '../../components/business/AddressField'
 import { pageUrl, publicHost } from '../../services/links'
 import { ServiceEditor, serviceFromRow, servicesValid } from '../../components/business/ServiceEditor'
@@ -633,9 +633,9 @@ const Setup = () => {
                                     <ImagePicker
                                         shape="logo"
                                         label="Logo"
-                                        hint="Square works best. Until then, your initials show."
+                                        hint="Square works best. Until then, your tile shows."
                                         value={business?.logo_url}
-                                        fallback={<span className="lc-setup__monogram">{initials(details.business_name)}</span>}
+                                        fallback={<BusinessMark business={{ ...draftBusiness, logo_url: null }} />}
                                         busy={media.logo.busy}
                                         error={media.logo.error}
                                         onPick={(file) => pickImage('logo', file)}
@@ -646,7 +646,7 @@ const Setup = () => {
                                         label="Cover photo"
                                         hint="Your chair, your shop front or your best work. Wide photos work best. Tap or drop a photo."
                                         value={business?.banner_url}
-                                        fallback={<StreetGridCover seed={details.slug} tint="azure" />}
+                                        fallback={<BusinessCover business={{ ...draftBusiness, banner_url: null }} />}
                                         busy={media.cover.busy}
                                         error={media.cover.error}
                                         onPick={(file) => pickImage('cover', file)}

@@ -57,7 +57,7 @@ export default async ({ check, root }) => {
     const posterImage = read('src/components/business/posterImage.js')
     check(/Loc<span className="lc-poster__accent">Appoint<\/span>/.test(poster), 'the poster preview carries the two-tone wordmark')
     check(/fillText\('Loc'/.test(posterImage) && /fillText\('Appoint'/.test(posterImage), 'the saved poster image carries the two-tone wordmark')
-    check(/business\.logo_url\s*\? <span className="biz-avatar biz-avatar--business biz-avatar--logo"><img src=\{business\.logo_url\}/.test(read('src/components/business/BusinessShell.jsx')), 'the sidebar card shows the business logo once there is one')
+    check(/<span className="biz-avatar biz-avatar--business biz-avatar--logo"><BusinessMark business=\{business\} \/><\/span>/.test(read('src/components/business/BusinessShell.jsx')) && /business\.logo_url\s*\? <img className="lc-face" src=\{business\.logo_url\}/.test(read('src/components/brand/BusinessFace.jsx')), 'the sidebar card shows the business logo once there is one, its tile until then')
     check(!/Porto, Portugal/.test(read('src/components/common/Appfooter.jsx')), 'the footer gives no city that differs from the registered address')
     check(['src/styles/languageSwitcher.css', 'src/styles/forms.css'].every((f) => !/139,\s*92,\s*246/.test(read(f))), 'no purple left in the public language switcher or the shared forms')
 }

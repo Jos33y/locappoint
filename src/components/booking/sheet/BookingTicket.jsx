@@ -1,7 +1,7 @@
 import { CircleCheck, CreditCard, House, Store, Video } from 'lucide-react'
 import { DurationDial } from '../../business/DurationDial'
 import { fullAddress } from '../../business/public/PublicFind'
-import { durationLabel, menuPrice } from '../../../services/business'
+import { durationLabel, menuPrice, shownPrice } from '../../../services/business'
 import { parseDateKey } from '../../../services/dates'
 import { clock } from '../../../services/hours'
 import { payMoney, payWith } from '../../../services/payments'
@@ -80,7 +80,7 @@ export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stam
                     <span className="lc-bk-ticket__how">
                         {payHere ? <><Store size={14} aria-hidden="true" />{mode === 'online' ? 'Pay the business directly' : 'Pay at your visit'}</> : 'Price'}
                     </span>
-                    {priced && <b className="lc-bk-ticket__price">{menuPrice(priceNumber + travelFee, currency)}</b>}
+                    {priced && <b className="lc-bk-ticket__price">{shownPrice(priceNumber + travelFee, currency)}</b>}
                 </div>
             )}
         </div>

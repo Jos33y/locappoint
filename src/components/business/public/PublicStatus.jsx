@@ -1,6 +1,5 @@
 import { Coffee } from 'lucide-react'
 import { WEEK, clock } from '../../../services/hours'
-import { ShopClock } from '../ShopClock'
 import '../../../styles/public-page.css'
 
 export const doorState = (week, now) => {
@@ -36,13 +35,13 @@ export const doorState = (week, now) => {
     return null
 }
 
-const placeName = (timeZone) => timeZone.split('/').pop().replace(/_/g, ' ')
+export const placeName = (timeZone) => timeZone.split('/').pop().replace(/_/g, ' ')
 
-const visitorZone = () => {
+export const visitorZone = () => {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone } catch { return null }
 }
 
-const TodayStrip = ({ windows, minutes }) => {
+export const TodayStrip = ({ windows, minutes }) => {
     const lo = windows[0].start
     const hi = windows[windows.length - 1].end
     const at = (m) => ((Math.min(Math.max(m, lo), hi) - lo) / (hi - lo)) * 100
@@ -75,29 +74,17 @@ const TodayStrip = ({ windows, minutes }) => {
     )
 }
 
-export const PublicStatus = ({ week, timeZone, now }) => {
+// The door in one line under the business's name: open until when, or when it opens next.
+export const OpenLine = ({ week, timeZone, now }) => {
     const door = doorState(week, now)
     if (!door) return null
     const zone = visitorZone()
-    const elsewhere = zone && zone !== timeZone
-    const today = week[now.dow]
-    const stripToday = today.length > 0 && now.minutes < today[today.length - 1].end
     return (
-        <section className={`lc-pub__card lc-pub__status is-${door.tone}`} aria-label="Open or closed">
-            <div className="lc-pub__statusrow">
-                <ShopClock minutes={now.minutes} open={door.tone === 'open'} size={56} />
-                <div className="lc-pub__statustext">
-                    <p className="lc-pub__state">
-                        {door.state}
-                        {elsewhere && <span className="lc-pub__zone">{placeName(timeZone)} time</span>}
-                    </p>
-                    <p className="lc-pub__when">
-                        <span className="lc-pub__lead">{door.lead}</span> <b>{clock(door.time)}</b>
-                    </p>
-                </div>
-            </div>
-            {door.note && <p className="lc-pub__note">{door.note}</p>}
-            {stripToday && <TodayStrip windows={today} minutes={now.minutes} />}
-        </section>
+        <p className={`lc-pub__open is-${door.tone}`}>
+            <span className="lc-pub__opendot" aria-hidden="true" />
+            <b>{door.state},</b>
+            <span>{`${door.lead.charAt(0).toLowerCase()}${door.lead.slice(1)} ${clock(door.time)}`}</span>
+            {zone && zone !== timeZone && <span className="lc-pub__zone">{placeName(timeZone)} time</span>}
+        </p>
     )
 }
