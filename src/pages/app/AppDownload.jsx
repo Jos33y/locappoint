@@ -3,10 +3,14 @@ import { Navigate } from 'react-router-dom'
 import { ArrowDown, Bell, CalendarCheck, Download, Gift, Link2, Mail, RefreshCw, ShieldCheck, Smartphone, UserRound } from 'lucide-react'
 import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
-import { Button, QrCode, Ring } from '../../components/ui'
+import { Button, QrCode } from '../../components/ui'
+import CityPattern from '../../components/brand/CityPattern'
+import BusinessTile from '../../components/brand/BusinessTile'
+import { useCity } from '../../hooks/useCity'
 import { isNative, WEB_ORIGIN } from '../../services/native'
 import { loadRelease, releaseFile } from '../../services/release'
-import { ClientShot, OwnerShot } from './AppShots'
+import { AppStage, citySample } from './AppShots'
+import { Alert, Ring, daylightOf } from './home/Drawings'
 import '../../styles/app/home.css'
 import '../../styles/app/download.css'
 
@@ -37,6 +41,10 @@ const FAQ = [
 const AppDownload = () => {
     const [release, setRelease] = useState(undefined)
     const [on] = useState(device)
+    // The phones and examples follow the city picked in the header; anyone, anywhere, sees one of ours.
+    const [city] = useCity()
+    const sample = citySample(city.code)
+    const [daylight] = useState(() => daylightOf())
 
     useEffect(() => {
         let cancelled = false
@@ -63,26 +71,25 @@ const AppDownload = () => {
             <AppHeader />
             <main className="lc-dl__main">
                 <section className="lc-dl-hero" aria-labelledby="lc-dl-title">
-                    <img className="lc-dl-hero__icon" src="/brand/loca-app-icon.svg" alt="" width="96" height="96" />
-                    <p className="lc-dl-hero__kicker">The Locappoint app</p>
-                    <h1 id="lc-dl-title" className="lc-dl-hero__title">Every booking.<br />In your pocket.</h1>
-                    <p className="lc-dl-hero__lede">Run your day as a business, or book your next appointment as a client. One app, on the same account as the website.</p>
+                    <div className="lc-dl-hero__copy">
+                        <img className="lc-dl-hero__icon" src="/brand/loca-app-icon.svg" alt="" width="96" height="96" />
+                        <p className="lc-dl-hero__kicker">The Locappoint app</p>
+                        <h1 id="lc-dl-title" className="lc-dl-hero__title">Every booking.<br />In your pocket.</h1>
+                        <p className="lc-dl-hero__lede">Run your day as a business, or book your next appointment as a client. One app, on the same account as the website.</p>
 
-                    <div className="lc-dl-hero__ctas">
-                        {on === 'ios' ? <>{iosCta(true)}{androidCta}</> : <>{androidCta}{iosCta(false)}</>}
+                        <div className="lc-dl-hero__ctas">
+                            {on === 'ios' ? <>{iosCta(true)}{androidCta}</> : <>{androidCta}{iosCta(false)}</>}
+                        </div>
+                        <p className="lc-dl-hero__meta">{meta.map((m) => <span key={m}>{m}</span>)}</p>
+
+                        <aside className="lc-dl__scan" aria-label="Open this page on your phone">
+                            <QrCode value={`${PAGE}?src=qr`} label={`QR code for ${PAGE}`} size={96} />
+                            <p><strong>On a computer?</strong> Point your phone&apos;s camera here to open this page there.</p>
+                        </aside>
                     </div>
-                    <p className="lc-dl-hero__meta">{meta.map((m) => <span key={m}>{m}</span>)}</p>
 
-                    <aside className="lc-dl__scan" aria-label="Open this page on your phone">
-                        <QrCode value={`${PAGE}?src=qr`} label={`QR code for ${PAGE}`} size={96} />
-                        <p><strong>On a computer?</strong> Point your phone&apos;s camera here to open this page there.</p>
-                    </aside>
+                    <AppStage city={city.code} />
                 </section>
-
-                <div className="lc-dl-stage" aria-label="The app on two phones">
-                    <div className="lc-dl-stage__phone is-back"><ClientShot /></div>
-                    <div className="lc-dl-stage__phone is-front"><OwnerShot /></div>
-                </div>
 
                 <section className="lc-dl-section" aria-labelledby="lc-dl-made">
                     <header className="lc-dl-section__head">
@@ -97,9 +104,7 @@ const AppDownload = () => {
                                 <p className="lc-dl-tile__text">Who is coming, what they booked, and the gaps still open. Move, confirm or cancel in a tap.</p>
                             </div>
                             <div className="lc-dl-tile__art lc-dl-tile__art--ring" aria-hidden="true">
-                                <Ring value={0.75} size={132} stroke={10} label="">
-                                    <span className="lc-dl-tile__figure">6<small>of 8 booked</small></span>
-                                </Ring>
+                                <Ring size={150} now={daylight.clock} />
                             </div>
                         </article>
 
@@ -116,9 +121,8 @@ const AppDownload = () => {
                             <p className="lc-dl-tile__label"><Bell size={16} aria-hidden="true" />Reminders</p>
                             <h3 className="lc-dl-tile__title">Fewer empty chairs.</h3>
                             <p className="lc-dl-tile__text">Clients are reminded the day before and two hours before. You do nothing.</p>
-                            <div className="lc-dl-tile__note" aria-hidden="true">
-                                <b>Tomorrow, 10:30</b>
-                                <span>Haircut and beard at Femtos Barbearia</span>
+                            <div className="lc-dl-tile__push" aria-hidden="true">
+                                <Alert title="Reminder" line={`Today 15:30 at ${sample.business}`} sub={sample.service} when="13:30" />
                             </div>
                         </article>
 
@@ -126,7 +130,10 @@ const AppDownload = () => {
                             <p className="lc-dl-tile__label"><Link2 size={16} aria-hidden="true" />Your link</p>
                             <h3 className="lc-dl-tile__title">Share it anywhere.</h3>
                             <p className="lc-dl-tile__text">Send your booking page to WhatsApp, or save your QR poster straight to the phone.</p>
-                            <span className="lc-dl-tile__link" aria-hidden="true">locappoint.com/<b>your-name</b></span>
+                            <span className="lc-dl-tile__link" aria-hidden="true">
+                                <BusinessTile name={sample.business} city={city.code} className="lc-dl-tile__tile" />
+                                <span>locappoint.com/<b>your-name</b></span>
+                            </span>
                         </article>
 
                         <article className="lc-dl-tile">
@@ -213,7 +220,8 @@ const AppDownload = () => {
                     </div>
                 </section>
 
-                <section className="lc-dl-end" aria-labelledby="lc-dl-end">
+                <section className={`lc-dl-end is-${city.code}`} aria-labelledby="lc-dl-end">
+                    <span className="lc-dl-end__band" aria-hidden="true"><CityPattern city={city.code} centred /></span>
                     <img className="lc-dl-end__icon" src="/brand/loca-app-icon.svg" alt="" width="64" height="64" />
                     <h2 id="lc-dl-end" className="lc-dl-end__title">Ready when you are.</h2>
                     <div className="lc-dl-hero__ctas">

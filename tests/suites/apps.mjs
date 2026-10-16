@@ -64,6 +64,43 @@ export default async ({ browser, url, check }) => {
     check(await p.evaluate(() => getComputedStyle(document.querySelector('.lc-dl__scan')).display !== 'none' && Boolean(document.querySelector('.lc-dl__scan svg path'))), 'on a computer a code opens the page on the phone')
     await p.close()
 
+    // The hero: a client with the ticket and the business with the same booking, side by side, in the
+    // city picked in the header, whichever country the visitor is in. Amber is kept for the stamp.
+    for (const [code, business, money] of [['porto', 'Barbearia do Bonfim', '€18'], ['lagos', 'Ada Braids Studio', '₦25,000']]) {
+        p = await open('/app', 1272, 900, `&guest=1&nobiz=1&release=1&city=${code}`)
+        const hero = await p.evaluate(() => {
+            const stage = document.querySelector('.lc-dl-hero .lc-dl-stage')
+            const box = (s) => stage?.querySelector(s)?.getBoundingClientRect()
+            const client = box('.is-client'), owner = box('.is-owner')
+            return {
+                label: stage?.getAttribute('aria-label') || '',
+                wall: Boolean(stage?.querySelector('.lc-dl-stage__wall .lc-pattern')),
+                city: stage?.className || '',
+                ticket: stage?.querySelector('.is-client .lc-home-ticket__who')?.textContent,
+                stamp: stage?.querySelector('.is-client .lc-home-ticket__stamp')?.textContent,
+                alert: stage?.querySelector('.is-owner .lc-home-alert__sub')?.textContent || '',
+                balanced: Boolean(client && owner && Math.abs(client.width - owner.width) < 2 && client.right <= owner.left + 1),
+            }
+        })
+        check(hero.city.includes(`is-${code}`) && hero.wall && hero.ticket === business && hero.stamp === 'Confirmed' && hero.alert.includes(money) && hero.label.includes(business), `${code}: the two phones show ${business} in ${code}'s money on its city wall: ${JSON.stringify(hero)}`)
+        check(hero.balanced, `${code}: client and business phones are the same size, side by side`)
+        await p.close()
+    }
+    p = await open('/app', 1272, 900, '&guest=1&nobiz=1&release=1')
+    const amber = await p.evaluate(() => {
+        const probe = document.createElement('i')
+        probe.style.color = 'var(--signal)'
+        document.body.appendChild(probe)
+        const want = getComputedStyle(probe).color
+        probe.remove()
+        return [...document.querySelectorAll('.lc-dl__main *')]
+            .filter((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && getComputedStyle(e).color === want)
+            .map((e) => e.className || e.tagName)
+    })
+    check(amber.length === 0, `no amber text on the download page; the stamp keeps its own ink: ${amber.join(', ')}`)
+    check(await p.evaluate(() => getComputedStyle(document.querySelector('.lc-dl-hero__meta')).textTransform !== 'uppercase'), 'the version line is not shouted in capitals')
+    await p.close()
+
     // The phone reading the page decides which button leads
     p = await open('/app', 390, 844, '&guest=1&nobiz=1&release=1&device=ios')
     check(await p.evaluate(() => /Ask for an iPhone invite/.test(document.querySelector('.lc-dl-hero__ctas .ui-btn')?.textContent || '') && document.querySelectorAll('.lc-dl-card')[1].classList.contains('is-lead')), 'on an iPhone the invite leads')
