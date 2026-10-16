@@ -33,7 +33,7 @@
 
 .lc-trust-badge.is-small {
     padding: 0.15em 0.5em 0.15em 0.4em;
-    font-size: var(--lc-t-micro);
+    font-size: 12px;
 }
 
 .lc-trust__kept {
@@ -43,5 +43,5 @@
 
 .lc-trust.is-small .lc-trust__kept {
     color: var(--lc-ink-3);
-    font-size: var(--lc-t-micro);
+    font-size: 12px;
 }

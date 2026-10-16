@@ -154,7 +154,7 @@ const PayReturn = () => {
                             dateKey={dateKey}
                             minutes={minutes}
                             stamp="Paid"
-                            stampTone="success"
+                            stampTone="stamp"
                             quote={quote}
                             paid
                         />

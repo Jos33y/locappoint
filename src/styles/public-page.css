@@ -893,6 +893,23 @@
     border-radius: var(--lc-r-xl);
     background: var(--lc-raised);
     box-shadow: inset 0 0 0 1px var(--lc-line-strong), var(--lc-shadow-overlay);
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(calc(100% + var(--space-4)));
+    transition: transform var(--lc-base) var(--lc-ease), opacity var(--lc-base) var(--lc-ease), visibility 0s linear var(--lc-base);
+}
+
+/* It slides up once the door sign has scrolled away, and back down when the sign returns. */
+.lc-pub__bookbar.is-shown {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition: transform var(--lc-base) var(--lc-ease), opacity var(--lc-base) var(--lc-ease), visibility 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lc-pub__bookbar,
+    .lc-pub__bookbar.is-shown { transform: none; }
 }
 
 .lc-pub__bookbar .lc-pub__booktime { font-size: 1.125rem; }
@@ -900,7 +917,6 @@
 .lc-pub__bookbar .ui-btn { flex: none; }
 
 @container (max-width: 799px) {
-    .lc-pub .lc-door__book { display: none; }
     .lc-pub__bookbar { display: flex; }
     .lc-pub.has-bookbar { padding-bottom: 88px; }
 }
@@ -1000,7 +1016,7 @@
 
 .lc-door__strap {
     display: block;
-    height: 14px;
+    height: 18px;
     border-bottom: 1px solid var(--lc-line-strong);
 }
 
@@ -1096,9 +1112,7 @@
     .lc-door__when b { font-size: 1.625rem; }
 }
 
-/* The phone bar carries the shop clock small, so the sign travels with it. */
-.lc-pub__bookbar .biz-clock { flex: none; }
-.lc-pub__bookbar .lc-pub__booktext { flex: 1; }
+.lc-pub__bookbar .lc-pub__booktext { flex: 1; min-width: 0; }
 
 /* Hours and where to find the business are information: flat, a 1px edge, no fill. */
 .lc-pub__visit {
@@ -1145,22 +1159,6 @@
 }
 
 .lc-pub__cover.is-city .lc-pub__badge { bottom: auto; top: var(--space-3); }
-
-/* A photo cover still sits in its city: the pattern runs along its foot. */
-.lc-pub__coverband {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 8px;
-}
-
-.lc-pub__coverband svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-    max-width: none;
-}
 
 /* The long-service arc reads in the core palette here; amber stays for now and confirmation. */
 .lc-pub .biz-dial__over { stroke: var(--azure-soft); }

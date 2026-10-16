@@ -36,7 +36,9 @@ const Option = ({ o, timeZone, onBook }) => {
 
 // "What do you need?": what, where, when and how many, then up to three people free, each for a
 // different reason. A tap opens that business's booking sheet at that time.
-export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/search' }) => {
+// compact: the one line and the popular chips first; when, what time, how many and where open behind
+// "More options", with what is picked said in words, so a short list never sits under a long form.
+export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/search', compact = false }) => {
     const navigate = useNavigate()
     // The same city as the header switcher: changing it in either place changes both.
     const [market, pickMarket] = useCity()
@@ -52,6 +54,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     const [search, setSearch] = useState('checking')
     const [popular, setPopular] = useState([])
     const [result, setResult] = useState({ status: 'idle', data: null, error: '' })
+    const [more, setMore] = useState(false)
 
     useEffect(() => {
         let cancelled = false
@@ -118,14 +121,20 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                         {popular.map((c) => <Chip key={c.value} onClick={() => { setText(c.words); run({ text: c.words }) }}>{c.label}</Chip>)}
                     </ChipGroup>
                 )}
-                <div className="lc-eng__row">
+                {compact && (
+                    <button type="button" className="lc-eng__more" aria-expanded={more} aria-controls="lc-eng-options" onClick={() => setMore((m) => !m)}>
+                        <span>{more ? 'Fewer options' : 'More options'}</span>
+                        <span className="lc-eng__picked">{[WHEN.find((w) => w.value === when)?.label, TIMES.find((t) => t.value === time)?.label, PEOPLE.find((n) => n.value === people)?.label, WHERE.find((w) => w.value === mode)?.label].filter(Boolean).join(', ')}</span>
+                    </button>
+                )}
+                <div className="lc-eng__row" id="lc-eng-options" hidden={compact && !more}>
                     <Picker value={city} onChange={pickCity} title="City" options={MARKETS.map((m) => ({ value: m.code, label: m.name }))} />
                     <Picker value={when} onChange={setWhen} title="When" options={WHEN} />
                     <Picker value={time} onChange={setTime} title="What time" options={TIMES} />
                     <Picker value={people} onChange={setPeople} title="How many people" options={PEOPLE} />
                     <Picker value={mode} onChange={(v) => { setMode(v); setResult((r) => ({ ...r, error: '' })) }} title="Where" options={WHERE} />
                 </div>
-                {mode === 'at_client' && (
+                {mode === 'at_client' && (!compact || more) && (
                     <div className="lc-eng__place">
                         {place ? (
                             <div className="lc-place-picked">

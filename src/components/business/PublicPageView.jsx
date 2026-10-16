@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { MessageCircle, Navigation, Phone } from 'lucide-react'
 import { Button } from '../ui'
 import { Mark, Wordmark } from './Brand'
@@ -86,12 +87,21 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
     const world = worldOf(business)
     const currency = business.currency || (business.country === 'NG' ? 'NGN' : 'EUR')
     const firstTicket = bookable && nextFree && reviews && reviews.count === 0
+    // The phone bar takes over once the door sign has scrolled up out of view.
+    const pageRef = useRef(null)
+    const [doorGone, setDoorGone] = useState(false)
+    useEffect(() => {
+        const door = pageRef.current?.querySelector('.lc-door')
+        if (!door || !bookable || typeof IntersectionObserver === 'undefined') return undefined
+        const watch = new IntersectionObserver(([seen]) => setDoorGone(!seen.isIntersecting && seen.boundingClientRect.top < 0))
+        watch.observe(door)
+        return () => watch.disconnect()
+    }, [bookable])
 
     return (
-        <article className={`lc-pub${preview ? ' lc-pub--preview' : ''}${bookable ? ' has-bookbar' : ''}`} inert={preview || undefined}>
+        <article ref={pageRef} className={`lc-pub${preview ? ' lc-pub--preview' : ''}${bookable ? ' has-bookbar' : ''}`} inert={preview || undefined}>
             <div className={`lc-pub__cover${business.banner_url ? '' : ' is-city'}`}>
                 <BusinessCover business={business} />
-                {business.banner_url && <span className="lc-pub__coverband" aria-hidden="true"><CityPattern city={world} centred /></span>}
                 <span className="lc-pub__badge" aria-hidden="true"><PinMark /></span>
             </div>
 
@@ -164,7 +174,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                 </footer>
             )}
 
-            {bookable && bookBar && <BookBar week={hasHours ? week : null} now={now} nextFree={nextFree} onBookNext={onBookNext} onPickService={toMenu} />}
+            {bookable && bookBar && <BookBar shown={doorGone} nextFree={nextFree} onBookNext={onBookNext} onPickService={toMenu} />}
         </article>
     )
 }

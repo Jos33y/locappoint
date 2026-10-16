@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Plus, RotateCw } from 'lucide-react'
 import AppHeader from '../../components/common/AppHeader'
 import AppFooter from '../../components/common/Appfooter'
-import StreetGridCover from '../../components/business/StreetGridCover'
+import CityPattern from '../../components/brand/CityPattern'
 import { Button } from '../../components/ui'
 import { PlaceResult } from '../../components/client/find/PlaceResult'
 import { EngineBox } from '../../components/client/find/EngineBox'
 import { loadPlaces } from '../../services/booking'
 import { useAuth } from '../../hooks/useAuth'
-import { CITIES, COHORT_SIZE, inMarket } from '../../services/cohort'
+import { CITIES, inMarket } from '../../services/cohort'
+import { categoryLabel } from '../../constants/categories'
 import { useCity } from '../../hooks/useCity'
 import '../../styles/client/find-page.css'
 import '../../styles/app/businesses.css'
@@ -19,27 +20,20 @@ const START = { pathname: '/portal', state: null }
 
 const placesText = (n) => (n === 1 ? '1 place' : `${n} places`)
 
-const CohortSlots = ({ filled }) => (
-    <svg className="lc-br-slots" viewBox={`0 0 ${COHORT_SIZE * 28 - 6} 30`} aria-hidden="true">
-        {Array.from({ length: COHORT_SIZE }, (_, i) => (
-            <rect
-                key={i}
-                className={i < filled ? 'is-filled' : i === filled ? 'is-next' : ''}
-                x={i * 28 + 0.75}
-                y="0.75"
-                width="20.5"
-                height="28.5"
-                rx="5"
-            />
-        ))}
-    </svg>
-)
+// What is here, said from the real list: "Barbershops and nail studios", never a promise the city cannot keep.
+const tradesIn = (places) => {
+    const names = [...new Set(places.map((p) => categoryLabel(p.category, p.category_detail)).filter(Boolean))]
+    if (names.length === 0) return ''
+    const plural = (n) => (/(s|sh|ch|x)$/i.test(n) ? `${n}es` : /y$/i.test(n) && !/[aeiou]y$/i.test(n) ? `${n.slice(0, -1)}ies` : `${n}s`)
+    const list = names.slice(0, 3).map((n, i) => (i === 0 ? plural(n) : plural(n).toLowerCase()))
+    return list.length === 1 ? list[0] : `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`
+}
 
-const JoinCard = ({ join, wide = false }) => (
+const JoinCard = ({ join, city, wide = false }) => (
     <li className={`lc-br-join${wide ? ' is-wide' : ''}`}>
         <Link to={join.pathname} state={join.state} className="lc-br-join__link">
             <span className="lc-br-join__cover" aria-hidden="true">
-                <StreetGridCover seed="your-business" tint="azure" />
+                <CityPattern city={city} centred />
                 <span className="lc-br-join__logo"><Plus size={18} /></span>
             </span>
             <span className="lc-br-join__body">
@@ -74,51 +68,31 @@ const Businesses = () => {
     const ready = state.status === 'ready'
     const counts = useMemo(() => CITIES.map((c) => state.places.filter((p) => inMarket(p, c.market)).length), [state.places])
     const places = useMemo(() => state.places.filter((p) => inMarket(p, market.code)), [state.places, market.code])
-    const first = places.length
-    const cohortOpen = first < COHORT_SIZE
-    const open = market.live
+    // A city with nothing live yet says it is opening, in the title and the list alike.
+    const open = market.live && !(ready && places.length === 0)
+    const trades = tradesIn(places)
 
     return (
         <div className="lc-br">
             <AppHeader />
 
             <main className="lc-br__main">
-                <section className="lc-br-hero">
+                {/* The city first: its pattern across the top, its name in the title, and what is really here. */}
+                <section className={`lc-br-hero is-${market.code}`}>
+                    <span className="lc-br-hero__band" aria-hidden="true"><CityPattern city={market.code} centred size={32} /></span>
                     <div className="lc-br-hero__text">
-                        <p className="lc-br-hero__kicker">{market.name}, {open ? 'first cohort' : 'opening soon'}</p>
-                        <h1 className="lc-br-hero__title">{open ? `Book the first businesses in ${market.name}.` : `${market.name} is opening on Locappoint.`}</h1>
+                        <h1 className="lc-br-hero__title">{open ? `Book a free time in ${market.name}.` : `${market.name} is opening on Locappoint.`}</h1>
                         <p className="lc-br-hero__lede">
-                            {open
-                                ? `A first group of ten ${market.name} businesses taking bookings through Locappoint. Pick a place, choose a time and you are booked in under a minute.`
-                                : `Businesses in ${market.name} can set up their booking page now. Bookings open as the first ones go live.`}
+                            {!open
+                                ? `Businesses in ${market.name} can set up their booking page now. Bookings open as the first ones go live.`
+                                : ready && trades
+                                    ? `${trades} taking bookings on Locappoint. Pick a place, choose a time and you are booked in under a minute.`
+                                    : 'Pick a place, choose a time and you are booked in under a minute.'}
                         </p>
-                    </div>
-
-                    <div className="lc-br-count" aria-live="polite">
-                        {ready ? (
-                            <>
-                                <p className="lc-br-count__figure">
-                                    <b>{first}</b>
-                                    {cohortOpen && <span>of {COHORT_SIZE}</span>}
-                                </p>
-                                <p className="lc-br-count__label">
-                                    {cohortOpen
-                                        ? `${first === 1 ? 'place' : 'places'} taking bookings in ${market.name}`
-                                        : `places taking bookings in ${market.name}. The first cohort is full.`}
-                                </p>
-                                {cohortOpen && <CohortSlots filled={first} />}
-                            </>
-                        ) : (
-                            <>
-                                <span className="lc-skel" style={{ width: 96, height: 44 }} />
-                                <span className="lc-skel" style={{ width: '70%', height: 12 }} />
-                                <span className="lc-skel" style={{ width: '100%', height: 30 }} />
-                            </>
-                        )}
                     </div>
                 </section>
 
-                <EngineBox title="What do you need, and when?" browseTo="/businesses" />
+                <EngineBox title="What do you need, and when?" browseTo="/businesses" compact />
 
                 <ul className="lc-br-cities" aria-label="Cities">
                     {CITIES.map((city, i) => {
@@ -126,10 +100,11 @@ const Businesses = () => {
                         const live = ready && n > 0
                         const here = city.market === market.code
                         return (
-                            <li key={city.name} className={`lc-br-city${live ? ' is-live' : ''}${here ? ' is-here' : ''}`}>
+                            <li key={city.name} className={`lc-br-city is-${city.market}${live ? ' is-live' : ''}${here ? ' is-here' : ''}`}>
                                 <button type="button" className="lc-br-city__pick" onClick={() => pickMarket(city.market)} aria-pressed={here}>
+                                    <span className="lc-br-city__strap" aria-hidden="true"><CityPattern city={city.market} centred size={20} /></span>
                                     <strong>{city.name}</strong>
-                                    <span><i aria-hidden="true" />{live ? placesText(n) : city.later}</span>
+                                    <span><i aria-hidden="true" />{live ? placesText(n) : ready ? 'Opening soon' : city.later}</span>
                                 </button>
                             </li>
                         )
@@ -166,7 +141,7 @@ const Businesses = () => {
                     {ready && (
                         <ul className="lc-cl-results">
                             {places.map((place) => <PlaceResult key={place.id} place={place} from="/businesses" />)}
-                            {!hasBusiness && <JoinCard join={join} wide={places.length === 0} />}
+                            {!hasBusiness && <JoinCard join={join} city={market.code} wide={places.length === 0} />}
                         </ul>
                     )}
                 </section>

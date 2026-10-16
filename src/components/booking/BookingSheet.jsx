@@ -2,10 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, CalendarClock, Clock, CreditCard, Globe2 } from 'lucide-react'
 import { Button, Chip, ChipGroup, Segmented, Sheet } from '../ui'
-import { DurationDial } from '../business/DurationDial'
 import { useNow } from '../business/ShopClock'
 import { useAuth } from '../../hooks/useAuth'
-import { durationLabel, menuPrice, shownPrice, zonedNow } from '../../services/business'
+import { durationLabel, menuPrice, zonedNow } from '../../services/business'
 import { trackPage } from '../../services/pageStats'
 import { USER_ERRORS, bookingDays, clearPending, firstOnOrAfter, hasTimeLeft, loadExtras, loadSlots, monthShort, requestBooking, rescheduleMyBooking, savePending, windowsFor } from '../../services/booking'
 import { parsePhone } from '../ui/PhoneField'
@@ -24,6 +23,7 @@ import { BookingDetails } from './sheet/BookingDetails'
 import { VisitAddress, needsAreaPick, visitAddressLine, visitCovered } from './sheet/VisitAddress'
 import { OwnerNote } from './sheet/OwnerNote'
 import { RebookNote } from './sheet/RebookNote'
+import { SheetHead } from './sheet/SheetHead'
 import '../../styles/client/booking-sheet.css'
 
 const TITLES = { time: 'Pick a time', review: 'Check and confirm', paying: 'Finish paying', done: 'Booking requested' }
@@ -453,14 +453,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
         <Sheet open onClose={close} title={step === 'done' && !move && auto ? 'Booking confirmed' : titles[step]} footer={footer} wide>
             {step === 'time' && (
                 <>
-                    <div className="lc-bk-service">
-                        <DurationDial minutes={duration} size={32} />
-                        <span className="lc-bk-service__text">
-                            <span className="lc-bk-service__name">{service.service_name.trim()}</span>
-                            <span className="lc-bk-service__meta">{durationLabel(duration)} at {business.business_name}</span>
-                        </span>
-                        {hasPrice(service.price) && <span className="lc-bk-service__price">{shownPrice(service.price, currency)}</span>}
-                    </div>
+                    <SheetHead business={business} service={service} duration={duration} currency={currency} priced={hasPrice(service.price)} />
                     {maxPeople > 1 && (
                         <div className="lc-bk-extras lc-bk-people">
                             <span className="lc-bk-extras__label">How many people</span>
@@ -628,7 +621,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
 
             {step === 'done' && minutes !== null && (
                 <>
-                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={paid || auto ? 'success' : 'signal'} pay={!owner} quote={paid ? quote.data : movedPaid} paid={paid || Boolean(movedPaid)} mode={mode} travel={travel} zone={move?.client_zone || visit.place?.zone || visit.zone} />
+                    <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} stamp={stamp} stampTone={paid || auto ? 'stamp' : 'quiet'} landing pay={!owner} quote={paid ? quote.data : movedPaid} paid={paid || Boolean(movedPaid)} mode={mode} travel={travel} zone={move?.client_zone || visit.place?.zone || visit.zone} />
                     {paid && (
                         <p className="lc-bk-done">
                             <b>Paid {payMoney(quote.data?.total, quote.data?.currency)}.</b>

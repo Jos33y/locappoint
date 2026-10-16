@@ -39,6 +39,7 @@
     --lc-data-6: #C9A66B;
 
     --lc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --lc-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
     --lc-fast: 120ms;
     --lc-base: 280ms;
     --lc-slow: 900ms;

@@ -110,6 +110,22 @@
 
 .lc-bk-days__row::-webkit-scrollbar { display: none; }
 
+/* The row fades where more days wait out of view, so it reads as a row you can scroll, not a cut. */
+.lc-bk-days__row.is-cut-end {
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 56px), transparent);
+    mask-image: linear-gradient(to right, black calc(100% - 56px), transparent);
+}
+
+.lc-bk-days__row.is-cut-start {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 56px);
+    mask-image: linear-gradient(to right, transparent, black 56px);
+}
+
+.lc-bk-days__row.is-cut-start.is-cut-end {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 56px, black calc(100% - 56px), transparent);
+    mask-image: linear-gradient(to right, transparent, black 56px, black calc(100% - 56px), transparent);
+}
+
 .lc-bk-day {
     display: flex;
     flex: none;
@@ -117,7 +133,7 @@
     align-items: center;
     justify-content: center;
     gap: 2px;
-    width: 60px;
+    width: 66px;
     min-height: 76px;
     margin: 0;
     padding: var(--space-2) 0;
@@ -150,20 +166,19 @@
 
 .lc-bk-day__sub {
     color: var(--lc-ink-3);
-    font-size: 11px;
+    font-size: 12px;
 }
 
+/* A day that cannot be picked stays quiet: no box, no strike-through, just dimmer words. */
 .lc-bk-day:disabled {
     background: none;
-    box-shadow: inset 0 0 0 1px var(--lc-line);
+    box-shadow: none;
     color: var(--lc-ink-4);
     cursor: default;
 }
 
 .lc-bk-day:disabled .lc-bk-day__wd,
 .lc-bk-day:disabled .lc-bk-day__sub { color: var(--lc-ink-4); }
-
-.lc-bk-day:disabled .lc-bk-day__num { text-decoration: line-through; text-decoration-thickness: 1px; }
 
 .lc-bk-day[aria-pressed='true'] {
     background: var(--lc-azure-button);
@@ -210,7 +225,7 @@
     font-variant-numeric: tabular-nums;
 }
 
-.lc-bk-lunch svg { flex: none; color: var(--signal); }
+.lc-bk-lunch svg { flex: none; color: var(--lc-ink-3); }
 
 .lc-bk-lunch::before,
 .lc-bk-lunch::after {
@@ -342,10 +357,17 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    border-radius: var(--lc-r-lg);
-    background: var(--lc-card);
-    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    color: var(--lc-paper-ink);
 }
+
+/* Each part of the ticket is paper; the notches are cut out of the paper itself with a mask, so they
+   show whatever ground the ticket sits on: the sheet, Home, the manage page. */
+.lc-bk-ticket > * {
+    background: var(--lc-paper);
+}
+
+.lc-bk-ticket > :first-child { border-radius: var(--lc-r-lg) var(--lc-r-lg) 0 0; }
+.lc-bk-ticket > :last-child { border-radius: 0 0 var(--lc-r-lg) var(--lc-r-lg); }
 
 .lc-bk-ticket__main {
     position: relative;
@@ -354,6 +376,8 @@
     align-items: center;
     column-gap: var(--space-5);
     padding: var(--space-5);
+    -webkit-mask: radial-gradient(circle at 0 100%, transparent var(--lc-bk-notch), black calc(var(--lc-bk-notch) + 0.5px)) left bottom / 51% 20px no-repeat, radial-gradient(circle at 100% 100%, transparent var(--lc-bk-notch), black calc(var(--lc-bk-notch) + 0.5px)) right bottom / 51% 20px no-repeat, linear-gradient(black, black) top / 100% calc(100% - 20px) no-repeat;
+    mask: radial-gradient(circle at 0 100%, transparent var(--lc-bk-notch), black calc(var(--lc-bk-notch) + 0.5px)) left bottom / 51% 20px no-repeat, radial-gradient(circle at 100% 100%, transparent var(--lc-bk-notch), black calc(var(--lc-bk-notch) + 0.5px)) right bottom / 51% 20px no-repeat, linear-gradient(black, black) top / 100% calc(100% - 20px) no-repeat;
 }
 
 .lc-bk-ticket__date {
@@ -363,20 +387,20 @@
     min-width: 72px;
     margin: 0;
     padding-right: var(--space-5);
-    border-right: 1px solid var(--lc-line);
+    border-right: 1px solid var(--lc-paper-line);
 }
 
 .lc-bk-ticket__wd,
 .lc-bk-ticket__mon {
-    color: var(--lc-ink-2);
+    color: var(--lc-paper-ink-2);
     font-size: 12px;
     font-weight: var(--font-weight-medium);
 }
 
-.lc-bk-ticket__wd { color: var(--lc-info); font-weight: var(--font-weight-semibold); }
+.lc-bk-ticket__wd { color: var(--lc-paper-ink); font-weight: var(--font-weight-semibold); }
 
 .lc-bk-ticket__day {
-    color: var(--lc-ink-1);
+    color: var(--lc-paper-ink);
     font-family: var(--lc-font-display);
     font-size: 2.5rem;
     font-weight: var(--font-weight-semibold);
@@ -397,23 +421,23 @@
 .lc-bk-ticket__dur { margin: 0; }
 
 .lc-bk-ticket__time {
-    color: var(--lc-ink-2);
+    color: var(--lc-paper-ink-2);
     font-size: var(--lc-t-body);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 
 .lc-bk-ticket__time b {
-    color: var(--lc-ink-1);
+    color: var(--lc-paper-ink);
     font-family: var(--lc-font-display);
     font-size: 2rem;
-    font-weight: var(--font-weight-semibold);
+    font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.05;
 }
 
 .lc-bk-ticket__svc {
-    color: var(--lc-ink-1);
+    color: var(--lc-paper-ink);
     font-size: var(--lc-t-body);
     font-weight: var(--font-weight-semibold);
     overflow-wrap: anywhere;
@@ -423,51 +447,70 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    color: var(--lc-ink-1);
-    font-size: var(--lc-t-body);
+    color: var(--lc-paper-ink-2);
+    font-size: var(--lc-t-label);
     font-weight: var(--font-weight-medium);
     font-variant-numeric: tabular-nums;
 }
 
+.lc-bk-ticket .biz-dial__face { fill: transparent; stroke: var(--lc-paper-ink-2); }
+.lc-bk-ticket .biz-dial__tick { stroke: var(--lc-paper-ink-2); }
+.lc-bk-ticket .biz-dial__pin { fill: var(--lc-paper-ink); }
+.lc-bk-ticket .biz-dial__over { stroke: var(--azure); }
+
+/* The stub: the business's logo or tile, its name and where. Perforated from the main part. */
 .lc-bk-ticket__stub {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-content: center;
+    column-gap: var(--space-3);
+    row-gap: 2px;
+    min-height: 72px;
     padding: var(--space-4) var(--space-5);
-    border-top: 1.5px dashed var(--lc-line-strong);
+    background-image: linear-gradient(to right, var(--lc-paper-line) 50%, transparent 50%);
+    background-size: 10px 1.5px;
+    background-repeat: repeat-x;
+    background-position: 0 0;
+    background-color: var(--lc-paper);
+    -webkit-mask: radial-gradient(circle at 0 0, transparent var(--lc-bk-notch), black calc(var(--lc-bk-notch) + 0.5px)) left top / 51% 20px no-repeat, radial-gradient(circle at 100% 0, transparent var(--lc-bk-notch), black calc(var(--lc-bk-notch) + 0.5px)) right top / 51% 20px no-repeat, linear-gradient(black, black) bottom / 100% calc(100% - 20px) no-repeat;
+    mask: radial-gradient(circle at 0 0, transparent var(--lc-bk-notch), black calc(var(--lc-bk-notch) + 0.5px)) left top / 51% 20px no-repeat, radial-gradient(circle at 100% 0, transparent var(--lc-bk-notch), black calc(var(--lc-bk-notch) + 0.5px)) right top / 51% 20px no-repeat, linear-gradient(black, black) bottom / 100% calc(100% - 20px) no-repeat;
 }
 
-.lc-bk-ticket__stub::before,
-.lc-bk-ticket__stub::after {
-    content: '';
-    position: absolute;
-    top: calc(var(--lc-bk-notch) * -1);
-    width: calc(var(--lc-bk-notch) * 2);
-    height: calc(var(--lc-bk-notch) * 2);
-    border-radius: 50%;
-    background: var(--lc-overlay);
-    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
-    clip-path: inset(0 0 0 50%);
+.lc-bk-ticket__mark {
+    grid-row: 1 / span 3;
+    align-self: center;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: var(--lc-r-sm);
+    box-shadow: inset 0 0 0 1px var(--lc-paper-line);
 }
 
-.lc-bk-ticket__stub::before { left: calc(var(--lc-bk-notch) * -1); }
-.lc-bk-ticket__stub::after { right: calc(var(--lc-bk-notch) * -1); clip-path: inset(0 50% 0 0); }
+.lc-bk-ticket__mark .lc-face {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+}
 
 .lc-bk-ticket.is-stamped .lc-bk-ticket__stub { padding-right: 116px; }
 
 .lc-bk-ticket__biz {
-    color: var(--lc-ink-1);
+    color: var(--lc-paper-ink);
     font-size: var(--lc-t-label);
     font-weight: var(--font-weight-semibold);
     overflow-wrap: anywhere;
 }
 
 .lc-bk-ticket__addr {
-    color: var(--lc-ink-3);
+    color: var(--lc-paper-ink-2);
     font-size: 12px;
     overflow-wrap: anywhere;
 }
+
+.lc-bk-ticket .lc-bk-ticket__addr.lc-fmt-online { color: var(--lc-paper-ink-2); }
 
 /* The amount and how it is paid, the last line of the ticket like a receipt total. */
 .lc-bk-ticket__total {
@@ -476,14 +519,14 @@
     justify-content: space-between;
     gap: var(--space-3);
     padding: var(--space-4) var(--space-5);
-    border-top: 1px solid var(--lc-line);
+    border-top: 1px solid var(--lc-paper-line);
 }
 
 .lc-bk-ticket__how {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    color: var(--lc-ink-2);
+    color: var(--lc-paper-ink-2);
     font-size: var(--lc-t-label);
     font-weight: var(--font-weight-medium);
 }
@@ -491,7 +534,7 @@
 .lc-bk-ticket__how svg { flex: none; align-self: center; }
 
 .lc-bk-ticket__price {
-    color: var(--lc-ink-1);
+    color: var(--lc-paper-ink);
     font-family: var(--lc-font-display);
     font-size: 1.5rem;
     font-weight: var(--font-weight-semibold);
@@ -500,6 +543,10 @@
     line-height: 1;
     white-space: nowrap;
 }
+
+.lc-bk-ticket .lc-bk-quote { border-top: 1px solid var(--lc-paper-line); }
+.lc-bk-ticket .lc-bk-quote dt { color: var(--lc-paper-ink-2); }
+.lc-bk-ticket .lc-bk-quote dd { color: var(--lc-paper-ink); }
 
 .lc-bk-paynote {
     margin: 0;
@@ -512,24 +559,30 @@
     position: absolute;
     top: 50%;
     right: var(--space-4);
-    margin-top: -12px;
+    margin-top: -14px;
     padding: 3px 10px;
     border-radius: var(--lc-r-sm);
-    box-shadow: inset 0 0 0 1.5px var(--signal);
-    color: var(--signal);
-    font-size: 12px;
-    font-weight: var(--font-weight-semibold);
-    transform: rotate(-6deg);
-    animation: lc-bk-stamp var(--lc-base) var(--lc-ease) both;
+    box-shadow: inset 0 0 0 2px var(--lc-stamp);
+    color: var(--lc-stamp);
+    font-family: var(--lc-font-mono);
+    font-size: var(--lc-t-label);
+    font-weight: 600;
+    transform: rotate(-7deg);
 }
 
-.lc-bk-ticket__stamp.is-success {
-    box-shadow: inset 0 0 0 1.5px var(--lc-success);
-    color: var(--lc-success);
+/* Waiting for the business: a quiet mark, not the amber stamp; that lands only on confirmation. */
+.lc-bk-ticket__stamp.is-quiet {
+    box-shadow: inset 0 0 0 1.5px var(--lc-paper-ink-2);
+    color: var(--lc-paper-ink-2);
+}
+
+/* It lands once, the moment the booking is made. */
+.lc-bk-ticket__stamp.is-landing {
+    animation: lc-bk-stamp 320ms var(--lc-ease) 160ms both;
 }
 
 @keyframes lc-bk-stamp {
-    from { opacity: 0; transform: rotate(-6deg) scale(1.4); }
+    from { opacity: 0; transform: rotate(-7deg) scale(1.35); }
 }
 
 
@@ -772,3 +825,148 @@
 .lc-bk-extras__meta { margin-left: var(--space-1); color: var(--lc-ink-3); font-weight: var(--font-weight-normal); }
 
 .ui-chip.is-selected .lc-bk-extras__meta { color: inherit; }
+
+.lc-bk-ticket .lc-bk-quote + .lc-bk-ticket__total { border-top: 1.5px dashed var(--lc-paper-line); }
+.lc-bk-ticket .lc-bk-ticket__total.is-paid .lc-bk-ticket__how { color: var(--lc-paper-ink); }
+
+/* Where you are booking: the business under a strap of its city, then the service. */
+.lc-bk-head {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-bk-head__strap {
+    display: block;
+    height: 16px;
+    border-bottom: 1px solid var(--lc-line-strong);
+}
+
+.lc-bk-head__strap svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+}
+
+.lc-bk-head__biz {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-3) var(--space-4) 0;
+}
+
+.lc-bk-head__mark {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    overflow: hidden;
+    border-radius: var(--lc-r-sm);
+    background: var(--lc-paper);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+}
+
+.lc-bk-head__mark .lc-face {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+}
+
+.lc-bk-head__who {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-bk-head__who b {
+    overflow: hidden;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lc-bk-head__who span {
+    overflow: hidden;
+    color: var(--lc-ink-3);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lc-bk-head .lc-bk-service {
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+/* Times by part of the day, each part saying how many are free. */
+.lc-bk-part {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.lc-bk-part__head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-bk-part__head svg { flex: none; color: var(--lc-ink-3); }
+
+.lc-bk-part__count {
+    margin-left: auto;
+    color: var(--lc-ink-3);
+    font-weight: var(--font-weight-medium);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-bk-part + .lc-bk-part {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--lc-line);
+}
+
+/* The earliest free time carries a small azure mark. */
+.lc-bk-slot { position: relative; }
+
+.lc-bk-slot.is-first::after {
+    content: '';
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--azure);
+}
+
+.lc-bk-slot.is-first[aria-pressed='true']::after { background: var(--lc-on-accent); }
+
+/* The footer is the ticket filling in: a slip of paper with the day and, once picked, the time. */
+.lc-bk-foot__sum {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--lc-r-sm);
+    background: var(--lc-paper);
+    color: var(--lc-paper-ink);
+}
+
+.lc-bk-foot__day { color: var(--lc-paper-ink-2); }
+.lc-bk-foot__sum b { color: var(--lc-paper-ink); }
+.lc-bk-foot__hint { color: var(--lc-paper-ink-2); }
+
+/* The long-service arc in the core palette here too; amber is kept for now and confirmation. */
+.lc-bk-head .biz-dial__over { stroke: var(--azure-soft); }

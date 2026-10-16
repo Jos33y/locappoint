@@ -1,5 +1,6 @@
 import { CircleCheck, CreditCard, House, Store, Video } from 'lucide-react'
 import { DurationDial } from '../../business/DurationDial'
+import { BusinessMark } from '../../brand/BusinessFace'
 import { fullAddress } from '../../business/public/PublicFind'
 import { durationLabel, menuPrice, shownPrice } from '../../../services/business'
 import { parseDateKey } from '../../../services/dates'
@@ -30,7 +31,11 @@ const OnlineTotal = ({ quote, paid }) => (
     </>
 )
 
-export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stampTone = 'signal', pay = true, quote = null, paid = false, mode = 'at_business', travel = 0, zone = '' }) => {
+// The ticket the client keeps (doc 30): porcelain paper on the dark ground, a perforation with notches
+// cut right through, the business's logo or tile on the stub, and the stamp. stampTone: 'stamp' for
+// confirmed or paid, in the amber stamp ink; 'quiet' while it waits for the business. landing: the
+// stamp lands once, the moment the booking is made, never again when the ticket is opened later.
+export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stampTone = 'stamp', landing = false, pay = true, quote = null, paid = false, mode = 'at_business', travel = 0, zone = '' }) => {
     const date = parseDateKey(dateKey)
     const currency = business.currency || (business.country === 'NG' ? 'NGN' : 'EUR')
     const duration = Number(service.duration_minutes) || 0
@@ -63,11 +68,12 @@ export const BookingTicket = ({ business, service, dateKey, minutes, stamp, stam
                 </div>
             </div>
             <div className="lc-bk-ticket__stub">
-                <span className="lc-bk-ticket__biz">{business.business_name}</span>
+                <span className="lc-bk-ticket__mark" aria-hidden="true"><BusinessMark business={business} /></span>
+                <span className="lc-bk-ticket__biz" translate="no">{business.business_name}</span>
                 {mode === 'online' && <span className="lc-bk-ticket__addr lc-fmt-online"><Video size={14} aria-hidden="true" />Online session</span>}
                 {mode === 'at_client' && <span className="lc-bk-ticket__addr lc-fmt-online"><House size={14} aria-hidden="true" />At your place{zone ? `, ${zone}` : ''}</span>}
                 {mode !== 'online' && mode !== 'at_client' && business.address?.trim() && <span className="lc-bk-ticket__addr">{fullAddress(business.address, business.city)}</span>}
-                {stamp && <span className={`lc-bk-ticket__stamp is-${stampTone}`}>{stamp}</span>}
+                {stamp && <span className={`lc-bk-ticket__stamp is-${stampTone}${landing ? ' is-landing' : ''}`}>{stamp}</span>}
             </div>
             {!online && travelFee > 0 && (
                 <dl className="lc-bk-quote">

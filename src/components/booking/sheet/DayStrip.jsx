@@ -44,8 +44,8 @@ export const DayStrip = ({ days, selected, onSelect, duration, nowMinutes, usual
                     </button>
                 </span>
             </div>
-            <div className="lc-bk-days__row" ref={rowRef} role="group" aria-label="Day" onScroll={measure}>
-                {days.map((d) => {
+            <div className={`lc-bk-days__row${edges.start ? '' : ' is-cut-start'}${edges.end ? '' : ' is-cut-end'}`} ref={rowRef} role="group" aria-label="Day" onScroll={measure}>
+                {days.map((d, i) => {
                     const closed = d.windows.length === 0
                     const done = !closed && !hasTimeLeft(d, duration, nowMinutes)
                     return (
@@ -58,9 +58,9 @@ export const DayStrip = ({ days, selected, onSelect, duration, nowMinutes, usual
                             disabled={closed || done}
                             onClick={() => onSelect(d.key)}
                         >
-                            <span className="lc-bk-day__wd">{d.today ? 'Today' : d.date.toLocaleDateString('en-GB', { weekday: 'short' })}</span>
+                            <span className="lc-bk-day__wd">{d.today ? 'Today' : i === 1 ? 'Tomorrow' : d.date.toLocaleDateString('en-GB', { weekday: 'short' })}</span>
                             <span className="lc-bk-day__num">{d.date.getDate()}</span>
-                            <span className="lc-bk-day__sub">{closed ? 'Closed' : done ? 'Past' : d.key === usual ? 'Usual' : monthShort(d.date)}</span>
+                            <span className="lc-bk-day__sub">{closed ? 'Closed' : done ? 'No times' : d.key === usual ? 'Usual' : monthShort(d.date)}</span>
                         </button>
                     )
                 })}

@@ -162,3 +162,37 @@
     .lc-eng__opt { grid-template-areas: "tag tag" "main main" "side side"; }
     .lc-eng__side { flex-direction: row; align-items: center; }
 }
+
+.lc-eng__row[hidden] { display: none; }
+
+/* Compact: the options open behind one quiet line that says what is picked. */
+.lc-eng__more {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px var(--space-3);
+    align-self: flex-start;
+    min-height: 44px;
+    margin: 0;
+    padding: var(--space-2) 0;
+    border: 0;
+    background: none;
+    color: var(--azure-link);
+    font: inherit;
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+    text-align: left;
+    cursor: pointer;
+}
+
+.lc-eng__picked {
+    color: var(--lc-ink-3);
+    font-weight: var(--font-weight-medium);
+}
+
+.lc-eng__more:focus-visible {
+    border-radius: var(--lc-r-sm);
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+}
+.lc-eng__out:empty { display: none; }

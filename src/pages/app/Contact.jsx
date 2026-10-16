@@ -85,7 +85,7 @@ const Contact = () => {
                                 Talk to us <span className="loca-section__title-accent">directly.</span>
                             </h1>
                             <p className="contact__hero-lede">
-                                Questions about cohort 1, the booking flow, or partnering. We read every message and reply within 24 hours.
+                                Questions about booking, setting up your page, or partnering. We read every message and reply within 24 hours.
                             </p>
                         </div>
                     </div>
@@ -142,15 +142,15 @@ const Contact = () => {
                                         <MapPin size={16} strokeWidth={2} />
                                     </span>
                                     <div className="info-card__copy">
-                                        <div className="info-card__label">Based in</div>
-                                        <div className="info-card__value">Porto and Lagos</div>
+                                        <div className="info-card__label">Cities</div>
+                                        <div className="info-card__value">Porto, Lagos and Lisbon</div>
                                         <div className="info-card__note">Portugal and Nigeria</div>
                                     </div>
                                 </article>
 
                                 <div className="info-card__meta">
                                     <span className="info-card__meta-dot"></span>
-                                    <span>Cohort 1 open in Porto, Lagos and Lisbon</span>
+                                    <span>Taking bookings in Porto, Lagos and Lisbon</span>
                                 </div>
                             </aside>
 

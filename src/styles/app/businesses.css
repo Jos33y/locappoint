@@ -19,25 +19,42 @@
 }
 
 
+/* The city first: its pattern across the top of the hero, fading into the canvas. */
 .lc-br-hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
-    align-items: end;
-    gap: var(--space-8);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding-top: 88px;
 }
+
+.lc-br-hero__band {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 64px;
+    overflow: hidden;
+    border-radius: var(--lc-r-xl);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+}
+
+.lc-br-hero__band svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+}
+
+.lc-br-hero.is-porto .lc-br-hero__band,
+.lc-br-hero.is-lisbon .lc-br-hero__band { opacity: 0.85; }
 
 .lc-br-hero__text {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    max-width: 640px;
-}
-
-.lc-br-hero__kicker {
-    margin: 0;
-    color: var(--signal);
-    font-size: var(--lc-t-label);
-    font-weight: var(--font-weight-semibold);
+    max-width: 680px;
 }
 
 .lc-br-hero__title {
@@ -51,75 +68,11 @@
 }
 
 .lc-br-hero__lede {
-    max-width: 52ch;
+    max-width: 56ch;
     margin: 0;
     color: var(--lc-ink-2);
     font-size: 1.0625rem;
     line-height: var(--lc-lh-body);
-}
-
-
-.lc-br-count {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-5);
-    border-radius: var(--lc-r-lg);
-    background: var(--lc-card);
-    box-shadow: inset 0 0 0 1px var(--lc-line);
-}
-
-.lc-br-count p { margin: 0; }
-
-.lc-br-count__figure {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-}
-
-.lc-br-count__figure b {
-    font-family: var(--lc-font-display);
-    font-size: 3rem;
-    font-weight: var(--font-weight-semibold);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: var(--lc-track-display);
-    line-height: 1;
-}
-
-.lc-br-count__figure span {
-    color: var(--lc-ink-3);
-    font-family: var(--lc-font-display);
-    font-size: 1.25rem;
-    font-weight: var(--font-weight-semibold);
-}
-
-.lc-br-count__label {
-    color: var(--lc-ink-2);
-    font-size: var(--lc-t-label);
-}
-
-.lc-br-slots {
-    display: block;
-    width: 100%;
-    height: auto;
-    margin-top: var(--space-2);
-}
-
-.lc-br-slots rect {
-    fill: var(--lc-well);
-    stroke: var(--lc-line-strong);
-    stroke-width: 1.5;
-}
-
-.lc-br-slots rect.is-filled {
-    fill: var(--azure);
-    stroke: var(--azure);
-}
-
-.lc-br-slots rect.is-next {
-    fill: var(--lc-warning-tint);
-    stroke: var(--signal);
-    stroke-dasharray: 4 3;
 }
 
 
@@ -143,7 +96,8 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-    padding: var(--space-4);
+    overflow: hidden;
+    padding: 0 var(--space-4) var(--space-4);
     border: 0;
     border-radius: var(--lc-r-md);
     background: var(--lc-panel);
@@ -162,6 +116,24 @@
 }
 
 .lc-br-city.is-here .lc-br-city__pick { box-shadow: inset 0 0 0 1.5px var(--azure); }
+
+/* Each city card wears its city: a strap of its pattern along the top. */
+.lc-br-city__strap {
+    display: block;
+    align-self: stretch;
+    height: 20px;
+    margin: 0 calc(var(--space-4) * -1) var(--space-3);
+    border-bottom: 1px solid var(--lc-line-strong);
+}
+
+.lc-br-city__strap svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+}
+
+.lc-br-city:not(.is-here) .lc-br-city__strap { opacity: 0.7; }
 
 .lc-br-city strong {
     color: var(--lc-ink-2);
@@ -258,7 +230,7 @@
 }
 
 @media (hover: hover) {
-    .lc-br-join__link:hover { background: var(--lc-panel); border-color: var(--signal); color: var(--lc-ink-1); }
+    .lc-br-join__link:hover { background: var(--lc-panel); border-color: var(--azure); color: var(--lc-ink-1); }
 }
 
 .lc-br-join__cover {
@@ -273,7 +245,8 @@
     width: 100%;
     height: 100%;
     max-width: none;
-    opacity: 0.45;
+    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent);
+    mask-image: linear-gradient(to bottom, black 30%, transparent);
 }
 
 .lc-br-join__logo {
@@ -284,10 +257,10 @@
     place-items: center;
     width: 44px;
     height: 44px;
-    border: 1.5px dashed var(--signal);
+    border: 1.5px dashed var(--lc-line-strong);
     border-radius: var(--lc-r-md);
     background: var(--lc-canvas);
-    color: var(--signal);
+    color: var(--lc-ink-2);
 }
 
 .lc-br-join__body {
@@ -359,18 +332,16 @@
 }
 
 
-@media (max-width: 899px) {
-    .lc-br-hero { grid-template-columns: minmax(0, 1fr); align-items: start; gap: var(--space-6); }
-    .lc-br-count { max-width: 420px; }
-}
 
 @media (max-width: 559px) {
     .lc-br__main { gap: var(--space-8); padding: var(--space-8) var(--space-4) var(--space-12); }
     .lc-br-hero__title { font-size: 1.875rem; }
     .lc-br-hero__lede { font-size: var(--lc-t-body); }
-    .lc-br-count { max-width: none; }
+    .lc-br-hero { padding-top: 64px; }
+    .lc-br-hero__band { height: 44px; }
     .lc-br-cities { gap: var(--space-2); }
-    .lc-br-city__pick { padding: var(--space-3); }
+    .lc-br-city__pick { padding: 0 var(--space-3) var(--space-3); }
+    .lc-br-city__strap { margin: 0 calc(var(--space-3) * -1) var(--space-2); }
     .lc-br-city strong { font-size: 1rem; }
     .lc-br-cta { padding: var(--space-6) var(--space-5); }
     .lc-br-cta__buttons { width: 100%; }

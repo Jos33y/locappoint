@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { BusinessCover, BusinessMark } from '../../brand/BusinessFace'
 import { openStatus } from '../../business/PublicPageView'
-import { menuPrice } from '../../../services/business'
+import { shownPrice } from '../../../services/business'
 import { weekFromRows } from '../../../services/hours'
 import { categoryLabel } from '../../../constants/categories'
 import { Stars } from '../../reviews/Stars'
@@ -12,6 +12,11 @@ import '../../../styles/client/find-page.css'
 export const PlaceResult = ({ place, from = '/client/search' }) => {
     const status = openStatus(weekFromRows(place.hourRows), place.timezone)
     const where = [place.neighbourhood?.trim(), place.city].filter(Boolean).join(', ')
+    const trade = categoryLabel(place.category, place.category_detail)
+    // A business that only meets by video call has no neighbourhood to name: "online from Porto".
+    const what = place.online
+        ? [trade, place.city && `online from ${place.city}`].filter(Boolean).join(', ')
+        : [trade, where].filter(Boolean).join(' in ')
     return (
         <li className="lc-cl-result">
             <Link to={`/${place.slug}`} state={{ from }} className="lc-cl-result__link">
@@ -26,7 +31,7 @@ export const PlaceResult = ({ place, from = '/client/search' }) => {
                             {place.is_demo && <span className="lc-cl-result__demo">Demo</span>}
                         </strong>
                         {place.fromPrice !== null && (
-                            <span className="lc-cl-result__price"><small>from</small> {menuPrice(place.fromPrice, place.currency)}</span>
+                            <span className="lc-cl-result__price"><small>{Number(place.fromPrice) === 0 ? 'starts' : 'from'}</small> {shownPrice(place.fromPrice, place.currency)}</span>
                         )}
                     </span>
                     {place.rating?.count ? (
@@ -39,7 +44,7 @@ export const PlaceResult = ({ place, from = '/client/search' }) => {
                         <span className="lc-cl-result__rating is-new">New on Locappoint</span>
                     )}
                     <TrustLine trust={place.trust} small className="lc-cl-result__trust" />
-                    <span className="lc-cl-result__what">{[categoryLabel(place.category, place.category_detail), where].filter(Boolean).join(' in ')}</span>
+                    <span className="lc-cl-result__what">{what}</span>
                     {status && (
                         <span className={`lc-cl-result__status${status.open ? ' is-open' : ''}`}>
                             <i aria-hidden="true" />

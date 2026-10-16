@@ -52,7 +52,7 @@ export const UpcomingBooking = ({ booking, token = null, lead = false, focused =
                 dateKey={booking.appointment_date}
                 minutes={minutes}
                 stamp={confirmed ? 'Confirmed' : 'Pending'}
-                stampTone={confirmed ? 'success' : 'signal'}
+                stampTone={confirmed ? 'stamp' : 'quiet'}
                 quote={quote}
                 paid={Boolean(quote)}
                 mode={booking.mode}

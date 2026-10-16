@@ -261,7 +261,7 @@ export default async ({ browser, url, check, cover, root }) => {
     check(view.label === 'Next free time' && /^(Today|Tomorrow|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) \d\d:\d\d$/.test(view.time), `the door sign shows the next real free time: ${view.label} ${view.time}`)
     check(view.panelShown && !view.barShown && view.aside.length === 1 && /lc-door/.test(view.aside[0]), `wide screen: only the door sign in the side column, no bottom bar: ${view.aside.join(', ')}`)
     check(view.hoursInMain && view.findInMain && view.hoursFill === 'rgba(0, 0, 0, 0)', `hours and Find us sit in the main column, flat: ${view.hoursFill}`)
-    check(view.badge && view.coverband, 'the cover photo carries the white Locappoint badge and the city along its foot')
+    check(view.badge && !view.coverband, 'the cover photo carries the white Locappoint badge, and no city band fighting the owner\'s own cover')
     check(view.actions.length >= 2 && view.actions.every((t) => t.length > 0), `contact buttons carry words: ${view.actions.join(', ')}`)
     check(/^Femtos Barbearia takes bookings on Locappoint in Lisbon\.$/.test(view.city) && view.band && view.mark, `the page closes in its city: ${view.city}`)
     check(view.bars.length === 5 && view.bars.every((c) => c !== 'rgb(232, 154, 62)'), `review bars are not amber: ${view.bars[0]}`)
@@ -269,29 +269,66 @@ export default async ({ browser, url, check, cover, root }) => {
     const nextTime = view.time.split(' ').pop()
     await p.evaluate(() => [...document.querySelectorAll('.lc-door__book button')].find((b) => /Book/.test(b.textContent))?.click())
     await wait(700)
-    view = await p.evaluate(() => ({ sheet: document.querySelector('[role="dialog"]')?.innerText || '' }))
+    view = await p.evaluate(() => ({
+        sheet: document.querySelector('[role="dialog"]')?.innerText || '',
+        paper: (() => { const t = document.querySelector('[role="dialog"] .lc-bk-ticket__main'); return t ? getComputedStyle(t).backgroundColor : '' })(),
+        mark: Boolean(document.querySelector('[role="dialog"] .lc-bk-ticket__stub .lc-bk-ticket__mark .lc-face')),
+    }))
     check(view.sheet.includes(nextTime), `Book opens the sheet at that time (${nextTime})`)
+    check(view.paper === 'rgb(245, 241, 232)' && view.mark, `the ticket is paper, with the business's mark on the stub (${view.paper})`)
+    await p.evaluate(() => [...document.querySelectorAll('.lc-bk-back')].find((b) => /Change time/.test(b.textContent))?.click())
+    await wait(700)
+    view = await p.evaluate(() => {
+        const dialog = document.querySelector('[role="dialog"]')
+        const days = [...dialog.querySelectorAll('.lc-bk-day')]
+        return {
+            strap: Boolean(dialog.querySelector('.lc-bk-head .lc-bk-head__strap .lc-pattern')),
+            who: dialog.querySelector('.lc-bk-head__who b')?.textContent || '',
+            mark: Boolean(dialog.querySelector('.lc-bk-head__mark .lc-face')),
+            tomorrow: days[1]?.querySelector('.lc-bk-day__wd')?.textContent || '',
+            struck: days.filter((d) => d.disabled).some((d) => getComputedStyle(d.querySelector('.lc-bk-day__num')).textDecorationLine.includes('line-through')),
+            parts: [...dialog.querySelectorAll('.lc-bk-part__head > span:first-of-type')].map((e) => e.textContent),
+            counts: [...dialog.querySelectorAll('.lc-bk-part__count')].map((e) => e.textContent),
+            first: dialog.querySelectorAll('.lc-bk-slot.is-first').length,
+            firstLabel: dialog.querySelector('.lc-bk-slot.is-first')?.getAttribute('aria-label') || '',
+            slip: getComputedStyle(dialog.querySelector('.lc-bk-foot__sum')).backgroundColor,
+            small: [...dialog.querySelectorAll('*')].filter((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && e.getClientRects().length && parseFloat(getComputedStyle(e).fontSize) < 12).map((e) => e.textContent.trim().slice(0, 16)),
+        }
+    })
+    check(view.strap && view.mark && view.who === 'Femtos Barbearia', `the sheet opens on where you are booking: the business, its mark and a strap of its city (${view.who})`)
+    check(view.tomorrow === 'Tomorrow' && !view.struck, `days read Tomorrow, and days you cannot pick are quiet, not struck through (${view.tomorrow})`)
+    check(view.parts.length > 0 && view.parts.every((p) => ['Morning', 'Afternoon', 'Evening'].includes(p)) && view.counts.every((c) => /^\d+ times?$/.test(c)), `times grouped by part of the day with how many are free: ${view.parts.join(', ')} / ${view.counts.join(', ')}`)
+    check(view.first === 1 && /earliest free time/.test(view.firstLabel), `the earliest free time is marked once: ${view.firstLabel}`)
+    check(view.slip === 'rgb(245, 241, 232)', 'the footer is a paper slip, the ticket filling in')
+    check(view.small.length === 0, `sheet text is 12px or more (${view.small.join(', ')})`)
     check(p.errors.length === 0, `no errors booking from the door sign: ${p.errors}`)
     await p.close()
 
-    // A phone: the door sign shows open or closed under the name; booking moves to the bar fixed to the
-    // bottom of the screen, which carries the clock and steps aside while the sheet is open.
+    // A phone: one sign. The door sign carries its own Book button under the name; the bar at the bottom
+    // stays away until the sign has scrolled out of view, then takes over, and steps aside for the sheet.
     p = await open('/femtos-barbearia', 390, 844, true)
+    await p.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
     await wait(600)
-    view = await p.evaluate(() => {
+    const barState = () => p.evaluate(() => {
         const bar = document.querySelector('.lc-pub__bookbar')
         const r = bar?.getBoundingClientRect()
         return {
+            seen: Boolean(bar) && getComputedStyle(bar).visibility === 'visible',
             fixed: bar && getComputedStyle(bar).position === 'fixed',
             bottom: r && r.bottom <= innerHeight && r.bottom > innerHeight - 40,
             time: bar?.querySelector('.lc-pub__booktime')?.textContent || '',
             barClock: Boolean(bar?.querySelector('.biz-clock')),
             door: Boolean(document.querySelector('.lc-door .biz-clock')?.getClientRects().length),
-            panel: Boolean(document.querySelector('.lc-door__book')?.getClientRects().length),
+            panel: Boolean(document.querySelector('.lc-door__book .ui-btn')?.getClientRects().length),
             over: document.documentElement.scrollWidth > innerWidth,
         }
     })
-    check(view.fixed && view.bottom && /\d\d:\d\d$/.test(view.time) && view.barClock && view.door && !view.panel && !view.over, `phone: the door sign above, the book bar at the bottom with the clock and next free time: ${JSON.stringify(view)}`)
+    view = await barState()
+    check(view.door && view.panel && !view.seen && !view.over, `phone, first screen: one sign with its Book button, no bar yet: ${JSON.stringify(view)}`)
+    await p.evaluate(() => { const d = document.querySelector('.lc-door'); window.scrollTo(0, d.getBoundingClientRect().bottom + window.scrollY + 200) })
+    await wait(700)
+    view = await barState()
+    check(view.seen && view.fixed && view.bottom && /\d\d:\d\d$/.test(view.time) && !view.barClock, `phone, scrolled past the sign: the bar takes over with the next free time, no second clock: ${JSON.stringify(view)}`)
     await p.evaluate(() => document.querySelector('.lc-pub__bookbar button')?.click())
     await wait(700)
     check(await p.evaluate(() => !document.querySelector('.lc-pub__bookbar') && Boolean(document.querySelector('[role="dialog"]'))), 'phone: the bar opens the sheet and steps aside')
@@ -339,6 +376,17 @@ export default async ({ browser, url, check, cover, root }) => {
     check(view.logo === view.paper, `worst case: a dark logo with no background sits on paper (${view.logo})`)
     check(/1,250,000/.test(view.price) && view.arc && view.arc !== 'rgb(232, 154, 62)', `worst case: naira in full, the long-service arc not amber (${view.price}, ${view.arc})`)
     check(view.small.length === 0, `worst case: page text is 12px or more (${view.small.join(', ')})`)
+    await p.evaluate(() => document.querySelector('.lc-pub__svc')?.click())
+    await wait(800)
+    view = await p.evaluate(() => {
+        const body = document.querySelector('[role="dialog"] .ui-sheet__body')
+        return {
+            fits: body && body.scrollWidth <= body.clientWidth + 1,
+            price: document.querySelector('[role="dialog"] .lc-bk-service__price')?.textContent || '',
+            arc: (() => { const a = document.querySelector('[role="dialog"] .biz-dial__over'); return a ? getComputedStyle(a).stroke : '' })(),
+        }
+    })
+    check(view.fits && /1,250,000/.test(view.price) && view.arc !== 'rgb(232, 154, 62)', `worst case: the booking sheet fits 320px with the naira price in full (${view.price})`)
     check(p.errors.length === 0, `worst case: no errors (${p.errors[0] || ''})`)
     await p.close()
 
@@ -348,5 +396,5 @@ export default async ({ browser, url, check, cover, root }) => {
     await p.close()
 
     const read = (rel) => fs.readFileSync(path.join(root, ...rel.split('/')), 'utf8')
-    check(/shownPrice = .*=== 0 \? 'Free'/.test(read('src/services/business.js')) && /shownPrice\(service\.price/.test(read('src/components/business/public/PublicMenu.jsx')) && /shownPrice\(service\.price/.test(read('src/components/booking/BookingSheet.jsx')), 'a free service reads Free on the page and in the booking sheet, never a zero')
+    check(/shownPrice = .*=== 0 \? 'Free'/.test(read('src/services/business.js')) && /shownPrice\(service\.price/.test(read('src/components/business/public/PublicMenu.jsx')) && /shownPrice\(service\.price/.test(read('src/components/booking/sheet/SheetHead.jsx')), 'a free service reads Free on the page and in the booking sheet, never a zero')
 }
