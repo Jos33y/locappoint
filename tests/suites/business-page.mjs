@@ -223,62 +223,128 @@ export default async ({ browser, url, check, cover, root }) => {
     check(/Find us/.test(face.find) && /google\.com\/maps/.test(face.route) && !/<svg/.test(face.find), `Find us gives the address and a way there, no drawn map: ${face.route}`)
     await p.close()
 
-    // Booking first: the next real free time and one button, in the side column on a wide screen.
+    // The door sign: hangs from the city's pattern, the shop clock, open or closed, and the next real
+    // free time with one button. On a wide screen it sits beside the name and is all the side column holds.
     p = await open('/femtos-barbearia')
     await wait(600)
-    let view = await p.evaluate(() => ({
-        open: document.querySelector('.lc-pub__head .lc-pub__open')?.textContent || '',
-        statusCard: Boolean(document.querySelector('.lc-pub__status')),
-        strip: Boolean(document.querySelector('.lc-pub__hours .lc-pub__strip')) || !/Open now/.test(document.querySelector('.lc-pub__open')?.textContent || ''),
-        label: document.querySelector('.lc-pub__book .lc-pub__booklabel')?.textContent,
-        time: document.querySelector('.lc-pub__book .lc-pub__booktime')?.textContent || '',
-        panelShown: (() => { const b = document.querySelector('.lc-pub__book'); return Boolean(b && b.getClientRects().length) })(),
-        barShown: (() => { const b = document.querySelector('.lc-pub__bookbar'); return Boolean(b && b.getClientRects().length) })(),
-        actions: [...document.querySelectorAll('.lc-pub__actions .ui-btn')].map((b) => b.textContent.trim()),
-        city: document.querySelector('.lc-pub__city .lc-pub__citytext b')?.textContent || '',
-        band: Boolean(document.querySelector('.lc-pub__city .lc-pub__cityband .lc-pattern')),
-        mark: Boolean(document.querySelector('.lc-pub__city .lc-pub__citymark .lc-face')),
-        bars: [...document.querySelectorAll('.lc-pub .lc-starbars__track i')].map((i) => getComputedStyle(i).backgroundColor),
-        amber: getComputedStyle(document.documentElement).getPropertyValue('--signal').trim(),
-    }))
-    check(/^(Open now|Opens|Closed|Closing|Back)/i.test(view.open) && /\d\d:\d\d/.test(view.open) && !view.statusCard, `open or closed is one line under the name, the big status card is gone: ${view.open}`)
-    check(view.strip, 'today\'s strip sits in the hours card while the door is open')
-    check(view.label === 'Next free time' && /^(Today|Tomorrow|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) \d\d:\d\d$/.test(view.time), `the book panel shows the next real free time: ${view.label} ${view.time}`)
-    check(view.panelShown && !view.barShown, 'wide screen: the panel in the side column, no bottom bar')
+    let view = await p.evaluate(() => {
+        const door = document.querySelector('.lc-door')
+        const shown = (sel) => { const e = document.querySelector(sel); return Boolean(e && e.getClientRects().length) }
+        return {
+            strap: Boolean(door?.querySelector('.lc-door__strap .lc-pattern')),
+            clock: Boolean(door?.querySelector('.biz-clock')),
+            state: door?.querySelector('.lc-door__now')?.textContent || '',
+            when: door?.querySelector('.lc-door__when')?.textContent || '',
+            oneLine: Boolean(document.querySelector('.lc-pub__open, .lc-pub__status')),
+            label: door?.querySelector('.lc-pub__booklabel')?.textContent,
+            time: door?.querySelector('.lc-pub__booktime')?.textContent || '',
+            panelShown: shown('.lc-door__book'),
+            barShown: shown('.lc-pub__bookbar'),
+            aside: [...document.querySelectorAll('.lc-pub__aside > *')].map((e) => e.className),
+            hoursInMain: Boolean(document.querySelector('.lc-pub__main .lc-pub__hours')),
+            findInMain: Boolean(document.querySelector('.lc-pub__main .lc-pub__find')),
+            hoursFill: getComputedStyle(document.querySelector('.lc-pub__hours')).backgroundColor,
+            nowHand: (() => { const n = document.querySelector('.lc-door .lc-pub__stripnow'); return n ? getComputedStyle(n).backgroundColor : null })(),
+            badge: Boolean(document.querySelector('.lc-pub__cover .lc-pub__badge svg')),
+            coverband: Boolean(document.querySelector('.lc-pub__cover .lc-pub__coverband .lc-pattern')),
+            actions: [...document.querySelectorAll('.lc-pub__actions .ui-btn')].map((b) => b.textContent.trim()),
+            city: document.querySelector('.lc-pub__city .lc-pub__citytext b')?.textContent || '',
+            band: Boolean(document.querySelector('.lc-pub__city .lc-pub__cityband .lc-pattern')),
+            mark: Boolean(document.querySelector('.lc-pub__city .lc-pub__citymark .lc-face')),
+            bars: [...document.querySelectorAll('.lc-pub .lc-starbars__track i')].map((i) => getComputedStyle(i).backgroundColor),
+            ticket: Boolean(document.querySelector('.lc-pub__first')),
+        }
+    })
+    check(view.strap && view.clock, `the door sign hangs from the city's pattern and shows the shop clock: ${JSON.stringify({ strap: view.strap, clock: view.clock })}`)
+    check(/^(Open now|Closed now|On lunch break)/.test(view.state) && /\d\d:\d\d/.test(view.when) && !view.oneLine, `open or closed on the door sign, with the time: ${view.state} / ${view.when}`)
+    check(view.nowHand === null || view.nowHand === 'rgb(232, 154, 62)', `today's hand for now is amber: ${view.nowHand}`)
+    check(view.label === 'Next free time' && /^(Today|Tomorrow|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) \d\d:\d\d$/.test(view.time), `the door sign shows the next real free time: ${view.label} ${view.time}`)
+    check(view.panelShown && !view.barShown && view.aside.length === 1 && /lc-door/.test(view.aside[0]), `wide screen: only the door sign in the side column, no bottom bar: ${view.aside.join(', ')}`)
+    check(view.hoursInMain && view.findInMain && view.hoursFill === 'rgba(0, 0, 0, 0)', `hours and Find us sit in the main column, flat: ${view.hoursFill}`)
+    check(view.badge && view.coverband, 'the cover photo carries the white Locappoint badge and the city along its foot')
     check(view.actions.length >= 2 && view.actions.every((t) => t.length > 0), `contact buttons carry words: ${view.actions.join(', ')}`)
     check(/^Femtos Barbearia takes bookings on Locappoint in Lisbon\.$/.test(view.city) && view.band && view.mark, `the page closes in its city: ${view.city}`)
     check(view.bars.length === 5 && view.bars.every((c) => c !== 'rgb(232, 154, 62)'), `review bars are not amber: ${view.bars[0]}`)
+    check(!view.ticket, 'a business with reviews shows them, not the ticket preview')
     const nextTime = view.time.split(' ').pop()
-    await p.evaluate(() => [...document.querySelectorAll('.lc-pub__book button')].find((b) => /Book/.test(b.textContent))?.click())
+    await p.evaluate(() => [...document.querySelectorAll('.lc-door__book button')].find((b) => /Book/.test(b.textContent))?.click())
     await wait(700)
     view = await p.evaluate(() => ({ sheet: document.querySelector('[role="dialog"]')?.innerText || '' }))
     check(view.sheet.includes(nextTime), `Book opens the sheet at that time (${nextTime})`)
-    check(p.errors.length === 0, `no errors booking from the panel: ${p.errors}`)
+    check(p.errors.length === 0, `no errors booking from the door sign: ${p.errors}`)
     await p.close()
 
-    // A phone: the bar is fixed to the bottom of the screen, the panel is not shown, the bar goes while the sheet is open.
+    // A phone: the door sign shows open or closed under the name; booking moves to the bar fixed to the
+    // bottom of the screen, which carries the clock and steps aside while the sheet is open.
     p = await open('/femtos-barbearia', 390, 844, true)
     await wait(600)
     view = await p.evaluate(() => {
         const bar = document.querySelector('.lc-pub__bookbar')
         const r = bar?.getBoundingClientRect()
-        return { fixed: bar && getComputedStyle(bar).position === 'fixed', bottom: r && r.bottom <= innerHeight && r.bottom > innerHeight - 40, time: bar?.querySelector('.lc-pub__booktime')?.textContent || '', panel: Boolean(document.querySelector('.lc-pub__book')?.getClientRects().length), over: document.documentElement.scrollWidth > innerWidth }
+        return {
+            fixed: bar && getComputedStyle(bar).position === 'fixed',
+            bottom: r && r.bottom <= innerHeight && r.bottom > innerHeight - 40,
+            time: bar?.querySelector('.lc-pub__booktime')?.textContent || '',
+            barClock: Boolean(bar?.querySelector('.biz-clock')),
+            door: Boolean(document.querySelector('.lc-door .biz-clock')?.getClientRects().length),
+            panel: Boolean(document.querySelector('.lc-door__book')?.getClientRects().length),
+            over: document.documentElement.scrollWidth > innerWidth,
+        }
     })
-    check(view.fixed && view.bottom && /\d\d:\d\d$/.test(view.time) && !view.panel && !view.over, `phone: the book bar sits at the bottom with the next free time: ${JSON.stringify(view)}`)
+    check(view.fixed && view.bottom && /\d\d:\d\d$/.test(view.time) && view.barClock && view.door && !view.panel && !view.over, `phone: the door sign above, the book bar at the bottom with the clock and next free time: ${JSON.stringify(view)}`)
     await p.evaluate(() => document.querySelector('.lc-pub__bookbar button')?.click())
     await wait(700)
     check(await p.evaluate(() => !document.querySelector('.lc-pub__bookbar') && Boolean(document.querySelector('[role="dialog"]'))), 'phone: the bar opens the sheet and steps aside')
     await p.close()
 
-    // A business with no reviews yet says so, instead of an empty space.
+    // A new business: no empty reviews; the ticket the client keeps, with the real next free time and no stamp.
     p = await open('/femtos-barbearia&noreviews=1')
-    view = await p.evaluate(() => ({ head: document.querySelector('#reviews.is-new h2')?.textContent, text: document.querySelector('#reviews .lc-pubrv__newtext')?.textContent || '' }))
+    await wait(600)
+    view = await p.evaluate(() => ({
+        head: document.querySelector('#reviews.is-new h2')?.textContent,
+        text: document.querySelector('#reviews .lc-pubrv__newtext')?.textContent || '',
+        time: document.querySelector('.lc-pub__first .lc-pub__tickettime')?.textContent || '',
+        door: document.querySelector('.lc-door .lc-pub__booktime')?.textContent || '',
+        who: document.querySelector('.lc-pub__first .lc-pub__ticketwho')?.textContent || '',
+        stamp: Boolean(document.querySelector('.lc-pub__first [class*="stamp"]')),
+    }))
     check(view.head === 'Reviews' && /written only by people who booked/.test(view.text), `new business: ${view.head}`)
+    check(view.time && view.door.endsWith(view.time) && view.who === 'Femtos Barbearia' && !view.stamp, `new business: the ticket preview with the next free time, no stamp: ${view.time}, ${view.who}`)
     await p.close()
 
-    // A demo page takes no bookings: no panel and no bar.
+    // A business that only meets by video call: no door to find, no directions, no neighbourhood as a place.
+    p = await open('/femtos-barbearia&online=all')
+    view = await p.evaluate(() => ({
+        where: document.querySelector('.lc-pub__where')?.textContent || '',
+        find: document.querySelector('.lc-pub__find')?.textContent || '',
+        route: Boolean(document.querySelector('.lc-pub__route')),
+        directions: [...document.querySelectorAll('.lc-pub__actions .ui-btn')].some((b) => /Directions/.test(b.textContent)),
+    }))
+    check(/online from Lisbon/.test(view.where) && /Online, by video call/.test(view.find) && !view.route && !view.directions, `online business: ${view.where} / ${view.find}`)
+    await p.close()
+
+    // Worst-case data (doc 29): a long Lagos name, naira, an 8-hour braid, a long address, a dark logo with no
+    // background, on the narrowest phone. Nothing runs off the edge and the logo sits on paper.
+    p = await open('/femtos-barbearia&worst=1&noreviews=1', 320, 700, true)
+    await wait(600)
+    view = await p.evaluate(() => ({
+        over: document.documentElement.scrollWidth > innerWidth,
+        logo: getComputedStyle(document.querySelector('.lc-pub__logo')).backgroundColor,
+        paper: getComputedStyle(document.querySelector('.lc-pub__ticket')).backgroundColor,
+        price: document.querySelector('.lc-pub__price')?.textContent || '',
+        arc: (() => { const a = document.querySelector('.lc-pub .biz-dial__over'); return a ? getComputedStyle(a).stroke : '' })(),
+        small: [...document.querySelectorAll('.lc-pub *')].filter((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && e.getClientRects().length && parseFloat(getComputedStyle(e).fontSize) < 12).map((e) => e.textContent.trim().slice(0, 20)),
+    }))
+    check(!view.over, 'worst case at 320px: nothing past the edge')
+    check(view.logo === view.paper, `worst case: a dark logo with no background sits on paper (${view.logo})`)
+    check(/1,250,000/.test(view.price) && view.arc && view.arc !== 'rgb(232, 154, 62)', `worst case: naira in full, the long-service arc not amber (${view.price}, ${view.arc})`)
+    check(view.small.length === 0, `worst case: page text is 12px or more (${view.small.join(', ')})`)
+    check(p.errors.length === 0, `worst case: no errors (${p.errors[0] || ''})`)
+    await p.close()
+
+    // A demo page takes no bookings: no book half on the door sign and no bar.
     p = await open('/femtos-barbearia&demo=1', 390, 844, true)
-    check(await p.evaluate(() => !document.querySelector('.lc-pub__bookbar, .lc-pub__book')), 'demo: no book panel or bar')
+    check(await p.evaluate(() => !document.querySelector('.lc-pub__bookbar, .lc-door__book')), 'demo: no booking on the door sign and no bar')
     await p.close()
 
     const read = (rel) => fs.readFileSync(path.join(root, ...rel.split('/')), 'utf8')

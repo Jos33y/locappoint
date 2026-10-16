@@ -17,6 +17,7 @@ Clients can also find businesses by city and category, or book through a WhatsAp
 ## What is built
 
 **For clients**
+- A business page that leads with booking: the next real free time and a Book button, fixed to the bottom of the screen on phones
 - Booking with or without an account; a private link to move or cancel; calendar invites; reminders the day before and two hours before
 - Three places a service can happen: at the business, at the client's address, or online with a meeting link
 - Group bookings, served one after another, priced per person or per group; extras added to a booking

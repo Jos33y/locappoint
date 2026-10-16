@@ -46,7 +46,7 @@ export const useNextFree = ({ business, services, week, skip = false }) => {
                 const free = await loadSlots({ businessId, serviceId, dateKey: key })
                 const first = free.find((m) => offset > 0 || m > minutes)
                 if (first != null) {
-                    if (!cancelled) setNext({ service: serviceRef.current, dateKey: key, minutes: first, label: `${dayLabel(offset, date)} ${clock(first)}` })
+                    if (!cancelled) setNext({ service: serviceRef.current, dateKey: key, minutes: first, day: dayLabel(offset, date), time: clock(first), label: `${dayLabel(offset, date)} ${clock(first)}` })
                     return
                 }
             }

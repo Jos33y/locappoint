@@ -1,16 +1,13 @@
 import { Coffee, DoorClosed } from 'lucide-react'
 import { WEEK, breakLabel, clock } from '../../../services/hours'
-import { TodayStrip } from './PublicStatus'
 import '../../../styles/public-page.css'
 
-// now: the business's clock; while today is still open, today's hours show as a strip with a hand for now.
-export const PublicHours = ({ week, todayDow, now = null }) => {
-    const open = now ? week[now.dow] : []
-    const strip = Boolean(now && open.length && now.minutes < open[open.length - 1].end)
+// The week as a door sign reads it: one line a day, today raised. Information, so flat: no fill,
+// a 1px edge. Today's strip with the hand for now lives on the door sign, not here.
+export const PublicHours = ({ week, todayDow }) => {
     return (
         <section className="lc-pub__card lc-pub__hours" aria-labelledby="lc-pub-hours">
             <h2 id="lc-pub-hours" className="lc-pub__h2">Opening hours</h2>
-            {strip && <TodayStrip windows={open} minutes={now.minutes} />}
             <ul className="lc-pub__days">
                 {WEEK.map(({ dow, long }) => {
                     const windows = week[dow]

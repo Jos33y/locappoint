@@ -1,11 +1,13 @@
-import { ArrowRight, MessageCircle, Navigation, Phone } from 'lucide-react'
+import { MessageCircle, Navigation, Phone } from 'lucide-react'
 import { Button } from '../ui'
 import { Mark, Wordmark } from './Brand'
 import { BusinessCover, BusinessMark } from '../brand/BusinessFace'
 import CityPattern from '../brand/CityPattern'
 import { worldOf } from '../brand/world'
 import { useNow } from './ShopClock'
-import { OpenLine } from './public/PublicStatus'
+import { BookBar, DoorSign } from './public/DoorSign'
+import { TicketPreview } from './public/TicketPreview'
+import PinMark from '../common/PinMark'
 import { PublicMenu } from './public/PublicMenu'
 import { PublicHours } from './public/PublicHours'
 import { PublicFind } from './public/PublicFind'
@@ -40,22 +42,13 @@ const mapsLink = (address, city) =>
 
 const CITY_NAME = { porto: 'Porto', lagos: 'Lagos', lisbon: 'Lisbon' }
 
-// Book: the next real free time and one button. In the side column on a wide screen, and on a phone
-// a bar fixed to the bottom of the screen, so booking is always one tap away.
-const BookPanel = ({ nextFree, onBookNext, onPickService, bar = false }) => (
-    <div className={bar ? 'lc-pub__bookbar' : 'lc-pub__book'}>
-        <span className="lc-pub__booktext">
-            <span className="lc-pub__booklabel">{nextFree ? 'Next free time' : 'Book online'}</span>
-            {nextFree
-                ? <b className="lc-pub__booktime">{nextFree.label}</b>
-                : <b className="lc-pub__booktime is-quiet">Pick a service to see free times</b>}
-            {nextFree && !bar && <span className="lc-pub__bookfor">{nextFree.service.service_name}</span>}
-        </span>
-        <Button iconRight={ArrowRight} full={!bar} onClick={nextFree ? onBookNext : onPickService}>
-            {nextFree ? 'Book' : 'See services'}
-        </Button>
-    </div>
-)
+// A business that only meets clients by video call: every bookable service is online only, or the
+// owner wrote Online as the address. It has no door to find and no neighbourhood to name.
+const onlineOnly = (business, services) => {
+    if (business.address?.trim().toLowerCase() === 'online') return true
+    const real = services.filter((s) => !s.is_addon && s.is_active !== false)
+    return real.length > 0 && real.every((s) => (s.modes || []).length > 0 && s.modes.every((m) => m === 'online'))
+}
 
 // The page closes where it opened: in the business's city, with its tile.
 const CityFoot = ({ business, name }) => {
@@ -80,17 +73,26 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
     const now = useNow(timeZone)
     const whatsapp = whatsappLink(business.whatsapp, `Hi ${name}, `)
     const phone = business.phone?.replace(/\s+/g, '')
-    const address = business.address?.trim()
+    const online = onlineOnly(business, services)
+    const address = online ? null : business.address?.trim()
     const maps = address ? mapsLink(address, business.city) : null
     const hasHours = Boolean(week && week.some((day) => day.length > 0))
-    const where = [categoryLabel(business.category, business.category_detail), [business.neighbourhood?.trim(), business.city].filter(Boolean).join(', ')].filter(Boolean).join(' in ')
+    const trade = categoryLabel(business.category, business.category_detail)
+    const where = online
+        ? [trade, business.city && `online from ${business.city}`].filter(Boolean).join(', ')
+        : [trade, [business.neighbourhood?.trim(), business.city].filter(Boolean).join(', ')].filter(Boolean).join(' in ')
     const bookable = !preview && !business.is_demo && Boolean(onBook) && services.some((s) => !s.is_addon)
     const toMenu = () => document.getElementById('lc-pub-menu')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const world = worldOf(business)
+    const currency = business.currency || (business.country === 'NG' ? 'NGN' : 'EUR')
+    const firstTicket = bookable && nextFree && reviews && reviews.count === 0
 
     return (
         <article className={`lc-pub${preview ? ' lc-pub--preview' : ''}${bookable ? ' has-bookbar' : ''}`} inert={preview || undefined}>
             <div className={`lc-pub__cover${business.banner_url ? '' : ' is-city'}`}>
                 <BusinessCover business={business} />
+                {business.banner_url && <span className="lc-pub__coverband" aria-hidden="true"><CityPattern city={world} centred /></span>}
+                <span className="lc-pub__badge" aria-hidden="true"><PinMark /></span>
             </div>
 
             <div className="lc-pub__body">
@@ -101,11 +103,32 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                     <div className="lc-pub__id">
                         <h1 className="lc-pub__name">{name}</h1>
                         {where && <p className="lc-pub__where">{where}</p>}
-                        {hasHours && now && <OpenLine week={week} timeZone={timeZone} now={now} />}
                         <RatingLine reviews={reviews} />
                         <TrustLine trust={trust} className="lc-pub__trust" />
                     </div>
                 </header>
+
+                {(hasHours && now) || bookable ? (
+                    <aside className="lc-pub__aside">
+                        <DoorSign
+                            world={world}
+                            week={hasHours ? week : null}
+                            now={now}
+                            timeZone={timeZone}
+                            city={business.city || CITY_NAME[world]}
+                            nextFree={nextFree}
+                            onBookNext={onBookNext}
+                            onPickService={toMenu}
+                            bookable={bookable}
+                        />
+                        {bookOnWhatsApp && !business.is_demo && !preview && (
+                            <div className="lc-pub__wabook">
+                                <Button variant="secondary" icon={MessageCircle} full href={bookOnWhatsApp} target="_blank" rel="noopener noreferrer">Book on WhatsApp</Button>
+                                <p>Say what you need and when. Our assistant books it with {name}.</p>
+                            </div>
+                        )}
+                    </aside>
+                ) : null}
 
                 {(whatsapp || phone || maps) && (
                     <div className="lc-pub__actions">
@@ -120,21 +143,16 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                         <p className="lc-pub__demo" role="note">This is a demo business that shows how Locappoint works. Please do not book it for a real visit.</p>
                     )}
                     {business.description?.trim() && <p className="lc-pub__about">{business.description.trim()}</p>}
-                    <PublicMenu services={services} name={name} whatsapp={whatsapp} preview={preview} onBook={onBook} currency={business.currency || (business.country === 'NG' ? 'NGN' : 'EUR')} />
-                    <PublicReviews reviews={reviews} name={name} onMore={onMoreReviews} />
-                </div>
-
-                <aside className="lc-pub__aside">
-                    {bookable && <BookPanel nextFree={nextFree} onBookNext={onBookNext} onPickService={toMenu} />}
-                    {bookOnWhatsApp && !business.is_demo && !preview && (
-                        <div className="lc-pub__wabook">
-                            <Button variant="secondary" icon={MessageCircle} full href={bookOnWhatsApp} target="_blank" rel="noopener noreferrer">Book on WhatsApp</Button>
-                            <p>Say what you need and when. Our assistant books it with {name}.</p>
+                    <PublicMenu services={services} name={name} whatsapp={whatsapp} preview={preview} onBook={onBook} currency={currency} />
+                    {firstTicket && <TicketPreview business={business} name={name} nextFree={nextFree} currency={currency} />}
+                    {(hasHours || address || online) && (
+                        <div className="lc-pub__visit">
+                            {hasHours && <PublicHours week={week} todayDow={now?.dow} />}
+                            {(address || online) && <PublicFind business={business} href={maps} online={online} />}
                         </div>
                     )}
-                    {hasHours && <PublicHours week={week} todayDow={now?.dow} now={now} />}
-                    {address && <PublicFind business={business} href={maps} />}
-                </aside>
+                    <PublicReviews reviews={reviews} name={name} onMore={onMoreReviews} />
+                </div>
             </div>
 
             {!preview && <CityFoot business={business} name={name} />}
@@ -146,7 +164,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                 </footer>
             )}
 
-            {bookable && bookBar && <BookPanel bar nextFree={nextFree} onBookNext={onBookNext} onPickService={toMenu} />}
+            {bookable && bookBar && <BookBar week={hasHours ? week : null} now={now} nextFree={nextFree} onBookNext={onBookNext} onPickService={toMenu} />}
         </article>
     )
 }

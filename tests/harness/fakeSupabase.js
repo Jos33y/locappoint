@@ -156,12 +156,14 @@ const withoutFirstPickable = (list, date) => {
   return list.filter((s) => mins(s.slot_time) > now.minutes + 60)
 }
 const quiet = (flag) => new URLSearchParams(window.location.search).get(flag) === '1'
-// Online sessions: ?online=1 offers Haircut in person or online; ?online=only offers it online only.
+// Online sessions: ?online=1 offers Haircut in person or online; ?online=only offers it online only;
+// ?online=all makes every service online only, so the business meets clients by video call alone.
 // ?onlinebooking=1 adds a confirmed online booking with its meeting link to the client's bookings.
 {
   const online = new URLSearchParams(window.location.search).get('online')
   if (online) {
-    DATA.services[0].modes = online === 'only' ? ['online'] : ['at_business', 'online']
+    DATA.services[0].modes = online === 'only' || online === 'all' ? ['online'] : ['at_business', 'online']
+    if (online === 'all') DATA.services.forEach((service) => { service.modes = ['online'] })
     DATA.businesses[0].meeting_url = 'https://meet.example.com/femtos'
   }
   // ?home=1 offers Haircut at the shop or at the client's place, with a EUR 5 travel fee, in Porto and Matosinhos.
@@ -188,6 +190,12 @@ const quiet = (flag) => new URLSearchParams(window.location.search).get(flag) ==
 }
 // ?group=1: Haircut takes groups of up to 4, priced per person, each person the full 30 minutes.
 if (quiet('group')) Object.assign(DATA.services[0], { max_people: 4, price_per: 'person', extra_person_minutes: null })
+// ?worst=1: the worst-case data from doc 29 on the public page: a long Lagos business name, a bridal
+// package in naira, an 8-hour braid with a long name, a long landmark, a dark logo with no background.
+if (quiet('worst')) {
+  Object.assign(DATA.businesses[0], { business_name: "Adeola's Hair, Nails and Lash Studio, Lekki Phase 1", city: 'Lagos', country: 'NG', market: 'lagos', timezone: 'Africa/Lagos', currency: 'NGN', neighbourhood: 'Opposite the yellow Mobil filling station, Ikota', address: 'Plot 12, Admiralty Way, after the second roundabout, by the mosque with the green gate', banner_url: null, logo_url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#111"/></svg>') })
+  Object.assign(DATA.services[0], { service_name: 'Knotless braids, waist length, with curls (bring your own hair)', duration_minutes: 480, price: 1250000 })
+}
 if (quiet('demo')) DATA.businesses[0].is_demo = true
 // ?opentoday=1: open today as well (the test business is closed on Sundays).
 if (quiet('opentoday')) {

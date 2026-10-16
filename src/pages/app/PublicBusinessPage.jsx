@@ -42,10 +42,13 @@ const PageSkeleton = () => (
                 </div>
             </div>
             <div className="lc-pub__aside">
-                <div className="lc-pub__book">
-                    <Skeleton width={96} height={14} />
-                    <Skeleton width={150} height={28} />
-                    <Skeleton height={44} />
+                <div className="lc-door">
+                    <span className="lc-door__strap" />
+                    <div className="lc-door__sign">
+                        <Skeleton width={96} height={14} />
+                        <Skeleton width={150} height={28} />
+                        <Skeleton height={44} />
+                    </div>
                 </div>
             </div>
         </div>

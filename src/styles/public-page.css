@@ -48,15 +48,15 @@
 }
 
 .lc-pub__head { order: 1; }
-.lc-pub__book { order: 2; }
+.lc-door { order: 2; }
 .lc-pub__actions { order: 3; }
 .lc-pub__wabook { order: 3; }
 .lc-pub__demo { order: 4; }
 .lc-pub__about { order: 4; }
 .lc-pub__menu { order: 5; }
-.lc-pub__reviews { order: 6; }
-.lc-pub__hours { order: 7; }
-.lc-pub__find { order: 8; }
+.lc-pub__first { order: 6; }
+.lc-pub__visit { order: 7; }
+.lc-pub__reviews { order: 8; }
 
 .lc-pub__head {
     display: flex;
@@ -66,6 +66,8 @@
     min-width: 0;
 }
 
+/* The owner's logo sits on paper inside its frame, so a dark logo with no background never vanishes
+   on the dark canvas (doc 30); an opaque logo covers the paper entirely. */
 .lc-pub__logo {
     position: relative;
     z-index: 1;
@@ -77,8 +79,8 @@
     overflow: hidden;
     margin-top: calc(var(--lc-pub-logo) / -2);
     border-radius: var(--lc-r-xl);
-    background: var(--azure);
-    box-shadow: 0 0 0 4px var(--lc-canvas), var(--lc-shadow-raised);
+    background: var(--lc-paper);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong), 0 0 0 4px var(--lc-canvas), var(--lc-shadow-raised);
     color: var(--lc-on-accent);
     font-family: var(--lc-font-display);
     font-size: calc(var(--lc-pub-logo) * 0.34);
@@ -190,74 +192,6 @@
 }
 
 
-.lc-pub__status {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-    padding: var(--space-4) var(--space-5) var(--space-5);
-}
-
-.lc-pub__statusrow {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-}
-
-.lc-pub__statustext {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.lc-pub__state,
-.lc-pub__when,
-.lc-pub__note {
-    margin: 0;
-}
-
-.lc-pub__state {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: var(--space-2);
-    color: var(--lc-ink-2);
-    font-size: var(--lc-t-label);
-    font-weight: var(--font-weight-semibold);
-}
-
-.lc-pub__status.is-open .lc-pub__state { color: var(--lc-success); }
-.lc-pub__status.is-lunch .lc-pub__state { color: var(--lc-warning); }
-
-.lc-pub__zone {
-    color: var(--lc-ink-3);
-    font-size: 12px;
-    font-weight: var(--font-weight-medium);
-}
-
-.lc-pub__when {
-    color: var(--lc-ink-2);
-    font-size: var(--lc-t-body);
-    line-height: var(--lc-lh-snug);
-}
-
-.lc-pub__when b {
-    color: var(--lc-ink-1);
-    font-family: var(--lc-font-display);
-    font-size: 1.875rem;
-    font-weight: var(--font-weight-semibold);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-    line-height: 1;
-    white-space: nowrap;
-}
-
-.lc-pub__note {
-    color: var(--lc-ink-2);
-    font-size: var(--lc-t-label);
-    font-variant-numeric: tabular-nums;
-    line-height: var(--lc-lh-snug);
-}
 
 .lc-pub__strip {
     display: flex;
@@ -305,8 +239,8 @@
     width: 2px;
     margin-left: -1px;
     border-radius: var(--radius-full);
-    background: var(--lc-ink-1);
-    box-shadow: 0 0 0 2px var(--lc-card);
+    background: var(--signal);
+    box-shadow: 0 0 0 2px var(--lc-raised);
 }
 
 .lc-pub__stripscale {
@@ -636,7 +570,7 @@
     font-variant-numeric: tabular-nums;
 }
 
-.lc-pub__lunch svg { color: var(--signal); }
+.lc-pub__lunch svg { color: var(--lc-ink-3); }
 
 
 .lc-pub__find {
@@ -710,10 +644,8 @@
     }
 
     .lc-pub__body { gap: var(--space-4); }
-    .lc-pub__status { padding: var(--space-4); }
     .lc-pub__hours { padding: var(--space-4) var(--space-4) var(--space-2); }
     .lc-pub__findtext { padding: var(--space-3) var(--space-4) var(--space-4); }
-    .lc-pub__when b { font-size: 1.625rem; }
 
     .lc-pub__svc {
         grid-template-columns: 30px minmax(0, 1fr) auto;
@@ -732,10 +664,6 @@
     .lc-pub__dayname { font-size: var(--lc-t-label); }
 }
 
-@container (max-width: 250px) {
-    .lc-pub__when b { font-size: 1.375rem; }
-    .lc-pub__statusrow .biz-clock { width: 44px; height: 44px; }
-}
 
 @container (min-width: 600px) {
     .lc-pub {
@@ -763,7 +691,6 @@
     .lc-pub__svc { padding: var(--space-3) var(--space-4); }
     .lc-pub__list > li + li::before { left: calc(var(--space-4) + 36px + var(--space-3)); right: var(--space-4); }
     .lc-pub__price { font-size: 1.5rem; }
-    .lc-pub__when b { font-size: 2.125rem; }
 }
 
 @container (min-width: 800px) {
@@ -771,7 +698,8 @@
         display: grid;
         grid-template-columns: minmax(0, 1fr) 340px;
         grid-template-areas:
-            'head actions'
+            'head aside'
+            'actions aside'
             'main aside';
         align-items: start;
         column-gap: var(--space-8);
@@ -782,9 +710,6 @@
 
     .lc-pub__actions {
         grid-area: actions;
-        align-self: end;
-        justify-content: end;
-        padding-bottom: var(--space-1);
     }
 
     .lc-pub__main,
@@ -797,17 +722,15 @@
 
     .lc-pub__main { grid-area: main; gap: var(--space-6); }
 
+    /* The door sign hangs beside the name and is the one thing that follows the scroll. */
     .lc-pub__aside {
-        grid-area: aside;
-        align-self: stretch;
-        gap: var(--space-4);
-    }
-
-    /* Only the book panel follows the scroll; hours and directions stay where they are. */
-    .lc-pub__book {
         position: sticky;
         top: calc(64px + var(--space-4));
         z-index: 1;
+        grid-area: aside;
+        align-self: start;
+        gap: var(--space-4);
+        margin-top: var(--space-6);
     }
 }
 
@@ -875,7 +798,7 @@
 }
 
 /* An extra says so on the menu, so clients know before they open a service. */
-.lc-pub__svcextra { margin-top: 2px; color: var(--signal); font-size: var(--lc-t-label); }
+.lc-pub__svcextra { margin-top: 2px; color: var(--lc-ink-3); font-size: var(--lc-t-label); }
 
 /* Until the owner adds photos, the page wears its city: the pattern as the cover, the business's
    tile as its logo, framed on the canvas like an uploaded logo (doc 30). */
@@ -919,44 +842,6 @@
     .lc-pub__cover.is-city {
         height: clamp(120px, 20vh, 200px);
     }
-}
-
-/* The door in one line under the name. */
-.lc-pub__open {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    column-gap: var(--space-2);
-    row-gap: 2px;
-    margin: var(--space-1) 0 0;
-    color: var(--lc-ink-2);
-    font-size: var(--lc-t-label);
-    font-variant-numeric: tabular-nums;
-}
-
-.lc-pub__open b { color: var(--lc-ink-1); font-weight: var(--font-weight-semibold); }
-.lc-pub__open.is-open b { color: var(--lc-success); }
-.lc-pub__open.is-lunch b { color: var(--lc-warning); }
-
-.lc-pub__opendot {
-    width: 8px;
-    height: 8px;
-    border-radius: var(--radius-full);
-    background: var(--lc-ink-4);
-}
-
-.lc-pub__open.is-open .lc-pub__opendot { background: var(--lc-success); box-shadow: 0 0 0 3px var(--lc-success-tint); }
-.lc-pub__open.is-lunch .lc-pub__opendot { background: var(--lc-warning); }
-
-/* Book: next free time and one button. */
-.lc-pub__book {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-    padding: var(--space-5);
-    border-radius: var(--lc-r-xl);
-    background: var(--lc-raised);
-    box-shadow: inset 0 0 0 1px var(--lc-line-strong), var(--lc-shadow-raised);
 }
 
 .lc-pub__booktext {
@@ -1015,7 +900,7 @@
 .lc-pub__bookbar .ui-btn { flex: none; }
 
 @container (max-width: 799px) {
-    .lc-pub__book { display: none; }
+    .lc-pub .lc-door__book { display: none; }
     .lc-pub__bookbar { display: flex; }
     .lc-pub.has-bookbar { padding-bottom: 88px; }
 }
@@ -1039,8 +924,6 @@
     line-height: var(--lc-lh-body);
 }
 
-/* Hours sit in the side column on a wide screen: one list, today's strip on top. */
-.lc-pub__hours .lc-pub__strip { margin: var(--space-2) 0 var(--space-1); }
 
 /* The page closes in its city. */
 .lc-pub__city {
@@ -1082,6 +965,7 @@
     height: 48px;
     overflow: hidden;
     border-radius: var(--lc-r-md);
+    background: var(--lc-paper);
     box-shadow: 0 0 0 1px var(--lc-line-strong);
 }
 
@@ -1099,4 +983,307 @@
     color: var(--lc-ink-1);
     font-size: var(--lc-t-body);
     font-weight: var(--font-weight-semibold);
+}
+
+/* The door sign: hangs from a strap of the city's pattern, then the shop clock, open or closed,
+   today's hours with the amber hand for now, and the next free time with one button. Raised,
+   because you act on it. */
+.lc-door {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--lc-r-xl);
+    background: var(--lc-raised);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong), var(--lc-shadow-raised);
+}
+
+.lc-door__strap {
+    display: block;
+    height: 14px;
+    border-bottom: 1px solid var(--lc-line-strong);
+}
+
+.lc-door__strap svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+}
+
+.lc-door__sign {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.lc-door__row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.lc-door__state {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.lc-door__now,
+.lc-door__when,
+.lc-door__note {
+    margin: 0;
+}
+
+.lc-door__now {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--space-2);
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+}
+
+.lc-door.is-open .lc-door__now { color: var(--lc-success); }
+.lc-door.is-lunch .lc-door__now { color: var(--lc-warning); }
+
+.lc-door__zone {
+    color: var(--lc-ink-3);
+    font-size: 12px;
+    font-weight: var(--font-weight-medium);
+}
+
+.lc-door__when {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-door__when b {
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: 1.875rem;
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--lc-track-title);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.lc-door__note {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-door__book {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5) var(--space-5);
+    border-top: 1px dashed var(--lc-line-strong);
+}
+
+.lc-door__sign + .lc-door__book { padding-top: var(--space-4); }
+.lc-door__strap + .lc-door__book { border-top: 0; }
+
+@container (max-width: 359px) {
+    .lc-door__sign { padding: var(--space-4); }
+    .lc-door__when b { font-size: 1.625rem; }
+}
+
+/* The phone bar carries the shop clock small, so the sign travels with it. */
+.lc-pub__bookbar .biz-clock { flex: none; }
+.lc-pub__bookbar .lc-pub__booktext { flex: 1; }
+
+/* Hours and where to find the business are information: flat, a 1px edge, no fill. */
+.lc-pub__visit {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.lc-pub .lc-pub__hours,
+.lc-pub .lc-pub__find {
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+}
+
+.lc-pub .lc-pub__day.is-today { background: var(--lc-card); }
+
+@container (min-width: 800px) {
+    .lc-pub__visit {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 240px);
+        align-items: start;
+    }
+}
+
+/* The Locappoint badge on every cover, photo or pattern: white, so it reads on any ground (doc 30). */
+.lc-pub__badge {
+    position: absolute;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background: var(--lc-on-accent);
+    box-shadow: var(--lc-shadow-raised);
+}
+
+.lc-pub__badge svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    max-width: none;
+}
+
+.lc-pub__cover.is-city .lc-pub__badge { bottom: auto; top: var(--space-3); }
+
+/* A photo cover still sits in its city: the pattern runs along its foot. */
+.lc-pub__coverband {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 8px;
+}
+
+.lc-pub__coverband svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+}
+
+/* The long-service arc reads in the core palette here; amber stays for now and confirmation. */
+.lc-pub .biz-dial__over { stroke: var(--azure-soft); }
+
+/* A new business: the ticket the client keeps, with the real next free time, and no stamp yet. */
+.lc-pub__first {
+    display: grid;
+    gap: var(--space-4);
+    align-items: center;
+}
+
+.lc-pub__firsttext {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.lc-pub__firsttext p {
+    max-width: 44ch;
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-pub__ticket {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 104px;
+    width: 100%;
+    max-width: 340px;
+    border-radius: var(--lc-r-md);
+    background: var(--lc-paper);
+    color: var(--lc-paper-ink);
+    box-shadow: var(--lc-shadow-raised);
+}
+
+.lc-pub__ticketmain {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding: var(--space-4);
+    border-right: 2px dashed var(--lc-paper-line);
+}
+
+.lc-pub__ticketday {
+    color: var(--lc-paper-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.lc-pub__tickettime {
+    font-family: var(--lc-font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--lc-track-title);
+    line-height: 1.05;
+}
+
+.lc-pub__ticketsvc {
+    font-weight: var(--font-weight-medium);
+    overflow-wrap: anywhere;
+}
+
+.lc-pub__ticketprice {
+    margin-top: var(--space-2);
+    font-family: var(--lc-font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.lc-pub__ticketstub {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    padding: var(--space-3);
+    text-align: center;
+}
+
+.lc-pub__ticketmark {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    overflow: hidden;
+    border-radius: var(--lc-r-sm);
+    box-shadow: inset 0 0 0 1px var(--lc-paper-line);
+}
+
+.lc-pub__ticketmark .lc-face {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+}
+
+.lc-pub__ticketwho,
+.lc-pub__ticketwhere {
+    display: -webkit-box;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+}
+
+.lc-pub__ticketwho {
+    margin-top: var(--space-1);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.2;
+    -webkit-line-clamp: 3;
+}
+
+.lc-pub__ticketwhere {
+    color: var(--lc-paper-ink-2);
+    font-size: 12px;
+    -webkit-line-clamp: 2;
+}
+
+@container (min-width: 800px) {
+    .lc-pub__first {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+        gap: var(--space-6);
+    }
 }

@@ -35,8 +35,6 @@ export const doorState = (week, now) => {
     return null
 }
 
-export const placeName = (timeZone) => timeZone.split('/').pop().replace(/_/g, ' ')
-
 export const visitorZone = () => {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone } catch { return null }
 }
@@ -71,20 +69,5 @@ export const TodayStrip = ({ windows, minutes }) => {
                 <span>{clock(hi)}</span>
             </div>
         </div>
-    )
-}
-
-// The door in one line under the business's name: open until when, or when it opens next.
-export const OpenLine = ({ week, timeZone, now }) => {
-    const door = doorState(week, now)
-    if (!door) return null
-    const zone = visitorZone()
-    return (
-        <p className={`lc-pub__open is-${door.tone}`}>
-            <span className="lc-pub__opendot" aria-hidden="true" />
-            <b>{door.state},</b>
-            <span>{`${door.lead.charAt(0).toLowerCase()}${door.lead.slice(1)} ${clock(door.time)}`}</span>
-            {zone && zone !== timeZone && <span className="lc-pub__zone">{placeName(timeZone)} time</span>}
-        </p>
     )
 }
