@@ -79,7 +79,7 @@ export default async ({ browser, url, check, server, root }) => {
     // Lagos: transfer or card, in naira.
     p = await open('/femtos-barbearia', '&guest=1&nobiz=1&payquote=lagos')
     await toReview(p)
-    check(/Pay now by bank transfer or card/.test(await text(p, '.lc-bk-ticket')) && /15,300/.test(await text(p, '.lc-bk-ticket__price')), `Lagos pays by transfer or card, in naira: ${await text(p, '.lc-bk-ticket__price')}`)
+    check(/Pay now by bank transfer or card/.test(await text(p, '.lc-bk-ticket')) && /15,225/.test(await text(p, '.lc-bk-ticket__price')), `Lagos pays by transfer or card, in naira: ${await text(p, '.lc-bk-ticket__price')}`)
     check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'the paid review fits a phone')
     await p.close()
 

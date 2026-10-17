@@ -466,7 +466,7 @@ const payRpc = (name, args) => {
   const mode = payParam('payquote')
   if (name === 'payment_quote') {
     if (mode === 'error') return { data: null, error: { message: 'down' } }
-    if (mode === 'lagos') return { data: { online: true, provider: 'paystack', currency: 'NGN', price: 15000, client_fee: 300, total: 15300, methods: ['transfer', 'card'], hold_minutes: 35, policy: PAY_POLICY }, error: null }
+    if (mode === 'lagos') return { data: { online: true, provider: 'paystack', currency: 'NGN', price: 15000, client_fee: 225, total: 15225, methods: ['transfer', 'card'], hold_minutes: 35, policy: PAY_POLICY }, error: null }
     if (mode === 'online') return { data: { online: true, provider: 'stripe', currency: 'EUR', price: 25, client_fee: 0.5, total: 25.5, methods: ['card'], hold_minutes: 35, policy: PAY_POLICY }, error: null }
     return { data: { online: false }, error: null }
   }

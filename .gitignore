@@ -29,7 +29,8 @@ dist-ssr
 *.sw?
 
 rough
-docs
+docs/*
+!docs/screenshots/
 locappoint-tree.txt
 supabase/.temp
 loca-brand-kit
