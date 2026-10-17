@@ -1,4 +1,4 @@
-import { META_LEFT, NEXT_FIX, SLIP, UPDATED } from './content'
+import { NEXT_FIX, NEXT_SWITCH, SLIP, UPDATED } from './content'
 
 const count = (key, state) => SLIP.find((s) => s.key === key).lines.filter((l) => !state || l.state === state).length
 
@@ -6,7 +6,7 @@ const Hero = () => {
     const stats = [
         { label: 'Cities live', value: '3', of: 'of 3', note: 'Porto, Lagos and Lisbon' },
         { label: 'Launch fixes done', value: String(count('code', 'done')), of: `of ${count('code')}`, note: NEXT_FIX },
-        { label: 'Meta approvals left', value: String(META_LEFT), of: null, note: 'Then WhatsApp switches on' },
+        { label: 'Switch-ons done', value: String(count('switch', 'done')), of: `of ${count('switch')}`, note: NEXT_SWITCH },
     ]
     return (
         <section className="lc-st-hero reveal" aria-labelledby="lc-st-hero-title">
@@ -15,10 +15,10 @@ const Hero = () => {
                 Status <span aria-hidden="true">/</span> updated <time className="js-relative" dateTime={UPDATED.iso}>{UPDATED.label}</time>
             </p>
             <h1 className="lc-st-hero__title" id="lc-st-hero-title">
-                Three cities live. <em>WhatsApp switches on next.</em>
+                Three cities live. <em>WhatsApp and Paystack are on.</em>
             </h1>
             <p className="lc-st-hero__lede">
-                Wave 1 is complete: clients book in Porto, Lagos and Lisbon, pay ahead in Lagos and at the visit in Portugal, and owners run their day from the app. The WhatsApp agent is built and waits on Meta's last approvals. Before Wave 2: eleven small launch fixes, then one design system on every page.
+                Clients book in Porto, Lagos and Lisbon on the web and on WhatsApp, pay ahead in Lagos and at the visit in Portugal, and owners run their day from the app. The first real Lagos booking was paid through Paystack on 17 October. Left before launch: one live refund and the test data cleared.
             </p>
             <dl className="lc-st-hero__stats">
                 {stats.map((s) => (

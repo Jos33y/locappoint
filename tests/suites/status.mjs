@@ -38,8 +38,9 @@ export default async ({ browser, url, check, server, root }) => {
         return { code: [done('code'), lines('code')], sw: [done('switch'), lines('switch')], wait: lines('wait'), totals, hero: [...document.querySelectorAll('.lc-st-stat b')].map((b) => b.textContent) }
     })
     check(slip.code[1] === 11 && slip.totals[0] === `${slip.code[0]} of ${slip.code[1]}`, `the slip counts its own stamps: ${slip.totals[0]}`)
-    check(slip.sw[1] === 9 && slip.totals[1] === `${slip.sw[0]} of ${slip.sw[1]}`, `switch-ons counted from the slip: ${slip.totals[1]}`)
+    check(slip.sw[1] === 5 && slip.totals[1] === `${slip.sw[0]} of ${slip.sw[1]}`, `switch-ons counted from the slip: ${slip.totals[1]}`)
     check(slip.hero[1] === String(slip.code[0]), 'the headline fix count is the slip\'s count')
+    check(slip.hero[2] === String(slip.sw[0]), 'the headline switch-on count is the slip\'s count')
 
     const cities = await p.evaluate(() => [...document.querySelectorAll('.lc-world__name')].map((n) => n.textContent))
     check(cities.join() === 'Porto,Lagos,Lisbon', `cities in order: ${cities.join(', ')}`)
