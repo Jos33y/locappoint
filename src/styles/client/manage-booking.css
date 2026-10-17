@@ -79,6 +79,9 @@
     font-weight: var(--font-weight-semibold);
 }
 
+/* The page is narrow enough that Cancel booking always wraps; it starts its own line on the left. */
+.lc-mb .lc-cl-bk__cancel { margin-left: 0; }
+
 .lc-mb__all {
     margin: 0;
     font-size: var(--lc-t-label);

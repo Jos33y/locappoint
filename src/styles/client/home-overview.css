@@ -34,7 +34,7 @@
     border-radius: var(--radius-full);
 }
 
-.lc-cl-todo__icon.is-rate { background: var(--lc-warning-tint); color: var(--lc-warning); }
+.lc-cl-todo__icon.is-rate { background: var(--lc-info-tint); color: var(--lc-info); }
 
 .lc-cl-todo__icon.is-wait { background: var(--lc-info-tint); color: var(--lc-info); }
 

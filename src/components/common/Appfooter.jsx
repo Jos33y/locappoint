@@ -25,7 +25,7 @@ const AppFooter = () => {
                             </span>
                         </Link>
                         <p className="loca-app-footer__desc">
-                            Book anyone, anywhere the service happens. Live in Porto, Lagos and Lisbon. Free during the beta.
+                            Book anyone, anywhere the service happens. Live in Porto, Lagos and Lisbon. Free for businesses during the beta.
                         </p>
                         <div className="loca-app-footer__cities">Porto · Lagos · Lisbon</div>
                     </div>

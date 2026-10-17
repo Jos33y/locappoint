@@ -81,7 +81,7 @@ const PayReturn = () => {
         title = pending ? 'Request sent' : 'You are booked'
         text = (
             <>
-                <b>{amount}</b> paid to {business}.
+                You paid <b>{amount}</b>.
                 {pending && ' They confirm each booking themselves; if they cannot take it, you get it all back.'}
                 {state.email && <> Details are on their way to <b>{state.email}</b>.</>}
             </>
@@ -149,7 +149,7 @@ const PayReturn = () => {
                 {showTicket && (
                     <div className="lc-paid__ticket">
                         <BookingTicket
-                            business={{ business_name: business, address: state.address, city: state.city }}
+                            business={{ business_name: business, address: state.address, city: state.city, country: state.country, logo_url: state.logo_url }}
                             service={{ service_name: state.service_name || 'Booking', duration_minutes: state.duration_minutes, price: state.price }}
                             dateKey={dateKey}
                             minutes={minutes}

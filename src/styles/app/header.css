@@ -55,9 +55,9 @@
     font-weight: 600;
     padding: 3px 8px;
     border-radius: 999px;
-    background: rgba(232, 154, 62, 0.10);
-    border: 1px solid rgba(232, 154, 62, 0.28);
-    color: var(--signal);
+    background: var(--lc-info-tint);
+    border: 1px solid var(--lc-line);
+    color: var(--lc-info);
     line-height: 1;
     margin-left: 2px;
     /* Flip to live: change this class to .loca-app-header__beta--live in JSX */

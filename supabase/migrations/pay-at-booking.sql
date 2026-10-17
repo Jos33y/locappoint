@@ -685,6 +685,8 @@ AS $$
     'slug', b.slug,
     'address', b.address,
     'city', b.city,
+    'country', b.country,
+    'logo_url', b.logo_url,
     'timezone', b.timezone,
     'auto_confirm', b.auto_confirm,
     'service_name', concat_ws(' + ', s.service_name, (SELECT string_agg(x->>'name', ' + ') FROM jsonb_array_elements(coalesce(a.addons, '[]')) x)),

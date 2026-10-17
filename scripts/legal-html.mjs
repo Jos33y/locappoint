@@ -37,9 +37,11 @@ const plainLayout = {
         if (id !== PLAIN) return null
         return `
 import { createElement as h } from 'react'
+import { LEGAL_UPDATED } from '/src/constants/legalEntity.js'
 export const LEGAL_PAGES = []
 const LegalLayout = ({ title, lede, sections }) => h('article', { className: 'legal-static' },
     h('h1', null, title),
+    h('p', null, 'Last updated: ' + LEGAL_UPDATED),
     lede ? h('p', null, lede) : null,
     ...(sections || []).map((s) => h('section', { key: s.id, id: s.id }, h('h2', null, s.label), s.body)))
 export default LegalLayout

@@ -6,6 +6,7 @@ import { Button, EmptyState, Skeleton } from '../../components/ui'
 import { payMoney } from '../../services/payments'
 import { receiptByToken } from '../../services/receipts'
 import { parseDateKey } from '../../services/dates'
+import { fullAddress } from '../../components/business/public/PublicFind'
 import '../../styles/client/receipt.css'
 
 // A receipt at /r/<token>: what was paid, to whom, for what, and how. Proof of payment, never a tax
@@ -46,7 +47,7 @@ const ReceiptPage = () => {
     const r = state.receipt
     const refund = r?.kind === 'refund'
     const money = (n) => payMoney(n, r?.currency, true)
-    const place = r ? [r.business?.address, r.business?.city].filter(Boolean).join(', ') : ''
+    const place = r ? (r.business?.address?.trim() ? fullAddress(r.business.address, r.business.city) : r.business?.city || '') : ''
     const when = r ? visitDay(r.booking?.date, r.booking?.time) : ''
 
     useEffect(() => {
