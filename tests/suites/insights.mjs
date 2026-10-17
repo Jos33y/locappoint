@@ -23,6 +23,8 @@ export default async ({ browser, url, check, root }) => {
         return [...document.querySelectorAll('.lc-ins-tile__value, .lc-ins-card h2')].every((el) => parseFloat(getComputedStyle(el).fontSize) < hero)
     }), 'nothing on the page is louder than the earned figure')
     check(/25%/.test(await p.evaluate(() => document.querySelector('.lc-ins-hero .lc-ins-delta')?.textContent)), 'earned compares with the period before')
+    const order = await p.evaluate(() => ['.lc-ins-kpis', '.lc-ins-card', '.lc-ins-stmt', '.lc-rel'].map((sel) => Math.round(document.querySelector(sel)?.getBoundingClientRect().top ?? -1)))
+    check(order.every((y, i) => y >= 0 && (i === 0 || y > order[i - 1])), `money first, then the days, the statement, and the score last: ${order.join(' < ')}`)
     check(await p.evaluate(() => document.querySelectorAll('.lc-ins-cols__col').length) === 7, 'a column per day')
     check(await p.evaluate(() => document.querySelectorAll('.lc-ins-funnel__step').length) === 4, 'four funnel steps')
     check(await p.evaluate(() => document.querySelector('.lc-ins-bars__label')?.textContent) === 'Instagram', 'sources are named, biggest first')

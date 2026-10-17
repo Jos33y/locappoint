@@ -27,19 +27,18 @@ export default async ({ browser, url, check }) => {
     check(p.errors.length === 0, `no page errors on Insights: ${p.errors.join(' | ')}`)
     await p.close()
 
-    // Figures count up, then settle on the exact amount
+    // Figures roll up digit by digit (NumberFlow); the exact amount is in the text from the start,
+    // so reading, finding and copying never meet a digit mid-roll.
     p = await browser.newPage()
     await p.setViewport({ width: 1272, height: 900 })
     await p.goto(`${url}/?path=${encodeURIComponent('/portal/insights')}`, { waitUntil: 'domcontentloaded' })
-    const seen = []
-    for (let i = 0; i < 40; i += 1) {
-        const v = await p.evaluate(() => document.querySelector('.lc-ins-hero__value')?.textContent || '')
-        if (v) seen.push(v)
-        await wait(40)
-    }
+    await p.waitForFunction(() => document.querySelector('.lc-ins-hero__value'), { timeout: 5000 }).catch(() => {})
     await wait(1500)
-    const final = await p.evaluate(() => document.querySelector('.lc-ins-hero__value')?.textContent || '')
-    check(new Set(seen).size > 2 && /^€[\d,]+$/.test(final), `the headline counts up: ${[...new Set(seen)].slice(0, 5).join(', ')} to ${final}`)
+    const hero = await p.evaluate(() => ({
+        text: document.querySelector('.lc-ins-hero__value')?.textContent || '',
+        rolls: Boolean(document.querySelector('.lc-ins-hero__value number-flow-react')),
+    }))
+    check(hero.rolls && /^€[\d,]+$/.test(hero.text), `the headline rolls and reads as the exact amount: ${hero.text}`)
     await p.close()
 
     p = await open('/portal/insights', 390, 844, '&fewreminders=1')

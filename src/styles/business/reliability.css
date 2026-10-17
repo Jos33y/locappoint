@@ -186,7 +186,8 @@
 
 .lc-rel-part__top b { font-weight: var(--font-weight-semibold); }
 .lc-rel-part__top small { color: var(--lc-ink-3); font-size: var(--lc-t-label); }
-.lc-rel-part.is-short .lc-rel-meter > span { background: var(--lc-warning); }
+/* A part short of full stays azure: a few points off is not a warning. What cost them is listed below. */
+.lc-rel-part.is-short .lc-rel-meter > span { background: var(--azure-soft); }
 
 .lc-rel-part__says {
     color: var(--lc-ink-3);
@@ -250,7 +251,7 @@
 
 .lc-rel-items__pts {
     flex: none;
-    color: var(--lc-warning);
+    color: var(--lc-ink-1);
     font-size: var(--lc-t-label);
     font-weight: var(--font-weight-semibold);
 }

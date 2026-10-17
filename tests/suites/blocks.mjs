@@ -52,8 +52,12 @@ export default async ({ browser, url, check }) => {
     await p.close()
 
     // A blocked guest: a neutral line, never "blocked", and a way to tell us
-    const day = (() => { const d = new Date(Date.now() + 86400000); return d.getUTCDay() === 0 ? new Date(Date.now() + 2 * 86400000) : d })()
-    const key = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Lisbon' }).format(day)
+    // Tomorrow in Lisbon, or the day after when tomorrow is Sunday (the test business is closed then).
+    // The weekday is read in Lisbon too: in UTC, the hour after midnight in Lisbon is still the day before.
+    const lisbon = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Lisbon' }).format(d)
+    const weekday = (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Lisbon', weekday: 'short' }).format(d)
+    const next = new Date(Date.now() + 86400000)
+    const key = lisbon(weekday(next) === 'Sun' ? new Date(Date.now() + 2 * 86400000) : next)
     p = await open(`/femtos-barbearia?book=s1.${key}.1000`, '&guest=1&nobiz=1&blockedme=1', 390, 844)
     await p.waitForFunction(() => /Check and confirm/.test(document.body.textContent), { timeout: 8000 }).catch(() => {})
     const inputs = await p.$$('.lc-bk-details input')

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowDownRight, ArrowUpRight, RotateCw, Share2 } from 'lucide-react'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
-import { Button, Segmented, useCountUp } from '../../components/ui'
+import { Button, Segmented } from '../../components/ui'
+import { RollMoney, RollNumber } from '../../components/business/Rolling'
 import { Columns } from '../../components/insights/Columns'
 import { BarList } from '../../components/insights/BarList'
 import { Funnel } from '../../components/insights/Funnel'
@@ -34,21 +35,13 @@ const Delta = ({ now, before, upIsGood = true, money }) => {
     )
 }
 
-// Money that moves: figures count up when they arrive and settle on the exact amount, cents included.
-const settle = (shown, target) => (Math.abs(shown - target) < 0.005 ? target : Math.round(shown))
+// Money that moves: figures roll up when they arrive and roll between periods, digit by digit,
+// in the business's own currency. Still for people who ask for less motion.
+const CountMoney = ({ value, country }) => <RollMoney value={value} country={country} />
 
-const CountMoney = ({ value, money }) => {
-    const target = Number(value) || 0
-    const shown = useCountUp(target)
-    return money(settle(shown, target))
-}
+const CountNum = ({ value }) => <span className="biz-num"><RollNumber value={value} /></span>
 
-const CountNum = ({ value }) => {
-    const target = Number(value) || 0
-    return <span className="biz-num">{Math.round(useCountUp(target))}</span>
-}
-
-const Reminders = ({ r, days, money }) => {
+const Reminders = ({ r, days, country }) => {
     if (!r) return null
     const span = days === 7 ? 'this week' : `in these ${days} days`
     if (!r.reminded) {
@@ -63,10 +56,10 @@ const Reminders = ({ r, days, money }) => {
             <dl className="lc-ins-facts">
                 <div><dt>Came</dt><dd><CountNum value={r.reminded_came} /></dd></div>
                 <div><dt>No-shows</dt><dd><CountNum value={r.reminded_no_show} /></dd></div>
-                <div><dt>Kept</dt><dd className="biz-num"><CountMoney value={r.reminded_value} money={money} /></dd></div>
+                <div><dt>Kept</dt><dd className="biz-num"><CountMoney value={r.reminded_value} country={country} /></dd></div>
             </dl>
             {r.saved_estimate > 0 ? (
-                <p className="lc-ins-saved"><b>About <CountMoney value={r.saved_estimate} money={money} /> saved.</b> Clients who got a reminder missed fewer visits than those who booked too late for one.</p>
+                <p className="lc-ins-saved"><b>About <CountMoney value={r.saved_estimate} country={country} /> saved.</b> Clients who got a reminder missed fewer visits than those who booked too late for one.</p>
             ) : (
                 <p className="lc-ins-none">{r.reminded >= 10 && r.other >= 10 ? 'Reminded clients miss visits as often as the rest, so no saving to show yet.' : 'An estimate of money saved shows once there are at least ten reminded visits and ten without a reminder to compare.'}</p>
             )}
@@ -167,10 +160,6 @@ const Insights = () => {
                 <Segmented options={PERIODS} value={days} onChange={setDays} label="Period" />
             </header>
 
-            <Statement businessId={business.id} country={business.country} money={money} />
-
-            <Reliability businessId={business.id} />
-
             {state.status === 'loading' && (
                 <div className="lc-ins__skel" aria-hidden="true">
                     <span className="lc-skel" style={{ height: 112 }} />
@@ -193,33 +182,37 @@ const Insights = () => {
             )}
 
             {d && quiet && <EmptyStart onShare={share} />}
+            {/* Before the first numbers, the statement and the score still say where things stand. */}
+            {d && quiet && <Statement businessId={business.id} country={business.country} money={money} />}
 
             {d && !quiet && (
                 <div className={`lc-ins__body${state.status === 'refreshing' ? ' is-refreshing' : ''}`} aria-busy={state.status === 'refreshing'}>
                     <div className="lc-ins-kpis">
                         <div className="lc-ins-hero">
                             <span className="lc-ins-tile__label">Earned</span>
-                            <span className="lc-ins-hero__value"><CountMoney value={now.earned} money={money} /></span>
+                            <span className="lc-ins-hero__value"><CountMoney value={now.earned} country={business.country} /></span>
                             <span className="lc-ins-tile__meta">
                                 <Delta now={now.earned} before={before.earned} money={money} />
                             </span>
                         </div>
-                        <Tile label="Booked ahead" value={<CountMoney value={d.ahead.value} money={money} />}>
+                        <Tile label="Booked ahead" value={<CountMoney value={d.ahead.value} country={business.country} />}>
                             {d.ahead.count} {d.ahead.count === 1 ? 'booking' : 'bookings'} in the next {d.days} days
                         </Tile>
                         <Tile label="Bookings" value={<CountNum value={now.bookings} />}>
                             <Delta now={now.bookings} before={before.bookings} />
                         </Tile>
-                        <Tile label="Lost to no-shows" value={<CountMoney value={now.no_show_value} money={money} />} tone={now.no_show_value > 0 ? 'bad' : null}>
+                        <Tile label="Lost to no-shows" value={<CountMoney value={now.no_show_value} country={business.country} />} tone={now.no_show_value > 0 ? 'bad' : null}>
                             {now.no_shows} {now.no_shows === 1 ? 'no-show' : 'no-shows'}
                         </Tile>
                     </div>
 
-                    <Reminders r={reminders} days={d.days} money={money} />
-
                     <Card title="Earned per day" note={d.days > 45 ? 'By week. Hover or tap a column for the numbers.' : 'Hover or tap a column for the numbers.'} className="is-wide">
                         <Columns days={d.daily} money={money} />
                     </Card>
+
+                    <Statement businessId={business.id} country={business.country} money={money} />
+
+                    <Reminders r={reminders} days={d.days} country={business.country} />
 
                     <div className="lc-ins-grid">
                         <Card
@@ -263,6 +256,9 @@ const Insights = () => {
                     </Card>
                 </div>
             )}
+
+            {/* The score last: it moves slowly and is about how bookings are kept, not about money. */}
+            {d && <Reliability businessId={business.id} />}
         </div>
     )
 }
