@@ -6,6 +6,7 @@ import fs from 'node:fs'
 import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 const listen = (server) => new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server.address().port)))
 
@@ -51,6 +52,15 @@ export default async ({ check, root }) => {
         'src/assets/fonts/Switzer-Bold.woff2': { file: 'assets/Switzer-Bold-5.woff2' },
     }))
 
+    // The legal pages' own words, rendered the way the build does it (scripts/legal-html.mjs).
+    // A file URL, not a path: on Windows, import() refuses C:\ paths.
+    const { renderLegal } = await import(pathToFileURL(path.join(root, 'scripts', 'legal-html.mjs')).href)
+    const legal = await renderLegal()
+    fs.writeFileSync(path.join(dist, 'legal.json'), JSON.stringify(legal))
+    check(Object.keys(legal).length === 9 && Object.values(legal).every((h) => h.startsWith('<article') && h.length > 1000), `all nine legal pages render as plain HTML: ${Object.entries(legal).map(([k, v]) => `${k} ${v.length}`).join(', ')}`)
+    check(/When you message us on WhatsApp/.test(legal['/privacy']) && /90 days, then deleted automatically/.test(legal['/privacy']) && /Send STOP/.test(legal['/privacy']), 'the privacy policy covers WhatsApp: what we get, how long, how to stop')
+    check(/If you used Locappoint on WhatsApp/.test(legal['/legal/delete-account']) && /Delete my WhatsApp data/.test(legal['/legal/delete-account']), 'the deletion page tells WhatsApp-only clients how to get their data deleted')
+
     const port = 40000 + Math.floor(Math.random() * 20000)
     const proc = spawn(process.execPath, [path.join(root, 'server', 'index.mjs')], {
         env: { ...process.env, PORT: String(port), DIST_DIR: dist, VITE_SUPABASE_URL: `http://127.0.0.1:${supa}`, VITE_SUPABASE_ANON_KEY: 'anon-key' },
@@ -90,6 +100,16 @@ export default async ({ check, root }) => {
         check(!head.includes('href="/assets/react-1.js"') && !head.includes('modulepreload" href="/assets/app-abc123.js"'), 'files the page already loads are not asked for twice')
         check(head.includes('<link rel="preload" href="/assets/Switzer-Bold-5.woff2" as="font" type="font/woff2" crossorigin>'), 'the heading font starts downloading at once')
         check(new RegExp(`<link rel="preconnect" href="http://127\\.0\\.0\\.1:${supa}" crossorigin>`).test(head), 'the connection to Supabase is opened early')
+
+        // Legal pages carry their text for checkers that do not run the app (Meta, Google Play)
+        for (const p of ['/privacy', '/terms', '/legal/delete-account']) {
+            r = await get(p)
+            const inRoot = (/<div id="root">([\s\S]*?)<\/div>\s*<noscript>/.exec(r.body) || [])[1] || ''
+            check(r.status === 200 && inRoot.startsWith('<article') && inRoot === legal[p], `${p} arrives with its words inside the page`)
+        }
+        r = await get('/privacy/')
+        check(r.body.includes('When you message us on WhatsApp'), 'with or without the trailing slash')
+        check(!(await get('/')).body.includes('<article class="legal-static">'), 'other pages stay as they were')
 
         // A business page
         r = await get('/femtos-barbearia')

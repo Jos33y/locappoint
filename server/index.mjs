@@ -8,7 +8,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import zlib from 'node:zlib'
 import { fileURLToPath } from 'node:url'
-import { businessMeta, injectHead, notFoundMeta, pageMeta, robotsTxt, sitemapXml, slugOf } from './seo.mjs'
+import { businessMeta, injectHead, notFoundMeta, pageMeta, robotsTxt, sitemapXml, slugOf, withLegalText } from './seo.mjs'
 import { loadManifest, preloadTags, withPreload } from './preload.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -29,6 +29,12 @@ const TYPES = {
 const COMPRESS = /^(text\/|application\/(json|javascript|manifest\+json|xml)|image\/svg)/
 
 const template = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8')
+
+// The legal pages as plain HTML, from the build (scripts/legal-html.mjs). Missing: the pages still work, without it.
+const LEGAL_TEXT = (() => {
+    try { return JSON.parse(fs.readFileSync(path.join(DIST, 'legal.json'), 'utf8')) } catch { return {} }
+})()
+if (!Object.keys(LEGAL_TEXT).length) console.warn('dist/legal.json is missing: legal pages go out without their text for checkers')
 
 // Read once at start: which files each landing screen needs, and the Supabase host to warm up early.
 const manifest = loadManifest(DIST)
@@ -161,7 +167,8 @@ const handle = async (req, res) => {
     }
 
     const { status, meta, cache: cacheControl, kind } = await page(pathname)
-    return send(req, res, status, 'text/html; charset=utf-8', withPreload(injectHead(template, meta), PRELOAD[kind]), {
+    const legal = LEGAL_TEXT[pathname.replace(/\/+$/, '') || '/']
+    return send(req, res, status, 'text/html; charset=utf-8', withPreload(withLegalText(injectHead(template, meta), legal), PRELOAD[kind]), {
         'Cache-Control': cacheControl,
         ...(meta.noindex ? { 'X-Robots-Tag': 'noindex' } : {}),
     })

@@ -36,7 +36,7 @@ export const PAGES = {
     '/legal/dpa': { title: 'Data Processing Agreement | Locappoint', description: 'How Locappoint processes client data on behalf of the businesses that use it.' },
     '/legal/subprocessors': { title: 'Subprocessors | Locappoint', description: 'The services Locappoint relies on to run, and what each one handles.' },
     '/legal/ranking': { title: 'How businesses are ranked | Locappoint', description: 'How Locappoint orders businesses in search and lists.' },
-    '/legal/delete-account': { title: 'Delete your Locappoint account', description: 'How to delete your account and data, from the app, the website or by email.' },
+    '/legal/delete-account': { title: 'Delete your Locappoint account', description: 'How to delete your account or your WhatsApp messages, from the app, the website or by email.' },
 }
 
 // Signed-in screens and one-off links: never in search results.
@@ -176,6 +176,12 @@ const LEGAL_LINE = `<noscript>Locappoint is operated by ${LEGAL.name} (${LEGAL.r
 export const injectHead = (html, m) => html
     .replace(/<!-- seo:start[\s\S]*?<!-- seo:end -->/, `<!-- seo -->\n${headTags(m)}\n  <!-- /seo -->`)
     .replace(/<div id="root"><\/div>(?!\s*<noscript>Locappoint is operated)/, `<div id="root"></div>\n  ${LEGAL_LINE}`)
+
+// The legal pages' own words inside the page (dist/legal.json, written at build), for checkers that
+// read the HTML without running the app. The app replaces them as soon as it starts.
+export const withLegalText = (html, text) => (text
+    ? html.replace('<div id="root"></div>', `<div id="root">${text}</div>`)
+    : html)
 
 export const robotsTxt = (host) => {
     if (/^status\./.test(host)) return 'User-agent: *\nDisallow: /\n'

@@ -1,4 +1,4 @@
-export const LEGAL_UPDATED = '30 September 2026'
+export const LEGAL_UPDATED = '17 October 2026'
 
 export const PENDING = 'Published before public launch'
 
@@ -57,13 +57,13 @@ export const SUBPROCESSORS = [
         purpose: 'Booking on WhatsApp, booking news and reminders to clients, booking alerts to businesses',
         data: 'Phone number, WhatsApp profile name, message content, booking details',
         location: 'European Union and United States',
-        status: 'In testing, active when Locappoint opens on WhatsApp',
+        status: 'Active',
     },
     {
         name: 'Anthropic, PBC (Claude)',
         purpose: 'Understands booking messages sent to Locappoint on WhatsApp and suggests replies; it cannot book or change anything on its own',
         data: 'Message content, first name, the booking details in the conversation',
         location: 'United States',
-        status: 'In testing, active when Locappoint opens on WhatsApp',
+        status: 'Active',
     },
 ]

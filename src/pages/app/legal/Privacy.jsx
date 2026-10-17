@@ -43,7 +43,7 @@ const sections = [
             <>
                 <p>Each use has a legal basis under Article 6 of the GDPR:</p>
                 <ul className="legal__list">
-                    <li><strong>Running your account and bookings</strong>, including confirmations and reminders by email, and by WhatsApp once that channel is live. Basis: performing our contract with you.</li>
+                    <li><strong>Running your account and bookings</strong>, including confirmations and reminders by email and on WhatsApp, and answering you when you book with us on WhatsApp. Basis: performing our contract with you.</li>
                     <li><strong>Publishing business pages.</strong> Basis: our contract with the business.</li>
                     <li><strong>Following up on waitlist and partnership applications.</strong> Basis: steps you asked us to take before a contract.</li>
                     <li><strong>Replying to contact messages.</strong> Basis: our legitimate interest in answering people who write to us.</li>
@@ -62,6 +62,23 @@ const sections = [
             <>
                 <p>When you book an appointment, the business you book with receives your name, contact details and booking details so it can provide the service. That business is responsible for how it uses them. We keep and process the booking on its behalf.</p>
                 <p>For questions about a specific booking, contact the business first. You can also write to us and we will pass your request on.</p>
+            </>
+        ),
+    },
+    {
+        id: 'whatsapp',
+        label: 'When you message us on WhatsApp',
+        body: (
+            <>
+                <p>You can find and book businesses by sending a message to Locappoint on WhatsApp. Businesses can also get their booking news there.</p>
+                <ul className="legal__list">
+                    <li><strong>What we receive.</strong> Your phone number, your WhatsApp profile name, the messages you send us and the booking details in the conversation, such as the service, the time and, for a visit at your place, the address you give. We do not see your contacts, your other chats or your status.</li>
+                    <li><strong>Who handles it.</strong> Meta (WhatsApp) carries the messages between you and us. Our booking assistant reads your messages to answer and to suggest free times, using Anthropic&apos;s Claude. It books only after you say yes. Under its commercial terms, Anthropic does not use these messages to train its models. Both are listed on the <Link to="/legal/subprocessors">Sub-processors</Link> page.</li>
+                    <li><strong>Why we are allowed to.</strong> To take and manage the booking you ask for (our contract with you) and to answer problems you report (our legitimate interest in helping you).</li>
+                    <li><strong>How long we keep it.</strong> Messages are kept for 90 days, then deleted automatically every night. A booking you make stays with the business as any other booking does.</li>
+                    <li><strong>Stopping.</strong> Send STOP and we send you nothing more on WhatsApp. Send START to turn it back on.</li>
+                    <li><strong>Deleting it sooner.</strong> Write to <a href={`mailto:${LEGAL_ENTITY.email}?subject=${encodeURIComponent('Delete my WhatsApp data')}`}>{LEGAL_ENTITY.email}</a> with your WhatsApp number and we delete your messages and contact details within 30 days. <Link to="/legal/delete-account">More on deleting your data</Link>.</li>
+                </ul>
             </>
         ),
     },
@@ -96,6 +113,7 @@ const sections = [
                 <li><strong>Waitlist signups.</strong> 24 months from signup, unless you create an account.</li>
                 <li><strong>Partnership and contact messages.</strong> 24 months from your last message.</li>
                 <li><strong>Waitlist analytics.</strong> 13 months.</li>
+                <li><strong>WhatsApp messages.</strong> 90 days, then deleted automatically every night.</li>
                 <li><strong>Email and notification records.</strong> Names and email addresses are removed after 90 days; we keep a note that the message was sent so it is never sent twice.</li>
                 <li><strong>Crash reports.</strong> 60 days from the last time the error happened.</li>
                 <li><strong>Abuse limit counts.</strong> 2 days.</li>

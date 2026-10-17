@@ -2,7 +2,8 @@ import { Link, useLocation } from 'react-router-dom'
 import LegalLayout from './LegalLayout'
 import { LEGAL_ENTITY } from '../../../constants/legalEntity'
 
-// The public page Google Play asks for: how to delete an account, from the app or without it.
+// The public page Google Play and Meta ask for: how to delete an account, from the app or without it,
+// and how someone who only ever used WhatsApp gets their messages deleted.
 const sections = [
     {
         id: 'how',
@@ -23,6 +24,20 @@ const sections = [
         label: 'Without the app',
         body: (
             <p>Write to <a href={`mailto:${LEGAL_ENTITY.email}?subject=${encodeURIComponent('Delete my Locappoint account')}`}>{LEGAL_ENTITY.email}</a> from the email address on your account, with &ldquo;Delete my account&rdquo; in the subject. We confirm it is you, delete the account and reply within 30 days.</p>
+        ),
+    },
+    {
+        id: 'whatsapp',
+        label: 'If you used Locappoint on WhatsApp',
+        body: (
+            <>
+                <p>You do not need an account to book with us on WhatsApp, so there is nothing to delete in the app. Instead:</p>
+                <ul className="legal__list">
+                    <li><strong>To stop messages:</strong> send STOP to Locappoint on WhatsApp. Send START to turn them back on.</li>
+                    <li><strong>To delete your data:</strong> write to <a href={`mailto:${LEGAL_ENTITY.email}?subject=${encodeURIComponent('Delete my WhatsApp data')}`}>{LEGAL_ENTITY.email}</a> with &ldquo;Delete my WhatsApp data&rdquo; in the subject and the WhatsApp number you used. We delete your messages and contact details and reply within 30 days. Bookings you made stay with the businesses you booked, without your messages.</li>
+                    <li><strong>Without asking:</strong> messages are deleted automatically 90 days after they were sent.</li>
+                </ul>
+            </>
         ),
     },
     {
@@ -48,7 +63,7 @@ const DeleteAccount = () => {
             title={done ? 'Your account is deleted' : 'Delete your account'}
             lede={done
                 ? <>Thank you for using Locappoint. You can make a new account any time. <Link to="/">Back to Locappoint</Link></>
-                : 'How to delete your Locappoint account, and what happens to your data.'}
+                : 'How to delete your Locappoint account or your WhatsApp messages, and what happens to your data.'}
             sections={sections}
         />
     )
