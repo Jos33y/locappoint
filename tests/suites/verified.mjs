@@ -16,6 +16,17 @@ export default async ({ browser, url, check }) => {
     const calls = (p, kind, name) => p.evaluate((k, n) => window.__calls.filter((c) => c[0] === k && (!n || c[1] === n)), kind, name)
     const click = (p, sel, label) => p.evaluate((s, l) => { const el = [...document.querySelectorAll(s)].find((e) => e.textContent.trim().startsWith(l)); el?.click(); return Boolean(el) }, sel, label)
 
+    // Launch list 1.6: Verified starts on the same left edge as the tabs, as Payments and Services do.
+    for (const [path, w] of [['/portal/verified', 1272], ['/portal/verified', 1440], ['/portal/payments', 1440]]) {
+        const q = await open(path, '', w, 900)
+        const edge = await q.evaluate(() => ({
+            tabs: Math.round(document.querySelector('.biz-hubnav')?.getBoundingClientRect().left || 0),
+            title: Math.round(document.querySelector('.biz-page__title')?.getBoundingClientRect().left || 0),
+        }))
+        check(Math.abs(edge.tabs - edge.title) <= 1, `${path} at ${w}px lines up with the tabs: ${JSON.stringify(edge)}`)
+        await q.close()
+    }
+
     // A new owner: three steps, the ID check opens Stripe
     let p = await open('/portal/verified', '', 390, 844)
     await p.waitForFunction(() => document.querySelector('.lc-ver-step'), { timeout: 5000 }).catch(() => {})

@@ -343,6 +343,8 @@
 
 .biz-weekrings__fig { color: var(--lc-ink-1); font-size: 12px; font-weight: var(--font-weight-semibold); }
 
+.biz-weekrings__fig.is-word { color: var(--lc-ink-3); font-weight: var(--font-weight-medium); }
+
 .biz-weekrings__day.is-closed .biz-weekrings__fig { color: var(--lc-ink-4); font-weight: var(--font-weight-medium); }
 
 .biz-weekrings__money { min-height: 1.2em; color: var(--lc-ink-3); font-size: 12px; }

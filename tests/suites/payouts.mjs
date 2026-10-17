@@ -140,6 +140,8 @@ export default async ({ browser, url, check, server, root }) => {
     check(v.title === 'Where should we pay you?' && /Paystack/.test(v.text) && /By transfer or card/.test(v.text), 'a Lagos owner sees the Paystack route')
     check(/Bank/.test(v.text) && /Account number/.test(v.text) && /Next working day/.test(v.text), 'bank and account number on our screen, and when money arrives')
     check(await p.evaluate(() => [...document.querySelectorAll('.biz-pay button')].find((b) => /pay me here/i.test(b.textContent))?.disabled), 'nothing can be saved before the bank confirms the name')
+    check(/Pick your bank and type the 10-digit number first/.test(await p.evaluate(() => document.querySelector('.biz-pay__wait')?.textContent || '')), 'the waiting button says what it waits for')
+    check(await p.evaluate(() => getComputedStyle(document.querySelector('.biz-pay__stop--bank .biz-pay__dot')).color) === await p.evaluate(() => { const s = document.createElement('span'); s.style.color = 'var(--lc-warning)'; document.body.append(s); const c = getComputedStyle(s).color; s.remove(); return c }), 'the bank, the stop still to fill, takes the warning colour')
     await p.evaluate(() => document.querySelector('.biz-pay__form button[aria-haspopup]')?.click())
     await wait(300)
     await p.evaluate(() => [...document.querySelectorAll('[role=option]')].find((o) => o.textContent.includes('Access Bank'))?.click())
@@ -147,7 +149,7 @@ export default async ({ browser, url, check, server, root }) => {
     await p.type('.biz-pay__nuban', '0987654321')
     await wait(900)
     v = await view(p)
-    check(/in the name of CHIDI EZE/.test(v.text) && /your name \(Adebayo Oluwaseun\)/.test(v.text) && await p.evaluate(() => [...document.querySelectorAll('.biz-pay button')].find((b) => /pay me here/i.test(b.textContent))?.disabled), `an account in someone else's name is refused before saving: ${v.text.match(/This account[^.]*\./)?.[0]}`)
+    check(/in the name of CHIDI EZE/.test(v.text) && /your name or Femtos Barbearia's\. Is it your registered business name\?/.test(v.text) && !(await p.evaluate(() => [...document.querySelectorAll('.biz-pay button')].some((b) => /pay me here/i.test(b.textContent)))), `an account in someone else's name is refused in two short lines, with no pay button to wonder at: ${v.text.match(/This account[^?]*\?/)?.[0]}`)
     // Changing the bank clears the account number, so no check runs on the old number with the new bank.
     const resolvesBefore = await p.evaluate(() => window.__calls.filter((c) => c[0] === 'fn' && c[2]?.action === 'resolve').length)
     await p.evaluate(() => document.querySelector('.biz-pay__form button[aria-haspopup]')?.click())

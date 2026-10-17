@@ -323,7 +323,7 @@
 .biz-board__line { fill: var(--lc-line-strong); }
 .biz-board__dots { stroke: var(--lc-line-strong); stroke-width: 1.5; stroke-dasharray: 0.5 4; stroke-linecap: round; }
 .biz-board__price { fill: var(--azure); opacity: 0.55; }
-.biz-board__tag { fill: var(--signal); }
+.biz-board__tag { fill: var(--azure); }
 
 @media (max-width: 559px) {
     .biz-svc__empty {
@@ -778,7 +778,7 @@
     font-variant-numeric: tabular-nums;
 }
 
-.biz-wk__lunch svg { color: var(--signal); }
+.biz-wk__lunch svg { color: var(--lc-ink-3); }
 
 .biz-wk__track {
     position: relative;
@@ -850,7 +850,7 @@
 .biz-sign__board { fill: var(--lc-well); stroke: var(--lc-line-strong); stroke-width: 1.5; }
 .biz-sign__line { fill: var(--lc-line-strong); }
 .biz-sign__line.is-strong { fill: var(--lc-ink-4); }
-.biz-sign__dot { fill: var(--signal); }
+.biz-sign__dot { fill: var(--azure); }
 
 @media (max-width: 767px) {
     .biz-wk__axis { display: none; }

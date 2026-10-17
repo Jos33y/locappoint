@@ -77,3 +77,100 @@
         min-height: 44px;
     }
 }
+
+/* Areas: what is picked first, then a search, then the rest. */
+.biz-areas {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.biz-areas__picked {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-raised);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.biz-areas__count {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+}
+
+.biz-areas__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.biz-areas__on {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 40px;
+    padding: 0 var(--space-3) 0 var(--space-4);
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--azure);
+    color: var(--lc-on-accent);
+    font: inherit;
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+}
+
+.biz-areas__on:focus-visible {
+    outline: 2px solid var(--azure);
+    outline-offset: 2px;
+}
+
+.biz-areas__search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 420px;
+    min-height: 44px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-full);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    color: var(--lc-ink-3);
+}
+
+.biz-areas__search:focus-within { box-shadow: inset 0 0 0 2px var(--azure); }
+
+.biz-areas__search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--lc-ink-1);
+    font: inherit;
+    font-size: var(--lc-t-label);
+}
+
+.biz-areas__search button {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--lc-well);
+    color: var(--lc-ink-2);
+    cursor: pointer;
+}
+
+.biz-areas__none {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+}

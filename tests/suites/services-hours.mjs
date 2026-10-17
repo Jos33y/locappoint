@@ -154,6 +154,40 @@ export default async ({ browser, url, check }) => {
     check(p.errors.length === 0, `hours errors ${p.errors}`)
     await p.close()
 
+    // Lagos areas (launch list 1.2): picked first, a search, the rest below; a tap saves.
+    p = await open('/portal/services&lagosareas=1', 1272, 900)
+    await wait(800)
+    const areas = await p.evaluate(() => ({
+        count: document.querySelector('.biz-areas__count')?.textContent || '',
+        picked: [...document.querySelectorAll('.biz-areas__on')].map((b) => b.textContent.trim()),
+        rest: document.querySelectorAll('.biz-areas .ui-chip').length,
+        search: Boolean(document.querySelector('.biz-areas__search input')),
+    }))
+    check(/3 of 73 areas picked/.test(areas.count) && areas.picked.join() === 'Lekki Phase 1,Ikoyi,Victoria Island', `the picked areas come first: ${areas.count} ${areas.picked.join()}`)
+    check(areas.rest === 70 && areas.search, `the other 70 sit below a search: ${areas.rest}`)
+    await p.type('.biz-areas__search input', 'yab')
+    await wait(300)
+    check(await p.evaluate(() => [...document.querySelectorAll('.biz-areas .ui-chip')].map((c) => c.textContent.trim()).join() === 'Yaba'), 'typing finds an area')
+    await p.evaluate(() => document.querySelector('.biz-areas .ui-chip')?.click())
+    await wait(500)
+    const saved = (await calls(p, 'businesses', 'update')).pop()
+    check(JSON.stringify(saved?.service_zones) === JSON.stringify(['Lekki Phase 1', 'Ikoyi', 'Victoria Island', 'Yaba']), `a tap saves it: ${JSON.stringify(saved)}`)
+    check(/4 of 73/.test(await text(p, '.biz-areas__count')) && /Yaba/.test(await text(p, '.biz-areas__list')), 'and it joins the picked ones')
+    await p.evaluate(() => [...document.querySelectorAll('.biz-areas__on')].find((b) => /Ikoyi/.test(b.textContent))?.click())
+    await wait(500)
+    check(!/Ikoyi/.test(await text(p, '.biz-areas__list')), 'a picked area comes off with one tap')
+    await p.evaluate(() => { const i = document.querySelector('.biz-areas__search input'); const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(i, 'zzz'); i.dispatchEvent(new Event('input', { bubbles: true })) })
+    await wait(300)
+    check(/No area called "zzz"/.test(await text(p, '.biz-areas__none')), 'an unknown area says how to get it added')
+    // Launch list 1.4: the naira sign is drawn by Inter wherever money is set in the number or display font.
+    const stacks = await p.evaluate(() => {
+        const css = getComputedStyle(document.documentElement)
+        return [css.getPropertyValue('--font-mono'), css.getPropertyValue('--font-display')]
+    })
+    check(stacks.every((f) => /^\s*'?(JetBrains Mono|Switzer)'?,\s*'?Inter'?/.test(f)), `naira falls back to Inter: ${stacks.join(' | ')}`)
+    check(p.errors.length === 0, `areas errors ${p.errors}`)
+    await p.close()
+
     p = await open('/portal/hours', 390, 844, true)
     const fit = await p.evaluate(() => {
       const days = [...document.querySelectorAll('.biz-sched__day')].map((b) => b.getBoundingClientRect())

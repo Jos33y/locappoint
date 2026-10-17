@@ -86,10 +86,11 @@
     --border-strong-light: rgba(11, 21, 48, 0.16);
 
     /* Typography */
-    --font-display: 'Switzer', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* Switzer and JetBrains Mono have no naira sign: Inter, already loaded, draws it, as on the public page. */
+    --font-display: 'Switzer', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-hero: 'Switzer', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+    --font-mono: 'JetBrains Mono', 'Inter', 'Courier New', monospace;
 
     --font-weight-normal: 400;
     --font-weight-medium: 500;

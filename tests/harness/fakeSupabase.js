@@ -201,6 +201,14 @@ if (quiet('tomorrow')) DATA.appointments = [...DATA.appointments,
   { id: 't1', business_id: 'b1', staff_id: 'm1', service_id: 's1', appointment_date: dk(1), appointment_time: '09:00:00', duration_minutes: 30, status: 'confirmed', source: 'online', client_name: 'Ana Ferreira', client_phone: '', client_email: '', notes: '', services: { service_name: 'Haircut', price: 18 } },
   { id: 't2', business_id: 'b1', staff_id: 'm1', service_id: 's2', appointment_date: dk(1), appointment_time: '09:30:00', duration_minutes: 20, status: 'pending', source: 'online', client_name: 'Rui Costa', client_phone: '', client_email: '', notes: '', services: { service_name: 'Beard trim', price: 12 } },
 ]
+// ?lagosareas=1: a Lagos business that goes to clients, with the city's long list of areas and three picked.
+if (quiet('lagosareas')) {
+  const names = ['Agege', 'Ajah', 'Alimosho', 'Apapa', 'Badagry', 'Banana Island', 'Bariga', 'Egbeda', 'Ejigbo', 'Epe', 'Festac', 'Gbagada', 'Ibeju-Lekki', 'Ikeja', 'Ikeja GRA', 'Ikorodu', 'Ikota', 'Ikoyi', 'Ilupeju', 'Isolo', 'Jakande', 'Ketu', 'Lagos Island', 'Lekki Phase 1', 'Lekki Phase 2', 'Magodo', 'Maryland', 'Mushin', 'Ogba', 'Ogudu', 'Ojo', 'Ojota', 'Okota', 'Oniru', 'Opebi', 'Oshodi', 'Sangotedo', 'Somolu', 'Surulere', 'Victoria Island', 'Yaba', 'Chevron', 'Osapa London', 'Agungi', 'Idado', 'Igbo Efon', 'Abraham Adesanya', 'Awoyaya', 'Ogombo', 'Badore', 'Ilasan', 'Jakande Estate', 'Akoka', 'Ebute Metta', 'Oyingbo', 'Ojuelegba', 'Palmgrove', 'Onipanu', 'Anthony', 'Ilupeju Estate', 'Omole Phase 1', 'Omole Phase 2', 'Berger', 'Ojodu', 'Isheri', 'Alausa', 'Allen', 'Toyin', 'Adeniyi Jones', 'Oregun', 'Ipaja', 'Iyana Ipaja', 'Dopemu']
+  Object.assign(DATA.businesses[0], { city: 'Lagos', country: 'NG', market: 'lagos', timezone: 'Africa/Lagos', currency: 'NGN', service_zones: ['Lekki Phase 1', 'Ikoyi', 'Victoria Island'] })
+  DATA.market_zones = names.map((name, i) => ({ market: 'lagos', name, sort_order: i }))
+  DATA.services[0].modes = ['at_business', 'at_client']
+  DATA.services.forEach((s, i) => { s.price = i ? 8000 : 15000 })
+}
 // ?fresh=1: a business on its first day, with no booking ever.
 if (quiet('fresh')) DATA.appointments = []
 if (quiet('demo')) DATA.businesses[0].is_demo = true

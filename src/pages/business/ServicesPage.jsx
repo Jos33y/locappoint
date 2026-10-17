@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowUpRight, EyeOff, House, MapPin, Trash2, TriangleAlert, Video } from 'lucide-react'
+import { ArrowUpRight, EyeOff, House, MapPin, Search, Trash2, TriangleAlert, Video, X } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Input, Picker, Sheet, Skeleton } from '../../components/ui'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { ServiceEditor, isOnline, menuPrice, serviceFromRow, serviceProblems, visitsClients } from '../../components/business/ServiceEditor'
@@ -284,6 +284,49 @@ const StartFrom = ({ businessId, zones, value, onSaved }) => {
     )
 }
 
+// A city's areas, picked ones first: the owner sees at once where they go, finds the next by typing,
+// and the long list below holds only what is left. Lagos alone has more than seventy.
+const AreaPicker = ({ zones, picked, onToggle }) => {
+    const [query, setQuery] = useState('')
+    const q = query.trim().toLowerCase()
+    const rest = zones.filter((z) => !picked.includes(z) && (!q || z.toLowerCase().includes(q)))
+    return (
+        <div className="biz-areas">
+            <div className="biz-areas__picked">
+                <p className="biz-areas__count">
+                    {picked.length === 0 ? 'No areas picked yet.' : `${picked.length} of ${zones.length} areas picked`}
+                </p>
+                {picked.length > 0 && (
+                    <ul className="biz-areas__list" aria-label="Areas you go to">
+                        {picked.map((z) => (
+                            <li key={z}>
+                                <button type="button" className="biz-areas__on" onClick={() => onToggle(z)} aria-label={`Remove ${z}`}>
+                                    <span>{z}</span>
+                                    <X size={14} aria-hidden="true" />
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+            {zones.length > 12 && (
+                <label className="biz-areas__search">
+                    <Search size={16} aria-hidden="true" />
+                    <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search areas" aria-label="Search areas" />
+                    {query && <button type="button" aria-label="Clear search" onClick={() => setQuery('')}><X size={14} aria-hidden="true" /></button>}
+                </label>
+            )}
+            {rest.length > 0 ? (
+                <ChipGroup label={picked.length ? 'More areas' : 'Areas you cover'}>
+                    {rest.map((z) => <Chip key={z} onClick={() => onToggle(z)}>{z}</Chip>)}
+                </ChipGroup>
+            ) : q ? (
+                <p className="biz-areas__none">No area called "{query.trim()}". Message us and we add it.</p>
+            ) : null}
+        </div>
+    )
+}
+
 // Where the business travels for visits at the client's place: areas, a distance, or both. Saved on every tap.
 const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius, onShop, onRadius, base, onBase }) => {
     const [zones, setZones] = useState(null)
@@ -323,9 +366,7 @@ const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius,
             {zones === null ? <Skeleton height={44} radius={10} /> : zones.length === 0 ? (
                 <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Areas for your city are not set up yet. Message us and we add them.</p>
             ) : (
-                <ChipGroup label="Areas you cover">
-                    {zones.map((z) => <Chip key={z} selected={picked.includes(z)} onClick={() => toggle(z)}>{z}</Chip>)}
-                </ChipGroup>
+                <AreaPicker zones={zones} picked={picked} onToggle={toggle} />
             )}
             {error && <p className="biz-sh__meetwarn" role="alert"><TriangleAlert size={16} aria-hidden="true" />{error}</p>}
             {travels && zones?.length > 0 && <StartFrom businessId={businessId} zones={zones} value={base} onSaved={onBase} />}

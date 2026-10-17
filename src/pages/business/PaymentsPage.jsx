@@ -287,12 +287,11 @@ const BankForm = ({ onSaved, onCancel }) => {
                 </Field>
             </div>
             <div className="biz-pay__confirm" aria-live="polite">
-                {checking && <span className="biz-pay__checking">Checking the account with your bank</span>}
                 {name && whose?.matches === false && !review && (
                     <span className="biz-pay__alert" role="alert">
                         <span>
-                            This account is in the name of <b>{name}</b>. We only pay into an account in your name{whose.owner_name ? ` (${whose.owner_name})` : ''} or your business&apos;s name ({whose.business_name}).
-                            {' '}If it is your registered business name, Support can check it.
+                            This account is in the name of <b>{name}</b>. We pay only into an account in your name or {whose.business_name ? `${whose.business_name}'s` : 'your business\'s'}.
+                            {' '}Is it your registered business name?
                         </span>
                         <Button variant="quiet" size="sm" icon={LifeBuoy} onClick={askSupport} loading={asking}>Ask Support to check it</Button>
                     </span>
@@ -313,10 +312,19 @@ const BankForm = ({ onSaved, onCancel }) => {
                 )}
             </div>
             {error && <p className="biz-pay__alert" role="alert">{error}</p>}
-            <div className="biz-pay__act">
-                <Button onClick={save} disabled={!name || checking || whose?.matches === false} loading={saving}>{name ? 'Yes, pay me here' : 'Pay me here'}</Button>
-                {onCancel && <Button variant="quiet" onClick={onCancel}>Cancel</Button>}
-            </div>
+            {/* One button that says why it waits; none at all when the account cannot be used. */}
+            {whose?.matches !== false && (
+                <div className="biz-pay__act">
+                    <Button onClick={save} disabled={!name || checking} loading={saving}>{name ? 'Yes, pay me here' : 'Pay me here'}</Button>
+                    {!name && <span className="biz-pay__wait">{checking ? 'Checking the account with your bank' : 'Pick your bank and type the 10-digit number first.'}</span>}
+                    {onCancel && <Button variant="quiet" onClick={onCancel}>Cancel</Button>}
+                </div>
+            )}
+            {whose?.matches === false && onCancel && (
+                <div className="biz-pay__act">
+                    <Button variant="quiet" onClick={onCancel}>Cancel</Button>
+                </div>
+            )}
         </div>
     )
 }
