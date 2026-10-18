@@ -9,9 +9,11 @@ import { PlaceResult } from '../../components/client/find/PlaceResult'
 import { EngineBox } from '../../components/client/find/EngineBox'
 import { loadPlaces } from '../../services/booking'
 import { useAuth } from '../../hooks/useAuth'
-import { CITIES, inMarket } from '../../services/cohort'
+import { inCountry } from '../../services/cohort'
+import { COUNTRIES } from '../../services/engine'
+import { COUNTRY_WORLDS } from '../../components/brand/worlds'
 import { categoryLabel } from '../../constants/categories'
-import { useCity } from '../../hooks/useCity'
+import { useCountry } from '../../hooks/useCountry'
 import '../../styles/client/find-page.css'
 import '../../styles/app/businesses.css'
 
@@ -29,11 +31,11 @@ const tradesIn = (places) => {
     return list.length === 1 ? list[0] : `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`
 }
 
-const JoinCard = ({ join, city, wide = false }) => (
+const JoinCard = ({ join, world, wide = false }) => (
     <li className={`lc-br-join${wide ? ' is-wide' : ''}`}>
         <Link to={join.pathname} state={join.state} className="lc-br-join__link">
             <span className="lc-br-join__cover" aria-hidden="true">
-                <CityPattern city={city} centred />
+                <CityPattern world={world} centred />
                 <span className="lc-br-join__logo"><Plus size={18} /></span>
             </span>
             <span className="lc-br-join__body">
@@ -50,8 +52,8 @@ const Businesses = () => {
     const [attempt, setAttempt] = useState(0)
     const { user, hasBusiness } = useAuth()
     const join = user ? START : SIGN_UP
-    // The city picked in the header (or here): only its places are listed.
-    const [market, pickMarket] = useCity()
+    // The country picked in the header (or here): only its places are listed.
+    const [market, pickMarket] = useCountry()
 
     useEffect(() => {
         let cancelled = false
@@ -66,10 +68,10 @@ const Businesses = () => {
     }, [attempt])
 
     const ready = state.status === 'ready'
-    const counts = useMemo(() => CITIES.map((c) => state.places.filter((p) => inMarket(p, c.market)).length), [state.places])
-    const places = useMemo(() => state.places.filter((p) => inMarket(p, market.code)), [state.places, market.code])
-    // A city with nothing live yet says it is opening, in the title and the list alike.
-    const open = market.live && !(ready && places.length === 0)
+    const counts = useMemo(() => COUNTRIES.map((c) => state.places.filter((p) => inCountry(p, c.code)).length), [state.places])
+    const places = useMemo(() => state.places.filter((p) => inCountry(p, market.code)), [state.places, market.code])
+    // A country with nothing live yet says it is opening, in the title and the list alike.
+    const open = !(ready && places.length === 0)
     const trades = tradesIn(places)
 
     return (
@@ -77,9 +79,9 @@ const Businesses = () => {
             <AppHeader />
 
             <main className="lc-br__main">
-                {/* The city first: its pattern across the top, its name in the title, and what is really here. */}
-                <section className={`lc-br-hero is-${market.code}`}>
-                    <span className="lc-br-hero__band" aria-hidden="true"><CityPattern city={market.code} centred size={32} /></span>
+                {/* The country first: one of its worlds across the top, its name in the title, and what is really here. */}
+                <section className={`lc-br-hero is-${market.code}${market.light ? ' is-light' : ''}`}>
+                    <span className="lc-br-hero__band" aria-hidden="true"><CityPattern world={market.world} centred size={32} /></span>
                     <div className="lc-br-hero__text">
                         <h1 className="lc-br-hero__title">{open ? `Book a free time in ${market.name}.` : `${market.name} is opening on Locappoint.`}</h1>
                         <p className="lc-br-hero__lede">
@@ -94,17 +96,17 @@ const Businesses = () => {
 
                 <EngineBox title="What do you need, and when?" browseTo="/businesses" compact />
 
-                <ul className="lc-br-cities" aria-label="Cities">
-                    {CITIES.map((city, i) => {
+                <ul className="lc-br-cities is-countries" aria-label="Countries">
+                    {COUNTRIES.map((country, i) => {
                         const n = counts[i]
                         const live = ready && n > 0
-                        const here = city.market === market.code
+                        const here = country.code === market.code
                         return (
-                            <li key={city.name} className={`lc-br-city is-${city.market}${live ? ' is-live' : ''}${here ? ' is-here' : ''}`}>
-                                <button type="button" className="lc-br-city__pick" onClick={() => pickMarket(city.market)} aria-pressed={here}>
-                                    <span className="lc-br-city__strap" aria-hidden="true"><CityPattern city={city.market} centred size={20} /></span>
-                                    <strong>{city.name}</strong>
-                                    <span><i aria-hidden="true" />{live ? placesText(n) : ready ? 'Opening soon' : city.later}</span>
+                            <li key={country.code} className={`lc-br-city is-${country.code}${live ? ' is-live' : ''}${here ? ' is-here' : ''}`}>
+                                <button type="button" className="lc-br-city__pick" onClick={() => pickMarket(country.code)} aria-pressed={here}>
+                                    <span className="lc-br-city__strap is-four" aria-hidden="true">{COUNTRY_WORLDS[country.iso].map((w) => <CityPattern key={w} world={w} centred size={20} />)}</span>
+                                    <strong>{country.name}</strong>
+                                    <span><i aria-hidden="true" />{live ? placesText(n) : ready ? 'Opening soon' : 'Taking bookings'}</span>
                                 </button>
                             </li>
                         )
@@ -141,7 +143,7 @@ const Businesses = () => {
                     {ready && (
                         <ul className="lc-cl-results">
                             {places.map((place) => <PlaceResult key={place.id} place={place} from="/businesses" />)}
-                            {!hasBusiness && <JoinCard join={join} city={market.code} wide={places.length === 0} />}
+                            {!hasBusiness && <JoinCard join={join} world={market.world} wide={places.length === 0} />}
                         </ul>
                     )}
                 </section>

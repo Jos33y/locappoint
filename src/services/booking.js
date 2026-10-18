@@ -297,7 +297,7 @@ export const USER_ERRORS = ['22023', 'P0001', 'P0002', '28000', '42501']
 export const loadPlaces = async () => {
     const [places, services, hours, ratings, trust] = await Promise.all([
         supabase.from('businesses')
-            .select('id, business_name, slug, description, category, category_detail, city, neighbourhood, timezone, market, currency, banner_url, logo_url, is_demo')
+            .select('id, business_name, slug, description, category, category_detail, city, neighbourhood, timezone, market, country, currency, banner_url, logo_url, is_demo')
             .eq('is_active', true)
             .order('created_at', { ascending: false }),
         supabase.from('services').select('business_id, price, is_active, is_addon, modes').eq('is_active', true),

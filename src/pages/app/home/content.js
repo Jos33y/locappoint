@@ -7,7 +7,8 @@ export const WHATSAPP_LIVE = true
 export const SETUP_NUMBER = '2348068007905'
 export const setupLink = (cityName) => `https://wa.me/${SETUP_NUMBER}?text=${encodeURIComponent(`Hi, I want to set up my Locappoint booking page in ${cityName}.`)}`
 
-// One sample day per city: the owner, a client, a service, and the times that drawing shows.
+// One sample day per city: the owner, a client, a service, and the times that drawing shows. A country
+// shows its sample city's day (COUNTRIES in services/engine.js).
 export const CITY_SAMPLE = {
     porto: { owner: 'Rui', client: 'Marta', regular: 'Tiago', trade: 'Barber', area: 'Bonfim', service: 'Cut and beard', ask: 'a cut and beard', price: 18 },
     lagos: { owner: 'Ada', client: 'Tolu', regular: 'Kemi', trade: 'Braider', area: 'Yaba', service: 'Knotless braids', ask: 'knotless braids', price: 25000 },
@@ -15,7 +16,7 @@ export const CITY_SAMPLE = {
 }
 
 export const HERO = {
-    eyebrow: 'For barbers, salons and studios in Porto, Lagos and Lisbon',
+    eyebrow: 'For barbers, salons and studios anywhere in Nigeria and Portugal',
     lede: 'One link where clients pick a real free time and book while you work. No more answering messages mid-appointment, and reminders so they turn up.',
     promises: ['No monthly fee', 'No app for your clients', 'Free during the beta'],
 }
@@ -44,13 +45,13 @@ export const PLACES = [
     { key: 'link', title: 'Your link, where you already post', text: 'WhatsApp, Instagram and the QR poster on your wall. locappoint.com/your-name opens with your name, photo and prices.' },
     { key: 'google', title: 'On Google', text: 'Your page carries its hours, prices and reviews in a form Google reads, for people searching nearby.' },
     { key: 'whatsapp', title: 'Booking on WhatsApp', text: 'Clients book, move and cancel by message, and you hear about it on WhatsApp too.', live: WHATSAPP_LIVE },
-    { key: 'browse', title: 'Locappoint in your city', text: 'Clients browse or say what they need, and we match your services and real free times.' },
+    { key: 'browse', title: 'Locappoint in your country', text: 'Clients browse or say what they need, and we match your services and real free times.' },
 ]
 
-export const CITIES = [
-    { city: 'porto', name: 'Porto', line: 'Clients book while you are with someone, so no more missed calls. Reminders cut the no-shows.', trades: 'Barbers, hair salons, nail studios, physios' },
-    { city: 'lagos', name: 'Lagos', line: 'Clients book on WhatsApp, where they already message you. Prices in naira, and travel time between home visits counted for you.', trades: 'Barbers, braiders, makeup artists, home cleaners' },
-    { city: 'lisbon', name: 'Lisbon', line: 'No monthly fee for your team, and no extra charge for the new clients we send you.', trades: 'Hair salons, nail and lash studios, massage, dog groomers' },
+// The two countries, each in its four worlds (doc 30). Anywhere in either can join.
+export const COUNTRY_CARDS = [
+    { code: 'ng', iso: 'NG', name: 'Nigeria', line: 'Clients book on WhatsApp, where they already message you. Prices in naira, and travel time between home visits counted for you.', places: 'Lagos, Abuja, Port Harcourt, Ibadan, Enugu, Kano and every state', trades: 'Barbers, braiders, makeup artists, home cleaners' },
+    { code: 'pt', iso: 'PT', name: 'Portugal', line: 'Clients book while you are with someone, so no more missed calls. Reminders cut the no-shows, and there is no monthly fee for your team.', places: 'Porto, Lisboa, Braga, Coimbra, Faro and every district', trades: 'Barbers, hair salons, nail and lash studios, physios' },
 ]
 
 export const FORMATS = [

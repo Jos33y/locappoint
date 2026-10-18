@@ -89,7 +89,7 @@ export default async ({ check, root }) => {
 
         // Home
         let r = await get('/')
-        check(r.status === 200 && /<div id="root">/.test(r.body) && /<title>Locappoint: get found and booked in Porto, Lagos and Lisbon<\/title>/.test(r.body), 'the home page is the app, with its own title')
+        check(r.status === 200 && /<div id="root">/.test(r.body) && /<title>Locappoint: get found and booked anywhere in Nigeria and Portugal<\/title>/.test(r.body), 'the home page is the app, with its own title')
         check(!/seo:start/.test(r.body) && (r.body.match(/<title>/g) || []).length === 1 && (r.body.match(/name="description"/g) || []).length === 1, 'the default block is replaced, never duplicated')
         check(/<link rel="canonical" href="https:\/\/locappoint.com\/">/.test(r.body) && /index, follow/.test(meta(r.body, 'name', 'robots')), 'home is canonical and indexable')
         check(ld(r.body).some((d) => d['@type'] === 'Organization') && ld(r.body).some((d) => d['@type'] === 'WebSite'), 'home tells Google who we are')

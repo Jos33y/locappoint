@@ -50,8 +50,7 @@
     max-width: none;
 }
 
-.lc-talk.is-porto .lc-talk__band,
-.lc-talk.is-lisbon .lc-talk__band { opacity: 0.85; }
+.lc-talk.is-light .lc-talk__band { opacity: 0.85; }
 
 .lc-talk__title {
     margin: 0;

@@ -46,15 +46,15 @@ const ClientPhone = ({ city, sample, daylight }) => (
     </div>
 )
 
-export const AppStage = ({ city }) => {
+export const AppStage = ({ city, world = city, light = false }) => {
     // The visitor's own hour sets the light on both screens, chosen once at load.
     const [daylight] = useState(() => daylightOf())
     const sample = citySample(city)
     return (
-        <div className={`lc-dl-stage is-${city}`} role="img" aria-label={`The Locappoint app: ${sample.client}'s booking at ${sample.business}, and the same booking arriving on the business's phone`}>
-            <span className="lc-dl-stage__wall" aria-hidden="true"><CityPattern city={city} centred /></span>
+        <div className={`lc-dl-stage is-${city}${light ? ' is-light' : ''}`} role="img" aria-label={`The Locappoint app: ${sample.client}'s booking at ${sample.business}, and the same booking arriving on the business's phone`}>
+            <span className="lc-dl-stage__wall" aria-hidden="true"><CityPattern world={world} centred /></span>
             <div className="lc-dl-stage__phone is-client">
-                <ClientPhone city={city} sample={sample} daylight={daylight} />
+                <ClientPhone city={world} sample={sample} daylight={daylight} />
             </div>
             <div className="lc-dl-stage__phone is-owner">
                 <OwnerPhone sample={sample} currency={sample.currency} daylight={daylight} greeting={`${daylight.greeting}, ${sample.owner}`} />

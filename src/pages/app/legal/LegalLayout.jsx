@@ -23,12 +23,12 @@ const LegalLayout = ({ title, lede, sections }) => {
     const [city] = useCity()
 
     return (
-        <div className={`legal-page is-${city.code}`}>
+        <div className={`legal-page is-${city.code}${city.light ? ' is-light' : ' is-dark'}`}>
             <AppHeader />
 
             <main>
                 <section className="legal__hero">
-                    <CityPattern city={city.code} centred className="legal__band" />
+                    <CityPattern world={city.world} centred className="legal__band" />
                     <div className="container container--legal">
                         <p className="legal__eyebrow">Legal</p>
                         <h1 className="legal__title">{title}</h1>

@@ -20,15 +20,15 @@ const splitWhen = (when = '') => {
 // owner: the owner's day filling up; welcome: that day at the visitor's own hour; ticket: what a
 // client keeps, at a business in their city; calm: the city alone, for password and email-link screens.
 const Scene = ({ scene, city, booking, daylight }) => {
-    const sample = CITY_SAMPLE[city.code] || CITY_SAMPLE.porto
+    const sample = CITY_SAMPLE[city.sample] || CITY_SAMPLE.porto
     if (scene === 'owner') return <OwnerPhone sample={sample} currency={city.currency} />
     if (scene === 'welcome') return <OwnerPhone sample={sample} currency={city.currency} alert={false} daylight={daylight} greeting={`${daylight.greeting}, ${sample.owner}`} />
     if (scene === 'ticket') {
-        if (!booking) return <Ticket city={city.code} sample={sample} currency={city.currency} className="auth-scene__ticket" who={sample.trade} where={sample.area} tileName={`${sample.trade} in ${sample.area}`} />
+        if (!booking) return <Ticket city={city.world} sample={sample} currency={city.currency} className="auth-scene__ticket" who={sample.trade} where={sample.area} tileName={`${sample.trade} in ${sample.area}`} />
         const [day, time] = splitWhen(booking.when)
         return (
             <Ticket
-                city={city.code}
+                city={city.world}
                 sample={{ service: booking.service }}
                 className="auth-scene__ticket"
                 day={day}
@@ -55,7 +55,7 @@ const AuthShell = ({
     const [daylight] = useState(() => daylightOf())
 
     return (
-        <div className={`auth-page is-${city.code}`}>
+        <div className={`auth-page is-${city.code}${city.light ? ' is-light' : ''}`}>
             <aside className={`auth-brand is-${scene}${scene === 'welcome' ? ` is-light-${daylight.light}` : ''}`} aria-hidden="true">
                 <Link to={HOME_PATH} className="auth-brand__wordmark" tabIndex={-1}>
                     <LogoIcon size={28} className="auth-brand__mark" />
@@ -70,14 +70,14 @@ const AuthShell = ({
                 </div>
 
                 <div className="auth-brand__world">
-                    <CityPattern city={city.code} centred className="auth-brand__wall" />
+                    <CityPattern world={city.world} centred size={48} className="auth-brand__wall" />
                     <div className="auth-brand__scene">
                         <Scene scene={scene} city={city} booking={booking} daylight={daylight} />
                     </div>
                 </div>
 
                 <p className="auth-brand__cities">
-                    Live in <b className={city.code === 'porto' ? 'is-here' : ''}>Porto</b>, <b className={city.code === 'lagos' ? 'is-here' : ''}>Lagos</b> and <b className={city.code === 'lisbon' ? 'is-here' : ''}>Lisbon</b>
+                    Live across <b className={city.code === 'ng' ? 'is-here' : ''}>Nigeria</b> and <b className={city.code === 'pt' ? 'is-here' : ''}>Portugal</b>
                 </p>
             </aside>
 
@@ -95,7 +95,7 @@ const AuthShell = ({
                     </Link>
                 </div>
                 {/* Phones: one row of the city's pattern, so the brand shows without pushing the form down. */}
-                <CityPattern city={city.code} centred className="auth-mobile-band" />
+                <CityPattern world={city.world} centred size={48} className="auth-mobile-band" />
 
                 <Link to={backLink.to} className="auth-back auth-back--wide">
                     <ArrowLeft size={14} strokeWidth={2} aria-hidden="true" />

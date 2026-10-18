@@ -8,7 +8,7 @@
 
 @media (min-width: 820px) {
     .lc-home-cities {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -19,21 +19,19 @@
     border-radius: var(--lc-r-lg);
 }
 
-/* Covers are whole rows of the pattern: two rows of 48 for Porto and Lagos, five of 20 for Lisbon. */
+/* The cover: the country's four worlds side by side, each whole rows of its pattern. */
 .lc-home-city__cover {
-    display: block;
+    display: grid;
     flex: none;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     width: 100%;
     height: 96px;
 }
 
-.lc-home-city.is-lisbon .lc-home-city__cover {
-    height: 100px;
-}
-
-/* The taller Lisbon cover is taken back from the padding, so the three names line up. */
-.lc-home-city.is-lisbon .lc-home-city__body {
-    padding-top: calc(var(--space-5) - 4px);
+.lc-home-city__cover .lc-pattern {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .lc-home-city__body {
@@ -64,32 +62,29 @@
     font-size: var(--lc-t-label);
 }
 
-/* Each city in its own colours; every text pair here is checked for contrast. */
-.lc-home-city.is-porto .lc-home-city__body {
-    background: var(--lc-porto-porcelain);
-    color: var(--lc-paper-ink);
-}
-
-.lc-home-city.is-porto .lc-home-city__name { color: var(--lc-porto-cobalt); }
-.lc-home-city.is-porto .lc-home-city__trades { color: var(--lc-porto-vinho); }
-
-.lc-home-city.is-lagos .lc-home-city__body {
+/* Each country in the colours of one of its worlds; every text pair here is checked for contrast. */
+.lc-home-city.is-ng .lc-home-city__body {
     background: var(--lc-lagos-indigo);
     color: var(--lc-porto-porcelain);
 }
 
-.lc-home-city.is-lagos .lc-home-city__name { color: var(--lc-lagos-sand); }
-.lc-home-city.is-lagos .lc-home-city__trades { color: var(--lc-lagos-sand); }
+.lc-home-city.is-ng .lc-home-city__name,
+.lc-home-city.is-ng .lc-home-city__trades { color: var(--lc-lagos-sand); }
 
-.lc-home-city.is-lisbon .lc-home-city__body {
-    background: var(--lc-lisbon-eletrico);
+.lc-home-city.is-pt .lc-home-city__body {
+    background: var(--lc-porto-porcelain);
     color: var(--lc-paper-ink);
 }
 
-.lc-home-city.is-lisbon .lc-home-city__name { color: var(--lc-paper-ink); }
-.lc-home-city.is-lisbon .lc-home-city__trades { color: var(--lc-paper-ink); }
+.lc-home-city.is-pt .lc-home-city__name { color: var(--lc-porto-cobalt); }
+.lc-home-city.is-pt .lc-home-city__trades { color: var(--lc-porto-vinho); }
 
-/* The visitor's own city gets a ring, so the page shows it knows where they are. */
+.lc-home-city__places {
+    font-size: var(--lc-t-label);
+    font-weight: 600;
+}
+
+/* The visitor's own country gets a ring, so the page shows it knows where they are. */
 .lc-home-city.is-picked {
     box-shadow: 0 0 0 2px var(--lc-canvas), 0 0 0 4px var(--azure);
 }

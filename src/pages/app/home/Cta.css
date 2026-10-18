@@ -16,9 +16,6 @@
     max-width: none;
 }
 
-.lc-home-cta.is-lisbon .lc-home-cta__band {
-    height: 40px;
-}
 
 .lc-home-cta__title {
     color: var(--lc-ink-1);

@@ -37,7 +37,7 @@ const authError = (err, fallback) => {
 const pathOf = (from) => (typeof from === 'string' ? from : from ? `${from.pathname || ''}${from.search || ''}` : null)
 
 // The example number in the phone field follows the visitor's city.
-const PHONE_EXAMPLE = { lagos: '+234 803 123 4567', porto: '+351 912 345 678', lisbon: '+351 912 345 678' }
+const PHONE_EXAMPLE = { ng: '+234 803 123 4567', pt: '+351 912 345 678' }
 
 const AuthPage = () => {
     const location = useLocation()
@@ -248,7 +248,7 @@ const AuthPage = () => {
         : signin
             ? ['Sign in to Locappoint', 'Welcome back.']
             : ownerIntent
-                ? ['Get found and booked in Porto, Lagos and Lisbon', 'Free during the beta. No card needed.']
+                ? ['Get found and booked anywhere in Nigeria and Portugal', 'Free during the beta. No card needed.']
                 : ['Create your Locappoint account', 'Book local businesses in a few taps. Set up your own business whenever you are ready.']
 
     // The side panel: the owner's day for owners, that day waiting for anyone signing in, the ticket for clients.
@@ -374,7 +374,7 @@ const AuthPage = () => {
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleInputChange}
-                                placeholder={PHONE_EXAMPLE[city.code] || PHONE_EXAMPLE.porto}
+                                placeholder={PHONE_EXAMPLE[city.code] || PHONE_EXAMPLE.pt}
                                 required
                                 autoComplete="tel"
                             />

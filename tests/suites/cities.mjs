@@ -56,15 +56,16 @@ export default async ({ check, root, server }) => {
     check(/useCity\(\)/.test(shell) && !/useCohort|COHORT_ONBOARDED|Cohort 1/.test(shell), 'sign-up follows the picked city and shows no business count')
     // The home page shows no business counts until businesses are onboarded; it still speaks to the picked city.
     const cta = read('src/pages/app/home/Cta.jsx')
-    check(/useCity\(\)/.test(cta) && !/useCohort|COHORT_ONBOARDED|first ten/i.test(cta), 'the home page closer follows the picked city and shows no business count')
+    check(/useCity\(\)/.test(cta) && !/useCohort|COHORT_ONBOARDED|first ten/i.test(cta), 'the home page closer follows the picked country and shows no business count')
 
     const engine = read('src/services/engine.js')
     check(/code: 'porto'[^\n]*live: true/.test(engine) && /code: 'lagos'[^\n]*live: true/.test(engine) && /code: 'lisbon'[^\n]*live: true/.test(engine), 'Porto, Lagos and Lisbon are live')
-    check(/Africa\/Lagos/.test(engine) && /lc:city/.test(engine), 'the first city comes from the time zone and a change reaches every page')
-    check(/<CitySwitcher/.test(read('src/components/common/AppHeader.jsx')) && /<CitySwitcher/.test(read('src/pages/client/ClientLayout.jsx')), 'the city switcher is in the site header and the client app')
+    check(/Africa\/Lagos/.test(engine) && /lc:country/.test(engine) && /lc\.city/.test(engine), 'geo1: the first country comes from the time zone, an old city carries over, and a change reaches every page')
+    check(/code: 'ng'[^\n]*cities: \['lagos'\]/.test(engine) && /code: 'pt'[^\n]*cities: \['porto', 'lisbon'\]/.test(engine), 'geo1: Nigeria and Portugal, each with its cities under it')
+    check(/<CountrySwitch/.test(read('src/components/common/AppHeader.jsx')) && /<CountrySwitch/.test(read('src/pages/client/ClientLayout.jsx')), 'the country switch is in the site header and the client app')
     for (const file of ['src/pages/app/Businesses.jsx', 'src/pages/client/Home.jsx', 'src/pages/client/Search.jsx']) {
         const text = read(file)
-        check(/useCity\(\)/.test(text) && /inMarket\(/.test(text), `${file} lists places in the picked city`)
+        check(/use(City|Country)\(\)/.test(text) && /inCountry\(/.test(text), `${file} lists places in the picked country`)
     }
 
     // These modules read the fake Supabase, which looks at the page address once on load.
@@ -86,5 +87,5 @@ export default async ({ check, root, server }) => {
     check(/country: 'PT',\s*city: 'Porto'/.test(read('src/pages/business/Setup.jsx')), 'a new Portuguese business starts on Porto')
     check(/useState\(startDetails\)/.test(read('src/pages/business/Setup.jsx')) && /city === 'lagos'\) return \{ \.\.\.emptyDetails, country: 'NG', city: 'Lagos', phoneCountry: 'NG' \}/.test(read('src/pages/business/Setup.jsx')), 'a new business starts in the city picked in the header')
     check(/Portugal time/.test(read('src/constants/support.js')), 'support hours are given in Portugal time')
-    check(/Porto, Lagos and Lisbon/.test(read('server/seo.mjs')), 'search titles name the live cities first')
+    check(/anywhere in Nigeria and Portugal/.test(read('server/seo.mjs')) && !/Porto, Lagos and Lisbon/.test(read('server/seo.mjs')), 'search titles name the two countries')
 }

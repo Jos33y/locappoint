@@ -24,14 +24,14 @@ export default async ({ browser, url, check }) => {
     await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
     await wait(700)
     const sent = (await calls(p, 'engine_match')).pop() || {}
-    check(sent.p_query === 'haircut' && sent.p_market === 'porto' && sent.p_people === 1 && sent.p_dates === null, `the request goes to the engine, for the soonest free times by default: ${JSON.stringify(sent)}`)
+    check(sent.p_query === 'haircut' && sent.p_market === 'pt' && sent.p_people === 1 && sent.p_dates === null, `the request goes to the engine, for the soonest free times by default: ${JSON.stringify(sent)}`)
     const opts = await p.evaluate(() => [...document.querySelectorAll('.lc-eng__opt')].map((o) => ({ tag: o.querySelector('.lc-eng__tag')?.textContent, why: o.querySelector('.lc-eng__why')?.textContent || '', book: o.querySelector('.ui-btn')?.textContent.trim() })))
     check(opts.length === 3 && opts[0].tag === 'Best match' && opts[1].tag === 'Earliest' && opts[2].tag === 'Closest', `three options, three reasons: ${JSON.stringify(opts.map((o) => o.tag))}`)
     check(/70% of clients book again/.test(opts[0].why) && /1\.2 km away/.test(opts[2].why) && /4\.8 from 12 reviews/.test(opts[2].why), `each says why: ${JSON.stringify(opts.map((o) => o.why))}`)
     check(opts[0].book === 'Book 10:00', `one tap books the time: ${opts[0].book}`)
     await wait(300)
     const noted = (await calls(p, 'search_note')).pop() || {}
-    check(noted.p_channel === 'web' && noted.p_query === 'haircut' && noted.p_market === 'porto' && noted.p_options === 3 && noted.p_matched === 3 && noted.p_offered === 3 && noted.p_people === 1, `every search is kept for Demand, with what we found: ${JSON.stringify(noted)}`)
+    check(noted.p_channel === 'web' && noted.p_query === 'haircut' && noted.p_market === 'pt' && noted.p_options === 3 && noted.p_matched === 3 && noted.p_offered === 3 && noted.p_people === 1, `every search is kept for Demand, with what we found: ${JSON.stringify(noted)}`)
     check(!/You are in/.test(await text(p, '.lc-eng')), 'no country line when the country is unknown')
     check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
     await p.evaluate(() => document.querySelector('.lc-eng__opt .ui-btn')?.click())
@@ -163,7 +163,7 @@ export default async ({ browser, url, check }) => {
     await ask3('something for my son tomorrow after football please')
     let ai = await fnCalls(p, 'understand')
     let sent3 = (await calls(p, 'engine_match')).pop() || {}
-    check(ai.length === 1 && ai[0].market === 'porto' && sent3.p_query === 'kids' && sent3.p_window === '13:00-23:59' && sent3.p_dates?.length === 1, `a long sentence: the AI reads it, the rules keep their own day: ${JSON.stringify([ai.length, sent3.p_query, sent3.p_window, sent3.p_dates])}`)
+    check(ai.length === 1 && ai[0].market === 'pt' && sent3.p_query === 'kids' && sent3.p_window === '13:00-23:59' && sent3.p_dates?.length === 1, `a long sentence: the AI reads it, the rules keep their own day: ${JSON.stringify([ai.length, sent3.p_query, sent3.p_window, sent3.p_dates])}`)
     const aiChips = await p.evaluate(() => ({ label: document.querySelector('.lc-eng__understood .lc-eng__label')?.textContent, ai: [...document.querySelectorAll('.lc-eng__read.is-ai')].map((c) => c.textContent.trim()), all: [...document.querySelectorAll('.lc-eng__read')].map((c) => c.textContent.trim()) }))
     check(aiChips.label === 'Understood with AI' && aiChips.ai.includes('kids') && aiChips.ai.includes('After 13:00') && aiChips.all.includes('Tomorrow'), `what the AI read is marked as such: ${JSON.stringify(aiChips)}`)
     const before3 = (await fnCalls(p, 'understand')).length
@@ -202,14 +202,16 @@ export default async ({ browser, url, check }) => {
     a4 = await ask4('haircut next week wednessday')
     check(new Date(`${a4.p_dates?.[0]}T12:00:00Z`).getUTCDay() === 3 && a4.p_dates.length === 1, `a typo in the day still reads the day: ${JSON.stringify(a4.p_dates)}`)
     a4 = await ask4('I need a makeup artist at abeokuta?')
-    check(a4.p_query === 'makeup artist' && a4.p_market === 'porto' && (await read4()).includes('Near Abeokuta') && /Nobody near Abeokuta/.test(await text(p, '.lc-eng__out')), `a place we have nobody in is said plainly: ${await text(p, '.lc-eng__out')}`)
+    check(a4.p_query === 'makeup artist' && a4.p_market === 'pt' && (await read4()).includes('Near Abeokuta') && /Nobody near Abeokuta/.test(await text(p, '.lc-eng__out')), `a place we have nobody in is said plainly: ${await text(p, '.lc-eng__out')}`)
     const noted4 = (await calls(p, 'search_note')).pop() || {}
     check(noted4.p_zone === 'Abeokuta', `and kept in Demand: ${noted4.p_zone}`)
     a4 = await ask4('haircut under 5 euros')
     const twice = (await calls(p, 'engine_match')).slice(-2)
     check(twice[0].p_max_price === 5 && twice[1].p_max_price === undefined && /Nothing under €5\. These cost more:/.test(await text(p, '.lc-eng__out')), `nothing under the price: what costs more, said: ${await text(p, '.lc-eng__out')}`)
     a4 = await ask4('haircut in Lisbon')
-    check(a4.p_market === 'lisbon' && a4.p_query === 'haircut', `another city named moves the search there: ${a4.p_market}`)
+    check(a4.p_market === 'pt' && a4.p_zone === 'Lisbon' && a4.p_query === 'haircut', `geo1: a city named lifts that city, in its country: ${a4.p_market} ${a4.p_zone}`)
+    a4 = await ask4('braids in Lagos')
+    check(a4.p_market === 'ng' && a4.p_zone === 'Lagos' && await p.evaluate(() => localStorage.getItem('lc.country')) === 'ng', `naming Lagos from Portugal moves the search to Nigeria: ${a4.p_market}`)
     check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
     await p.close()
 
@@ -242,18 +244,18 @@ export default async ({ browser, url, check }) => {
     await p.type('.lc-eng__what input', 'nothing like this')
     await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
     await wait(700)
-    check(/Nobody in Porto offers that yet/.test(await text(p, '.lc-eng__out')) && /Browse every place/.test(await text(p, '.lc-eng__out')), 'nothing fits: it says so and offers every place')
+    check(/Nobody in Portugal offers that yet/.test(await text(p, '.lc-eng__out')) && /Browse every place/.test(await text(p, '.lc-eng__out')), 'nothing fits: it says so and offers every place')
     check(/Want to know when someone near you offers it/.test(await text(p, '.lc-eng__out')) && await p.$('.lc-eng__out .lc-wish'), 'nothing fits: they can ask to be told')
-    check(await p.evaluate(() => Boolean(document.querySelector('.lc-eng__none .lc-scene--place .lc-pattern--azulejo')) && /An empty slot/.test(document.querySelector('.lc-scene__cap')?.textContent || '')), 'nothing fits: drawn from the city world, never a bare line')
+    check(await p.evaluate(() => Boolean(document.querySelector('.lc-eng__none .lc-scene--place .lc-pattern:is(.lc-pattern--azulejo, .lc-pattern--calcada, .lc-pattern--minho, .lc-pattern--arraiolos)')) && /An empty slot/.test(document.querySelector('.lc-scene__cap')?.textContent || '')), 'nothing fits: drawn from the city world, never a bare line')
     await p.$eval('.lc-wish input', (el) => el.select())
     await p.type('.lc-wish input', 'ana@x.pt')
     await p.evaluate(() => document.querySelector('.lc-wish').requestSubmit())
     await wait(500)
     const wish = (await calls(p, 'search_wish_add')).pop() || {}
-    check(wish.p_query === 'nothing like this' && wish.p_market === 'porto' && wish.p_email === 'ana@x.pt' && wish.p_phone === null, `Tell me when keeps the search and the email: ${JSON.stringify(wish)}`)
+    check(wish.p_query === 'nothing like this' && wish.p_market === 'pt' && wish.p_email === 'ana@x.pt' && wish.p_phone === null, `Tell me when keeps the search and the email: ${JSON.stringify(wish)}`)
     const notedView = await p.evaluate(() => ({ head: document.querySelector('.lc-eng__none.is-noted .lc-eng__headline')?.textContent || '', facts: document.querySelector('.lc-eng__facts')?.textContent || '', badge: Boolean(document.querySelector('.lc-scene--noted .lc-scene__badge')) }))
     check(/Noted\. You will be the first to know/.test(notedView.head) && notedView.badge, `and says it is done, with the badge: ${notedView.head}`)
-    check(/Looking fornothing like this, Porto/.test(notedView.facts) && /a\*\*\*@x\.pt/.test(notedView.facts) && !/ana@x\.pt/.test(notedView.facts), `the contact is shown back, never in full: ${notedView.facts}`)
+    check(/Looking fornothing like this, Portugal/.test(notedView.facts) && /a\*\*\*@x\.pt/.test(notedView.facts) && !/ana@x\.pt/.test(notedView.facts), `the contact is shown back, never in full: ${notedView.facts}`)
     const missNote = (await calls(p, 'search_note')).pop() || {}
     check(missNote.p_query === 'nothing like this' && missNote.p_options === 0 && missNote.p_later === 0, 'a search that found nothing is kept too')
     await p.close()
@@ -301,7 +303,7 @@ export default async ({ browser, url, check }) => {
         straps: document.querySelectorAll('.lc-eng__opt .lc-eng__strap .lc-pattern, .lc-eng__opt .lc-eng__side-strap .lc-pattern').length,
         time: document.querySelector('.lc-eng__opt.is-lead .lc-eng__time')?.textContent || '',
         count: document.querySelector('.lc-eng__count')?.textContent || '',
-        band: Boolean(document.querySelector('.lc-eng__band .lc-pattern--azulejo')),
+        band: Boolean(document.querySelector('.lc-eng__band .lc-pattern:is(.lc-pattern--azulejo, .lc-pattern--calcada, .lc-pattern--minho, .lc-pattern--arraiolos)')),
         rowBook: document.querySelector('.lc-eng__opt.is-row .ui-btn')?.textContent.trim() || '',
     }))
     check(shape.lead === 1 && shape.rows === 2 && shape.straps === 3 && shape.time === '10:00', `one lead card, two lines, each with its world: ${JSON.stringify(shape)}`)
@@ -324,7 +326,7 @@ export default async ({ browser, url, check }) => {
     check(/14 searches in Abeokuta found nobody to book this month/.test(near.lede), `how many asked there: ${near.lede}`)
     check(/Do this work in Abeokuta\? List your business free/.test(near.list), `and a way in for a business there: ${near.list}`)
     const asked = (await calls(p, 'search_place_interest')).pop() || {}
-    check(asked.p_zone === 'Abeokuta' && asked.p_market === 'lagos', `the count is asked for that place: ${JSON.stringify(asked)}`)
+    check(asked.p_zone === 'Abeokuta' && asked.p_market === 'ng', `the count is asked for that place: ${JSON.stringify(asked)}`)
     await p.close()
     p = await open('/client', '&city=lagos&few=1')
     await p.type('.lc-eng__what input', 'nothing at abeokuta')

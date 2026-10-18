@@ -64,12 +64,12 @@ const Contact = () => {
     }
 
     return (
-        <div className={`lc-talk is-${city.code}`}>
+        <div className={`lc-talk is-${city.code}${city.light ? ' is-light' : ''}`}>
             <AppHeader />
 
             <main className="lc-talk__main">
                 <section className="lc-talk__hero">
-                    <span className="lc-talk__band" aria-hidden="true"><CityPattern city={city.code} centred size={28} /></span>
+                    <span className="lc-talk__band" aria-hidden="true"><CityPattern world={city.world} centred size={28} /></span>
                     <h1 className="lc-talk__title">Talk to us.</h1>
                     <p className="lc-talk__lede">Questions about booking, setting up your page or partnering. A person reads every message and replies within 24 hours.</p>
                 </section>
@@ -103,7 +103,7 @@ const Contact = () => {
                             <MapPin size={18} aria-hidden="true" />
                             <div>
                                 <p className="lc-talk__waylabel">Taking bookings in</p>
-                                <p className="lc-talk__wayvalue">Porto, Lagos and Lisbon</p>
+                                <p className="lc-talk__wayvalue">Anywhere in Nigeria and Portugal</p>
                             </div>
                         </div>
                     </aside>

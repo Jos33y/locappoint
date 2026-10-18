@@ -21,7 +21,8 @@ export default async ({ browser, url, check }) => {
     const looping = (p) => p.evaluate(() => [...document.querySelectorAll('.lc-setup, .lc-setup *')]
         .filter((e) => !e.closest('.lc-pub') && getComputedStyle(e).animationIterationCount === 'infinite').length)
 
-    for (const [city, name, wall] of [['lagos', 'Ada Braids Studio', 'is-lagos'], ['porto', 'Barbearia do Bonfim', 'is-porto'], ['lisbon', 'Unhas de Arroios', 'is-lisbon']]) {
+    // geo1: a visitor from Lisbon is in Portugal, so they see Portugal's example, the same as Porto.
+    for (const [city, name, wall] of [['lagos', 'Ada Braids Studio', 'is-lagos'], ['porto', 'Barbearia do Bonfim', 'is-porto'], ['lisbon', 'Barbearia do Bonfim', 'is-porto']]) {
         const p = await open(`&newowner=1&city=${city}`)
         const view = await p.evaluate(() => ({
             text: document.body.innerText,

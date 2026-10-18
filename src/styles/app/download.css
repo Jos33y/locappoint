@@ -621,8 +621,7 @@
     mask-image: radial-gradient(ellipse 75% 65% at 50% 50%, transparent 0, black 100%);
 }
 
-.lc-dl-stage.is-porto .lc-dl-stage__wall,
-.lc-dl-stage.is-lisbon .lc-dl-stage__wall { opacity: 0.22; }
+.lc-dl-stage.is-light .lc-dl-stage__wall { opacity: 0.22; }
 
 .lc-dl-stage__wall svg {
     display: block;
@@ -748,8 +747,7 @@
     border-bottom: 1px solid var(--lc-line);
 }
 
-.lc-dl-end.is-porto .lc-dl-end__band,
-.lc-dl-end.is-lisbon .lc-dl-end__band { opacity: 0.32; }
+.lc-dl-end.is-light .lc-dl-end__band { opacity: 0.32; }
 
 .lc-dl-end__band svg {
     display: block;

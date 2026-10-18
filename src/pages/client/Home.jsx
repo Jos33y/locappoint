@@ -17,7 +17,7 @@ import { EngineBox } from '../../components/client/find/EngineBox'
 import { RateSheet } from '../../components/reviews/RateSheet'
 import { canReview, submitMyReview } from '../../services/reviews'
 import { loadPlaces } from '../../services/booking'
-import { inMarket } from '../../services/cohort'
+import { inCountry } from '../../services/cohort'
 import { useCity } from '../../hooks/useCity'
 import '../../styles/client/client-bookings.css'
 import '../../styles/client/home-page.css'
@@ -61,7 +61,7 @@ const ClientHome = () => {
         loadPlaces()
             .then((all) => {
                 if (cancelled) return
-                const ranked = all.filter((p) => inMarket(p, market.code)).sort((a, b) => (b.rating?.count || 0) - (a.rating?.count || 0) || (b.rating?.average || 0) - (a.rating?.average || 0))
+                const ranked = all.filter((p) => inCountry(p, market.code)).sort((a, b) => (b.rating?.count || 0) - (a.rating?.count || 0) || (b.rating?.average || 0) - (a.rating?.average || 0))
                 setPopular(ranked.slice(0, 3))
             })
             .catch(() => {})

@@ -53,3 +53,24 @@
         left: 9px;
     }
 }
+
+/* The country switch (geo1): a small disc of one of the country's worlds where the pin was. */
+.lc-country__disc {
+    width: 18px;
+    height: 18px;
+    overflow: hidden;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--lc-line-strong);
+}
+
+.lc-country__disc .lc-pattern {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.lc-country .ui-picker-trigger { padding-left: 36px; }
+
+@media (max-width: 560px) {
+    .lc-country .ui-picker-trigger { padding-left: 34px; }
+}

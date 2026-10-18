@@ -6,10 +6,10 @@ import './HowItWorks.css'
 
 const HowItWorks = () => {
     const [city] = useCity()
-    const sample = CITY_SAMPLE[city.code] || CITY_SAMPLE.porto
+    const sample = CITY_SAMPLE[city.sample] || CITY_SAMPLE.porto
     const drawings = {
         hours: <DoorSign />,
-        share: <SharedLink city={city.code} sample={sample} currency={city.currency} />,
+        share: <SharedLink city={city.world} sample={sample} currency={city.currency} />,
         booked: <Arrivals sample={sample} currency={city.currency} />,
     }
     return (

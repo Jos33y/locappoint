@@ -48,8 +48,8 @@ const MARKET_REGION = { lagos: 'Lagos', porto: 'Porto', lisbon: 'Lisboa' }
 export const countryOf = ({ country, market } = {}) => {
     const c = String(country || '').toUpperCase()
     if (COUNTRY_WORLDS[c]) return c
-    if (market === 'lagos') return 'NG'
-    if (market === 'porto' || market === 'lisbon') return 'PT'
+    if (market === 'lagos' || market === 'ng') return 'NG'
+    if (market === 'porto' || market === 'lisbon' || market === 'pt') return 'PT'
     return null
 }
 

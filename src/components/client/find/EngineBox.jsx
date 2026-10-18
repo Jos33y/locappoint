@@ -3,12 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Globe, MapPin, MessageCircle, Search, X } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Picker } from '../../ui'
 import { PlaceSearch } from '../../common/PlaceSearch'
-import { MARKETS, LABELS, TIMES, WHERE, bookingLink, dayLabel, findMatches, marketOf, keepEnginePlace, loadPopular, reasons, timeLabel, whenOptions, whenWords } from '../../../services/engine'
+import { COUNTRIES, MARKETS, LABELS, TIMES, WHERE, bookingLink, countryOf, dayLabel, findMatches, keepEnginePlace, loadCountryZones, loadPopular, reasons, timeLabel, whenOptions, whenWords } from '../../../services/engine'
 import { understand, without } from '../../../services/understand'
 import { askAI, needsAI } from '../../../services/ai'
-import { useCity } from '../../../hooks/useCity'
+import { useCountry } from '../../../hooks/useCountry'
 import { pickAddress, placesOn } from '../../../services/places'
-import { loadZones } from '../../../services/setup'
 import { payMoney } from '../../../services/payments'
 import { withPeople } from '../../../services/formats'
 import { USER_ERRORS } from '../../../services/booking'
@@ -16,7 +15,7 @@ import { ReliableBadge, VerifiedBadge } from '../../trust/Trust'
 import { SERVED, countryName, maskContact, noteSearch, placeInterest, visitorCountry } from '../../../services/demand'
 import { WEB_ORIGIN } from '../../../services/native'
 import CityPattern from '../../brand/CityPattern'
-import { WORLD_ALIAS, patternOf } from '../../brand/world'
+import { patternOf } from '../../brand/world'
 import { pickWorld } from '../../brand/worlds'
 import { PT_MUNICIPALITIES } from '../../../constants/locations'
 import { TellMeWhen } from './TellMeWhen'
@@ -46,7 +45,11 @@ const READ = { day: 'when', time: 'time', people: 'people', mode: 'mode' }
 // Read from the words for this search only: a place, a price limit, cheapest first.
 const EXTRA = ['place', 'price', 'order']
 const plain = (v) => String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
-const cityNamed = (name) => MARKETS.find((m) => plain(m.name) === plain(name) || (m.code === 'lisbon' && plain(name) === 'lisboa'))?.code || null
+// One of our cities named ("barber in Porto"): its country, and the city as the place to lift.
+const cityNamed = (name) => {
+    const m = MARKETS.find((x) => plain(x.name) === plain(name) || (x.code === 'lisbon' && plain(name) === 'lisboa'))
+    return m ? { country: countryOf(m.code).code, name: m.name } : null
+}
 const withOption = (list, value, label) => (value && !list.some((o) => o.value === value) ? [...list, { value, label }] : list)
 
 // One business, in full: its world as a strap, who and where, the time it is free, the service that
@@ -131,7 +134,7 @@ const Options = ({ list, timeZone, onBook, market }) => (
 )
 
 // The world a place wears in the empty screens: its home region's, else a stable pick by its name.
-const placeWorld = (place, market) => pickWorld({ id: `place|${place}`, city: place, market }, { municipalities: PT_MUNICIPALITIES })
+const placeWorld = (place, market) => pickWorld({ id: `place|${place}`, city: place, country: countryOf(market).iso }, { municipalities: PT_MUNICIPALITIES })
 
 // "What do you need?": what, where, when and how many, then up to three people free, each for a
 // different reason. A tap opens that business's booking sheet at that time.
@@ -139,8 +142,8 @@ const placeWorld = (place, market) => pickWorld({ id: `place|${place}`, city: pl
 // "More options", with what is picked said in words, so a short list never sits under a long form.
 export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/search', compact = false }) => {
     const navigate = useNavigate()
-    // The same city as the header switcher: changing it in either place changes both.
-    const [market, pickMarket] = useCity()
+    // The same country as the header switch: changing it in either place changes both.
+    const [market, pickMarket] = useCountry()
     const city = market.code
     const [text, setText] = useState('')
     const [mode, setMode] = useState('')
@@ -189,7 +192,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
         setZone('')
         setResult({ status: 'idle', data: null, error: '' })
         loadPopular(city).then((list) => { if (!cancelled) setPopular(list) }).catch(() => { if (!cancelled) setPopular([]) })
-        loadZones(city).then((list) => { if (!cancelled) setZones(list) }).catch(() => { if (!cancelled) setZones([]) })
+        loadCountryZones(city).then((list) => { if (!cancelled) setZones(list) }).catch(() => { if (!cancelled) setZones([]) })
         return () => { cancelled = true }
     }, [city])
 
@@ -250,16 +253,16 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
             byAI = byAI || used
             return used
         }
-        // Where: another city named ("barber in Porto") moves the search there; an area of this city
-        // ("in Lekki") goes first; any other place ("at Abeokuta") is said plainly and kept in Demand.
+        // Where: one of our cities named ("barber in Porto") lifts the businesses there, in its country;
+        // an area ("in Lekki") goes first; any other place ("at Abeokuta") is said plainly and kept in Demand.
         let mk = market
         let zoneHere = zone
         let near = null
         const resolvePlace = () => {
             mk = market; zoneHere = zone; near = null
             if (!ex.place) return
-            const code = cityNamed(ex.place)
-            if (code) { mk = marketOf(code); if (code !== city) pickMarket(code); return }
+            const named = cityNamed(ex.place)
+            if (named) { mk = countryOf(named.country); if (named.country !== city) pickMarket(named.country); zoneHere = named.name; return }
             const z = zones.find((x) => plain(x) === plain(ex.place))
             if (z) zoneHere = z
             else near = ex.place
@@ -319,7 +322,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
 
     const options = result.data?.options || []
     const later = result.data?.later || []
-    const world = WORLD_ALIAS[city] || 'azulejo'
+    const world = market.world
     const askedFor = String(result.what || result.text || '').trim()
     const shareText = `Take bookings on Locappoint, free: ${WEB_ORIGIN}`
     const missedLine = (place) => (interest.missed > 0
@@ -369,7 +372,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                     </div>
                 )}
                 <div className="lc-eng__row" id="lc-eng-options" hidden={compact && !more}>
-                    <Picker value={city} onChange={pickCity} title="City" options={MARKETS.map((m) => ({ value: m.code, label: m.name }))} />
+                    <Picker value={city} onChange={pickCity} title="Country" options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))} />
                     <Picker value={when} onChange={byHand('when', setWhen)} title="When" options={whens} />
                     <Picker value={time} onChange={byHand('time', setTime)} title="What time" options={times} />
                     <Picker value={people} onChange={byHand('people', setPeople)} title="How many people" options={PEOPLE} />
@@ -415,8 +418,8 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                         ? <TellMeWhen country={abroad} title={`Tell me when ${countryName(abroad)} opens`} label="Tell me" done={`Done. We will tell you when Locappoint opens in ${countryName(abroad)}.`} />
                         : <Button size="sm" variant="secondary" onClick={() => setAskHome(true)}>{`Want Locappoint in ${countryName(abroad)}?`}</Button>}
                     <span className="lc-eng__pick">
-                        <button type="button" className="lc-eng__country" onClick={() => pickCity('lagos')}><span className="lc-eng__countryart" aria-hidden="true"><CityPattern world="adire" centred size={14} /></span><span>Book in <b>Nigeria</b></span></button>
-                        <button type="button" className="lc-eng__country" onClick={() => pickCity(city === 'lisbon' ? 'lisbon' : 'porto')}><span className="lc-eng__countryart" aria-hidden="true"><CityPattern world="azulejo" centred size={14} /></span><span>Book in <b>Portugal</b></span></button>
+                        <button type="button" className="lc-eng__country" onClick={() => pickCity('ng')}><span className="lc-eng__countryart" aria-hidden="true"><CityPattern world="adire" centred size={14} /></span><span>Book in <b>Nigeria</b></span></button>
+                        <button type="button" className="lc-eng__country" onClick={() => pickCity('pt')}><span className="lc-eng__countryart" aria-hidden="true"><CityPattern world="azulejo" centred size={14} /></span><span>Book in <b>Portugal</b></span></button>
                     </span>
                 </div>
             )}

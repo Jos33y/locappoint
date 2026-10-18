@@ -11,7 +11,7 @@ import { InboxBell } from '../../components/inbox/InboxBell'
 import { useSupportUnread } from '../../components/support/useSupportUnread'
 import { loadNextBooking } from '../../services/booking'
 import PushSetup from '../../components/common/PushSetup'
-import CitySwitcher from '../../components/common/CitySwitcher'
+import CountrySwitch from '../../components/common/CountrySwitch'
 import '../../styles/business/shell.css'
 import '../../styles/client/client-shell.css'
 import '../../styles/support.css'
@@ -116,7 +116,7 @@ const ClientLayout = () => {
                             </Link>
                         )}
                         <div className="biz-topbar__actions lc-cl-topacts">
-                            <CitySwitcher className="lc-cl-city" />
+                            <CountrySwitch className="lc-cl-city" />
                             <InboxBell to="/client/notifications" />
                             <button type="button" className="biz-iconbtn lc-cl-me" aria-label="Account" onClick={() => setAccountOpen(true)}>
                                 <span className="biz-avatar">{initials(name || email)}</span>

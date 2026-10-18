@@ -53,7 +53,8 @@ export const buildRequest = (text: string, market: string, ctx: Context, now = n
         const key = addDays(today, i)
         return `${WEEKDAY[new Date(`${key}T12:00:00Z`).getUTCDay()]} ${key}${i === 0 ? ' (today)' : i === 1 ? ' (tomorrow)' : ''}`
     }).join('\n')
-    const city = market.charAt(0).toUpperCase() + market.slice(1)
+    // A country (geo1) or one of our cities, by name.
+    const city = ({ ng: 'Nigeria', pt: 'Portugal' } as Record<string, string>)[market] || market.charAt(0).toUpperCase() + market.slice(1)
     const system = `You read searches on Locappoint, where people book local businesses (barbers, salons, nails, beauty, wellness, cleaners, tutors and more) in ${city}. People write in English, Portuguese or Nigerian English. Fill the search_fields tool from what they typed. Never invent a business, a time or a price.
 
 Days (the city's calendar):

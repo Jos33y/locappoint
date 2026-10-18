@@ -141,8 +141,11 @@ Deno.serve(async (req) => {
             } catch (err) {
                 return googleFailed(err)
             }
-            // The area: the first municipality or town in the address that is one of the city's areas.
-            const { data: zones } = await db.from('market_zones').select('name').eq('market', marketCode || '')
+            // The area: the first municipality or town in the address that is one of the city's areas. A
+            // country (geo1: 'ng', 'pt') has the areas of every city in it.
+            const { data: same } = market?.country ? await db.from('markets').select('code').eq('country', market.country) : { data: null }
+            const codes = marketCode && ['ng', 'pt'].includes(marketCode) ? (same || []).map((m: { code: string }) => m.code) : [marketCode || '']
+            const { data: zones } = await db.from('market_zones').select('name').in('market', codes.length ? codes : [''])
             const byFold = new Map((zones || []).map((z: { name: string }) => [fold(z.name), z.name]))
             const zone = place.areas.map((a) => byFold.get(fold(a))).find(Boolean) || null
             const listed = (business?.service_zones || []) as string[]

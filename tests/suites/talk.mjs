@@ -2,6 +2,8 @@
 // accented word in the title, no "cohort", fields that say optional instead of asterisks, errors next
 // to the field with focus on the first, and the message saved.
 
+const FOUR = { lagos: /lc-pattern--(adire|uli|arewa|benin)\b/, porto: /lc-pattern--(azulejo|calcada|minho|arraiolos)\b/, lisbon: /lc-pattern--(azulejo|calcada|minho|arraiolos)\b/ }
+
 export default async ({ browser, url, check }) => {
     const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms))
     const open = async (path, extra = '', vw = 1280, vh = 900) => {
@@ -31,7 +33,7 @@ export default async ({ browser, url, check }) => {
     for (const [path, city] of [['/contact', 'lagos'], ['/partnership', 'lisbon']]) {
         const p = await open(path, `&city=${city}`)
         const v = await look(p)
-        check(v.band.includes(`lc-pattern--${city}`) && v.titleParts === 0, `${path}: the ${city} pattern across the top, a plain title`)
+        check(FOUR[city].test(v.band) && v.titleParts === 0, `${path}: one of the country's worlds across the top, a plain title (${v.band})`)
         check(v.upper === 0 && !v.stars && !/cohort/i.test(v.text), `${path}: no capitals-only labels, no asterisks, no cohort`)
         check(v.small.length === 0, `${path}: text is 12px or more (${v.small.join(', ')})`)
         check(p.errors.length === 0, `${path}: no errors (${p.errors[0] || ''})`)

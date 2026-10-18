@@ -36,9 +36,11 @@ export default async ({ browser, url, check, root }) => {
     let p = await open('&city=porto')
     let v = await look(p)
     check(!/cohort/i.test(v.text) && !v.counter && !/of 10\b/.test(v.text), 'no cohort and no "of 10" counter for clients')
-    check(v.band.includes('lc-pattern--porto') && v.title === 'Book a free time in Porto.', `the city first: its pattern and its name (${v.title})`)
+    check(/lc-pattern--(azulejo|calcada|minho|arraiolos)\b/.test(v.band) && v.title === 'Book a free time in Portugal.', `geo1: the country first, one of its worlds and its name (${v.title})`)
+    const sw = await p.evaluate(() => ({ text: document.querySelector('.lc-country .ui-picker-trigger')?.textContent.trim() || '', disc: document.querySelector('.lc-country__disc .lc-pattern')?.getAttribute('class') || '' }))
+    check(/Portugal/.test(sw.text) && /lc-pattern--(azulejo|calcada|minho|arraiolos)\b/.test(sw.disc), `geo1: the header switch says the country, with a disc of one of its worlds, no flag: ${JSON.stringify(sw)}`)
     check(/^Barbershops taking bookings on Locappoint\./.test(v.lede), `the line says what is really there: ${v.lede}`)
-    check(v.straps.length === 3 && ['porto', 'lagos', 'lisbon'].every((c, i) => v.straps[i].includes(`lc-pattern--${c}`)), 'each city card wears its pattern')
+    check(v.straps.length === 8 && ['adire', 'uli', 'arewa', 'benin', 'azulejo', 'calcada', 'minho', 'arraiolos'].every((w, i) => v.straps[i].includes(`lc-pattern--${w}`)), 'each country card wears its four worlds')
     check(v.optionsHidden === true && /^More options/.test(v.more) && /Soonest/.test(v.more), `the search is one line; the options wait behind More options (${v.more})`)
     await p.evaluate(() => document.querySelector('.lc-eng__more').click())
     await wait(200)
@@ -48,10 +50,10 @@ export default async ({ browser, url, check, root }) => {
     check(p.errors.length === 0, `no errors (${p.errors[0] || ''})`)
     await p.close()
 
-    // A city with nothing live yet says it is opening, everywhere on the page.
-    p = await open('&city=lisbon', 390, 844)
+    // A country with nothing live yet says it is opening, everywhere on the page.
+    p = await open('&country=ng', 390, 844)
     v = await look(p)
-    check(/Lisbon is opening/.test(v.title) && v.cityText[2] === 'Opening soon' && !v.over, `an empty city says it is opening: ${v.title} / ${v.cityText[2]}`)
+    check(/Nigeria is opening/.test(v.title) && v.cityText[0] === 'Opening soon' && !v.over, `an empty country says it is opening: ${v.title} / ${v.cityText[0]}`)
     await p.close()
 
     // An extra never sets the "from" price.

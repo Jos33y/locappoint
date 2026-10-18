@@ -10,6 +10,15 @@ export const CITIES = [
     { name: 'Lisbon', market: 'lisbon', match: ['lisbon', 'lisboa'], later: 'Taking bookings' },
 ]
 
+// A place belongs to a country (geo1) by its country, else by the city market it has.
+const COUNTRY_OF = { ng: { iso: 'NG', cities: ['lagos'] }, pt: { iso: 'PT', cities: ['porto', 'lisbon'] } }
+export const inCountry = (place, code) => {
+    const c = COUNTRY_OF[code]
+    if (!c) return inMarket(place, code)
+    if (place.country) return String(place.country).toUpperCase() === c.iso
+    return c.cities.some((m) => inMarket(place, m))
+}
+
 export const fold = (text) => (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
 export const inCity = (place, names) => names.includes(fold(place.city))
 export const inMarket = (place, market) => {

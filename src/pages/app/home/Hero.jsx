@@ -7,7 +7,7 @@ import './Hero.css'
 
 const Hero = () => {
     const [city] = useCity()
-    const sample = CITY_SAMPLE[city.code] || CITY_SAMPLE.porto
+    const sample = CITY_SAMPLE[city.sample] || CITY_SAMPLE.porto
     return (
         <section className="lc-home-hero" aria-labelledby="lc-home-title">
             <div className="lc-home-hero__glow" aria-hidden="true" />
@@ -23,8 +23,8 @@ const Hero = () => {
                         {HERO.promises.map((p) => <li key={p}>{p}</li>)}
                     </ul>
                 </div>
-                <div className={`lc-home-hero__world is-${city.code}`}>
-                    <CityPattern city={city.code} centred className="lc-home-hero__pattern" />
+                <div className={`lc-home-hero__world is-${city.code}${city.light ? ' is-light' : ''}`}>
+                    <CityPattern world={city.world} centred className="lc-home-hero__pattern" />
                     <OwnerPhone sample={sample} currency={city.currency} />
                 </div>
             </div>

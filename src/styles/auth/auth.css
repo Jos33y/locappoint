@@ -172,15 +172,13 @@
     opacity: 0.55;
 }
 
-/* Porto's and Lisbon's patterns are light: at full strength they glare on the dark panel and
-   outshine the scene, so they sit back. Lagos's indigo is dark and keeps its strength. */
-.auth-page.is-porto .auth-brand__wall,
-.auth-page.is-lisbon .auth-brand__wall {
+/* Worlds on a light ground (azulejo, calcada, uli, arraiolos) glare on the dark panel at full strength
+   and outshine the scene, so they sit back. Dark worlds keep their strength. */
+.auth-page.is-light .auth-brand__wall {
     opacity: 0.42;
 }
 
-.auth-page.is-porto .auth-brand.is-calm .auth-brand__wall,
-.auth-page.is-lisbon .auth-brand.is-calm .auth-brand__wall {
+.auth-page.is-light .auth-brand.is-calm .auth-brand__wall {
     opacity: 0.3;
 }
 
@@ -828,11 +826,6 @@
         height: 48px;
         margin: var(--space-3) auto 0;
         border-radius: var(--lc-r-sm);
-    }
-
-    /* One whole row of tiles: 48px for Porto and Lagos, two waves of 20px for Lisbon. */
-    .auth-page.is-lisbon .auth-mobile-band {
-        height: 40px;
     }
 
     .auth-form-panel {

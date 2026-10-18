@@ -41,9 +41,9 @@ const FAQ = [
 const AppDownload = () => {
     const [release, setRelease] = useState(undefined)
     const [on] = useState(device)
-    // The phones and examples follow the city picked in the header; anyone, anywhere, sees one of ours.
+    // The phones and examples follow the country picked in the header; anyone, anywhere, sees one of ours.
     const [city] = useCity()
-    const sample = citySample(city.code)
+    const sample = citySample(city.sample)
     const [daylight] = useState(() => daylightOf())
 
     useEffect(() => {
@@ -88,7 +88,7 @@ const AppDownload = () => {
                         </aside>
                     </div>
 
-                    <AppStage city={city.code} />
+                    <AppStage city={city.sample} world={city.world} light={city.light} />
                 </section>
 
                 <section className="lc-dl-section" aria-labelledby="lc-dl-made">
@@ -131,7 +131,7 @@ const AppDownload = () => {
                             <h3 className="lc-dl-tile__title">Share it anywhere.</h3>
                             <p className="lc-dl-tile__text">Send your booking page to WhatsApp, or save your QR poster straight to the phone.</p>
                             <span className="lc-dl-tile__link" aria-hidden="true">
-                                <BusinessTile name={sample.business} city={city.code} className="lc-dl-tile__tile" />
+                                <BusinessTile name={sample.business} city={city.world} className="lc-dl-tile__tile" />
                                 <span>locappoint.com/<b>your-name</b></span>
                             </span>
                         </article>
@@ -220,8 +220,8 @@ const AppDownload = () => {
                     </div>
                 </section>
 
-                <section className={`lc-dl-end is-${city.code}`} aria-labelledby="lc-dl-end">
-                    <span className="lc-dl-end__band" aria-hidden="true"><CityPattern city={city.code} centred /></span>
+                <section className={`lc-dl-end is-${city.code}${city.light ? ' is-light' : ''}`} aria-labelledby="lc-dl-end">
+                    <span className="lc-dl-end__band" aria-hidden="true"><CityPattern world={city.world} centred /></span>
                     <img className="lc-dl-end__icon" src="/brand/loca-app-icon.svg" alt="" width="64" height="64" />
                     <h2 id="lc-dl-end" className="lc-dl-end__title">Ready when you are.</h2>
                     <div className="lc-dl-hero__ctas">

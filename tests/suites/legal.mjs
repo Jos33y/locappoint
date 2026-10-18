@@ -1,6 +1,8 @@
 // Legal pages: no "based in" a city we are not registered in; sentence case labels; text at 12px or more;
 // the visitor's city as a thin band along the top; nothing past the edge of a phone.
 
+const FOUR = { lagos: /lc-pattern--(adire|uli|arewa|benin)\b/, porto: /lc-pattern--(azulejo|calcada|minho|arraiolos)\b/, lisbon: /lc-pattern--(azulejo|calcada|minho|arraiolos)\b/ }
+
 export default async ({ browser, url, check }) => {
     const open = async (path, extra = '', vw = 1280, vh = 860) => {
         const page = await browser.newPage()
@@ -29,7 +31,7 @@ export default async ({ browser, url, check }) => {
         const p = await open(path, `&city=${city}`)
         const v = await look(p)
         check(!/based in/i.test(v.text), `${path}: no "based in" line`)
-        check(v.band.includes(`lc-pattern--${city}`), `${path}: the ${city} band runs along the top (${v.band})`)
+        check(FOUR[city].test(v.band), `${path}: one of the ${city === 'lagos' ? 'Nigerian' : 'Portuguese'} worlds runs along the top (${v.band})`)
         check(v.canvas && v.painted.length === 0, `${path}: the page sits on the brand canvas, no old section fill (${v.painted.join(', ')})`)
         check(v.upper.length === 0, `${path}: no capitals-only labels (${v.upper.join(', ')})`)
         check(v.small.length === 0, `${path}: text is 12px or more (${v.small.join(', ')})`)

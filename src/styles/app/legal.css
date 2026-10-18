@@ -40,7 +40,7 @@
     mask-image: linear-gradient(90deg, transparent, var(--lc-ink-1) 20%, var(--lc-ink-1) 80%, transparent);
 }
 
-.legal-page.is-lagos .legal__band { opacity: 0.8; }
+.legal-page.is-dark .legal__band { opacity: 0.8; }
 
 .legal__eyebrow {
     margin: 0;

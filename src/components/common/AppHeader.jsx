@@ -4,7 +4,7 @@ import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import LanguageSwitcher from './LanguageSwitcher'
-import CitySwitcher from './CitySwitcher'
+import CountrySwitch from './CountrySwitch'
 import PinMark from './PinMark'
 import '../../styles/app/header.css'
 
@@ -87,7 +87,7 @@ const AppHeader = () => {
                     </div>
 
                     <div className="loca-app-header__actions">
-                        <CitySwitcher className="loca-app-header__city" />
+                        <CountrySwitch className="loca-app-header__city" />
                         <div className="loca-app-header__bar-only">
                             <LanguageSwitcher />
                         </div>

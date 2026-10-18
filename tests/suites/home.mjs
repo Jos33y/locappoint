@@ -34,7 +34,7 @@ export default async ({ browser, url, check, root }) => {
     const text = await p.evaluate(() => document.querySelector('.lc-home main')?.innerText || '')
     const h1 = await p.evaluate(() => document.querySelector('h1')?.textContent.replace(/\s+/g, ' ').trim())
     check(h1 === 'Get found. Get booked.', `the page speaks to businesses first: ${h1}`)
-    check(/Porto, Lagos and Lisbon/.test(text), 'it names the three live cities')
+    check(/anywhere in Nigeria and Portugal/.test(text) && !/Porto, Lagos and Lisbon/.test(text), 'geo1: it names the two countries, not three cities')
     check(/Sound familiar\?/.test(text) && /Then the chair fills itself\./.test(text), 'it names the problem, then the fix')
     check(!/first ten|Cohort 1|\d+\s*\/\s*\d+\s*live|ten minutes|trial|\bSoon\b/i.test(text), 'no business counts, timing claims, trial wording or Soon tags')
     check(!/[\u2014\u2013]/.test(text), 'no long dashes on the page')
@@ -42,7 +42,7 @@ export default async ({ browser, url, check, root }) => {
     const actions = await p.evaluate(() => [...document.querySelectorAll('.lc-home-actions')].map((a) => [...a.querySelectorAll('a, button')].map((b) => ({ text: b.textContent.trim(), href: b.getAttribute('href'), target: b.getAttribute('target') }))))
     check(actions.length === 2 && actions.every((a) => a[0].text === 'Get your booking page' && a[1].text === 'Set it up with us'), `two ways in, the same wording top and bottom: ${JSON.stringify(actions.map((a) => a.map((b) => b.text)))}`)
     const wa = actions[0]?.[1]
-    check(wa?.href?.startsWith(SETUP) && /Porto/.test(decodeURIComponent(wa.href)) && wa.target === '_blank', `Set it up with us opens WhatsApp with the city in the message: ${wa?.href}`)
+    check(wa?.href?.startsWith(SETUP) && /in Portugal\./.test(decodeURIComponent(wa.href)) && wa.target === '_blank', `Set it up with us opens WhatsApp with the country in the message: ${wa?.href}`)
     check(!/Browse businesses/.test(text), 'owners are not sent to the business list from the page body')
     check(/€0/.test(text) && /€18/.test(text), 'Porto prices are in euro')
     check(/Booking on WhatsApp/.test(text), 'booking on WhatsApp is listed as working')
@@ -61,9 +61,10 @@ export default async ({ browser, url, check, root }) => {
     })
     check(amber.length === 1 && amber[0] === 'h1', `amber text only on Get booked: ${amber.join(', ')}`)
 
-    // The visitor's city is marked among the three.
-    const cities = await p.evaluate(() => [...document.querySelectorAll('.lc-home-city')].map((c) => ({ name: c.querySelector('h3')?.textContent, picked: c.classList.contains('is-picked') })))
-    check(cities.length === 3 && cities.filter((c) => c.picked).map((c) => c.name).join() === 'Porto', `three city worlds, Porto marked: ${JSON.stringify(cities)}`)
+    // The visitor's country is marked of the two, each in its four worlds.
+    const cities = await p.evaluate(() => [...document.querySelectorAll('.lc-home-city')].map((c) => ({ name: c.querySelector('h3')?.textContent, picked: c.classList.contains('is-picked'), worlds: [...c.querySelectorAll('.lc-home-city__cover .lc-pattern')].map((w) => w.getAttribute('class').match(/lc-pattern--(\w+)/)[1]) })))
+    check(cities.length === 2 && cities.filter((c) => c.picked).map((c) => c.name).join() === 'Portugal', `two countries, Portugal marked: ${JSON.stringify(cities)}`)
+    check(cities[0]?.worlds.join() === 'adire,uli,arewa,benin' && cities[1]?.worlds.join() === 'azulejo,calcada,minho,arraiolos', `each country wears its four worlds: ${JSON.stringify(cities.map((c) => c.worlds))}`)
 
     // The notification never covers the owner's greeting.
     const cover = await p.evaluate(() => {
@@ -134,8 +135,8 @@ export default async ({ browser, url, check, root }) => {
     p = await open('lagos')
     const lagos = await p.evaluate(() => document.querySelector('.lc-home main')?.innerText || '')
     check(/₦0/.test(lagos) && /₦25,000/.test(lagos) && !/€/.test(lagos), 'Lagos prices are in naira, with no euro left over')
-    check(/Get found in Lagos\./.test(lagos), 'the closer follows the picked city')
-    check(await p.evaluate(() => /Lagos/.test(decodeURIComponent(document.querySelector('.lc-home-actions a').href))), 'the WhatsApp message names Lagos')
+    check(/Get found in Nigeria\./.test(lagos), 'the closer follows the picked country')
+    check(await p.evaluate(() => /Nigeria/.test(decodeURIComponent(document.querySelector('.lc-home-actions a').href))), 'the WhatsApp message names Nigeria')
     await p.close()
 
     for (const [vw, vh] of [[320, 640], [390, 844], [820, 1180], [1272, 588], [1920, 1080]]) {

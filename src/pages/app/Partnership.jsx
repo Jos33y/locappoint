@@ -81,14 +81,14 @@ const Partnership = () => {
     }
 
     return (
-        <div className={`lc-talk is-${city.code}`}>
+        <div className={`lc-talk is-${city.code}${city.light ? ' is-light' : ''}`}>
             <AppHeader />
 
             <main className="lc-talk__main is-narrow">
                 <section className="lc-talk__hero">
-                    <span className="lc-talk__band" aria-hidden="true"><CityPattern city={city.code} centred size={28} /></span>
+                    <span className="lc-talk__band" aria-hidden="true"><CityPattern world={city.world} centred size={28} /></span>
                     <h1 className="lc-talk__title">Become a founding partner.</h1>
-                    <p className="lc-talk__lede">Founding partners shape what we build next, get it first, and appear with us when we open their city. Tell us about your business below.</p>
+                    <p className="lc-talk__lede">Founding partners shape what we build next, get it first, and appear with us as we grow in their country. Tell us about your business below.</p>
                 </section>
 
                 <div className="lc-talk__card">

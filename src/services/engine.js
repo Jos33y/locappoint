@@ -5,55 +5,84 @@ import { CATEGORIES } from '../constants/categories'
 import { keptLine } from './reliability'
 
 // "What do you need?": one request, matched in the database (engine_match) against every live
-// business in the city. The same function serves the site, the app and, later, WhatsApp.
+// business in the country (doc 35, geo1). The same function serves the site, the app and WhatsApp.
 
-// Porto, Lagos and Lisbon are live.
+// The cities we started in. Still the data under each country: areas, places, samples, fees.
 export const MARKETS = [
-    { code: 'porto', name: 'Porto', country: 'Portugal', timeZone: 'Europe/Lisbon', currency: 'EUR', live: true, street: 'Rua de Santa Catarina 120' },
-    { code: 'lagos', name: 'Lagos', country: 'Nigeria', timeZone: 'Africa/Lagos', currency: 'NGN', live: true, street: '12 Admiralty Way, Lekki' },
-    { code: 'lisbon', name: 'Lisbon', country: 'Portugal', timeZone: 'Europe/Lisbon', currency: 'EUR', live: true, street: 'Rua Augusta 100' },
+    { code: 'porto', name: 'Porto', country: 'Portugal', iso: 'PT', timeZone: 'Europe/Lisbon', currency: 'EUR', live: true, street: 'Rua de Santa Catarina 120' },
+    { code: 'lagos', name: 'Lagos', country: 'Nigeria', iso: 'NG', timeZone: 'Africa/Lagos', currency: 'NGN', live: true, street: '12 Admiralty Way, Lekki' },
+    { code: 'lisbon', name: 'Lisbon', country: 'Portugal', iso: 'PT', timeZone: 'Europe/Lisbon', currency: 'EUR', live: true, street: 'Rua Augusta 100' },
 ]
 
-// The city a visitor sees: the one they picked, remembered on this device, or on a first visit the
-// one their phone's clock is set to (Lagos for Africa/Lagos, otherwise Porto). Every screen that
-// shows places follows it, and changing it anywhere changes it everywhere.
-const CITY = 'lc.city'
-const CITY_EVENT = 'lc:city'
-const known = (code) => MARKETS.some((m) => m.code === code)
-export const defaultCity = () => {
+// What a visitor picks: a country. cities are the market codes under it; sample is the city whose
+// example content (tickets, pages) a generic screen shows; home is the place said in examples.
+export const COUNTRIES = [
+    { code: 'ng', iso: 'NG', name: 'Nigeria', country: 'Nigeria', timeZone: 'Africa/Lagos', currency: 'NGN', cities: ['lagos'], sample: 'lagos', street: '12 Admiralty Way, Lekki, Lagos' },
+    { code: 'pt', iso: 'PT', name: 'Portugal', country: 'Portugal', timeZone: 'Europe/Lisbon', currency: 'EUR', cities: ['porto', 'lisbon'], sample: 'porto', street: 'Rua de Santa Catarina 120, Porto' },
+]
+
+// The country a visitor sees: the one they picked, remembered on this device, or on a first visit the
+// one their phone's clock says (Nigeria for Africa/Lagos, otherwise Portugal). A city picked before
+// geo1 (lc.city) carries over to its country. Every screen follows it; changing it anywhere changes
+// it everywhere.
+const COUNTRY = 'lc.country'
+const OLD_CITY = 'lc.city'
+const COUNTRY_EVENT = 'lc:country'
+const CITY_COUNTRY = { lagos: 'ng', porto: 'pt', lisbon: 'pt' }
+const known = (code) => COUNTRIES.some((c) => c.code === code)
+export const defaultCountry = () => {
     try {
-        return Intl.DateTimeFormat().resolvedOptions().timeZone === 'Africa/Lagos' ? 'lagos' : 'porto'
+        return Intl.DateTimeFormat().resolvedOptions().timeZone === 'Africa/Lagos' ? 'ng' : 'pt'
     } catch {
-        return 'porto'
+        return 'pt'
     }
 }
-export const savedCity = () => {
+export const savedCountry = () => {
     try {
-        const code = localStorage.getItem(CITY)
-        return known(code) ? code : defaultCity()
+        const code = localStorage.getItem(COUNTRY)
+        if (known(code)) return code
+        const old = CITY_COUNTRY[localStorage.getItem(OLD_CITY)]
+        return old || defaultCountry()
     } catch {
-        return defaultCity()
+        return defaultCountry()
     }
 }
-export const saveCity = (code) => {
-    if (!known(code)) return
-    try { localStorage.setItem(CITY, code) } catch { /* private mode: asked again next time */ }
-    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(CITY_EVENT, { detail: code }))
+export const saveCountry = (code) => {
+    const c = known(code) ? code : CITY_COUNTRY[code]
+    if (!c) return
+    try { localStorage.setItem(COUNTRY, c) } catch { /* private mode: asked again next time */ }
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(COUNTRY_EVENT, { detail: c }))
 }
-// Calls back when the city changes in this tab or another one.
-export const onCityChange = (callback) => {
+// Calls back when the country changes in this tab or another one.
+export const onCountryChange = (callback) => {
     if (typeof window === 'undefined') return () => {}
     const here = (e) => callback(e.detail)
-    const elsewhere = (e) => { if (e.key === CITY) callback(savedCity()) }
-    window.addEventListener(CITY_EVENT, here)
+    const elsewhere = (e) => { if (e.key === COUNTRY) callback(savedCountry()) }
+    window.addEventListener(COUNTRY_EVENT, here)
     window.addEventListener('storage', elsewhere)
     return () => {
-        window.removeEventListener(CITY_EVENT, here)
+        window.removeEventListener(COUNTRY_EVENT, here)
         window.removeEventListener('storage', elsewhere)
     }
 }
 
-export const marketOf = (code) => MARKETS.find((m) => m.code === code) || MARKETS[0]
+// A country by its code, or the country of a city code. Unknown: Portugal.
+export const countryOf = (code) => COUNTRIES.find((c) => c.code === code) || COUNTRIES.find((c) => c.code === CITY_COUNTRY[code]) || COUNTRIES[1]
+
+// The city behind the saved country, for what still needs one (the sun's place, sample pages).
+export const savedCity = () => countryOf(savedCountry()).sample
+export const defaultCity = () => countryOf(defaultCountry()).sample
+
+export const marketOf = (code) => MARKETS.find((m) => m.code === code) || countryOf(code)
+
+// The areas of a country: every area of every city under it, in order, without repeats.
+export const loadCountryZones = async (code) => {
+    const c = countryOf(code)
+    const { data, error } = await supabase.from('market_zones').select('market, name, sort_order').in('market', c.cities).order('sort_order')
+    if (error) throw error
+    const order = (row) => c.cities.indexOf(row.market)
+    return [...new Set((data || []).slice().sort((a, b) => order(a) - order(b) || a.sort_order - b.sort_order).map((z) => z.name))]
+}
 
 const addDays = (key, n) => {
     const d = parseDateKey(key)
@@ -162,7 +191,7 @@ export const WHERE = [
 ]
 
 export const findMatches = async ({ market, text, mode = '', when = 'soonest', time = 'any', people = 1, place = null, zone = '', maxPrice = null, order = '' }) => {
-    const m = marketOf(market)
+    const m = countryOf(market)
     // "at:15" or "at:15:30" around an hour; "r:17:00-23:59" a range read from the words ("after 5").
     const at = time.startsWith('at:') ? (time.slice(3).includes(':') ? time.slice(3) : `${String(time.slice(3)).padStart(2, '0')}:00`) : null
     const range = time.startsWith('r:') ? time.slice(2) : null
@@ -185,11 +214,16 @@ export const findMatches = async ({ market, text, mode = '', when = 'soonest', t
     return data
 }
 
-// The chips under the box: the categories with the most live businesses in the city.
+// The chips under the box: the categories with the most live businesses in the country, counted
+// across its cities.
 export const loadPopular = async (market) => {
-    const { data, error } = await supabase.rpc('engine_popular', { p_market: market })
-    if (error) throw error
-    return (data || [])
+    const counts = new Map()
+    for (const city of countryOf(market).cities) {
+        const { data, error } = await supabase.rpc('engine_popular', { p_market: city })
+        if (error) throw error
+        for (const row of data || []) counts.set(row.category, (counts.get(row.category) || 0) + (Number(row.businesses) || 0))
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([category]) => ({ category }))
         .map((row) => CATEGORIES.find((c) => c.value === row.category))
         .filter(Boolean)
         .map((c) => ({ value: c.value, label: c.label, words: c.services?.[0]?.[0] || c.label }))

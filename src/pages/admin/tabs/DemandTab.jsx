@@ -11,7 +11,7 @@ import '../../../styles/admin/demand.css'
 
 const PERIODS = [7, 30, 90]
 const CHANNEL = { web: 'Website', app: 'App', whatsapp: 'WhatsApp' }
-const CITY = { porto: 'Porto', lisbon: 'Lisbon', lagos: 'Lagos' }
+const CITY = { porto: 'Porto', lisbon: 'Lisbon', lagos: 'Lagos', ng: 'Nigeria', pt: 'Portugal' }
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 const cityName = (market) => CITY[market] || market || 'No city'
 const placeName = (r) => (r.zone ? `${r.zone}, ${cityName(r.market)}` : cityName(r.market))
