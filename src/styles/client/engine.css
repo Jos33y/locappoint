@@ -247,3 +247,5 @@
 .lc-eng__read:hover svg,
 .lc-eng__read:focus-visible svg { color: var(--lc-ink-1); }
 .lc-eng__read:focus-visible { outline: 2px solid var(--azure); outline-offset: 2px; }
+/* Read by the AI rather than the rules: the same chip, a dashed edge. */
+.lc-eng__read.is-ai { box-shadow: none; border: 1px dashed var(--azure); }

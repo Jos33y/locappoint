@@ -148,6 +148,41 @@ export default async ({ browser, url, check }) => {
     check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
     await p.close()
 
+    // The AI step (R1b): a long sentence goes to the AI first; a short clear one never does; a short one
+    // the engine cannot place goes after; an AI reading can be removed; with the AI off, rules alone.
+    const fnCalls = (pg, name) => pg.evaluate((n) => window.__calls.filter((c) => c[0] === 'fn' && c[1] === n).map((c) => c[2]), name)
+    p = await open('/client')
+    const ask3 = async (words) => {
+        await p.$eval('.lc-eng__what input', (el) => el.select())
+        await p.type('.lc-eng__what input', words)
+        await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+        await wait(900)
+    }
+    await ask3('haircut')
+    check((await fnCalls(p, 'understand')).length === 0, 'a short clear search never asks the AI')
+    await ask3('something for my son tomorrow after football please')
+    let ai = await fnCalls(p, 'understand')
+    let sent3 = (await calls(p, 'engine_match')).pop() || {}
+    check(ai.length === 1 && ai[0].market === 'porto' && sent3.p_query === 'kids' && sent3.p_window === '13:00-23:59' && sent3.p_dates?.length === 1, `a long sentence: the AI reads it, the rules keep their own day: ${JSON.stringify([ai.length, sent3.p_query, sent3.p_window, sent3.p_dates])}`)
+    const aiChips = await p.evaluate(() => ({ label: document.querySelector('.lc-eng__understood .lc-eng__label')?.textContent, ai: [...document.querySelectorAll('.lc-eng__read.is-ai')].map((c) => c.textContent.trim()), all: [...document.querySelectorAll('.lc-eng__read')].map((c) => c.textContent.trim()) }))
+    check(aiChips.label === 'Understood with AI' && aiChips.ai.includes('kids') && aiChips.ai.includes('After 13:00') && aiChips.all.includes('Tomorrow'), `what the AI read is marked as such: ${JSON.stringify(aiChips)}`)
+    const before3 = (await fnCalls(p, 'understand')).length
+    await p.evaluate(() => [...document.querySelectorAll('.lc-eng__read.is-ai')].find((c) => /After/.test(c.textContent))?.click())
+    await wait(800)
+    sent3 = (await calls(p, 'engine_match')).pop() || {}
+    check((await fnCalls(p, 'understand')).length === before3 && sent3.p_window === 'any', `removing an AI reading searches again on the rules, without the AI: ${JSON.stringify(sent3.p_window)}`)
+    await ask3('nothing zzz')
+    const engineRuns = (await calls(p, 'engine_match')).length
+    check((await fnCalls(p, 'understand')).length === before3 + 1 && /offers that yet/.test(await text(p, '.lc-eng__out')), 'a short search nobody offers asks the AI once after, and says so when it cannot help')
+    check(p.errors.length === 0 && engineRuns > 0, `no page errors: ${p.errors.join(' | ')}`)
+    await p.close()
+    p = await open('/client', '&ai=off')
+    await p.type('.lc-eng__what input', 'something for my son tomorrow after football please')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(900)
+    check(((await calls(p, 'engine_match')).pop() || {}).p_dates?.length === 1 && !(await p.$('.lc-eng__read.is-ai')), 'with the AI off or over its cap, the rules still search')
+    await p.close()
+
     // One business: no "Best match"; the area, how long, the date, its other times and its other services.
     p = await open('/client')
     await p.type('.lc-eng__what input', 'kids')

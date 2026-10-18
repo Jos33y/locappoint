@@ -498,6 +498,16 @@ const placesFn = (body) => {
   if (body.action === 'shop' && p) return { data: { on: true, shop: { address: p.address, lat: p.lat, lng: p.lng } }, error: null }
   return { data: { error: 'Unknown action' }, error: null }
 }
+// The AI step (R1b): a long sentence about a son becomes a kids' cut after 13:00; anything with "zzz" is
+// not understood; "?ai=off" is the AI over its cap.
+const understandFn = ({ text = '' }) => {
+  if (new URLSearchParams(window.location.search).get('ai') === 'off') return { data: { on: false, reason: 'budget' }, error: null }
+  if (/son/.test(text)) return { data: { on: true, fields: { understood: true, what: 'kids', kids: true, time: 'r:13:00-23:59' } }, error: null }
+  if (/zzz/.test(text)) return { data: { on: true, fields: { understood: false } }, error: null }
+  if (/trim my hair/.test(text)) return { data: { on: true, fields: { understood: true, what: 'haircut' } }, error: null }
+  return { data: { on: true, fields: { understood: false } }, error: null }
+}
+
 // Demand (doc 35): searches from Nigeria, Portugal and Kenya, two misses, one "Tell me when".
 adminRpc.admin_demand = ({ p_days = 30 }) => ({
   days: p_days, searches: 42, misses: 7, full: 3, people: 9, wishes: 2,
@@ -690,7 +700,7 @@ const checkoutFn = (body) => (body.action === 'start' && body.appointment_id
   : failed('Unknown action'))
 
 export const supabase = {
-  functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); if (name === 'checkout') return checkoutFn(body || {}); if (name === 'places') return placesFn(body || {}); if (name === 'trip') return tripFn(body || {}); if (name === 'verify') return { data: body?.action === 'start' ? { url: '#stripe-identity' } : MY_VER(), error: null }; return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
+  functions: { invoke: async (name, { body } = {}) => { calls.push(['fn', name, body]); if (name === 'checkout') return checkoutFn(body || {}); if (name === 'places') return placesFn(body || {}); if (name === 'trip') return tripFn(body || {}); if (name === 'understand') return understandFn(body || {}); if (name === 'verify') return { data: body?.action === 'start' ? { url: '#stripe-identity' } : MY_VER(), error: null }; return name === 'payouts' ? payouts(body || {}) : { data: null, error: null } } },
   from: builder,
   rpc: async (name, args) => { calls.push(['rpc', name, args]); const tripping = tripRpc(name, args); if (tripping) return tripping; const relying = relRpc(name); if (relying) return relying; const chatting = waRpc(name, args); if (chatting) return chatting; const verifying = verRpc(name); if (verifying) return verifying; const supporting = supportRpc(name, args); if (supporting) return supporting; const blocking = blockRpc(name, args); if (blocking) return blocking; const matching = engineRpc(name, args); if (matching) return matching; const paying = payRpc(name, args); if (paying) return paying; if (name === 'slug_status') return { data: args.p_slug === 'taken-one' ? 'taken' : 'available', error: null }; if (name === 'business_insights') return { data: insights(args.p_days), error: null }; if (name === 'reminder_effect') return { data: reminderEffect(), error: null }; if (name === 'week_statement') return { data: weekStatement(args.p_weeks_back), error: null }; if (name === 'account_deletion_check') return { data: deletionCheck(), error: null }; if (name === 'delete_my_account') return { data: null, error: null }; if (adminRpc[name]) return { data: adminRpc[name](args || {}), error: null }; if (clientRpc[name]) return { data: clientRpc[name](args), error: null }; if (reviewRpc[name]) return { data: reviewRpc[name](args), error: null }; if (referralRpc[name]) return { data: referralRpc[name](args), error: null }; if (clientRpc2[name]) return { data: clientRpc2[name](args), error: null }; if (teamRpc[name]) { try { return { data: teamRpc[name](args), error: null } } catch (e) { return { data: null, error: { code: 'P0001', message: e.message } } } } return { data: null, error: null } },
   storage: { from: () => ({ getPublicUrl: (path) => ({ data: { publicUrl: `/brand/loca-app-icon.svg?${path}` } }), upload: async (path) => { calls.push(['upload', path]); return { data: {}, error: null } }, remove: async (paths) => { calls.push(['remove', paths]); return { error: null } }, createSignedUrl: async (path) => ({ data: { signedUrl: `/brand/loca-app-icon.svg?${path}` }, error: null }) }) },

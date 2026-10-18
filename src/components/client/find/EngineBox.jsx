@@ -5,6 +5,7 @@ import { Button, Chip, ChipGroup, Field, Picker } from '../../ui'
 import { PlaceSearch } from '../../common/PlaceSearch'
 import { MARKETS, LABELS, TIMES, WHERE, bookingLink, dayLabel, findMatches, keepEnginePlace, loadPopular, reasons, timeLabel, whenOptions, whenWords } from '../../../services/engine'
 import { understand, without } from '../../../services/understand'
+import { askAI, needsAI } from '../../../services/ai'
 import { useCity } from '../../../hooks/useCity'
 import { pickAddress, placesOn } from '../../../services/places'
 import { loadZones } from '../../../services/setup'
@@ -146,28 +147,64 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
             if (u[k] != null) { next[f] = u[k]; src[f] = 'words' } else if (src[f] === 'words') { next[f] = DEFAULTS[f]; src[f] = 'default' }
         })
         if (over.when) { next.when = over.when; src.when = 'hand' }
-        setWhen(next.when); setTime(next.time); setPeople(next.people); setMode(next.mode); setFrom(src)
+        if (over.clear) { next[READ[over.clear] || over.clear] = DEFAULTS[READ[over.clear] || over.clear]; src[READ[over.clear] || over.clear] = 'hand' }
         const understood = Object.entries(READ).filter(([k]) => u[k] != null).map(([k]) => ({ field: k, label: k === 'day' ? whenText(u.day) : u.labels[k] }))
-        const asked = { understood, spans: u.spans, text: typed, when: next.when }
+        let what = u.what
+        let byAI = false
+        // The AI reads what the rules could not, and fills only what they left empty; the rules' own
+        // readings stand. Its fields reset with the words, like the rules'.
+        const withAI = (ai) => {
+            if (!ai) return false
+            let used = false
+            const fill = (k, f, value, label) => {
+                if (value == null || u[k] != null || src[f] === 'hand') return
+                next[f] = value; src[f] = 'words'; used = true
+                understood.push({ field: k, label, ai: true })
+            }
+            fill('day', 'when', ai.when, ai.when && whenText(ai.when))
+            fill('time', 'time', ai.time, ai.time && timeLabel(ai.time))
+            fill('people', 'people', ai.people, ai.people && `For ${ai.people}`)
+            fill('mode', 'mode', ai.mode, ai.mode && WHERE.find((w) => w.value === ai.mode)?.label)
+            if (ai.what && ai.what.toLowerCase() !== u.what.toLowerCase()) {
+                what = ai.what; used = true
+                understood.unshift({ field: 'what', label: ai.what, ai: true })
+            }
+            byAI = byAI || used
+            return used
+        }
+        const settle = () => { setWhen(next.when); setTime(next.time); setPeople(next.people); setMode(next.mode); setFrom(src) }
+        const asked = () => ({ understood: [...understood], spans: u.spans, text: typed, when: next.when, byAI })
+        settle()
         if (next.mode === 'at_client' && !place && !zone) {
             if (compact) setMore(true)
-            setResult({ status: 'error', data: null, error: 'Tell us where you are, so we only show people who come to you.', ...asked })
+            setResult({ status: 'error', data: null, error: 'Tell us where you are, so we only show people who come to you.', ...asked() })
             return
         }
-        setResult({ status: 'loading', data: null, error: '', ...asked })
+        setResult({ status: 'loading', data: null, error: '', ...asked() })
+        const search = () => findMatches({ market: city, text: what, mode: next.mode, when: next.when, time: next.time, people: Number(next.people), place, zone })
         try {
-            const data = await findMatches({ market: city, text: u.what, mode: next.mode, when: next.when, time: next.time, people: Number(next.people), place, zone })
-            setResult({ status: 'ready', data, error: '', ...asked })
+            // A long sentence: the AI first. A short one the engine cannot place: the AI after.
+            let asking = !over.noAI && needsAI(u.what)
+            if (asking) { withAI(await askAI({ text: typed, market: city })); settle() }
+            let data = await search().catch((err) => { if (!over.noAI && !asking && err?.code === '22023') return null; throw err })
+            if (!over.noAI && !asking && (!data || offers(data) === 0)) {
+                asking = true
+                if (withAI(await askAI({ text: typed, market: city }))) { settle(); data = await search() }
+            }
+            if (!data) throw Object.assign(new Error('Say what you need, like "haircut" or "nails"'), { code: '22023' })
+            setResult({ status: 'ready', data, error: '', ...asked() })
             noteSearch({ market: city, text: typed, mode: next.mode, people: next.people, place, zone, data })
         } catch (err) {
             console.error('Engine failed:', err)
-            setResult({ status: 'error', data: null, error: USER_ERRORS.includes(err?.code) || err?.code === '22023' ? err.message : 'We could not search right now. Try again.', ...asked })
+            setResult({ status: 'error', data: null, error: USER_ERRORS.includes(err?.code) || err?.code === '22023' ? err.message : 'We could not search right now. Try again.', ...asked() })
         }
     }
 
     // A chip's remove takes its phrase out of the words and searches again.
-    const drop = (field) => {
-        const next = without(result.text, result.spans || [], field)
+    // An AI reading has no words of its own to take out: it is cleared and the search runs on the rules.
+    const drop = (chip) => {
+        if (chip.ai) { run({ text: result.text, noAI: true, clear: chip.field === 'what' ? undefined : chip.field }); return }
+        const next = without(result.text, result.spans || [], chip.field)
         setText(next)
         run({ text: next })
     }
@@ -211,9 +248,9 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 )}
                 {result.understood?.length > 0 && (
                     <div className="lc-eng__understood" role="group" aria-label="What we understood">
-                        <span className="lc-eng__label">Understood</span>
+                        <span className="lc-eng__label">{result.byAI ? 'Understood with AI' : 'Understood'}</span>
                         {result.understood.map((c) => (
-                            <button key={c.field} type="button" className="lc-eng__read" onClick={() => drop(c.field)} aria-label={`Remove ${c.label}`}>
+                            <button key={c.field} type="button" className={`lc-eng__read${c.ai ? ' is-ai' : ''}`} onClick={() => drop(c)} aria-label={`Remove ${c.label}`}>
                                 {c.label}
                                 <X size={14} aria-hidden="true" />
                             </button>
