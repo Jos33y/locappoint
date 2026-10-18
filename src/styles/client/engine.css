@@ -196,3 +196,12 @@
     outline-offset: 2px;
 }
 .lc-eng__out:empty { display: none; }
+
+/* Demand (doc 35): a visitor from a country we are not in, and "Tell me when". */
+.lc-eng__abroad { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--lc-line); }
+.lc-eng__abroad .lc-eng__note { display: flex; gap: var(--space-2); align-items: flex-start; }
+.lc-eng__abroad .lc-eng__note svg { flex: none; margin-top: 2px; color: var(--lc-ink-3); }
+.lc-wish { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); width: 100%; }
+.lc-wish .ui-field { flex: 1 1 220px; min-width: 0; }
+.lc-wish--done { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--lc-ink-2); font-size: var(--lc-t-label); }
+.lc-wish--done svg { flex: none; color: var(--lc-success); }

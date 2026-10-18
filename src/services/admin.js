@@ -8,6 +8,7 @@ const call = async (name, args) => {
 }
 
 export const loadOverview = () => call('admin_overview')
+export const loadDemand = (days = 30) => call('admin_demand', { p_days: days })
 export const loadAdminBusinesses = () => call('admin_businesses')
 export const loadAdminBookings = ({ search = '', status = '', offset = 0, limit = 50 } = {}) =>
     call('admin_bookings', { p_search: search || null, p_status: status || null, p_limit: limit, p_offset: offset })

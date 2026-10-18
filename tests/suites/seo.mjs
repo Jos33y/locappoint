@@ -171,6 +171,14 @@ export default async ({ check, root }) => {
         r = await get('/assets/app-abc123.js', { host: 'waitlist.locappoint.com' })
         check(r.status === 301, 'nothing of the old waitlist page is served any more')
 
+        // Where the visitor is, for the search log: Cloudflare's country, never cached, nothing when unknown.
+        r = await get('/geo', { 'cf-ipcountry': 'KE' })
+        check(r.status === 200 && JSON.parse(r.body).country === 'KE' && /no-store/.test(r.headers.get('cache-control')) && r.headers.get('access-control-allow-origin') === '*', `the visitor's country comes from Cloudflare: ${r.body}`)
+        r = await get('/geo', { 'cf-ipcountry': 'XX' })
+        const unknown = JSON.parse(r.body).country
+        r = await get('/geo', { 'cf-ipcountry': 'T1' })
+        check(unknown === null && JSON.parse(r.body).country === null && JSON.parse((await get('/geo')).body).country === null, 'unknown, Tor and no header all give no country')
+
         // Supabase down: pages still load
         fake.close()
         fake.closeAllConnections()

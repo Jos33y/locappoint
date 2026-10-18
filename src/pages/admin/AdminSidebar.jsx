@@ -17,7 +17,8 @@ import {
     Ban,
     ShieldCheck,
     BadgeCheck,
-    MessagesSquare
+    MessagesSquare,
+    Radar
 } from 'lucide-react'
 import LogoIcon from '../../components/LogoIcon'
 
@@ -134,6 +135,14 @@ const AdminSidebar = ({ activeSection, setActiveSection, counts, onClose, onLogo
                         >
                             <MessagesSquare size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
                             <span className="admin-sidebar__item-label">WhatsApp</span>
+                        </button>
+                        <button
+                            type="button"
+                            className={`admin-sidebar__item ${activeSection === 'demand' ? 'admin-sidebar__item--active' : ''}`}
+                            onClick={() => goTo('demand')}
+                        >
+                            <Radar size={16} className="admin-sidebar__item-icon" aria-hidden="true" />
+                            <span className="admin-sidebar__item-label">Demand</span>
                         </button>
                         {[['businesses', Building2, 'Businesses'], ['bookings', ShoppingBag, 'Bookings'], ['people', UserCog, 'People']].map(([key, Icon, label]) => (
                             <button

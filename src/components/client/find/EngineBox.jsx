@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, MapPin, RotateCw, Search } from 'lucide-react'
+import { ArrowRight, Globe, MapPin, RotateCw, Search } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Picker } from '../../ui'
 import { PlaceSearch } from '../../common/PlaceSearch'
 import { MARKETS, LABELS, TIMES, WHEN, WHERE, bookingLink, dayWord, findMatches, keepEnginePlace, loadPopular, reasons } from '../../../services/engine'
@@ -11,6 +11,8 @@ import { payMoney } from '../../../services/payments'
 import { withPeople } from '../../../services/formats'
 import { USER_ERRORS } from '../../../services/booking'
 import { ReliableBadge, VerifiedBadge } from '../../trust/Trust'
+import { SERVED, countryName, noteSearch, visitorCountry } from '../../../services/demand'
+import { TellMeWhen } from './TellMeWhen'
 import '../../../styles/client/engine.css'
 
 const PEOPLE = Array.from({ length: 6 }, (_, i) => ({ value: String(i + 1), label: i === 0 ? 'Just me' : `${i + 1} people` }))
@@ -55,6 +57,16 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     const [popular, setPopular] = useState([])
     const [result, setResult] = useState({ status: 'idle', data: null, error: '' })
     const [more, setMore] = useState(false)
+    // Someone searching from a country we are not in: they may be booking for someone here, or asking
+    // for Locappoint at home. Either way they are told, and can ask for their country.
+    const [abroad, setAbroad] = useState(null)
+    const [askHome, setAskHome] = useState(false)
+
+    useEffect(() => {
+        let cancelled = false
+        visitorCountry().then((c) => { if (!cancelled && c && !SERVED.includes(c)) setAbroad(c) })
+        return () => { cancelled = true }
+    }, [])
 
     useEffect(() => {
         let cancelled = false
@@ -83,7 +95,8 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
         setResult({ status: 'loading', data: null, error: '' })
         try {
             const data = await findMatches({ market: city, text: what, mode, when: days, time, people: Number(people), place, zone })
-            setResult({ status: 'ready', data, error: '' })
+            setResult({ status: 'ready', data, error: '', text: what })
+            noteSearch({ market: city, text: what, mode, people, place, zone, data })
         } catch (err) {
             console.error('Engine failed:', err)
             setResult({ status: 'error', data: null, error: USER_ERRORS.includes(err?.code) || err?.code === '22023' ? err.message : 'We could not search right now. Try again.' })
@@ -161,6 +174,18 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 )}
             </form>
 
+            {abroad && (
+                <div className="lc-eng__abroad">
+                    <p className="lc-eng__note">
+                        <Globe size={16} aria-hidden="true" />
+                        <span>{`You are in ${countryName(abroad)}. Locappoint books businesses in Nigeria and Portugal, so search here to book for someone there.`}</span>
+                    </p>
+                    {askHome
+                        ? <TellMeWhen country={abroad} label={`Ask for ${countryName(abroad)}`} done={`Done. We will tell you when Locappoint opens in ${countryName(abroad)}.`} />
+                        : <Button size="sm" variant="quiet" onClick={() => setAskHome(true)}>{`Want Locappoint in ${countryName(abroad)}?`}</Button>}
+                </div>
+            )}
+
             <div className="lc-eng__out" aria-live="polite">
                 {result.status === 'loading' && (
                     <ul className="lc-eng__opts" aria-hidden="true">
@@ -194,6 +219,12 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                             {when !== 'soon' && Number(result.data?.matched) > 0 && <Button size="sm" variant="secondary" icon={RotateCw} onClick={() => { setWhen('soon'); run({ when: 'soon' }) }}>Look at the next 3 days</Button>}
                             <Button size="sm" variant="quiet" to={browseTo}>Browse every place</Button>
                         </span>
+                        {Number(result.data?.matched) === 0 && (
+                            <>
+                                <p className="lc-eng__note">Want to know when someone near you offers it?</p>
+                                <TellMeWhen key={`${result.text}-${city}`} text={result.text} market={city} zone={place?.zone || zone} />
+                            </>
+                        )}
                     </div>
                 )}
             </div>

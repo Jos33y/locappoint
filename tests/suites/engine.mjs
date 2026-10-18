@@ -29,6 +29,10 @@ export default async ({ browser, url, check }) => {
     check(opts.length === 3 && opts[0].tag === 'Best match' && opts[1].tag === 'Earliest' && opts[2].tag === 'Closest', `three options, three reasons: ${JSON.stringify(opts.map((o) => o.tag))}`)
     check(/70% of clients book again/.test(opts[0].why) && /1\.2 km away/.test(opts[2].why) && /4\.8 from 12 reviews/.test(opts[2].why), `each says why: ${JSON.stringify(opts.map((o) => o.why))}`)
     check(opts[0].book === 'Book 10:00', `one tap books the time: ${opts[0].book}`)
+    await wait(300)
+    const noted = (await calls(p, 'search_note')).pop() || {}
+    check(noted.p_channel === 'web' && noted.p_query === 'haircut' && noted.p_market === 'porto' && noted.p_options === 3 && noted.p_matched === 3 && noted.p_people === 1, `every search is kept for Demand, with what we found: ${JSON.stringify(noted)}`)
+    check(!/You are in/.test(await text(p, '.lc-eng')), 'no country line when the country is unknown')
     check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
     await p.evaluate(() => document.querySelector('.lc-eng__opt .ui-btn')?.click())
     // The business page loads on demand; on a slow machine that takes a few seconds.
@@ -58,6 +62,44 @@ export default async ({ browser, url, check }) => {
     await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
     await wait(700)
     check(/Nobody in Porto offers that yet/.test(await text(p, '.lc-eng__out')) && /Browse every place/.test(await text(p, '.lc-eng__out')), 'nothing fits: it says so and offers every place')
+    check(/Want to know when someone near you offers it/.test(await text(p, '.lc-eng__out')) && await p.$('.lc-eng__out .lc-wish'), 'nothing fits: they can ask to be told')
+    await p.$eval('.lc-wish input', (el) => el.select())
+    await p.type('.lc-wish input', 'ana@x.pt')
+    await p.evaluate(() => document.querySelector('.lc-wish').requestSubmit())
+    await wait(500)
+    const wish = (await calls(p, 'search_wish_add')).pop() || {}
+    check(wish.p_query === 'nothing like this' && wish.p_market === 'porto' && wish.p_email === 'ana@x.pt' && wish.p_phone === null, `Tell me when keeps the search and the email: ${JSON.stringify(wish)}`)
+    check(/We will tell you when someone near you offers it/.test(await text(p, '.lc-eng__out')), 'and says it is done')
+    const missNote = (await calls(p, 'search_note')).pop() || {}
+    check(missNote.p_query === 'nothing like this' && missNote.p_options === 0 && missNote.p_later === 0, 'a search that found nothing is kept too')
+    await p.close()
+
+    // Someone in Kenya: told where Locappoint works, and can ask for Kenya.
+    p = await browser.newPage()
+    p.errors = []
+    p.on('pageerror', (e) => p.errors.push(e.message))
+    await p.setRequestInterception(true)
+    p.on('request', (r) => (new URL(r.url()).pathname === '/geo'
+        ? r.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ country: 'KE' }) })
+        : r.continue()))
+    await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
+    await p.goto(`${url}/?path=${encodeURIComponent('/client')}`, { waitUntil: 'networkidle0' })
+    await wait(900)
+    check(/You are in Kenya\. Locappoint books businesses in Nigeria and Portugal/.test(await text(p, '.lc-eng__abroad')), `a visitor from Kenya is told where Locappoint works: ${await text(p, '.lc-eng__abroad')}`)
+    await p.evaluate(() => [...document.querySelectorAll('.lc-eng__abroad .ui-btn')].find((b) => /Want Locappoint in Kenya/.test(b.textContent))?.click())
+    await wait(300)
+    await p.$eval('.lc-eng__abroad .lc-wish input', (el) => el.select())
+    await p.type('.lc-eng__abroad .lc-wish input', '+254 712 345 678')
+    await p.evaluate(() => document.querySelector('.lc-eng__abroad .lc-wish').requestSubmit())
+    await wait(500)
+    const ke = (await calls(p, 'search_wish_add')).pop() || {}
+    check(ke.p_target_country === 'KE' && ke.p_origin_country === 'KE' && ke.p_phone === '+254 712 345 678' && ke.p_email === null, `asking for Kenya keeps the country and the number: ${JSON.stringify(ke)}`)
+    check(/We will tell you when Locappoint opens in Kenya/.test(await text(p, '.lc-eng__abroad')), 'and says it is done')
+    await p.type('.lc-eng__what input', 'haircut')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(800)
+    check(((await calls(p, 'search_note')).pop() || {}).p_origin_country === 'KE', 'their searches carry their country')
+    check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth) && p.errors.length === 0, `fits a phone, no page errors: ${p.errors.join(' | ')}`)
     await p.close()
 
 }

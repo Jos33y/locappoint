@@ -14,6 +14,7 @@ import BlocksTab from './tabs/BlocksTab'
 import ReliabilityTab from './tabs/ReliabilityTab'
 import VerificationTab from './tabs/VerificationTab'
 import WhatsAppTab from './tabs/WhatsAppTab'
+import DemandTab from './tabs/DemandTab'
 
 const AdminDash = ({
     activeSection,
@@ -49,6 +50,7 @@ const AdminDash = ({
     if (activeSection === 'reliability') return <div className="admin-dashboard"><ReliabilityTab /></div>
     if (activeSection === 'verification') return <div className="admin-dashboard"><VerificationTab onCount={onVerifyCount} /></div>
     if (activeSection === 'whatsapp') return <div className="admin-dashboard"><WhatsAppTab /></div>
+    if (activeSection === 'demand') return <div className="admin-dashboard"><DemandTab /></div>
 
     if (loading) {
         return (

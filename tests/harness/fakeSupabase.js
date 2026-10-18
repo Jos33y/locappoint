@@ -498,6 +498,19 @@ const placesFn = (body) => {
   if (body.action === 'shop' && p) return { data: { on: true, shop: { address: p.address, lat: p.lat, lng: p.lng } }, error: null }
   return { data: { error: 'Unknown action' }, error: null }
 }
+// Demand (doc 35): searches from Nigeria, Portugal and Kenya, two misses, one "Tell me when".
+adminRpc.admin_demand = ({ p_days = 30 }) => ({
+  days: p_days, searches: 42, misses: 7, people: 9, wishes: 2,
+  by_channel: [{ channel: 'web', searches: 30, misses: 5 }, { channel: 'whatsapp', searches: 12, misses: 2 }],
+  by_origin: [{ country: 'PT', searches: 25, misses: 3 }, { country: 'NG', searches: 14, misses: 2 }, { country: 'KE', searches: 3, misses: 2 }],
+  by_place: [{ market: 'porto', zone: null, searches: 20, misses: 2 }, { market: 'lagos', zone: 'Lekki', searches: 12, misses: 4 }, { market: 'lisbon', zone: null, searches: 10, misses: 1 }],
+  missed: [{ query: 'braids', market: 'porto', times: 3 }, { query: 'lash lift', market: 'lagos', times: 2 }],
+  latest_wishes: [
+    { created_at: new Date(Date.now() - 3600000).toISOString(), query: null, market: null, zone: null, target_country: 'KE', origin_country: 'KE', email: null, phone: '+254712345678', told_at: null },
+    { created_at: new Date(Date.now() - 86400000).toISOString(), query: 'braids', market: 'porto', zone: 'Bonfim', target_country: 'PT', origin_country: 'PT', email: 'ana@x.pt', phone: null, told_at: null },
+  ],
+})
+
 // "What do you need?": three options for any words, a later time when asked for 21:00, nothing for "nothing".
 const openDay = () => { const d = new Date(`${dk(1)}T12:00:00Z`).getUTCDay(); return d === 0 ? dk(2) : dk(1) }
 const engineOption = (label, i, extra = {}) => ({ business_id: `b${i}`, business_name: ['Femtos Barbearia', 'Nove Unhas', 'Barba Rija'][i - 1], slug: 'femtos-barbearia', city: 'Porto', service_id: 's1', service_name: 'Haircut', people: 1, price: 18, price_per: 'booking', currency: 'EUR', mode: 'at_business', date: openDay(), time: ['10:00', '09:30', '11:00'][i - 1], km: i === 3 ? 1.2 : null, rating: i === 3 ? 4.8 : null, reviews: i === 3 ? 12 : 0, rebook_pct: i === 1 ? 70 : null, regular: false, label, ...extra })

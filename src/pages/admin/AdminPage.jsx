@@ -22,13 +22,14 @@ const SECTION_LABELS = {
     reliability: 'Reliability',
     verification: 'Verification',
     whatsapp: 'WhatsApp',
+    demand: 'Demand',
     analytics: 'Analytics',
     waitlist: 'Waitlist',
     partnership: 'Partnerships',
     errors: 'App errors'
 }
 
-const VALID_SECTIONS = ['overview', 'support', 'blocks', 'reliability', 'verification', 'whatsapp', 'businesses', 'bookings', 'people', 'analytics', 'waitlist', 'partnership', 'errors']
+const VALID_SECTIONS = ['overview', 'support', 'blocks', 'reliability', 'verification', 'whatsapp', 'demand', 'businesses', 'bookings', 'people', 'analytics', 'waitlist', 'partnership', 'errors']
 const DEFAULT_SECTION = 'overview'
 
 const getSectionFromHash = () => {

@@ -84,4 +84,23 @@ export default async ({ browser, url, check }) => {
         check(p.errors.length === 0, `no page errors on ${s} at 390: ${p.errors.join(' | ')}`)
         await p.close()
     }
+
+    // Demand (doc 35): where people search from, where they want it, what found nothing, who asked to be told.
+    p = await open('demand')
+    const dem = await p.evaluate(() => document.querySelector('.adm-demand')?.textContent || '')
+    const dcards = await p.evaluate(() => [...document.querySelectorAll('.adm-demand .stat-card')].map((c) => c.textContent))
+    check(dcards.some((c) => /Searches\s*42/.test(c) && /Website 30, WhatsApp 12/.test(c)) && dcards.some((c) => /Found nothing\s*7/.test(c) && /17% of searches/.test(c)), `searches and misses are counted: ${JSON.stringify(dcards)}`)
+    check(dcards.some((c) => /From outside Nigeria and Portugal\s*3/.test(c) && /1 country/.test(c)) && dcards.some((c) => /Asked to be told\s*2/.test(c)), 'searches from abroad and Tell me when are counted')
+    check(/Kenya/.test(dem) && /Lagos, Lekki: 4 found nothing/.test(dem) && /braids, Porto/.test(dem), `countries, places and missed words show: ${dem.slice(0, 400)}`)
+    check(/\+254712345678/.test(dem) && /ana@x\.pt/.test(dem) && /Locappoint in their country/.test(dem), 'the Tell me when contacts are listed')
+    const before = (await rpcs(p, 'admin_demand')).length
+    await p.evaluate(() => [...document.querySelectorAll('.adm-demand__periods .btn')].find((b) => b.textContent === '7 days')?.click())
+    await wait(500)
+    const asked = await rpcs(p, 'admin_demand')
+    check(asked.length === before + 1 && asked.pop().p_days === 7, 'the period can be changed')
+    check(p.errors.length === 0, `no page errors on Demand: ${p.errors.join(' | ')}`)
+    await p.close()
+    p = await open('demand', 390, 844)
+    check(await fits(p), 'Demand fits a phone')
+    await p.close()
 }

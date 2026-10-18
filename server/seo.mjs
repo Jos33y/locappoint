@@ -42,7 +42,7 @@ export const PAGES = {
 // Signed-in screens and one-off links: never in search results.
 const PRIVATE = ['/portal', '/client', '/admin', '/auth', '/b/', '/me', '/join/', '/team/', '/forgot-password', '/reset-password', '/waitlist']
 // Single-segment paths the app owns, so they are never looked up as a business.
-export const RESERVED = new Set(['', 'about', 'businesses', 'app', 'contact', 'partnership', 'privacy', 'terms', 'legal', 'admin', 'auth', 'me', 'forgot-password', 'reset-password', 'waitlist', 'portal', 'client', 'join', 'team', 'b', 'robots.txt', 'sitemap.xml', 'favicon.ico'])
+export const RESERVED = new Set(['', 'about', 'businesses', 'app', 'contact', 'partnership', 'privacy', 'terms', 'legal', 'admin', 'auth', 'me', 'forgot-password', 'reset-password', 'waitlist', 'portal', 'client', 'join', 'team', 'b', 'robots.txt', 'sitemap.xml', 'favicon.ico', 'geo'])
 
 export const isPrivate = (path) => PRIVATE.some((p) => path === p.replace(/\/$/, '') || path.startsWith(p.endsWith('/') ? p : `${p}/`))
 
@@ -182,6 +182,13 @@ export const injectHead = (html, m) => html
 export const withLegalText = (html, text) => (text
     ? html.replace('<div id="root"></div>', `<div id="root">${text}</div>`)
     : html)
+
+// Cloudflare's guess at the visitor's country (CF-IPCountry): two capital letters, or null when it is
+// unknown (XX), Tor (T1) or missing.
+export const visitorCountry = (headers = {}) => {
+    const code = String(headers['cf-ipcountry'] || '').trim().toUpperCase()
+    return /^[A-Z]{2}$/.test(code) && code !== 'XX' ? code : null
+}
 
 export const robotsTxt = (host) => {
     if (/^status\./.test(host)) return 'User-agent: *\nDisallow: /\n'

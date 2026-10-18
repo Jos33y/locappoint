@@ -214,6 +214,21 @@ const compact = (v: any): any => {
     return v
 }
 
+// The country of a WhatsApp number, for the search log (doc 35): the calling code, longest first.
+// Numbers from anywhere else are kept without a country.
+const CALLING: Array<[string, string]> = [
+    ['234', 'NG'], ['351', 'PT'], ['233', 'GH'], ['254', 'KE'], ['225', 'CI'], ['250', 'RW'], ['256', 'UG'], ['255', 'TZ'],
+    ['237', 'CM'], ['221', 'SN'], ['229', 'BJ'], ['228', 'TG'], ['244', 'AO'], ['258', 'MZ'], ['238', 'CV'], ['245', 'GW'],
+    ['239', 'ST'], ['353', 'IE'], ['352', 'LU'], ['971', 'AE'], ['966', 'SA'], ['974', 'QA'],
+    ['27', 'ZA'], ['20', 'EG'], ['44', 'GB'], ['33', 'FR'], ['34', 'ES'], ['39', 'IT'], ['49', 'DE'], ['31', 'NL'],
+    ['32', 'BE'], ['41', 'CH'], ['46', 'SE'], ['47', 'NO'], ['55', 'BR'], ['91', 'IN'], ['86', 'CN'], ['61', 'AU'],
+]
+export const phoneCountry = (phone: string) => {
+    const digits = String(phone || '').replace(/\D/g, '')
+    if (digits.startsWith('1')) return 'US'
+    return CALLING.find(([code]) => digits.startsWith(code))?.[1] || null
+}
+
 const SYMBOL: Record<string, string> = { EUR: '€', NGN: '₦', USD: '$', GBP: '£' }
 export const priceText = (price: unknown, currency: unknown, per?: unknown) => {
     const n = Number(price)
@@ -321,11 +336,21 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
             }))
             return { ...r, services }
         },
-        search: async (i) => deps.call('wa_search', {
-            p_market: i.city, p_query: String(i.what || ''), p_zone: String(i.area || '').trim() || null,
-            p_dates: Array.isArray(i.days) ? i.days.filter((d: string) => DATE.test(d)).slice(0, 3) : null,
-            p_window: i.part || 'any', p_at: TIME.test(String(i.around || '')) ? i.around : null, p_people: Number(i.people) || 1,
-        }),
+        search: async (i) => {
+            const found = await deps.call('wa_search', {
+                p_market: i.city, p_query: String(i.what || ''), p_zone: String(i.area || '').trim() || null,
+                p_dates: Array.isArray(i.days) ? i.days.filter((d: string) => DATE.test(d)).slice(0, 3) : null,
+                p_window: i.part || 'any', p_at: TIME.test(String(i.around || '')) ? i.around : null, p_people: Number(i.people) || 1,
+            })
+            // Kept for Demand in /admin; never in the way of the answer.
+            await Promise.resolve(deps.call('search_note', {
+                p_channel: 'whatsapp', p_query: String(i.what || ''), p_market: i.city, p_zone: String(i.area || '').trim() || null,
+                p_people: Number(i.people) || 1, p_origin_country: phoneCountry(o.phone),
+                p_options: Array.isArray(found?.options) ? found.options.length : 0, p_later: Array.isArray(found?.later) ? found.later.length : 0,
+                p_matched: Number(found?.matched) || 0,
+            })).catch(() => {})
+            return found
+        },
         free_times: async (i) => {
             need(UUID.test(String(i.business_id)) && UUID.test(String(i.service_id)) && DATE.test(String(i.date)), 'Give business_id, service_id and date (YYYY-MM-DD)')
             return deps.call('wa_times', { p_business: i.business_id, p_service: i.service_id, p_date: i.date, p_ignore: null, p_people: Number(i.people) || 1, ...place(i) })

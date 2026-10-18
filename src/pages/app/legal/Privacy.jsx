@@ -28,6 +28,8 @@ const sections = [
                     <li><strong>Bookings.</strong> The business, service, date and time, the client&apos;s name and contact details, and any notes added to the booking.</li>
                     <li><strong>Forms.</strong> Waitlist: email address, whether you are a business or a client, business type, city and name if you give them. Partnership application: name, email, phone, category, business name, city, country and your message. Contact form: name, email, phone if given, subject and message.</li>
                     <li><strong>Waitlist site analytics, only with your consent.</strong> A random session identifier, pages and sections viewed, clicks, scroll depth, time on page, device type, browser, operating system, screen size, referring site, campaign tags and browser language. Approximate location (country, region, city and time zone) is looked up from your IP address. We store the location result, not the IP address.</li>
+                    <li><strong>Searches.</strong> When you search for a service on Locappoint, on the website, in the app or on WhatsApp: the words, the city and area or a map point rounded to about 1 km, how many people, and how many results we found; your country, from our hosting provider's lookup of your connection or from your WhatsApp number's country code, and your device's time zone. If you are signed in, the search is linked to your account. No IP address or exact address is kept.</li>
+                    <li><strong>Tell me when.</strong> If you ask us to tell you when someone offers what you searched for, or when Locappoint opens in your country: the email or WhatsApp number you give us, with that search.</li>
                     <li><strong>Server logs.</strong> Our hosting server records IP addresses and requests to keep the service secure and working.</li>
                     <li><strong>Business page counts.</strong> How many times each business page is opened, a booking is started and a time is picked, per day, by source (such as Instagram or a QR code) and by phone or computer. No identifier, cookie or IP address is kept, so a count cannot be traced back to you.</li>
                     <li><strong>Abuse limits.</strong> To stop floods of fake bookings and form spam, we count requests per connection for up to 2 days. We store a one-way hash of the IP address, not the address itself.</li>
@@ -48,6 +50,8 @@ const sections = [
                     <li><strong>Following up on waitlist and partnership applications.</strong> Basis: steps you asked us to take before a contract.</li>
                     <li><strong>Replying to contact messages.</strong> Basis: our legitimate interest in answering people who write to us.</li>
                     <li><strong>Waitlist site analytics.</strong> Basis: your consent, which you can withdraw at any time.</li>
+                    <li><strong>Search records</strong>, to see where people want Locappoint and which businesses to bring on. Basis: our legitimate interest in growing the service where it is needed.</li>
+                    <li><strong>Tell me when.</strong> Basis: your request.</li>
                     <li><strong>Security, fraud and abuse prevention</strong>, including server logs. Basis: our legitimate interest in keeping the platform safe.</li>
                     <li><strong>Meeting legal duties</strong>, such as tax records once billing starts or lawful requests from authorities. Basis: legal obligation.</li>
                 </ul>
@@ -113,6 +117,8 @@ const sections = [
                 <li><strong>Waitlist signups.</strong> 24 months from signup, unless you create an account.</li>
                 <li><strong>Partnership and contact messages.</strong> 24 months from your last message.</li>
                 <li><strong>Waitlist analytics.</strong> 13 months.</li>
+                <li><strong>Searches.</strong> 13 months.</li>
+                <li><strong>Tell me when.</strong> 24 months at most. Ask us at any time and we remove it.</li>
                 <li><strong>WhatsApp messages.</strong> 90 days, then deleted automatically every night.</li>
                 <li><strong>Email and notification records.</strong> Names and email addresses are removed after 90 days; we keep a note that the message was sent so it is never sent twice.</li>
                 <li><strong>Crash reports.</strong> 60 days from the last time the error happened.</li>

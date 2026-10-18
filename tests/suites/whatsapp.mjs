@@ -238,6 +238,22 @@ export default async ({ browser, url, check, server, root }) => {
     check(mdTurn.replies[0].text === 'Hi\nFound *Femtos Barbearia*.', `WhatsApp bold and no headings: ${JSON.stringify(mdTurn.replies[0].text)}`)
     check(/before you have looked/.test(seenBody.system[0].text), 'the rules forbid refusing a booking before looking')
 
+    // Demand (doc 35): every WhatsApp search is kept, with the country of the number.
+    check(agent.phoneCountry('351911222333') === 'PT' && agent.phoneCountry('2348031234567') === 'NG' && agent.phoneCountry('254712345678') === 'KE' && agent.phoneCountry('447700900123') === 'GB' && agent.phoneCountry('15551234567') === 'US' && agent.phoneCountry('999') === null, 'a WhatsApp number gives its country')
+    const noted = []
+    const recCall = async (fn, args) => {
+        if (fn === 'search_note') { noted.push(args); return null }
+        if (fn === 'wa_search') return { options: [{ business_id: BIZ, mode: 'at_business' }], later: [], matched: 1 }
+        return fakeCall(fn, args)
+    }
+    const finder = script([use('search', { city: 'lisbon', what: 'haircut' }), { stop_reason: 'end_turn', content: [{ type: 'text', text: 'Femtos Barbearia has 10:00.' }], usage: {} }])
+    await agent.runAgent({ call: recCall, claude: finder, nonce: () => 'abcdef012345' }, { phone: '254712345678', profileName: '', message: 'haircut in lisbon', thread: { ...thread, history: [] } })
+    check(noted.length === 1 && noted[0].p_channel === 'whatsapp' && noted[0].p_query === 'haircut' && noted[0].p_market === 'lisbon' && noted[0].p_origin_country === 'KE' && noted[0].p_options === 1 && noted[0].p_matched === 1, `a WhatsApp search is kept for Demand: ${JSON.stringify(noted)}`)
+    const failing = async (fn, args) => { if (fn === 'search_note') throw new Error('down'); return recCall(fn, args) }
+    const finder2 = script([use('search', { city: 'lisbon', what: 'haircut' }), { stop_reason: 'end_turn', content: [{ type: 'text', text: 'Femtos Barbearia has 10:00.' }], usage: {} }])
+    const kept = await agent.runAgent({ call: failing, claude: finder2, nonce: () => 'abcdef012345' }, { phone: '254712345678', profileName: '', message: 'haircut in lisbon', thread: { ...thread, history: [] } })
+    check(/10:00/.test(kept.replies?.[0]?.text || ''), 'and a failure to keep it never stops the answer')
+
     // Round 3: a calendar for dates, plain WhatsApp text, prices in words, Portuguese noticed, and the
     // last round always answers in words.
     let r3Body

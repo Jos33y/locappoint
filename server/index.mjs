@@ -8,7 +8,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import zlib from 'node:zlib'
 import { fileURLToPath } from 'node:url'
-import { businessMeta, injectHead, notFoundMeta, pageMeta, robotsTxt, sitemapXml, slugOf, withLegalText } from './seo.mjs'
+import { businessMeta, injectHead, notFoundMeta, pageMeta, robotsTxt, sitemapXml, slugOf, visitorCountry, withLegalText } from './seo.mjs'
 import { loadManifest, preloadTags, withPreload } from './preload.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -145,6 +145,9 @@ const handle = async (req, res) => {
     if (host.startsWith('waitlist.')) return send(req, res, 301, 'text/plain; charset=utf-8', '', { Location: `https://${APEX}/auth?tab=signup&as=business` })
     if (pathname === '/about') return send(req, res, 301, 'text/plain; charset=utf-8', '', { Location: '/' })
 
+    // The visitor's country from Cloudflare, for the search log (doc 35). Never cached: it is per visitor.
+    // The app asks from its own origin, so any origin may read it; it carries nothing private.
+    if (pathname === '/geo') return send(req, res, 200, 'application/json; charset=utf-8', JSON.stringify({ country: visitorCountry(req.headers) }), { 'Cache-Control': 'private, no-store', 'Access-Control-Allow-Origin': '*' })
     if (pathname === '/robots.txt') return send(req, res, 200, 'text/plain; charset=utf-8', robotsTxt(host), { 'Cache-Control': 'public, max-age=3600' })
     if (pathname === '/sitemap.xml') {
         const all = await loadAll().catch((err) => { console.error('Sitemap lookup failed:', err.message); return [] })
