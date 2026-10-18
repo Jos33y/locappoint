@@ -2,13 +2,36 @@
    the reason tag in a quiet chip; the best match carries the only accent. */
 
 .lc-eng {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
     padding: var(--space-5);
+    overflow: hidden;
     border-radius: var(--lc-r-lg);
     background: var(--lc-card);
     box-shadow: inset 0 0 0 1px var(--lc-line);
+    isolation: isolate;
+}
+
+/* The city's world across the top of the box, under a veil, so the box is never a plain slab. */
+.lc-eng__band {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: -1;
+    height: 132px;
+    border-bottom: 1px solid var(--lc-line);
+}
+
+.lc-eng__band .lc-pattern { display: block; width: 100%; height: 100%; }
+
+.lc-eng__band::after {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--lc-card) 80%, transparent);
+    content: "";
 }
 
 .lc-eng__title {
@@ -87,24 +110,123 @@
 }
 
 .lc-eng__opt {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "tag tag" "main side" "times times" "also also";
-    gap: var(--space-2) var(--space-3);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
     padding: var(--space-4);
-    border-radius: var(--lc-r-md);
+    overflow: hidden;
+    border-radius: var(--lc-r-lg);
     background: var(--lc-well);
     box-shadow: inset 0 0 0 1px var(--lc-line);
 }
 
-.lc-eng__opt.is-best,
-.lc-eng__opt.is-regular { box-shadow: inset 0 0 0 1.5px var(--azure); }
+/* The lead: the business's world as a strap along the top. */
+.lc-eng__opt.is-lead { padding-top: calc(var(--space-4) + 10px); }
+
+.lc-eng__strap {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 10px;
+}
+
+.lc-eng__strap .lc-pattern,
+.lc-eng__side-strap .lc-pattern { display: block; width: 100%; height: 100%; }
+
+.lc-eng__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.lc-eng__at {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    text-align: right;
+}
+
+.lc-eng__time {
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-title);
+    font-weight: var(--font-weight-bold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--lc-track-title);
+    line-height: 1;
+}
+
+.lc-eng__svcbox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-eng__svcwords { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.lc-eng__svcbox .lc-eng__svc { color: var(--lc-ink-1); font-size: var(--lc-t-body); font-weight: var(--font-weight-medium); }
+
+.lc-eng__mins { color: var(--lc-ink-3); font-size: 12px; }
+
+.lc-eng__svcbox .lc-eng__price { flex: none; font-family: var(--lc-font-mono); }
+
+.lc-eng__go { display: flex; }
+
+/* The others: one line each, their world down the side, the time as the button. */
+.lc-eng__opt.is-row {
+    flex-direction: row;
+    align-items: center;
+    padding-left: calc(var(--space-4) + 8px);
+}
+
+.lc-eng__side-strap {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 8px;
+}
+
+.lc-eng__opt.is-row .lc-eng__main { flex: 1 1 auto; }
+
+.lc-eng__opt.is-row .lc-eng__at .ui-btn { font-variant-numeric: tabular-nums; }
+
+.lc-eng__opt.is-best.is-lead,
+.lc-eng__opt.is-regular.is-lead { box-shadow: inset 0 0 0 1.5px var(--azure); }
+
+.lc-eng__count {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-3);
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+}
+
+.lc-eng__count b {
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
 
 .lc-eng__opt.is-skeleton { display: flex; flex-direction: column; gap: var(--space-2); }
 
 .lc-eng__tag {
-    grid-area: tag;
-    justify-self: start;
+    align-self: flex-start;
+    margin-bottom: 2px;
     padding: 2px 10px;
     border-radius: var(--radius-full);
     background: var(--lc-card);
@@ -118,7 +240,6 @@
 .lc-eng__opt.is-regular .lc-eng__tag { color: var(--lc-info); box-shadow: inset 0 0 0 1px var(--azure); }
 
 .lc-eng__main {
-    grid-area: main;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -141,7 +262,6 @@
 .lc-eng__area { color: var(--lc-ink-3); font-size: var(--lc-t-label); }
 
 /* More of the same business: the other times that day, and its other services that fit. */
-.lc-eng__opt.is-only { grid-template-areas: "main side" "times times" "also also"; }
 .lc-eng__times,
 .lc-eng__also {
     display: flex;
@@ -151,19 +271,8 @@
     padding-top: var(--space-3);
     border-top: 1px solid var(--lc-line);
 }
-.lc-eng__times { grid-area: times; }
-.lc-eng__also { grid-area: also; }
 .lc-eng__label { flex-basis: 100%; color: var(--lc-ink-3); font-size: 12px; font-weight: var(--font-weight-semibold); }
 .lc-eng__times .ui-btn { font-variant-numeric: tabular-nums; }
-
-.lc-eng__side {
-    grid-area: side;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: var(--space-2);
-}
 
 .lc-eng__price {
     color: var(--lc-ink-1);
@@ -173,13 +282,61 @@
 
 .lc-eng__none { display: flex; flex-direction: column; gap: var(--space-3); }
 
+.lc-eng__headline {
+    margin: var(--space-1) 0 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-title);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--lc-track-title);
+    line-height: var(--lc-lh-tight);
+}
+
+.lc-eng__lede {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+    line-height: var(--lc-lh-body);
+}
+
+.lc-eng__small {
+    margin: 0;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.lc-eng__small a { color: var(--lc-ink-1); text-decoration: underline; text-underline-offset: 3px; }
+
+.lc-eng__facts {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-eng__facts div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3);
+}
+
+.lc-eng__facts div + div { border-top: 1px solid var(--lc-line); }
+
+.lc-eng__facts dt { color: var(--lc-ink-3); font-size: var(--lc-t-label); }
+
+.lc-eng__facts dd { margin: 0; color: var(--lc-ink-1); font-size: var(--lc-t-label); overflow-wrap: anywhere; }
+
+.lc-eng__facts dd.is-mono { font-family: var(--lc-font-mono); }
+
 .lc-eng__noneactions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
 @media (max-width: 479px) {
     .lc-eng { padding: var(--space-4); }
-    .lc-eng__opt { grid-template-areas: "tag tag" "main main" "side side" "times times" "also also"; }
-    .lc-eng__opt.is-only { grid-template-areas: "main main" "side side" "times times" "also also"; }
-    .lc-eng__side { flex-direction: row; align-items: center; }
 }
 
 .lc-eng__row[hidden] { display: none; }
@@ -218,11 +375,60 @@
 
 /* Demand (doc 35): a visitor from a country we are not in, and "Tell me when". */
 .lc-eng__abroad { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--lc-line); }
+.lc-eng__abroad.is-scene { align-items: stretch; gap: var(--space-3); }
+.lc-eng__abroad.is-scene > .ui-btn { align-self: flex-start; }
 .lc-eng__abroad .lc-eng__note { display: flex; gap: var(--space-2); align-items: flex-start; }
 .lc-eng__abroad .lc-eng__note svg { flex: none; margin-top: 2px; color: var(--lc-ink-3); }
-.lc-wish { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); width: 100%; }
-.lc-wish .ui-field { flex: 1 1 220px; min-width: 0; }
-.lc-wish--done { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--lc-ink-2); font-size: var(--lc-t-label); }
+
+.lc-eng__pick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+
+.lc-eng__country {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 52px;
+    padding: var(--space-2);
+    border: 0;
+    border-radius: var(--lc-r-md);
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    color: var(--lc-ink-2);
+    font: inherit;
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+    text-align: left;
+    cursor: pointer;
+}
+
+.lc-eng__country b { display: block; color: var(--lc-ink-1); }
+
+.lc-eng__country:hover { background: var(--lc-raised); }
+
+.lc-eng__country:focus-visible { outline: 2px solid var(--azure); outline-offset: 2px; }
+
+.lc-eng__countryart { flex: none; width: 28px; height: 28px; overflow: hidden; border-radius: var(--lc-r-sm); }
+
+.lc-eng__countryart .lc-pattern { display: block; width: 100%; height: 100%; }
+
+/* "Tell me when" as its own small card: a title, then the contact and the button side by side. */
+.lc-wish {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    box-sizing: border-box;
+}
+
+.lc-wish__title { margin: 0; color: var(--lc-ink-1); font-size: var(--lc-t-body); font-weight: var(--font-weight-semibold); }
+
+.lc-wish__row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); }
+
+.lc-wish .ui-field { flex: 1 1 200px; min-width: 0; }
+.lc-wish--done { flex-direction: row; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-4); color: var(--lc-ink-2); font-size: var(--lc-t-label); }
 .lc-wish--done svg { flex: none; color: var(--lc-success); }
 
 /* Search that understands (doc 36): what the words were read as, each removable. */
@@ -249,3 +455,114 @@
 .lc-eng__read:focus-visible { outline: 2px solid var(--azure); outline-offset: 2px; }
 /* Read by the AI rather than the rules: the same chip, a dashed edge. */
 .lc-eng__read.is-ai { box-shadow: none; border: 1px dashed var(--azure); }
+.lc-eng__readhint { flex-basis: 100%; color: var(--lc-ink-3); font-size: 12px; }
+
+/* The empty screens (Scenes.jsx): drawn from the place's world, the mark's pin, slot and badge. */
+.lc-scene {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    border-radius: var(--lc-r-lg);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    isolation: isolate;
+}
+
+.lc-scene--place,
+.lc-scene--noted { aspect-ratio: 6 / 5; max-height: 320px; }
+
+.lc-scene--noted { aspect-ratio: 18 / 13; }
+
+.lc-scene.is-small { aspect-ratio: auto; height: 150px; }
+
+.lc-scene__world,
+.lc-scene__veil { position: absolute; inset: 0; z-index: -1; }
+
+.lc-scene__world .lc-pattern { display: block; width: 100%; height: 100%; }
+
+.lc-scene__veil { background: color-mix(in srgb, var(--lc-canvas) 72%, transparent); }
+
+.lc-scene.is-paper .lc-scene__veil { background: color-mix(in srgb, var(--lc-canvas) 84%, transparent); }
+
+.lc-scene__art,
+.lc-scene__lines { display: block; width: 100%; height: 100%; }
+
+.lc-scene__ring { fill: none; stroke: var(--lc-ink-1); stroke-opacity: 0.14; stroke-width: 1.5; }
+
+.lc-scene__ring.is-mid { stroke-opacity: 0.22; }
+
+.lc-scene__ring.is-near { stroke-opacity: 0.34; stroke-dasharray: 3 6; }
+
+.lc-scene__path { fill: none; stroke: var(--azure-soft, var(--azure)); stroke-dasharray: 2 5; stroke-linecap: round; stroke-width: 1.5; }
+
+.lc-scene__route { fill: none; stroke: var(--azure); stroke-opacity: 0.6; stroke-width: 1.5; }
+
+.lc-scene__there { fill: var(--azure); }
+
+.lc-scene__therering { fill: none; stroke: var(--azure); stroke-opacity: 0.5; }
+
+.lc-scene__pin { fill: var(--lc-card); stroke: var(--lc-ink-1); stroke-width: 2; }
+
+.lc-scene__pin.is-solid { fill: var(--azure); stroke: none; }
+
+.lc-scene__slot { fill: none; stroke: var(--lc-ink-1); stroke-dasharray: 3 3; stroke-width: 1.6; }
+
+.lc-scene__slot.is-full { fill: var(--lc-ink-1); stroke: none; }
+
+.lc-scene__disc-bg { fill: var(--lc-card); fill-opacity: 0.92; }
+
+.lc-scene__badge { fill: var(--signal); stroke: var(--lc-card); stroke-width: 4; }
+
+.lc-scene__tick { fill: none; stroke: var(--lc-canvas); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3.2; }
+
+.lc-scene__you { fill: none; stroke: var(--lc-ink-1); stroke-dasharray: 4 5; stroke-opacity: 0.55; stroke-width: 1.5; }
+
+.lc-scene__label { fill: var(--lc-ink-1); font-family: var(--lc-font-body); font-size: 13px; }
+
+.lc-scene__label.is-there { fill: var(--lc-ink-2); font-size: 12px; }
+
+.lc-scene__cap {
+    position: absolute;
+    top: var(--space-3);
+    left: var(--space-3);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--lc-canvas) 85%, transparent);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    color: var(--lc-ink-1);
+    font-size: 12px;
+}
+
+.lc-scene--abroad {
+    aspect-ratio: 6 / 5;
+    max-height: 320px;
+    background: var(--lc-well);
+}
+
+.lc-scene__dot { fill: var(--lc-ink-1); fill-opacity: 0.1; }
+
+.lc-scene__country {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.lc-scene__country.is-pt { top: 8%; left: 10%; }
+
+.lc-scene__country.is-ng { top: 50%; left: 22%; }
+
+.lc-scene__disc {
+    width: 64px;
+    height: 64px;
+    overflow: hidden;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--lc-line-strong);
+}
+
+.lc-scene__disc .lc-pattern { display: block; width: 100%; height: 100%; }
+
+.lc-scene__name { display: flex; flex-direction: column; color: var(--lc-ink-2); font-size: 12px; }
+
+.lc-scene__name b { color: var(--lc-ink-1); font-family: var(--lc-font-display); font-size: var(--lc-t-body); font-weight: var(--font-weight-semibold); }
+
+.lc-scene--abroad .lc-scene__lines { position: absolute; inset: 0; }

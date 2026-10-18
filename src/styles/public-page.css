@@ -972,8 +972,7 @@
     max-width: none;
 }
 
-.lc-pub__city.is-porto .lc-pub__cityband,
-.lc-pub__city.is-lisbon .lc-pub__cityband { opacity: 0.6; }
+.lc-pub__city.is-light .lc-pub__cityband { opacity: 0.6; }
 
 .lc-pub__citymark {
     flex: none;

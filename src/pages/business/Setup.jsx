@@ -26,7 +26,7 @@ import {
 import { ABOUT_MAX, OTHER_CITY, aboutExample, cityOf, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
 import { useSlugStatus } from '../../hooks/useSlugStatus'
 import { savedCity } from '../../services/engine'
-import { CityWall, ExamplePage, GoLiveCard, worldOf } from './SetupScenes'
+import { CityWall, ExamplePage, GoLiveCard, patternOf, worldOf } from './SetupScenes'
 import { isNative, shareLink } from '../../services/native'
 import '../../styles/business/setup.css'
 
@@ -723,7 +723,7 @@ const Setup = () => {
 
             {isDesktop && staged && (
                 <aside className="lc-setup__stage" aria-label={phase === 'welcome' ? 'Example booking page' : 'Your page on a phone'}>
-                    <CityWall world={world} />
+                    <CityWall world={phase === 'live' ? patternOf(business) : world} />
                     {phase !== 'welcome' && <div className="lc-setup__stagehead">
                         {inSteps && (
                             <>

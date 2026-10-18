@@ -4,7 +4,7 @@ import { Button } from '../ui'
 import { Mark, Wordmark } from './Brand'
 import { BusinessCover, BusinessMark } from '../brand/BusinessFace'
 import CityPattern from '../brand/CityPattern'
-import { worldOf } from '../brand/world'
+import { LIGHT_WORLDS, patternOf, worldOf } from '../brand/world'
 import { useNow } from './ShopClock'
 import { BookBar, DoorSign } from './public/DoorSign'
 import { TicketPreview } from './public/TicketPreview'
@@ -54,9 +54,10 @@ const onlineOnly = (business, services) => {
 // The page closes where it opened: in the business's city, with its tile.
 const CityFoot = ({ business, name }) => {
     const world = worldOf(business)
+    const pattern = patternOf(business)
     return (
-        <footer className={`lc-pub__city is-${world}`}>
-            <span className="lc-pub__cityband" aria-hidden="true"><CityPattern city={world} centred /></span>
+        <footer className={`lc-pub__city is-${pattern}${LIGHT_WORLDS.has(pattern) ? ' is-light' : ''}`}>
+            <span className="lc-pub__cityband" aria-hidden="true"><CityPattern world={pattern} centred /></span>
             <span className="lc-pub__citymark" aria-hidden="true"><BusinessMark business={business} /></span>
             <p className="lc-pub__citytext">
                 <b>{name} takes bookings on Locappoint in {business.city || CITY_NAME[world]}.</b>
@@ -121,7 +122,7 @@ export const PublicPageView = ({ business, services, week, preview = false, onBo
                 {(hasHours && now) || bookable ? (
                     <aside className="lc-pub__aside">
                         <DoorSign
-                            world={world}
+                            world={patternOf(business)}
                             week={hasHours ? week : null}
                             now={now}
                             timeZone={timeZone}

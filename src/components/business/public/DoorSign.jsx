@@ -6,8 +6,8 @@ import { TodayStrip, doorState, visitorZone } from './PublicStatus'
 import { clock } from '../../../services/hours'
 import '../../../styles/public-page.css'
 
-// The door sign: the shop's sign hanging in its city. The city's pattern is the strap it hangs from,
-// so the page wears its city even when the owner has a photo cover. Under it, the shop clock, open or
+// The door sign: the shop's sign hanging in its world. The business's pattern is the strap it hangs from,
+// so the page wears its world even when the owner has a photo cover. Under it, the shop clock, open or
 // closed, today's hours with the amber hand for now, and, when the page takes bookings, the next real
 // free time with one button. On a wide screen it is the one thing that follows the scroll. On a phone
 // it sits under the name with its button, and the bar at the bottom takes over once it scrolls away.
@@ -19,7 +19,7 @@ export const DoorSign = ({ world, week, now, timeZone, city, nextFree, onBookNex
     const strip = Boolean(door && today.length && now.minutes < today[today.length - 1].end)
     return (
         <section className={`lc-door is-${world}${door ? ` is-${door.tone}` : ''}`} aria-label={door ? `${door.state}. ${door.lead} ${clock(door.time)}` : 'Book'}>
-            <span className="lc-door__strap" aria-hidden="true"><CityPattern city={world} centred size={18} /></span>
+            <span className="lc-door__strap" aria-hidden="true"><CityPattern world={world} centred size={18} /></span>
             {door && (
                 <div className="lc-door__sign">
                     <div className="lc-door__row">

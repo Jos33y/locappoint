@@ -110,24 +110,84 @@ export default async ({ browser, url, check }) => {
         share: document.querySelector('.biz-tomorrow a[href*="wa.me"]')?.getAttribute('href') || '',
         sky: document.querySelector('.biz-main')?.className || '',
         line: document.querySelector('.biz-dayhead__line')?.textContent || '',
+        status: document.querySelector('.biz-dayhead__status')?.textContent || '',
     }))
     check(/Today, in full/.test(eve.slip) && /earned from 1 visit/.test(eve.slip) && /Booked online/.test(eve.slip) && /No-shows/.test(eve.slip), `the evening slip: ${eve.slip}`)
     check(!eve.bigRing, 'after closing the big ring gives way to the slip')
     check(/2 booked/.test(eve.tomorrow) && /First at 09:00 with Ana Ferreira/.test(eve.tomorrow) && /Still free 09:50 to 19:00/.test(eve.tomorrow), `tomorrow: ${eve.tomorrow}`)
     check(/Free%20tomorrow/.test(eve.share) && /src%3Dwa/.test(eve.share), 'tomorrow\'s free times go out on WhatsApp with the link')
-    check(/biz-main--(dusk|night)/.test(eve.sky) && /Closed for the day/.test(eve.line), `evening sky and line: ${eve.sky} / ${eve.line}`)
+    check(/biz-main--(dusk|night)/.test(eve.sky) && /Closed for the day/.test(eve.status) && /You open tomorrow at 09:00 with 2 bookings/.test(eve.line), `evening sky, status and line: ${eve.sky} / ${eve.status} / ${eve.line}`)
     check(p.errors.length === 0, `no page errors in the evening: ${p.errors.join(' | ')}`)
     await p.close()
 
     p = await at('2026-10-16T08:10:00+01:00', '')
-    const morning = await p.evaluate(() => ({ hello: document.querySelector('.biz-dayhead__hello')?.textContent || '', line: document.querySelector('.biz-dayhead__line')?.textContent || '', sky: document.querySelector('.biz-main')?.className || '' }))
-    check(/^Good morning/.test(morning.hello) && /You open at 09:00/.test(morning.line) && /Sunrise \d\d:\d\d in Porto/.test(morning.line), `morning: ${morning.hello} / ${morning.line}`)
+    const morning = await p.evaluate(() => ({ hello: document.querySelector('.biz-dayhead__hello')?.textContent || '', status: document.querySelector('.biz-dayhead__status')?.textContent || '', line: document.querySelector('.biz-dayhead__line')?.textContent || '', sky: document.querySelector('.biz-main')?.className || '' }))
+    check(/^Good morning/.test(morning.hello) && /You open at 09:00/.test(morning.status) && /Sunrise \d\d:\d\d in Porto/.test(morning.line), `morning: ${morning.hello} / ${morning.status} / ${morning.line}`)
     check(/biz-main--dawn/.test(morning.sky), `first light is dawn: ${morning.sky}`)
     await p.close()
 
     p = await at('2026-10-18T12:00:00+01:00', '&tomorrow=1')
-    check(/Closed today/.test(await text(p, '.biz-dayhead__line')) && /Tomorrow/.test(await text(p, '.biz-tomorrow')), 'a closed day says so and shows tomorrow')
+    check(/Closed today/.test(await text(p, '.biz-dayhead__status')) && /Tomorrow/.test(await text(p, '.biz-tomorrow')), 'a closed day says so and shows tomorrow')
     await p.close()
+
+    // Sunday evening, closed all day (today1): closed is said once, the ring shows tomorrow, the week
+    // ahead replaces the week that ended, the link stays on one line and the band carries the light.
+    p = await at('2026-10-18T19:40:00+01:00', '&tomorrow=1')
+    const sun = await p.evaluate(() => {
+        const words = (sel) => document.querySelector(sel)?.textContent || ''
+        const link = document.querySelector('.biz-ov__side .biz-share__link')
+        const lh = link ? parseFloat(getComputedStyle(link).fontSize) * 2 : 0
+        return {
+            closedCount: (document.querySelector('.biz-page')?.innerText.match(/\bClosed\b/g) || []).length,
+            closedRings: [...document.querySelectorAll('.biz-weekrings__day.is-closed')].length,
+            status: words('.biz-dayhead__status'),
+            line: words('.biz-dayhead__line'),
+            ring: words('.biz-ov__day .biz-ring__centre'),
+            ringLabel: document.querySelector('.biz-ov__day .biz-ring svg')?.getAttribute('aria-label') || '',
+            week: words('.biz-ov__weekhead'),
+            done: words('.biz-ov__weekdone'),
+            firstDay: document.querySelector('.biz-weekrings__day')?.getAttribute('aria-label') || '',
+            fill: words('.biz-tomorrow__fill'),
+            linkOneLine: link ? link.getBoundingClientRect().height < lh + 24 && link.scrollHeight <= link.clientHeight + 1 : false,
+            band: Boolean(document.querySelector('.biz-dayhead .biz-band__world .lc-pattern--calcada')),
+            arc: document.querySelector('.biz-band__arc')?.getAttribute('aria-label') || '',
+            veil: document.querySelector('.biz-dayhead')?.className || '',
+        }
+    })
+    check(sun.status === 'Closed today.' && /You open tomorrow at 09:00 with 2 bookings/.test(sun.line), `the band says closed once and what comes next: ${sun.status} / ${sun.line}`)
+    check(sun.closedCount - sun.closedRings === 1, `"Closed" is said once outside the week rings (${sun.closedCount} in all, ${sun.closedRings} rings)`)
+    check(/Tomorrow/.test(sun.ring) && /2/.test(sun.ring) && /booked/.test(sun.ring) && /Tomorrow: 2 booked/.test(sun.ringLabel), `the ring shows tomorrow, not a closed circle: ${sun.ring}`)
+    check(/The week ahead/.test(sun.week) && /19 to 25 Oct/.test(sun.week) && /2 booked/.test(sun.week) && /Mon/.test(sun.firstDay) && /19/.test(sun.firstDay), `on Sunday the week ahead shows: ${sun.week} / ${sun.firstDay}`)
+    check(/This week, in full/.test(sun.done) && /earned/.test(sun.done), `the week that ended is closed off in a line: ${sun.done}`)
+    check(/^2 booked, \d+ hours free$/.test(sun.fill) && !/%/.test(sun.fill), `tomorrow says booked and free time, not a percent: ${sun.fill}`)
+    check(sun.linkOneLine, 'the booking link stays on one line')
+    check(sun.band && /is-(dusk|night)/.test(sun.veil) && /is-paper/.test(sun.veil), `the band wears the business's world under the evening light: ${sun.veil}`)
+    check(/Sunrise \d\d:\d\d, sunset \d\d:\d\d\. Now 19:40, after sunset/.test(sun.arc), `the sun's path, with now after sunset: ${sun.arc}`)
+    check(p.errors.length === 0, `no page errors on Sunday evening: ${p.errors.join(' | ')}`)
+    await p.close()
+
+    // Balanced at desktop width: the day beside the week, the same width.
+    p = await at('2026-10-18T19:40:00+01:00', '&tomorrow=1', 1440, 900)
+    const cols = await p.evaluate(() => {
+        const w = (sel) => Math.round(document.querySelector(sel)?.getBoundingClientRect().width || 0)
+        return { day: w('.biz-ov__day'), week: w('.biz-ov__week'), timeline: w('.biz-ov__timeline'), side: w('.biz-ov__side') }
+    })
+    check(Math.abs(cols.day - cols.week) <= 2 && Math.abs(cols.timeline - cols.side) <= 2, `two equal columns: ${JSON.stringify(cols)}`)
+    await p.close()
+
+    // Phones, including the app's three share buttons: nothing runs out of its card.
+    for (const [w, h] of [[320, 640], [360, 760], [390, 844]]) {
+        p = await at('2026-10-18T19:40:00+01:00', '&tomorrow=1&native=1', w, h)
+        const r = await p.evaluate(() => {
+            const out = (el) => { const box = el.closest('.biz-ovpanel, .biz-ovcard, .biz-tomorrow')?.getBoundingClientRect(); const b = el.getBoundingClientRect(); return box ? b.right > box.right + 1 || b.left < box.left - 1 : false }
+            return {
+                overflow: document.documentElement.scrollWidth > window.innerWidth,
+                spill: [...document.querySelectorAll('.biz-tomorrow__actions .btn, .biz-share__actions .btn, .biz-share__link')].filter(out).map((e) => e.textContent.trim()),
+            }
+        })
+        check(!r.overflow && r.spill.length === 0, `Sunday evening fits at ${w}px: ${r.spill.join(', ')}`)
+        await p.close()
+    }
 
     for (const [w, h] of [[320, 640], [390, 844]]) {
         p = await at('2026-10-16T20:30:00+01:00', '&tomorrow=1', w, h)

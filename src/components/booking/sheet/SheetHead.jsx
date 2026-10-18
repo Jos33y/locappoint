@@ -1,19 +1,19 @@
 import { BusinessMark } from '../../brand/BusinessFace'
 import CityPattern from '../../brand/CityPattern'
-import { worldOf } from '../../brand/world'
+import { patternOf } from '../../brand/world'
 import { DurationDial } from '../../business/DurationDial'
 import { durationLabel, shownPrice } from '../../../services/business'
 import '../../../styles/client/booking-sheet.css'
 
-// Where you are booking, before when: the business's logo or tile under a strap of its city, then the
-// service being booked with its time and price. The price and the dial keep the core palette; the city
+// Where you are booking, before when: the business's logo or tile under a strap of its world, then the
+// service being booked with its time and price. The price and the dial keep the core palette; the world
 // lives only in the strap.
 export const SheetHead = ({ business, service, duration, currency, priced }) => {
-    const world = worldOf(business)
+    const world = patternOf(business)
     const area = [business.neighbourhood?.trim(), business.city].filter(Boolean).join(', ')
     return (
         <div className={`lc-bk-head is-${world}`}>
-            <span className="lc-bk-head__strap" aria-hidden="true"><CityPattern city={world} centred size={16} /></span>
+            <span className="lc-bk-head__strap" aria-hidden="true"><CityPattern world={world} centred size={16} /></span>
             <div className="lc-bk-head__biz">
                 <span className="lc-bk-head__mark" aria-hidden="true"><BusinessMark business={business} /></span>
                 <span className="lc-bk-head__who">

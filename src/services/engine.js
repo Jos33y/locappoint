@@ -69,7 +69,8 @@ export const daysFor = (when, timeZone) => {
     if (when === 'today') return [today]
     if (when === 'tomorrow') return [addDays(today, 1)]
     if (when === 'soon') return [today, addDays(today, 1), addDays(today, 2)]
-    if (when === 'weekend') return dow === 0 ? [today] : dow === 6 ? [today, addDays(today, 1)] : [addDays(today, 6 - dow), addDays(today, 7 - dow)]
+    // Said on a Sunday, "this weekend" is mostly the next one: today and next Saturday and Sunday.
+    if (when === 'weekend') return dow === 0 ? [today, addDays(today, 6), addDays(today, 7)] : dow === 6 ? [today, addDays(today, 1)] : [addDays(today, 6 - dow), addDays(today, 7 - dow)]
     if (when === 'nextweek') {
         const monday = addDays(today, ((8 - dow) % 7) || 7)
         return Array.from({ length: 7 }, (_, i) => addDays(monday, i))
@@ -160,7 +161,7 @@ export const WHERE = [
     { value: 'online', label: 'Online' },
 ]
 
-export const findMatches = async ({ market, text, mode = '', when = 'soonest', time = 'any', people = 1, place = null, zone = '' }) => {
+export const findMatches = async ({ market, text, mode = '', when = 'soonest', time = 'any', people = 1, place = null, zone = '', maxPrice = null, order = '' }) => {
     const m = marketOf(market)
     // "at:15" or "at:15:30" around an hour; "r:17:00-23:59" a range read from the words ("after 5").
     const at = time.startsWith('at:') ? (time.slice(3).includes(':') ? time.slice(3) : `${String(time.slice(3)).padStart(2, '0')}:00`) : null
@@ -176,6 +177,9 @@ export const findMatches = async ({ market, text, mode = '', when = 'soonest', t
         p_lat: place?.lat ?? null,
         p_lng: place?.lng ?? null,
         p_zone: place?.zone || zone || null,
+        // Only sent when asked, so a search without them stays the same call as before.
+        ...(maxPrice ? { p_max_price: maxPrice } : {}),
+        ...(order ? { p_order: order } : {}),
     })
     if (error) throw error
     return data
@@ -198,6 +202,7 @@ export const LABELS = {
     closest: 'Closest',
     top_rated: 'Top rated',
     another: 'Also free',
+    cheapest: 'Cheapest',
     later: 'Later',
 }
 

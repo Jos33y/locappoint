@@ -39,7 +39,9 @@ export const TOOL = {
             day: { type: 'string', description: 'soonest, today, tomorrow, weekend, nextweek, or a date YYYY-MM-DD. soonest when no day is said.' },
             time: { type: 'string', description: 'any, morning, afternoon, evening, HH:MM (around that time) or HH:MM-HH:MM (a range, e.g. 17:00-23:59 for after 5). any when no time is said.' },
             where: { type: 'string', enum: ['any', 'at_business', 'at_client', 'online'], description: 'at_client for home service or come to me; online for video. any when not said.' },
-            max_price: { type: ['number', 'null'], description: 'Highest price they will pay, in the local money, or null.' },
+            max_price: { type: ['number', 'null'], description: 'Highest price they will pay, in the local money, or null. "10k" is 10000.' },
+            cheapest: { type: 'boolean', description: 'true when they ask for the cheapest or a cheap one' },
+            place: { type: ['string', 'null'], description: 'A town, city or area they name for where it should be (Lekki, Abeokuta, Braga), as written. null when none.' },
         },
         required: ['understood', 'what', 'people', 'day', 'time', 'where'],
     },
@@ -66,7 +68,8 @@ ${ctx.categories.map((c) => `${c.key}: ${c.words}`).join('\n')}
 
 Rules:
 - "what": copy a service name from the list when one fits what they mean, even in another language ("haircut for my son" fits "Kids cut (under 12)" or "Corte júnior"). If none fits, the plain name of the service in their words, a few words at most. Barbing and low cut mean a haircut.
-- Leave out greetings, names, reasons and the day, time, people and place from "what".
+- Leave out greetings, names, reasons and the day, time, people, price and place from "what".
+- place: a town, city or area named for where it happens ("at Abeokuta", "in Lekki", "em Braga"). Not their home.
 - people: only when they say more than one person is booked.
 - Unsure about a field: leave it at its default (soonest, any, 1, any).`
     return {
@@ -102,6 +105,9 @@ export const checkFields = (raw: any, timezone: string | null, now = new Date())
     if (['at_business', 'at_client', 'online'].includes(raw.where)) out.mode = raw.where
     const price = Number(raw.max_price)
     if (raw.max_price !== null && raw.max_price !== undefined && price > 0 && price < 10_000_000) out.max_price = price
+    if (raw.cheapest === true) out.cheapest = true
+    const place = String(raw.place || '').replace(/[^\p{L}\p{N} '.-]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 40)
+    if (place && !/^(home|my place|online|null|none)$/i.test(place)) out.place = place
     return out
 }
 

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Globe, MapPin, Search, X } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Globe, MapPin, MessageCircle, Search, X } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Picker } from '../../ui'
 import { PlaceSearch } from '../../common/PlaceSearch'
-import { MARKETS, LABELS, TIMES, WHERE, bookingLink, dayLabel, findMatches, keepEnginePlace, loadPopular, reasons, timeLabel, whenOptions, whenWords } from '../../../services/engine'
+import { MARKETS, LABELS, TIMES, WHERE, bookingLink, dayLabel, findMatches, marketOf, keepEnginePlace, loadPopular, reasons, timeLabel, whenOptions, whenWords } from '../../../services/engine'
 import { understand, without } from '../../../services/understand'
 import { askAI, needsAI } from '../../../services/ai'
 import { useCity } from '../../../hooks/useCity'
@@ -13,8 +13,14 @@ import { payMoney } from '../../../services/payments'
 import { withPeople } from '../../../services/formats'
 import { USER_ERRORS } from '../../../services/booking'
 import { ReliableBadge, VerifiedBadge } from '../../trust/Trust'
-import { SERVED, countryName, noteSearch, visitorCountry } from '../../../services/demand'
+import { SERVED, countryName, maskContact, noteSearch, placeInterest, visitorCountry } from '../../../services/demand'
+import { WEB_ORIGIN } from '../../../services/native'
+import CityPattern from '../../brand/CityPattern'
+import { WORLD_ALIAS, patternOf } from '../../brand/world'
+import { pickWorld } from '../../brand/worlds'
+import { PT_MUNICIPALITIES } from '../../../constants/locations'
 import { TellMeWhen } from './TellMeWhen'
+import { AbroadScene, NotedScene, PlaceScene } from './Scenes'
 import '../../../styles/client/engine.css'
 
 const WHEN_LABEL = { soonest: 'Soonest', today: 'Today', tomorrow: 'Tomorrow', weekend: 'This weekend', nextweek: 'Next week' }
@@ -37,31 +43,44 @@ const PEOPLE = Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), lab
 // back to Soonest; hand picks stay until changed.
 const DEFAULTS = { when: 'soonest', time: 'any', people: '1', mode: '' }
 const READ = { day: 'when', time: 'time', people: 'people', mode: 'mode' }
+// Read from the words for this search only: a place, a price limit, cheapest first.
+const EXTRA = ['place', 'price', 'order']
+const plain = (v) => String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+const cityNamed = (name) => MARKETS.find((m) => plain(m.name) === plain(name) || (m.code === 'lisbon' && plain(name) === 'lisboa'))?.code || null
 const withOption = (list, value, label) => (value && !list.some((o) => o.value === value) ? [...list, { value, label }] : list)
 
-// One business: the service that fits the words best at its best time, the other free times that
-// day, and its other services that fit, each with a time. One option alone carries no "Best match".
-const Option = ({ o, timeZone, onBook, only = false }) => {
+// One business, in full: its world as a strap, who and where, the time it is free, the service that
+// fits the words with its length and price, the other free times that day, its other services that
+// fit, and one button. One option alone carries no "Best match".
+const Option = ({ o, timeZone, onBook, market, only = false }) => {
     const why = reasons(o)
-    const more = (o.times || []).filter((t) => t !== o.time).slice(0, 6)
+    const more = (o.times || []).filter((t) => t !== o.time).slice(0, 4)
     const others = o.others || []
+    const day = dayLabel(o.date, timeZone)
     return (
-        <li className={`lc-eng__opt is-${o.label}${only ? ' is-only' : ''}`}>
-            {!only && <span className="lc-eng__tag">{LABELS[o.label] || 'Free'}</span>}
-            <span className="lc-eng__main">
-                <b className="lc-eng__biz">{o.business_name}{o.verified && <> <VerifiedBadge small /></>}{o.reliable && <> <ReliableBadge small /></>}</b>
-                {o.area && <span className="lc-eng__area">{o.area}</span>}
-                <span className="lc-eng__svc">{withPeople(o.service_name, Number(o.people))}{o.mode === 'at_client' ? ', at your place' : o.mode === 'online' ? ', online' : ''}{o.minutes ? `, ${o.minutes} min` : ''}</span>
-                <span className="lc-eng__when">{dayLabel(o.date, timeZone)} at <b>{o.time}</b></span>
-                {why.length > 0 && <span className="lc-eng__why">{why.join(' · ')}</span>}
+        <li className={`lc-eng__opt is-lead is-${o.label}${only ? ' is-only' : ''}`}>
+            <span className="lc-eng__strap" aria-hidden="true"><CityPattern world={patternOf({ id: o.business_id, city: o.city, market })} centred size={12} /></span>
+            <span className="lc-eng__head">
+                <span className="lc-eng__main">
+                    {!only && <span className="lc-eng__tag">{LABELS[o.label] || 'Free'}</span>}
+                    <b className="lc-eng__biz">{o.business_name}{o.verified && <> <VerifiedBadge small /></>}{o.reliable && <> <ReliableBadge small /></>}</b>
+                    {o.area && <span className="lc-eng__area">{o.area}</span>}
+                </span>
+                <span className="lc-eng__at">
+                    <b className="lc-eng__time">{o.time}</b>
+                    <span className="lc-eng__when">{day}</span>
+                </span>
             </span>
-            <span className="lc-eng__side">
+            <span className="lc-eng__svcbox">
+                <span className="lc-eng__svcwords">
+                    <span className="lc-eng__svc">{withPeople(o.service_name, Number(o.people))}{o.mode === 'at_client' ? ', at your place' : o.mode === 'online' ? ', online' : ''}</span>
+                    {o.minutes ? <span className="lc-eng__mins">{`${o.minutes} min`}</span> : null}
+                </span>
                 {o.price !== null && o.price !== undefined && <span className="lc-eng__price">{payMoney(o.price, o.currency || 'EUR')}</span>}
-                <Button size="sm" iconRight={ArrowRight} onClick={() => onBook(o)}>{`Book ${o.time}`}</Button>
             </span>
             {more.length > 0 && (
                 <span className="lc-eng__times" role="group" aria-label={`Other times for ${o.service_name}`}>
-                    <span className="lc-eng__label">Other times</span>
+                    <span className="lc-eng__label">{`Other times, ${day.split(',')[0]}`}</span>
                     {more.map((t) => <Button key={t} size="sm" variant="secondary" onClick={() => onBook({ ...o, time: t })}>{t}</Button>)}
                     <Button size="sm" variant="quiet" onClick={() => onBook(o)}>More times</Button>
                 </span>
@@ -76,9 +95,43 @@ const Option = ({ o, timeZone, onBook, only = false }) => {
                     ))}
                 </span>
             )}
+            {why.length > 0 && <span className="lc-eng__why">{why.join(' · ')}</span>}
+            <span className="lc-eng__go"><Button iconRight={ArrowRight} full onClick={() => onBook(o)}>{`Book ${o.time}`}</Button></span>
         </li>
     )
 }
+
+// The others, one line each: their world down the side, who, what and where, and the time as the button.
+const OptionRow = ({ o, timeZone, onBook, market }) => {
+    const why = reasons(o)
+    const price = o.price !== null && o.price !== undefined ? payMoney(o.price, o.currency || 'EUR') : null
+    return (
+        <li className={`lc-eng__opt is-row is-${o.label}`}>
+            <span className="lc-eng__side-strap" aria-hidden="true"><CityPattern world={patternOf({ id: o.business_id, city: o.city, market })} centred size={12} /></span>
+            <span className="lc-eng__main">
+                <span className="lc-eng__tag">{LABELS[o.label] || 'Free'}</span>
+                <b className="lc-eng__biz">{o.business_name}{o.verified && <> <VerifiedBadge small /></>}{o.reliable && <> <ReliableBadge small /></>}</b>
+                <span className="lc-eng__svc">{[withPeople(o.service_name, Number(o.people)), price, o.area].filter(Boolean).join(' · ')}</span>
+                {why.length > 0 && <span className="lc-eng__why">{why.join(' · ')}</span>}
+            </span>
+            <span className="lc-eng__at">
+                <Button size="sm" variant="secondary" onClick={() => onBook(o)}><span className="sr-only">Book </span>{o.time}</Button>
+                <span className="lc-eng__when">{dayLabel(o.date, timeZone).split(', ').pop()}</span>
+            </span>
+        </li>
+    )
+}
+
+const Options = ({ list, timeZone, onBook, market }) => (
+    <ul className="lc-eng__opts">
+        {list.map((o, i) => (i === 0
+            ? <Option key={o.business_id} o={o} timeZone={timeZone} onBook={onBook} market={market} only={list.length === 1} />
+            : <OptionRow key={o.business_id} o={o} timeZone={timeZone} onBook={onBook} market={market} />))}
+    </ul>
+)
+
+// The world a place wears in the empty screens: its home region's, else a stable pick by its name.
+const placeWorld = (place, market) => pickWorld({ id: `place|${place}`, city: place, market }, { municipalities: PT_MUNICIPALITIES })
 
 // "What do you need?": what, where, when and how many, then up to three people free, each for a
 // different reason. A tap opens that business's booking sheet at that time.
@@ -107,12 +160,28 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     // for Locappoint at home. Either way they are told, and can ask for their country.
     const [abroad, setAbroad] = useState(null)
     const [askHome, setAskHome] = useState(false)
+    // The empty screens: how many asked here before, and the contact once "Tell me when" is done.
+    const [interest, setInterest] = useState({ missed: 0, waiting: 0 })
+    const [noted, setNoted] = useState(null)
 
     useEffect(() => {
         let cancelled = false
         visitorCountry().then((c) => { if (!cancelled && c && !SERVED.includes(c)) setAbroad(c) })
         return () => { cancelled = true }
     }, [])
+
+    // Numbers for the empty screens, asked only when one shows. A place for "nobody near", the
+    // visitor's country before they search from abroad.
+    const emptyAt = result.status === 'ready' && (result.data?.options || []).length === 0 && (result.data?.later || []).length === 0
+        ? (result.near || '') : ''
+    useEffect(() => {
+        let cancelled = false
+        setNoted(null)
+        const ask = emptyAt ? { market: city, zone: emptyAt } : abroad && result.status === 'idle' ? { country: abroad } : null
+        if (!ask) { setInterest({ missed: 0, waiting: 0 }); return undefined }
+        placeInterest(ask).then((n) => { if (!cancelled) setInterest(n) })
+        return () => { cancelled = true }
+    }, [emptyAt, abroad, result.status, result.text, city])
 
     useEffect(() => {
         let cancelled = false
@@ -148,7 +217,8 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
         })
         if (over.when) { next.when = over.when; src.when = 'hand' }
         if (over.clear) { next[READ[over.clear] || over.clear] = DEFAULTS[READ[over.clear] || over.clear]; src[READ[over.clear] || over.clear] = 'hand' }
-        const understood = Object.entries(READ).filter(([k]) => u[k] != null).map(([k]) => ({ field: k, label: k === 'day' ? whenText(u.day) : u.labels[k] }))
+        const ex = Object.fromEntries(EXTRA.map((k) => [k, over.clear === k ? null : u[k] ?? null]))
+        const understood = [...Object.keys(READ), ...EXTRA].filter((k) => u[k] != null && over.clear !== k).map((k) => ({ field: k, label: k === 'day' ? whenText(u.day) : k === 'price' ? null : u.labels[k] }))
         let what = u.what
         let byAI = false
         // The AI reads what the rules could not, and fills only what they left empty; the rules' own
@@ -165,6 +235,14 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
             fill('time', 'time', ai.time, ai.time && timeLabel(ai.time))
             fill('people', 'people', ai.people, ai.people && `For ${ai.people}`)
             fill('mode', 'mode', ai.mode, ai.mode && WHERE.find((w) => w.value === ai.mode)?.label)
+            const extra = (k, value, label) => {
+                if (value == null || ex[k] != null) return
+                ex[k] = value; used = true
+                understood.push({ field: k, label, ai: true })
+            }
+            extra('place', ai.place, ai.place && `Near ${ai.place}`)
+            extra('price', ai.max_price, null)
+            extra('order', ai.cheapest ? 'price' : null, 'Cheapest')
             if (ai.what && ai.what.toLowerCase() !== u.what.toLowerCase()) {
                 what = ai.what; used = true
                 understood.unshift({ field: 'what', label: ai.what, ai: true })
@@ -172,28 +250,53 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
             byAI = byAI || used
             return used
         }
+        // Where: another city named ("barber in Porto") moves the search there; an area of this city
+        // ("in Lekki") goes first; any other place ("at Abeokuta") is said plainly and kept in Demand.
+        let mk = market
+        let zoneHere = zone
+        let near = null
+        const resolvePlace = () => {
+            mk = market; zoneHere = zone; near = null
+            if (!ex.place) return
+            const code = cityNamed(ex.place)
+            if (code) { mk = marketOf(code); if (code !== city) pickMarket(code); return }
+            const z = zones.find((x) => plain(x) === plain(ex.place))
+            if (z) zoneHere = z
+            else near = ex.place
+        }
+        const priceText = (v) => `Under ${payMoney(v, (mk || market).currency || 'EUR')}`
         const settle = () => { setWhen(next.when); setTime(next.time); setPeople(next.people); setMode(next.mode); setFrom(src) }
-        const asked = () => ({ understood: [...understood], spans: u.spans, text: typed, when: next.when, byAI })
+        const asked = () => ({
+            understood: understood.map((c) => (c.field === 'price' ? { ...c, label: priceText(ex.price) } : c)),
+            spans: u.spans, text: typed, what, when: next.when, byAI, near, price: ex.price, cityName: mk.name,
+        })
+        resolvePlace()
         settle()
-        if (next.mode === 'at_client' && !place && !zone) {
+        if (next.mode === 'at_client' && !place && !zoneHere) {
             if (compact) setMore(true)
             setResult({ status: 'error', data: null, error: 'Tell us where you are, so we only show people who come to you.', ...asked() })
             return
         }
         setResult({ status: 'loading', data: null, error: '', ...asked() })
-        const search = () => findMatches({ market: city, text: what, mode: next.mode, when: next.when, time: next.time, people: Number(next.people), place, zone })
+        const search = (withPrice = true) => findMatches({ market: mk.code, text: what, mode: next.mode, when: next.when, time: next.time, people: Number(next.people), place, zone: zoneHere, maxPrice: withPrice ? ex.price : null, order: ex.order || '' })
         try {
             // A long sentence: the AI first. A short one the engine cannot place: the AI after.
             let asking = !over.noAI && needsAI(u.what)
-            if (asking) { withAI(await askAI({ text: typed, market: city })); settle() }
+            if (asking) { withAI(await askAI({ text: typed, market: city })); resolvePlace(); settle() }
             let data = await search().catch((err) => { if (!over.noAI && !asking && err?.code === '22023') return null; throw err })
             if (!over.noAI && !asking && (!data || offers(data) === 0)) {
                 asking = true
-                if (withAI(await askAI({ text: typed, market: city }))) { settle(); data = await search() }
+                if (withAI(await askAI({ text: typed, market: city }))) { resolvePlace(); settle(); data = await search() }
             }
             if (!data) throw Object.assign(new Error('Say what you need, like "haircut" or "nails"'), { code: '22023' })
-            setResult({ status: 'ready', data, error: '', ...asked() })
-            noteSearch({ market: city, text: typed, mode: next.mode, people: next.people, place, zone, data })
+            // Loosen one thing and say which: nothing under the price asked, so what costs more.
+            let loosened = null
+            if (ex.price && offers(data) === 0) {
+                const dearer = await search(false)
+                if (offers(dearer) > 0) { data = dearer; loosened = 'price' }
+            }
+            setResult({ status: 'ready', data, error: '', loosened, ...asked() })
+            noteSearch({ market: mk.code, text: typed, mode: next.mode, people: next.people, place, zone: near || zoneHere, data })
         } catch (err) {
             console.error('Engine failed:', err)
             setResult({ status: 'error', data: null, error: USER_ERRORS.includes(err?.code) || err?.code === '22023' ? err.message : 'We could not search right now. Try again.', ...asked() })
@@ -216,9 +319,16 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
 
     const options = result.data?.options || []
     const later = result.data?.later || []
+    const world = WORLD_ALIAS[city] || 'azulejo'
+    const askedFor = String(result.what || result.text || '').trim()
+    const shareText = `Take bookings on Locappoint, free: ${WEB_ORIGIN}`
+    const missedLine = (place) => (interest.missed > 0
+        ? `${interest.missed} searches in ${place} found nobody to book this month. Every search is counted, and it decides where we go next.`
+        : 'Every search is counted, and it decides where we go next.')
 
     return (
         <section className="lc-eng" aria-labelledby="lc-eng-title">
+            <span className="lc-eng__band" aria-hidden="true"><CityPattern world={world} centred size={40} /></span>
             <h2 id="lc-eng-title" className="lc-eng__title">{title}</h2>
             <form className="lc-eng__form" role="search" onSubmit={(e) => { e.preventDefault(); run() }}>
                 <span className="lc-eng__what">
@@ -255,6 +365,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                                 <X size={14} aria-hidden="true" />
                             </button>
                         ))}
+                        <span className="lc-eng__readhint">{result.byAI ? 'Solid: read by the rules. Dashed: understood with AI. Tap one to drop it.' : 'Tap one to drop it.'}</span>
                     </div>
                 )}
                 <div className="lc-eng__row" id="lc-eng-options" hidden={compact && !more}>
@@ -291,15 +402,30 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 )}
             </form>
 
-            {abroad && (
+            {abroad && result.status === 'idle' && (
+                <div className="lc-eng__abroad is-scene">
+                    <AbroadScene country={countryName(abroad)} />
+                    <h3 className="lc-eng__headline">{`We are in Nigeria and Portugal. ${countryName(abroad)} is on the list.`}</h3>
+                    <p className="lc-eng__lede">
+                        {`You are in ${countryName(abroad)}. Locappoint books businesses in Nigeria and Portugal, so search here to book for someone there. `}
+                        {interest.missed > 0 ? `${interest.missed} searches came from ${countryName(abroad)} this month. ` : ''}
+                        Where people look is where we open next.
+                    </p>
+                    {askHome
+                        ? <TellMeWhen country={abroad} title={`Tell me when ${countryName(abroad)} opens`} label="Tell me" done={`Done. We will tell you when Locappoint opens in ${countryName(abroad)}.`} />
+                        : <Button size="sm" variant="secondary" onClick={() => setAskHome(true)}>{`Want Locappoint in ${countryName(abroad)}?`}</Button>}
+                    <span className="lc-eng__pick">
+                        <button type="button" className="lc-eng__country" onClick={() => pickCity('lagos')}><span className="lc-eng__countryart" aria-hidden="true"><CityPattern world="adire" centred size={14} /></span><span>Book in <b>Nigeria</b></span></button>
+                        <button type="button" className="lc-eng__country" onClick={() => pickCity(city === 'lisbon' ? 'lisbon' : 'porto')}><span className="lc-eng__countryart" aria-hidden="true"><CityPattern world="azulejo" centred size={14} /></span><span>Book in <b>Portugal</b></span></button>
+                    </span>
+                </div>
+            )}
+            {abroad && result.status !== 'idle' && (
                 <div className="lc-eng__abroad">
                     <p className="lc-eng__note">
                         <Globe size={16} aria-hidden="true" />
                         <span>{`You are in ${countryName(abroad)}. Locappoint books businesses in Nigeria and Portugal, so search here to book for someone there.`}</span>
                     </p>
-                    {askHome
-                        ? <TellMeWhen country={abroad} label={`Ask for ${countryName(abroad)}`} done={`Done. We will tell you when Locappoint opens in ${countryName(abroad)}.`} />
-                        : <Button size="sm" variant="quiet" onClick={() => setAskHome(true)}>{`Want Locappoint in ${countryName(abroad)}?`}</Button>}
                 </div>
             )}
 
@@ -312,33 +438,88 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 {result.status === 'error' && result.error && (
                     <p className="lc-eng__note" role="alert">{result.error}</p>
                 )}
+                {result.status === 'ready' && (options.length > 0 || later.length > 0) && result.near && (
+                    <PlaceScene world={placeWorld(result.near, city)} place={result.near} toCity={result.cityName} small />
+                )}
+                {result.status === 'ready' && (options.length > 0 || later.length > 0) && (result.near || result.loosened) && (
+                    <p className="lc-eng__note">
+                        {[
+                            result.near ? `Nobody near ${result.near} is on Locappoint yet. These are in ${result.cityName}:` : '',
+                            result.loosened === 'price' ? `Nothing ${(result.understood.find((c) => c.field === 'price')?.label || '').toLowerCase()}. These cost more:` : '',
+                        ].filter(Boolean).join(' ')}
+                    </p>
+                )}
                 {result.status === 'ready' && options.length > 0 && (
-                    <ul className="lc-eng__opts">
-                        {options.map((o) => <Option key={o.business_id} o={o} timeZone={market.timeZone} onBook={book} only={options.length === 1} />)}
-                    </ul>
+                    <>
+                        {!result.near && !result.loosened && (
+                            <p className="lc-eng__count">
+                                <b>{[result.when && result.when !== 'soonest' ? whenText(result.when) : 'Soonest free', time !== 'any' ? timeLabel(time).toLowerCase() : ''].filter(Boolean).join(', ')}</b>
+                                <span>{`${options.length === 1 ? '1 place' : `${options.length} places`}, ${options.reduce((n, o) => n + Math.max(1, (o.times || []).length), 0)} times`}</span>
+                            </p>
+                        )}
+                        <Options list={options} timeZone={market.timeZone} onBook={book} market={city} />
+                    </>
                 )}
                 {result.status === 'ready' && options.length === 0 && later.length > 0 && (
                     <>
                         <p className="lc-eng__note">{nobodyFree(result, time, market.timeZone, later.length)}</p>
-                        <ul className="lc-eng__opts">
-                            {later.map((o) => <Option key={o.business_id} o={o} timeZone={market.timeZone} onBook={book} />)}
-                        </ul>
+                        <Options list={later} timeZone={market.timeZone} onBook={book} market={city} />
                     </>
                 )}
-                {result.status === 'ready' && options.length === 0 && later.length === 0 && (
+                {result.status === 'ready' && options.length === 0 && later.length === 0 && (noted ? (
+                    <div className="lc-eng__none is-noted" role="status">
+                        <NotedScene world={result.near ? placeWorld(result.near, city) : world} place={result.near || market.name} />
+                        <h3 className="lc-eng__headline">Noted. You will be the first to know.</h3>
+                        <p className="lc-eng__lede">
+                            {offers(result.data) > 0
+                                ? 'When a time opens up, we let you know.'
+                                : `When someone in ${result.near || market.name} starts taking bookings for this, we let you know.`}
+                        </p>
+                        <dl className="lc-eng__facts">
+                            <div><dt>Looking for</dt><dd>{[askedFor, result.near || market.name].filter(Boolean).join(', ')}</dd></div>
+                            <div><dt>We tell you on</dt><dd className="is-mono">{`${noted.includes('@') ? 'Email' : 'WhatsApp'} ${maskContact(noted)}`}</dd></div>
+                            {interest.waiting > 0 && <div><dt>{`Asking for ${result.near || market.name}`}</dt><dd>{`You and ${interest.waiting} others`}</dd></div>}
+                        </dl>
+                        <span className="lc-eng__noneactions">
+                            <Button variant="secondary" to={browseTo}>Browse every place</Button>
+                            <Button variant="secondary" icon={MessageCircle} href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer">Share with a business</Button>
+                        </span>
+                        <p className="lc-eng__small">We use this contact only to tell you about this search, and delete it within 24 months.</p>
+                    </div>
+                ) : (
                     <div className="lc-eng__none">
-                        <p className="lc-eng__note">
+                        <PlaceScene world={result.near ? placeWorld(result.near, city) : world} place={result.near || market.name} full={offers(result.data) > 0} />
+                        <h3 className="lc-eng__headline">
                             {offers(result.data) > 0
                                 ? 'Everyone who does this is fully booked for the next 3 weeks.'
-                                : `Nobody in ${market.name} offers that yet${mode === 'at_client' ? ' at your place' : ''}. Try other words, or browse every place.`}
+                                : result.near
+                                    ? `Nobody near ${result.near} offers that yet.`
+                                    : `Nobody in ${market.name} offers that yet${mode === 'at_client' ? ' at your place' : ''}.`}
+                        </h3>
+                        <p className="lc-eng__lede">
+                            {offers(result.data) > 0
+                                ? 'Times open up when people move or cancel.'
+                                : result.near ? missedLine(result.near) : 'Try other words, or browse every place.'}
                         </p>
+                        <TellMeWhen
+                            key={`${result.text}-${city}`}
+                            text={result.text}
+                            market={city}
+                            zone={result.near || place?.zone || zone}
+                            title={offers(result.data) > 0 ? 'Want to know when a time opens up?' : 'Want to know when someone near you offers it?'}
+                            onDone={setNoted}
+                        />
                         <span className="lc-eng__noneactions">
                             <Button size="sm" variant="quiet" to={browseTo}>Browse every place</Button>
                         </span>
-                        <p className="lc-eng__note">{offers(result.data) > 0 ? 'Want to know when a time opens up?' : 'Want to know when someone near you offers it?'}</p>
-                        <TellMeWhen key={`${result.text}-${city}`} text={result.text} market={city} zone={place?.zone || zone} done={offers(result.data) > 0 ? 'Done. We will tell you when a time opens up.' : undefined} />
+                        {offers(result.data) === 0 && (
+                            <p className="lc-eng__small">
+                                {`Do this work${result.near ? ` in ${result.near}` : ''}? `}
+                                <Link to="/auth">List your business free</Link> and take the first bookings.
+                            </p>
+                        )}
                     </div>
-                )}
+                ))}
             </div>
         </section>
     )

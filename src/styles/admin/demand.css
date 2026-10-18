@@ -1,3 +1,218 @@
-/* Admin, Demand (doc 35): the period buttons beside the refresh. */
+/* Admin, Demand (doc 35, redesigned 18 October): the period buttons beside the refresh, then what
+   people asked for as a list to act on. Flat cards, 1px borders, places wear their world as a tile. */
 .adm-demand__periods { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .adm-demand .panel + .panel { margin-top: var(--space-4); }
+
+.adm-dem-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin: var(--space-4) 0;
+}
+
+@media (min-width: 1100px) {
+    .adm-dem-grid { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: start; }
+}
+
+.adm-dem-side { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+
+.adm-dem-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-card);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.adm-dem-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-3);
+}
+
+.adm-dem-card__title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-heading);
+    font-weight: var(--font-weight-semibold);
+}
+
+.adm-dem-card__title svg { color: var(--lc-ink-3); }
+
+.adm-dem-card__meta { color: var(--lc-ink-3); font-size: var(--lc-t-label); }
+
+.adm-dem-empty,
+.adm-dem-note { margin: 0; color: var(--lc-ink-3); font-size: var(--lc-t-label); line-height: var(--lc-lh-snug); }
+
+/* Places: a tile in the place's world, the place, the words asked most, a bar, and who waits. */
+.adm-dem-table { display: flex; flex-direction: column; }
+
+.adm-dem-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.4fr) 56px 20px;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 48px;
+    margin: 0;
+    padding: var(--space-2) 0;
+    border: 0;
+    border-top: 1px solid var(--lc-line);
+    background: none;
+    color: var(--lc-ink-1);
+    font: inherit;
+    font-size: var(--lc-t-body);
+    text-align: left;
+    cursor: pointer;
+}
+
+.adm-dem-row.is-head {
+    min-height: 0;
+    border-top: 0;
+    color: var(--lc-ink-3);
+    font-size: 12px;
+    cursor: default;
+}
+
+.adm-dem-row:not(.is-head):hover { background: var(--lc-raised); }
+
+.adm-dem-row:focus-visible { outline: 2px solid var(--azure); outline-offset: -2px; }
+
+.adm-dem-row.is-open { border-color: var(--azure); }
+
+.adm-dem-row__tile { width: 24px; height: 24px; overflow: hidden; border-radius: var(--lc-r-sm); }
+
+.adm-dem-row.is-head .adm-dem-row__tile { height: 0; }
+
+.adm-dem-row__tile .lc-pattern { display: block; width: 100%; height: 100%; }
+
+.adm-dem-row__place,
+.adm-dem-row__asked { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.adm-dem-row__asked { color: var(--lc-ink-2); }
+
+.adm-dem-row__bar { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+
+.adm-dem-row__bar b,
+.adm-dem-abroad b { flex: none; font-family: var(--lc-font-mono); font-size: var(--lc-t-label); font-weight: var(--font-weight-medium); }
+
+.adm-dem-row .is-num { font-family: var(--lc-font-mono); font-size: var(--lc-t-label); text-align: right; }
+
+.adm-dem-row__chev { display: flex; color: var(--lc-ink-3); }
+
+.adm-dem-row__unit { display: none; }
+
+.adm-dem-row.is-open .adm-dem-row__chev svg { transform: rotate(180deg); }
+
+.adm-dem-bar {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 24px;
+    height: 8px;
+    overflow: hidden;
+    border-radius: var(--radius-full);
+    background: var(--lc-well);
+}
+
+.adm-dem-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--azure); }
+
+.adm-dem-bar.is-quiet > span { background: var(--lc-ink-2); }
+
+/* A place opened: the words, the busiest day and the waiting list. */
+.adm-dem-detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+}
+
+.adm-dem-detail__label { color: var(--lc-ink-3); font-size: 12px; }
+
+.adm-dem-detail__words { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.adm-dem-word {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 4px 8px;
+    border-radius: var(--lc-r-sm);
+    background: var(--lc-card);
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-mono);
+    font-size: var(--lc-t-label);
+}
+
+.adm-dem-word b { color: var(--lc-ink-3); font-weight: var(--font-weight-medium); }
+
+.adm-dem-detail__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-1); }
+
+.adm-dem-detail__note { margin-left: auto; color: var(--lc-ink-3); font-size: var(--lc-t-label); }
+
+/* No time that fit: booked out against free but not when asked, as one split bar. */
+.adm-dem-split { display: flex; height: 12px; overflow: hidden; border-radius: var(--radius-full); background: var(--lc-well); }
+
+.adm-dem-split .is-out,
+.adm-dem-key.is-out { background: var(--azure); }
+
+.adm-dem-split .is-then,
+.adm-dem-key.is-then { background: var(--azure-soft); }
+
+.adm-dem-key { display: inline-block; flex: none; width: 10px; height: 10px; margin-right: var(--space-2); border-radius: 3px; }
+
+.adm-dem-legend { display: flex; flex-direction: column; gap: var(--space-1); margin: 0; }
+
+.adm-dem-legend div { display: flex; justify-content: space-between; gap: var(--space-3); font-size: var(--lc-t-body); }
+
+.adm-dem-legend dt { display: flex; align-items: center; min-width: 0; color: var(--lc-ink-1); }
+
+.adm-dem-legend dd { margin: 0; font-family: var(--lc-font-mono); font-size: var(--lc-t-label); }
+
+.adm-dem-legend .is-sub { padding-left: calc(10px + var(--space-2)); font-size: var(--lc-t-label); }
+
+.adm-dem-legend .is-sub dt { color: var(--lc-ink-2); }
+
+.adm-dem-abroad { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+
+.adm-dem-abroad li { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 40px; align-items: center; gap: var(--space-3); }
+
+.adm-dem-abroad b { text-align: right; }
+
+.adm-dem-abroad__who { display: flex; flex-direction: column; min-width: 0; font-size: var(--lc-t-body); }
+
+/* Phones: the places become two lines each, the bar under the place. */
+@media (max-width: 640px) {
+    .adm-dem-card { padding: var(--space-4); }
+
+    .adm-dem-row__unit { display: inline; color: var(--lc-ink-3); }
+
+    .adm-dem-row { grid-template-columns: 28px minmax(0, 1fr) auto 16px; grid-template-areas: "tile place num chev" "tile bar bar bar"; row-gap: var(--space-1); }
+
+    .adm-dem-row.is-head { display: none; }
+
+    .adm-dem-row__tile { grid-area: tile; align-self: start; }
+
+    .adm-dem-row__place { grid-area: place; }
+
+    .adm-dem-row__asked { display: none; }
+
+    .adm-dem-row__bar { grid-area: bar; }
+
+    .adm-dem-row .is-num { grid-area: num; }
+
+    .adm-dem-row__chev { grid-area: chev; }
+
+    .adm-dem-detail__note { margin-left: 0; }
+}

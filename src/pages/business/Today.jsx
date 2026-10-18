@@ -9,6 +9,7 @@ import { WeekRings } from '../../components/business/WeekRings'
 import { PageCard, ReviewsCard } from '../../components/business/TodayCards'
 import ShareLink from '../../components/business/ShareLink'
 import { DaySlip, Tomorrow, freeGaps } from '../../components/business/TodayEvening'
+import { TodayBand } from '../../components/business/TodayBand'
 import PosterSheet from '../../components/business/PosterSheet'
 import { useDaylight } from '../../components/business/useDaylight'
 import { pageUrl } from '../../services/links'
@@ -57,8 +58,8 @@ const Today = () => {
     useEffect(() => {
         let cancelled = false
         const keys = weekKeys(now.dateKey)
-        // Through tomorrow as well, which on a Sunday is already next week.
-        const until = addDays(now.dateKey, 1) > keys[6] ? addDays(now.dateKey, 1) : keys[6]
+        // A week past today as well: the next open day may be days away, and on a Sunday the week ahead shows.
+        const until = addDays(now.dateKey, 8) > keys[6] ? addDays(now.dateKey, 8) : keys[6]
         Promise.all([loadBookings(business.id, addDays(keys[0], -7), until), loadBlocks(business.id, now.dateKey, now.dateKey)])
             .then(async ([rows, blockRows]) => {
                 // Nothing in these two weeks: look once for any booking at all, so a new business
@@ -94,8 +95,7 @@ const Today = () => {
     const visible = useMemo(() => scoped.filter((b) => b.appointment_date === now.dateKey), [scoped, now.dateKey])
     const members = staff ? [staff] : bookableMembers
     const day = dayFigures({ bookings: scoped, hours, members, dateKey: now.dateKey, now })
-    const week = weekFigures({ bookings: scoped, hours, members, now })
-    const weekChange = change(week.earned, week.before)
+    const thisWeek = weekFigures({ bookings: scoped, hours, members, now })
 
     const counted = visible.filter((b) => b.status !== 'cancelled')
     const pending = visible.filter((b) => b.status === 'pending')
@@ -114,13 +114,24 @@ const Today = () => {
     const closesAt = todayWindows.length ? minutesToLabel(todayWindows[todayWindows.length - 1][1]) : null
     const fresh = !loading && ever === false
 
-    // The evening: once the doors close the day goes on paper, and tomorrow comes forward.
-    const tomorrowKey = addDays(now.dateKey, 1)
+    // The evening: once the doors close the day goes on paper, and the next open day comes forward
+    // (tomorrow, or the first day after it with hours).
+    const tomorrowKey = [1, 2, 3, 4, 5, 6, 7].map((n) => addDays(now.dateKey, n))
+        .find((k) => windowsFor(hours, staff?.id, parseDateKey(k).getDay()).length > 0) || addDays(now.dateKey, 1)
+    const nextName = tomorrowKey === addDays(now.dateKey, 1) ? 'Tomorrow' : parseDateKey(tomorrowKey).toLocaleDateString('en-GB', { weekday: 'long' })
     const tomorrowWindows = windowsFor(hours, staff?.id, parseDateKey(tomorrowKey).getDay())
     const tomorrowRows = scoped
         .filter((b) => b.appointment_date === tomorrowKey && ['pending', 'confirmed'].includes(b.status))
         .sort((a, b) => bookingStart(a) - bookingStart(b))
     const tomorrow = dayFigures({ bookings: scoped, hours, members, dateKey: tomorrowKey, now })
+    // A day with no hours at all: the ring shows the next open day instead of a closed circle, so
+    // "closed" is said once, at the top.
+    const closedDay = !loading && !fresh && todayWindows.length === 0
+    // Sunday once the doors are shut: the week that matters is the one starting tomorrow.
+    const weekAhead = parseDateKey(now.dateKey).getDay() === 0 && closedNow
+    const week = weekAhead ? weekFigures({ bookings: scoped, hours, members, now, anchor: addDays(now.dateKey, 1) }) : thisWeek
+    const weekChange = change(week.earned, week.before)
+    const weekCount = week.days.reduce((s, d) => s + d.count, 0)
     const shortest = Math.min(...activeServices.map((x) => Number(x.duration_minutes) || 30), 120)
     const tomorrowFree = freeGaps(tomorrowWindows, tomorrowRows, shortest)
     const evening = !loading && !fresh && todayWindows.length > 0 && closedNow && counted.length > 0
@@ -135,10 +146,24 @@ const Today = () => {
     const status = todayWindows.length === 0
         ? <>Closed today.</>
         : now.minutes < todayWindows[0][0]
-            ? <>You open at <b className="biz-num">{opensAt}</b>.</>
-            : closedNow ? <>Closed for the day.</> : <>Open until <b className="biz-num">{closesAt}</b>.</>
+            ? <>You open at <span className="biz-num">{opensAt}</span>.</>
+            : closedNow ? <>Closed for the day.</> : <>Open until <span className="biz-num">{closesAt}</span>.</>
     const sunAt = daylight.light === 'dawn' ? daylight.sunrise : daylight.light === 'golden' ? daylight.sunset : null
     const sun = sunAt && <> {daylight.light === 'dawn' ? 'Sunrise' : 'Sunset'} <b className="biz-num">{sunAt}</b>{daylight.place ? ` in ${daylight.place}` : ''}.</>
+    const booked = (n) => (n === 1 ? '1 booking' : `${n} bookings`)
+    const nextOpen = tomorrowWindows.length ? minutesToLabel(tomorrowWindows[0][0]) : null
+    // What comes next, in one sentence.
+    const ahead = closedNow
+        ? (nextOpen
+            ? <>You open {nextName === 'Tomorrow' ? 'tomorrow' : `on ${nextName}`} at <b className="biz-num">{nextOpen}</b>{tomorrowRows.length ? <> with {booked(tomorrowRows.length)}.</> : ', nothing booked yet.'}</>
+            : <>No opening hours set for the week ahead.</>)
+        : now.minutes < (todayWindows[0]?.[0] ?? 0)
+            ? (counted.length ? <>{booked(counted.length)} today.</> : <>Nothing booked yet.</>)
+            : next
+                ? <>Next at <b className="biz-num">{next.appointment_time.slice(0, 5)}</b> with {next.client_name}.</>
+                : counted.length ? <>Nothing else booked today.</> : <>Nothing booked today yet.</>
+    const fmt = (key, opts) => parseDateKey(key).toLocaleDateString('en-GB', opts)
+    const weekRange = `${fmt(week.keys[0], { day: 'numeric' })} to ${fmt(week.keys[6], { day: 'numeric', month: 'short' })}`
 
     const confirm = async (booking) => {
         try {
@@ -154,10 +179,14 @@ const Today = () => {
 
     return (
         <div className="biz-page biz-today">
-            <header className="biz-dayhead biz-ov__head">
-                <h1 className="biz-dayhead__hello">{firstName ? `${daylight.greeting}, ${firstName}` : daylight.greeting}</h1>
-                <p className="biz-dayhead__line">{weekday} {dayMonth}. {status}{sun}</p>
-            </header>
+            <TodayBand
+                business={business}
+                daylight={daylight}
+                minutes={now.minutes}
+                hello={firstName ? `${daylight.greeting}, ${firstName}` : daylight.greeting}
+                status={status}
+                line={<>{weekday} {dayMonth}. {ahead}{sun}</>}
+            />
 
             {!setupDone && (
                 <section className="biz-setup" aria-labelledby="setup-title">
@@ -183,9 +212,21 @@ const Today = () => {
             )}
 
             <div className={`biz-ov__grid${fresh ? ' is-fresh' : ''}`}>
-                <section className={`biz-ovpanel biz-ov__day${evening ? ' is-evening' : ''}`} aria-label="How today is going">
+                <section className={`biz-ovpanel biz-ov__day${evening ? ' is-evening' : ''}`} aria-label={closedDay ? `${nextName}, the next open day` : 'How today is going'}>
                     {evening ? (
                         <DaySlip dateKey={now.dateKey} bookings={visible} hours={hours} staff={staff} figures={day} money={money} country={business.country} visits={visits} online={online} />
+                    ) : closedDay ? (
+                        <DayRing
+                            dateKey={tomorrowKey}
+                            bookings={tomorrowRows}
+                            hours={hours}
+                            staff={staff}
+                            figures={tomorrow}
+                            money={money}
+                            country={business.country}
+                            centre="ahead"
+                            dayName={nextName}
+                        />
                     ) : (
                         <DayRing
                             dateKey={now.dateKey}
@@ -241,7 +282,7 @@ const Today = () => {
                             </button>
                         )}
                         {showTomorrow && (
-                            <Tomorrow business={business} dateKey={tomorrowKey} figures={tomorrow} rows={tomorrowRows} windows={tomorrowWindows} free={tomorrowFree} />
+                            <Tomorrow business={business} dateKey={tomorrowKey} rows={tomorrowRows} windows={tomorrowWindows} free={tomorrowFree} title={nextName} />
                         )}
                         {day.lost > 0 && !evening && <p className="biz-ov__lost">{money(day.lost)} lost to no-shows today</p>}
                     </div>
@@ -249,7 +290,16 @@ const Today = () => {
 
                 {!fresh && <section className="biz-ovpanel biz-ov__week" aria-labelledby="week-title">
                     <header className="biz-ov__weekhead">
-                        <h2 id="week-title" className="biz-ov__h2">This week</h2>
+                        <div className="biz-ov__weektitle">
+                            <h2 id="week-title" className="biz-ov__h2">{weekAhead ? 'The week ahead' : 'This week'}</h2>
+                            <span className="biz-ov__weekrange">{weekRange}</span>
+                        </div>
+                        {weekAhead ? (
+                            <p className="biz-ov__weekfigs">
+                                <span><b className="biz-num">{weekCount}</b> booked</span>
+                                <span><b className="biz-num">{money(week.ahead)}</b> expected</span>
+                            </p>
+                        ) : (
                         <p className="biz-ov__weekfigs">
                             <span><b className="biz-num">{money(week.earned)}</b> earned</span>
                             {weekChange !== null && (
@@ -261,8 +311,15 @@ const Today = () => {
                             <span><b className="biz-num">{money(week.ahead)}</b> booked ahead</span>
                             {week.lost > 0 && <span className="is-bad"><b className="biz-num">{money(week.lost)}</b> lost to no-shows</span>}
                         </p>
+                        )}
                     </header>
                     <WeekRings week={week} todayKey={now.dateKey} money={money} onPick={(key) => navigate(`/portal/calendar?date=${key}`)} />
+                    {weekAhead && (
+                        <p className="biz-ov__weekdone">
+                            This week, in full: <b className="biz-num">{money(thisWeek.earned)}</b> earned
+                            {thisWeek.lost > 0 ? <>, <b className="biz-num">{money(thisWeek.lost)}</b> lost to no-shows</> : ', no no-shows'}.
+                        </p>
+                    )}
                 </section>}
 
                 <section className="biz-ov__timeline" aria-label="Today's schedule">
@@ -276,8 +333,7 @@ const Today = () => {
                         <>
                             {counted.length === 0 && closedNow && (
                                 <div className="biz-closed">
-                                    <strong>{todayWindows.length === 0 ? 'Closed today' : 'Closed for the day'}</strong>
-                                    <span>No bookings today. Share your link so tomorrow fills up.</span>
+                                    <span>No bookings today. Share your link so {nextName === 'Tomorrow' ? 'tomorrow' : nextName} fills up.</span>
                                 </div>
                             )}
                             {counted.length === 0 && !closedNow && (

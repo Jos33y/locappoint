@@ -62,3 +62,6 @@ export const adminPayoutDecide = ({ id, approve, detail = '' }) => call('admin_p
 
 export const TICKET_PRIORITY = { 1: ['Money or safety', 'danger'], 2: ['Visit or bill', 'warning'], 3: ['General', 'muted'] }
 export const TICKET_STATE = { open: ['Open', 'info'], waiting: ['Waiting on them', 'warning'], resolved: ['Resolved', 'muted'] }
+
+// Demand, one place opened: the words asked there and who waits to be told (demand2.sql).
+export const loadDemandPlace = ({ market, zone = null, days = 30 }) => call('admin_demand_place', { p_market: market, p_zone: zone || null, p_days: days })

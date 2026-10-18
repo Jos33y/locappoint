@@ -196,6 +196,15 @@ if (quiet('worst')) {
   Object.assign(DATA.businesses[0], { business_name: "Adeola's Hair, Nails and Lash Studio, Lekki Phase 1", city: 'Lagos', country: 'NG', market: 'lagos', timezone: 'Africa/Lagos', currency: 'NGN', neighbourhood: 'Opposite the yellow Mobil filling station, Ikota', address: 'Plot 12, Admiralty Way, after the second roundabout, by the mosque with the green gate', banner_url: null, logo_url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#111"/></svg>') })
   Object.assign(DATA.services[0], { service_name: 'Knotless braids, waist length, with curls (bring your own hair)', duration_minutes: 480, price: 1250000 })
 }
+// ?place=Enugu,NG: the business sits in another city and country, with no cover photo, so its world
+// pattern shows (doc 30). market is cleared: a business outside our first cities has none.
+{
+  const place = new URLSearchParams(window.location.search).get('place')
+  if (place) {
+    const [city, country] = place.split(',')
+    Object.assign(DATA.businesses[0], { city, country, market: null, banner_url: null, logo_url: null, timezone: country === 'NG' ? 'Africa/Lagos' : 'Europe/Lisbon', currency: country === 'NG' ? 'NGN' : 'EUR' })
+  }
+}
 // ?tomorrow=1: two visits tomorrow, the first at 09:00, so the evening has a tomorrow to show.
 if (quiet('tomorrow')) DATA.appointments = [...DATA.appointments,
   { id: 't1', business_id: 'b1', staff_id: 'm1', service_id: 's1', appointment_date: dk(1), appointment_time: '09:00:00', duration_minutes: 30, status: 'confirmed', source: 'online', client_name: 'Ana Ferreira', client_phone: '', client_email: '', notes: '', services: { service_name: 'Haircut', price: 18 } },
@@ -509,6 +518,9 @@ const understandFn = ({ text = '' }) => {
 }
 
 // Demand (doc 35): searches from Nigeria, Portugal and Kenya, two misses, one "Tell me when".
+adminRpc.admin_demand_place = ({ p_zone }) => (p_zone === 'Ibadan'
+  ? { queries: [{ query: 'lash tech', times: 3 }, { query: 'lashes bodija', times: 1 }], busiest: 'Saturday', waiting: [{ created_at: new Date().toISOString(), query: 'lashes', email: 'tola@x.ng', phone: null }] }
+  : { queries: [], busiest: null, waiting: [] })
 adminRpc.admin_demand = ({ p_days = 30 }) => ({
   days: p_days, searches: 42, misses: 7, full: 3, people: 9, wishes: 2,
   by_channel: [{ channel: 'web', searches: 30, misses: 5 }, { channel: 'whatsapp', searches: 12, misses: 2 }],
@@ -516,6 +528,15 @@ adminRpc.admin_demand = ({ p_days = 30 }) => ({
   by_place: [{ market: 'porto', zone: null, searches: 20, misses: 2 }, { market: 'lagos', zone: 'Lekki', searches: 12, misses: 4 }, { market: 'lisbon', zone: null, searches: 10, misses: 1 }],
   missed: [{ query: 'braids', market: 'porto', times: 3 }, { query: 'lash lift', market: 'lagos', times: 2 }],
   booked_out: [{ query: 'haircut', market: 'lagos', times: 3 }],
+  // demand2: what the redesigned screen adds.
+  found: 30, not_then: 2, countries: 3, waiting: 2, waiting_places: 2,
+  not_then_list: [{ query: 'braids', market: 'lagos', times: 2 }],
+  places: [
+    { market: 'lagos', zone: 'Ibadan', searches: 4, waiting: 1, asked: [{ query: 'lash tech', times: 3 }, { query: 'lashes bodija', times: 1 }] },
+    { market: 'porto', zone: 'Braga', searches: 2, waiting: 0, asked: [{ query: 'unhas de gel', times: 2 }] },
+    { market: 'lagos', zone: 'Enugu', searches: 1, waiting: 0, asked: [{ query: 'braids', times: 1 }] },
+  ],
+  abroad: [{ country: 'KE', searches: 3, top_market: 'lagos' }, { country: 'GB', searches: 2, top_market: 'lisbon' }],
   latest_wishes: [
     { created_at: new Date(Date.now() - 3600000).toISOString(), query: null, market: null, zone: null, target_country: 'KE', origin_country: 'KE', email: null, phone: '+254712345678', told_at: null },
     { created_at: new Date(Date.now() - 86400000).toISOString(), query: 'braids', market: 'porto', zone: 'Bonfim', target_country: 'PT', origin_country: 'PT', email: 'ana@x.pt', phone: null, told_at: null },
@@ -527,7 +548,11 @@ const openDay = () => { const d = new Date(`${dk(1)}T12:00:00Z`).getUTCDay(); re
 const engineOption = (label, i, extra = {}) => ({ business_id: `b${i}`, business_name: ['Femtos Barbearia', 'Nove Unhas', 'Barba Rija'][i - 1], slug: 'femtos-barbearia', city: 'Porto', service_id: 's1', service_name: 'Haircut', people: 1, price: 18, price_per: 'booking', currency: 'EUR', mode: 'at_business', date: openDay(), time: ['10:00', '09:30', '11:00'][i - 1], km: i === 3 ? 1.2 : null, rating: i === 3 ? 4.8 : null, reviews: i === 3 ? 12 : 0, rebook_pct: i === 1 ? 70 : null, regular: false, label, ...extra })
 const engineRpc = (name, args) => {
   if (name === 'engine_popular') return { data: [{ category: 'barbershop', businesses: 2 }, { category: 'nails', businesses: 1 }], error: null }
+  // The empty screens' numbers: a place with 14 misses and 6 waiting; a country with 121 searches, 9 asking.
+  if (name === 'search_place_interest') return { data: new URLSearchParams(window.location.search).get('few') === '1' ? { missed: 0, waiting: 0 } : args.p_zone ? { missed: 14, waiting: 6 } : { missed: 121, waiting: 9 }, error: null }
   if (name !== 'engine_match') return null
+  // A price limit nobody meets (under 10): nothing, so the box loosens it.
+  if (args.p_max_price && args.p_max_price < 10) return { data: { options: [], later: [], matched: 0, offered: 0, words: ['haircut'] }, error: null }
   if (/nothing/.test(args.p_query || '')) return { data: { options: [], later: [], matched: 0, offered: 0, words: ['nothing'] }, error: null }
   // Offered, closed on the day asked: the next free time ahead.
   if (/closed/.test(args.p_query || '')) return { data: { options: [], later: [engineOption('later', 1, { date: openDay(), time: '09:00' })], matched: 0, offered: 1, ahead: true }, error: null }

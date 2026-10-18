@@ -71,3 +71,28 @@ export const addWish = async ({ text = '', market = null, zone: area = '', count
     })
     if (error) throw error
 }
+
+// How many searches in a place found nobody this month, and how many people wait to be told; for a
+// country we are not in, how many searched from there and how many asked for it. Counts under 3 come
+// back as 0. Never in the way: a failure is no numbers.
+export const placeInterest = async ({ market = null, zone: area = null, country = null }) => {
+    try {
+        const { data, error } = await supabase.rpc('search_place_interest', { p_market: market, p_zone: area || null, p_country: country })
+        if (error || !data) return { missed: 0, waiting: 0 }
+        return { missed: Number(data.missed) || 0, waiting: Number(data.waiting) || 0 }
+    } catch {
+        return { missed: 0, waiting: 0 }
+    }
+}
+
+// A contact shown back without all of it: "a***@mail.com", "+234 803 ... 4412".
+export const maskContact = (value) => {
+    const v = String(value || '').trim()
+    if (v.includes('@')) {
+        const [name, host] = v.split('@')
+        return `${name.slice(0, 1)}***@${host}`
+    }
+    const digits = v.replace(/[^0-9+]/g, '')
+    if (digits.length < 8) return digits
+    return `${digits.slice(0, digits.startsWith('+') ? 4 : 3)} ${digits.slice(digits.startsWith('+') ? 4 : 3, digits.startsWith('+') ? 7 : 6)} ... ${digits.slice(-4)}`
+}

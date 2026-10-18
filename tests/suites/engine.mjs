@@ -183,6 +183,36 @@ export default async ({ browser, url, check }) => {
     check(((await calls(p, 'engine_match')).pop() || {}).p_dates?.length === 1 && !(await p.$('.lc-eng__read.is-ai')), 'with the AI off or over its cap, the rules still search')
     await p.close()
 
+    // R1c: price, cheapest, places, typos in day names, and loosening the price with the reason said.
+    p = await open('/client')
+    const ask4 = async (words) => {
+        await p.$eval('.lc-eng__what input', (el) => el.select())
+        await p.type('.lc-eng__what input', words)
+        await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+        await wait(900)
+        return (await calls(p, 'engine_match')).pop() || {}
+    }
+    const read4 = () => p.evaluate(() => [...document.querySelectorAll('.lc-eng__read')].map((c) => c.textContent.trim()))
+    let a4 = await ask4('barbing under 15k')
+    check(a4.p_max_price === 15000 && a4.p_query === 'barbing' && (await read4()).includes('Under €15,000'), `a price limit from the words: ${JSON.stringify([a4.p_max_price, await read4()])}`)
+    a4 = await ask4('cheapest haircut')
+    check(a4.p_order === 'price' && a4.p_max_price === undefined && (await read4()).includes('Cheapest'), `cheapest first: ${JSON.stringify(a4)}`)
+    a4 = await ask4('haircut')
+    check(a4.p_order === undefined && a4.p_max_price === undefined, 'and neither sticks to the next search')
+    a4 = await ask4('haircut next week wednessday')
+    check(new Date(`${a4.p_dates?.[0]}T12:00:00Z`).getUTCDay() === 3 && a4.p_dates.length === 1, `a typo in the day still reads the day: ${JSON.stringify(a4.p_dates)}`)
+    a4 = await ask4('I need a makeup artist at abeokuta?')
+    check(a4.p_query === 'makeup artist' && a4.p_market === 'porto' && (await read4()).includes('Near Abeokuta') && /Nobody near Abeokuta/.test(await text(p, '.lc-eng__out')), `a place we have nobody in is said plainly: ${await text(p, '.lc-eng__out')}`)
+    const noted4 = (await calls(p, 'search_note')).pop() || {}
+    check(noted4.p_zone === 'Abeokuta', `and kept in Demand: ${noted4.p_zone}`)
+    a4 = await ask4('haircut under 5 euros')
+    const twice = (await calls(p, 'engine_match')).slice(-2)
+    check(twice[0].p_max_price === 5 && twice[1].p_max_price === undefined && /Nothing under €5\. These cost more:/.test(await text(p, '.lc-eng__out')), `nothing under the price: what costs more, said: ${await text(p, '.lc-eng__out')}`)
+    a4 = await ask4('haircut in Lisbon')
+    check(a4.p_market === 'lisbon' && a4.p_query === 'haircut', `another city named moves the search there: ${a4.p_market}`)
+    check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
+    await p.close()
+
     // One business: no "Best match"; the area, how long, the date, its other times and its other services.
     p = await open('/client')
     await p.type('.lc-eng__what input', 'kids')
@@ -192,7 +222,7 @@ export default async ({ browser, url, check }) => {
         const o = document.querySelector('.lc-eng__opt')
         return { tag: !!o?.querySelector('.lc-eng__tag'), text: o?.textContent || '', times: [...(o?.querySelectorAll('.lc-eng__times .ui-btn') || [])].map((b) => b.textContent.trim()), also: [...(o?.querySelectorAll('.lc-eng__also .ui-btn') || [])].map((b) => b.textContent.trim()) }
     })
-    check(!one.tag && /Bonfim/.test(one.text) && /Haircut, 45 min/.test(one.text) && /(Today|Tomorrow), \w{3} \d+ \w{3} at 10:00/.test(one.text), `one business: no Best match, its area, how long and the date: ${one.text}`)
+    check(!one.tag && /Bonfim/.test(one.text) && /Haircut45 min/.test(one.text) && /10:00(Today|Tomorrow), \w{3} \d+ \w{3}/.test(one.text), `one business: no Best match, its area, how long and the date: ${one.text}`)
     check(JSON.stringify(one.times) === '["10:30","11:00","15:00","More times"]' && one.also.length === 1 && /^Kids cut \(under 12\), €12, 09:45$/.test(one.also[0]), `its other times and other services: ${JSON.stringify(one)}`)
     await p.evaluate(() => [...document.querySelectorAll('.lc-eng__times .ui-btn')].find((b) => b.textContent.trim() === '11:00')?.click())
     await wait(600)
@@ -214,13 +244,16 @@ export default async ({ browser, url, check }) => {
     await wait(700)
     check(/Nobody in Porto offers that yet/.test(await text(p, '.lc-eng__out')) && /Browse every place/.test(await text(p, '.lc-eng__out')), 'nothing fits: it says so and offers every place')
     check(/Want to know when someone near you offers it/.test(await text(p, '.lc-eng__out')) && await p.$('.lc-eng__out .lc-wish'), 'nothing fits: they can ask to be told')
+    check(await p.evaluate(() => Boolean(document.querySelector('.lc-eng__none .lc-scene--place .lc-pattern--azulejo')) && /An empty slot/.test(document.querySelector('.lc-scene__cap')?.textContent || '')), 'nothing fits: drawn from the city world, never a bare line')
     await p.$eval('.lc-wish input', (el) => el.select())
     await p.type('.lc-wish input', 'ana@x.pt')
     await p.evaluate(() => document.querySelector('.lc-wish').requestSubmit())
     await wait(500)
     const wish = (await calls(p, 'search_wish_add')).pop() || {}
     check(wish.p_query === 'nothing like this' && wish.p_market === 'porto' && wish.p_email === 'ana@x.pt' && wish.p_phone === null, `Tell me when keeps the search and the email: ${JSON.stringify(wish)}`)
-    check(/We will tell you when someone near you offers it/.test(await text(p, '.lc-eng__out')), 'and says it is done')
+    const notedView = await p.evaluate(() => ({ head: document.querySelector('.lc-eng__none.is-noted .lc-eng__headline')?.textContent || '', facts: document.querySelector('.lc-eng__facts')?.textContent || '', badge: Boolean(document.querySelector('.lc-scene--noted .lc-scene__badge')) }))
+    check(/Noted\. You will be the first to know/.test(notedView.head) && notedView.badge, `and says it is done, with the badge: ${notedView.head}`)
+    check(/Looking fornothing like this, Porto/.test(notedView.facts) && /a\*\*\*@x\.pt/.test(notedView.facts) && !/ana@x\.pt/.test(notedView.facts), `the contact is shown back, never in full: ${notedView.facts}`)
     const missNote = (await calls(p, 'search_note')).pop() || {}
     check(missNote.p_query === 'nothing like this' && missNote.p_options === 0 && missNote.p_later === 0, 'a search that found nothing is kept too')
     await p.close()
@@ -237,6 +270,9 @@ export default async ({ browser, url, check }) => {
     await p.goto(`${url}/?path=${encodeURIComponent('/client')}`, { waitUntil: 'networkidle0' })
     await wait(900)
     check(/You are in Kenya\. Locappoint books businesses in Nigeria and Portugal/.test(await text(p, '.lc-eng__abroad')), `a visitor from Kenya is told where Locappoint works: ${await text(p, '.lc-eng__abroad')}`)
+    const ab = await p.evaluate(() => ({ head: document.querySelector('.lc-eng__abroad .lc-eng__headline')?.textContent || '', scene: Boolean(document.querySelector('.lc-scene--abroad .lc-pattern--adire') && document.querySelector('.lc-scene--abroad .lc-pattern--azulejo')), count: document.querySelector('.lc-eng__abroad .lc-eng__lede')?.textContent || '', pick: [...document.querySelectorAll('.lc-eng__country')].map((b) => b.textContent) }))
+    check(ab.head === 'We are in Nigeria and Portugal. Kenya is on the list.' && ab.scene, `the abroad screen: our two worlds and theirs, not yet: ${ab.head}`)
+    check(/121 searches came from Kenya this month/.test(ab.count) && ab.pick.join('|') === 'Book in Nigeria|Book in Portugal', `with the count and a country to book in: ${ab.count} / ${ab.pick.join('|')}`)
     await p.evaluate(() => [...document.querySelectorAll('.lc-eng__abroad .ui-btn')].find((b) => /Want Locappoint in Kenya/.test(b.textContent))?.click())
     await wait(300)
     await p.$eval('.lc-eng__abroad .lc-wish input', (el) => el.select())
@@ -246,6 +282,7 @@ export default async ({ browser, url, check }) => {
     const ke = (await calls(p, 'search_wish_add')).pop() || {}
     check(ke.p_target_country === 'KE' && ke.p_origin_country === 'KE' && ke.p_phone === '+254 712 345 678' && ke.p_email === null, `asking for Kenya keeps the country and the number: ${JSON.stringify(ke)}`)
     check(/We will tell you when Locappoint opens in Kenya/.test(await text(p, '.lc-eng__abroad')), 'and says it is done')
+    check(((await calls(p, 'search_place_interest')).pop() || {}).p_country === 'KE', 'the count is asked for Kenya')
     await p.type('.lc-eng__what input', 'haircut')
     await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
     await wait(800)
@@ -253,4 +290,58 @@ export default async ({ browser, url, check }) => {
     check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth) && p.errors.length === 0, `fits a phone, no page errors: ${p.errors.join(' | ')}`)
     await p.close()
 
+    // search1: the lead result in full, the others one line each, every one wearing its world.
+    p = await open('/client')
+    await p.type('.lc-eng__what input', 'haircut')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(800)
+    const shape = await p.evaluate(() => ({
+        lead: document.querySelectorAll('.lc-eng__opt.is-lead').length,
+        rows: document.querySelectorAll('.lc-eng__opt.is-row').length,
+        straps: document.querySelectorAll('.lc-eng__opt .lc-eng__strap .lc-pattern, .lc-eng__opt .lc-eng__side-strap .lc-pattern').length,
+        time: document.querySelector('.lc-eng__opt.is-lead .lc-eng__time')?.textContent || '',
+        count: document.querySelector('.lc-eng__count')?.textContent || '',
+        band: Boolean(document.querySelector('.lc-eng__band .lc-pattern--azulejo')),
+        rowBook: document.querySelector('.lc-eng__opt.is-row .ui-btn')?.textContent.trim() || '',
+    }))
+    check(shape.lead === 1 && shape.rows === 2 && shape.straps === 3 && shape.time === '10:00', `one lead card, two lines, each with its world: ${JSON.stringify(shape)}`)
+    check(/Soonest free/.test(shape.count) && /3 places, 3 times/.test(shape.count) && shape.band, `the list says what it is, under the city's world: ${shape.count}`)
+    check(shape.rowBook === 'Book 09:30', `a line's time is its book button: ${shape.rowBook}`)
+    await p.close()
+
+    // Nobody near a place: drawn from the place's own world, how many asked there, and Tell me when.
+    p = await open('/client', '&city=lagos')
+    await p.type('.lc-eng__what input', 'nothing at abeokuta')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(1100)
+    const near = await p.evaluate(() => ({
+        world: Boolean(document.querySelector('.lc-eng__none .lc-scene--place .lc-pattern--adire')),
+        head: document.querySelector('.lc-eng__none .lc-eng__headline')?.textContent || '',
+        lede: document.querySelector('.lc-eng__none .lc-eng__lede')?.textContent || '',
+        list: document.querySelector('.lc-eng__none .lc-eng__small')?.textContent || '',
+    }))
+    check(near.world && near.head === 'Nobody near Abeokuta offers that yet.', `nobody near Abeokuta, in adire: ${near.head}`)
+    check(/14 searches in Abeokuta found nobody to book this month/.test(near.lede), `how many asked there: ${near.lede}`)
+    check(/Do this work in Abeokuta\? List your business free/.test(near.list), `and a way in for a business there: ${near.list}`)
+    const asked = (await calls(p, 'search_place_interest')).pop() || {}
+    check(asked.p_zone === 'Abeokuta' && asked.p_market === 'lagos', `the count is asked for that place: ${JSON.stringify(asked)}`)
+    await p.close()
+    p = await open('/client', '&city=lagos&few=1')
+    await p.type('.lc-eng__what input', 'nothing at abeokuta')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(1100)
+    check(!/searches in/.test(await text(p, '.lc-eng__none .lc-eng__lede')), 'too few searches to count: no number at all')
+    await p.close()
+
+    // Phones: no result card or empty screen runs past the edge.
+    for (const [w, words] of [[320, 'kids'], [320, 'nothing like this'], [360, 'haircut']]) {
+        p = await open('/client')
+        await p.setViewport({ width: w, height: 760, isMobile: true, hasTouch: true })
+        await p.type('.lc-eng__what input', words)
+        await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+        await wait(900)
+        const r = await p.evaluate(() => ({ overflow: document.documentElement.scrollWidth > window.innerWidth, spill: [...document.querySelectorAll('.lc-eng__opt .ui-btn, .lc-wish .ui-btn, .lc-scene')].filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1).length }))
+        check(!r.overflow && r.spill === 0, `${words} fits at ${w}px`)
+        await p.close()
+    }
 }

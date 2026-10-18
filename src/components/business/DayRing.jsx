@@ -20,7 +20,8 @@ const arc = (c, r, from, to) => {
 // centre: 'figures' shows how full the day is and the money; 'hours' only the open hours (while loading);
 // 'fresh' the open hours and where the first booking will land, for a business with none yet;
 // 'pct' only how full the day was, for the small ring on the evening slip. paper draws it for the slip.
-export const DayRing = ({ dateKey, bookings, hours, staff, figures, nowMinutes, money, country, onBook, centre = 'figures', paper = false, size = 248 }) => {
+// 'ahead' a day still to come (dayName, such as Tomorrow): how many are booked and what they bring.
+export const DayRing = ({ dateKey, bookings, hours, staff, figures, nowMinutes, money, country, onBook, centre = 'figures', paper = false, size = 248, dayName = 'Tomorrow' }) => {
     const windows = windowsFor(hours, staff?.id, parseDateKey(dateKey).getDay())
     const [drawn, setDrawn] = useState(false)
     useEffect(() => {
@@ -79,9 +80,12 @@ export const DayRing = ({ dateKey, bookings, hours, staff, figures, nowMinutes, 
     const hours24 = []
     for (let m = Math.ceil(open / 60) * 60; m < close; m += 60) hours24.push(m)
     const pct = Math.round(figures.fill * 100)
-    const counts = centre === 'figures' || centre === 'pct'
+    const ahead = centre === 'ahead'
+    const counts = centre === 'figures' || centre === 'pct' || ahead
     const openSpan = `${minutesToLabel(open)} to ${minutesToLabel(close)}`
-    const label = counts
+    const label = ahead
+        ? `${dayName}: ${figures.count} booked, ${money(figures.toCome)} expected. Open ${openSpan}.`
+        : counts
         ? `${pct}% of today's open time is booked. ${money(figures.earned)} earned, ${money(figures.toCome)} still to come.`
         : `Open today from ${openSpan}.${centre === 'fresh' ? ' No bookings yet.' : ''}`
 
@@ -131,7 +135,14 @@ export const DayRing = ({ dateKey, bookings, hours, staff, figures, nowMinutes, 
                 )}
             </svg>
             <span className="biz-ring__open-at biz-num" aria-hidden="true">{minutesToLabel(open)}</span>
-            {centre === 'pct' ? (
+            {ahead ? (
+                <div className="biz-ring__centre">
+                    <span className="biz-ring__sub">{dayName}</span>
+                    <b className="biz-ring__pct biz-num"><RollNumber value={figures.count} /></b>
+                    <span className="biz-ring__sub">booked</span>
+                    {figures.toCome > 0 && <span className="biz-ring__money"><span><b className="biz-num"><RollMoney value={figures.toCome} country={country} /></b> expected</span></span>}
+                </div>
+            ) : centre === 'pct' ? (
                 <div className="biz-ring__centre">
                     <b className="biz-ring__pct biz-num"><RollNumber value={pct} /><small>%</small></b>
                 </div>

@@ -1,23 +1,88 @@
+/* The top of Today: the business's world under the light of the hour (TodayBand). The veil keeps the
+   words readable on any pattern; its weight follows the sun, so the band is lighter by day and deep at
+   night. Flat layers only. */
 .biz-dayhead {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    min-height: 168px;
+    margin-bottom: var(--space-5);
+    padding: var(--space-5);
+    overflow: hidden;
+    border-radius: var(--lc-r-xl);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    isolation: isolate;
+}
+
+.biz-band__world,
+.biz-band__veil {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+}
+
+.biz-band__world .lc-pattern {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.biz-band__veil { background: color-mix(in srgb, var(--lc-canvas) 78%, transparent); }
+
+.biz-band.is-day .biz-band__veil { background: color-mix(in srgb, var(--lc-canvas) 74%, transparent); }
+
+.biz-band.is-dawn .biz-band__veil,
+.biz-band.is-golden .biz-band__veil { background: color-mix(in srgb, var(--lc-canvas) 76%, transparent); }
+
+.biz-band.is-dusk .biz-band__veil { background: color-mix(in srgb, var(--lc-canvas) 82%, transparent); }
+
+.biz-band.is-night .biz-band__veil { background: color-mix(in srgb, var(--lc-canvas) 86%, transparent); }
+
+/* A world on a light ground (calcada, azulejo, uli, arraiolos) needs a heavier veil to sit dark. */
+.biz-band.is-paper .biz-band__veil { background: color-mix(in srgb, var(--lc-canvas) 84%, transparent); }
+
+.biz-band.is-paper.is-dusk .biz-band__veil,
+.biz-band.is-paper.is-night .biz-band__veil { background: color-mix(in srgb, var(--lc-canvas) 88%, transparent); }
+
+.biz-band__veil::after {
+    position: absolute;
+    inset: 0;
+    background: var(--lc-ambient, transparent);
+    opacity: 0.5;
+    content: "";
+}
+
+.biz-band__words {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+    min-width: 0;
+    max-width: 560px;
 }
 
-/* The greeting follows the shop's clock; the line under it says what the day is doing. */
+/* The greeting follows the shop's clock; the status says the day once; the line says what comes next. */
 .biz-dayhead__hello {
+    margin: 0;
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-medium);
+}
+
+.biz-dayhead__status {
     margin: 0;
     color: var(--lc-ink-1);
     font-family: var(--lc-font-display);
     font-size: var(--lc-t-title);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-bold);
     letter-spacing: var(--lc-track-display);
     line-height: var(--lc-lh-tight);
     overflow-wrap: anywhere;
 }
 
 .biz-dayhead__line {
-    margin: 0;
+    margin: var(--space-1) 0 0;
     color: var(--lc-ink-2);
     font-size: var(--lc-t-body);
     line-height: var(--lc-lh-body);
@@ -26,6 +91,61 @@
 .biz-dayhead__line b {
     color: var(--lc-ink-1);
     font-weight: var(--font-weight-medium);
+}
+
+.biz-band__arc {
+    display: none;
+    flex: none;
+    width: 360px;
+    height: auto;
+    overflow: visible;
+}
+
+.biz-band__horizon { stroke: var(--lc-line-strong); stroke-width: 1; }
+
+.biz-band__path {
+    fill: none;
+    stroke: var(--lc-ink-3);
+    stroke-dasharray: 2 6;
+    stroke-linecap: round;
+    stroke-width: 1.5;
+}
+
+.biz-band__walked {
+    fill: none;
+    stroke: var(--lc-ink-2);
+    stroke-width: 1.5;
+}
+
+.biz-band__evening {
+    stroke: var(--signal);
+    stroke-dasharray: 2 4;
+    stroke-opacity: 0.6;
+    stroke-width: 2;
+}
+
+.biz-band__moon { fill: var(--lc-ink-2); }
+
+.biz-band__now { fill: var(--signal); }
+
+.biz-band__nowring {
+    fill: none;
+    stroke: var(--signal);
+    stroke-opacity: 0.35;
+}
+
+.biz-band__time {
+    fill: var(--lc-ink-3);
+    font-family: var(--lc-font-mono);
+    font-size: 12px;
+}
+
+.biz-band__time.is-now { fill: var(--lc-ink-1); }
+
+@media (min-width: 720px) {
+    .biz-dayhead { padding: var(--space-5) var(--space-6); }
+
+    .biz-band__arc { display: block; }
 }
 
 .biz-stats {
@@ -164,26 +284,41 @@
     font-size: var(--text-sm);
 }
 
-.biz-share__link {
+.biz-share__row {
     display: flex;
-    flex-direction: column;
-    margin: var(--space-1) 0 var(--space-4);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
     min-width: 0;
 }
 
-.biz-share__host {
-    color: var(--lc-ink-3);
+.biz-share__link {
+    display: flex;
+    flex: 1 1 220px;
+    align-items: center;
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 var(--space-3);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-well);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.biz-share__host {
+    flex: none;
+    color: var(--lc-ink-3);
 }
 
 .biz-share__slug {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-semibold);
+    color: var(--lc-ink-1);
 }
 
 .biz-closed {
@@ -208,9 +343,23 @@
 }
 
 .biz-share__actions {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    flex: 1 1 auto;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
     gap: var(--space-2);
+    min-width: 0;
+}
+
+.biz-share__actions .btn {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.biz-share__actions .btn span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 
@@ -698,5 +847,4 @@
     .biz-agenda__book { min-height: 30px; }
     .biz-panel { padding: 18px; }
     .biz-closed { padding: 16px; }
-    .biz-share__slug { font-size: 16px; }
 }

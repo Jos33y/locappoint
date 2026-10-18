@@ -38,6 +38,33 @@ const todayIn = (timeZone) => {
     try { return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()) } catch { return toDateKey(new Date()) }
 }
 
+// Edit distance, for typos in day and month names ("wednessday", "satuday", "fryday").
+const distance = (a, b) => {
+    const row = Array.from({ length: b.length + 1 }, (_, j) => j)
+    for (let i = 1; i <= a.length; i++) {
+        let prev = row[0]
+        row[0] = i
+        for (let j = 1; j <= b.length; j++) {
+            const keep = row[j]
+            row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1))
+            prev = keep
+        }
+    }
+    return row[b.length]
+}
+const FULL_DAYS = [['sunday', 'domingo'], ['monday', 'segunda'], ['tuesday', 'terca'], ['wednesday', 'quarta'], ['thursday', 'quinta'], ['friday', 'sexta'], ['saturday', 'sabado']]
+// A word close enough to a day name: one letter off for short names, two for long ones.
+const fuzzyDay = (word) => FULL_DAYS.findIndex((names) => names.some((n) => word.length >= 5 && word !== n && Math.abs(word.length - n.length) <= 2 && distance(word, n) <= (n.length >= 7 ? 2 : 1)))
+
+// Places that are not search words. "in the morning", "at home", "at 3" are read before places.
+const NOT_PLACE = new Set(['home', 'my', 'me', 'the', 'a', 'an', 'work', 'night', 'casa', 'minha', 'meu', 'all', 'any', 'least', 'once', 'least', 'time', 'least'])
+const PLACE_STOP = /^(on|at|for|this|next|tomorrow|today|tonight|after|before|by|from|around|with|and|please|para|amanha|hoje|de|depois|antes|com|e|por|in|em|no|na)$/
+
+const money = (raw) => {
+    const n = /^\d{1,3}([.,]\d{3})+$/.test(raw) ? Number(raw.replace(/[.,]/g, '')) : Number(raw.replace(',', '.'))
+    return Number.isFinite(n) ? n : null
+}
+
 const dayKey = (today, ahead) => (ahead === 0 ? 'today' : ahead === 1 ? 'tomorrow' : `d:${addDays(today, ahead)}`)
 
 export const understand = (text, timeZone) => {
@@ -99,6 +126,20 @@ export const understand = (text, timeZone) => {
     if (!found.day && (m = /\b(today|tonight|hoje|esta noite)\b/.exec(t))) take('day', 'today', null, m)
     if (!found.day && (m = /\b(tomorrow|amanha)\b/.exec(t))) take('day', 'tomorrow', null, m)
     if (!found.day && (m = /\b(?:this\s+|next\s+)?(weekend|fim de semana|fim-de-semana)\b/.exec(t))) take('day', 'weekend', null, m)
+    if (!found.day) {
+        // A day name with a typo ("wednessday", "satuday"): the same day, if nothing else named one.
+        const words = /[a-z]{5,}/g
+        let w
+        while (!found.day && (w = words.exec(t))) {
+            const hit = fuzzyDay(w[0])
+            if (hit < 0) continue
+            const inNext = nextWeek.test(t)
+            const ahead = inNext ? nextMonday + ((hit + 6) % 7) : (hit - dow + 7) % 7
+            take('day', dayKey(today, ahead), null, w)
+            const nw = nextWeek.exec(t)
+            if (nw) spans.push({ field: 'day', start: nw.index, end: nw.index + nw[0].length })
+        }
+    }
     if (!found.day && (m = nextWeek.exec(t))) take('day', 'nextweek', null, m)
     if (!found.day && (m = /\bin\s+(\d+|two|three|four|five|six)\s+days\b|\bdaqui a\s+(\d+|dois|tres|quatro|cinco)\s+dias\b/.exec(t))) {
         const n = num(m[1] || m[2])
@@ -141,9 +182,33 @@ export const understand = (text, timeZone) => {
     if ((m = /\b(home service|home visit|at home|at my (?:place|house|home)|to my (?:place|house|home)|come to me|come to my (?:place|house|home)|ao domicilio|domicilio|em casa|na minha casa|a minha casa)\b/.exec(t))) take('mode', 'at_client', 'At your place', m)
     if (!found.mode && (m = /\b(online|zoom|video call|videocall|google meet|teams call|virtual|por video)\b/.exec(t))) take('mode', 'online', 'Online', m)
 
+    // ---------- price ----------
+    if ((m = /(?:\b(?:under|below|less than|max|maximum|up to|not more than|within|budget(?: of)?|ate|abaixo de|menos de|no maximo)\s*)(?:n|₦|€|eur|ngn)?\s*(\d+(?:[.,]\d+)*)\s*(k|mil|thousand)?\b\s*(?:naira|euros?|eur|ngn|€|₦)?/.exec(t))) {
+        let value = money(m[1])
+        if (value && m[2]) value *= 1000
+        if (value && value > 0) take('price', value, null, m)
+    }
+    if ((m = /\b(cheapest|cheap|affordable|mais barato|barato|baratos|economico)\b/.exec(t))) take('order', 'price', 'Cheapest', m)
+
+    // ---------- the place, last: what the other readings did not take ----------
+    const placeRe = /\b(in|at|near|around|em|no|na|perto d[eoa]|ao pe d[eoa])\s+([a-z][a-z'-]*(?:\s+[a-z][a-z'-]*){0,2})/g
+    while (!found.place && (m = placeRe.exec(t))) {
+        // Look again just after this word, so "at home in Ikeja" still finds "in Ikeja".
+        placeRe.lastIndex = m.index + m[1].length
+        const begin = m.index
+        const words = m[2].split(/\s+/)
+        const keep = []
+        for (const w of words) { if (PLACE_STOP.test(w)) break; keep.push(w) }
+        if (!keep.length || NOT_PLACE.has(keep[0]) || keep[0].length < 3) continue
+        const len = m[1].length + 1 + keep.join(' ').length
+        if (spans.some((sp) => begin < sp.end && begin + len > sp.start)) continue
+        const name = raw.slice(begin + m[1].length + 1, begin + len).replace(/[?.!,]+$/, '').replace(/\b\w/g, (c) => c.toUpperCase())
+        take('place', name, `Near ${name}`, { 0: t.slice(begin, begin + len) }, begin)
+    }
+
     // What is left is what they want.
     const keep = [...raw].map((ch, i) => (spans.some((s) => i >= s.start && i < s.end) ? ' ' : ch)).join('')
-    const what = keep.replace(/\s+(?:on|at|for|in|the|para|na|no|as|de|e|and|please)\s*$/i, '').replace(/^\s*(?:i need|i want|need|want|book|preciso de|quero)\s+/i, '').replace(/\s{2,}/g, ' ').trim()
+    const what = keep.replace(/[?!.,]+/g, ' ').replace(/\s+(?:on|at|for|in|the|para|na|no|as|de|e|and|please)\s*$/i, '').replace(/^\s*(?:i need|i want|need|want|book|preciso de|quero)\s+/i, '').replace(/^\s*(?:a|an|um|uma)\s+/i, '').replace(/\s{2,}/g, ' ').trim()
     return { ...Object.fromEntries(Object.entries(found).map(([k, v]) => [k, v.value])), labels: Object.fromEntries(Object.entries(found).map(([k, v]) => [k, v.label])), spans, what: what || raw.trim() }
 }
 

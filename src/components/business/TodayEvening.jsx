@@ -24,6 +24,14 @@ export const freeGaps = (windows, bookings, length = 30) => {
     return starts
 }
 
+// Free time as a few words: "9 hours free", "90 min free". Short, so the card head never breaks.
+export const freeWords = (free) => {
+    const total = free.reduce((s, [a, b]) => s + (b - a), 0)
+    if (total <= 0) return 'fully booked'
+    if (total < 120) return `${total} min free`
+    return `${Math.round(total / 60)} hours free`
+}
+
 const and = (items) => (items.length < 2 ? items : [items[0], ' and ', items[1]])
 
 // After closing: the day on paper. What it made, how full it was, what went wrong.
@@ -45,17 +53,18 @@ export const DaySlip = ({ dateKey, bookings, hours, staff, figures, money, count
     </section>
 )
 
-// Tomorrow at a glance, with the free times worth sharing tonight.
-export const Tomorrow = ({ business, dateKey, figures, rows, windows, free }) => {
+// Tomorrow (or the next open day, title) at a glance, with the free times worth sharing tonight.
+export const Tomorrow = ({ business, dateKey, rows, windows, free, title = 'Tomorrow' }) => {
     const first = rows[0]
     const shown = free.slice(0, 2).map(([a, b]) => `${minutesToLabel(a)} to ${minutesToLabel(b)}`)
-    const text = `Free tomorrow at ${business.business_name}: ${shown.join(' and ')}. Book here: ${pageUrl(business.slug, 'wa')}`
+    const day = title === 'Tomorrow' ? 'tomorrow' : `on ${title}`
+    const text = `Free ${day} at ${business.business_name}: ${shown.join(' and ')}. Book here: ${pageUrl(business.slug, 'wa')}`
     return (
         <section className="biz-tomorrow" aria-labelledby="tomorrow-title">
             <header className="biz-tomorrow__head">
-                <h2 id="tomorrow-title" className="biz-ov__h2">Tomorrow</h2>
+                <h2 id="tomorrow-title" className="biz-ov__h2">{title}</h2>
                 <span className="biz-tomorrow__fill">
-                    {windows.length === 0 ? 'Closed' : `${rows.length} booked, ${Math.round(figures.fill * 100)}%`}
+                    {windows.length === 0 ? 'Closed' : `${rows.length} booked, ${freeWords(free)}`}
                 </span>
             </header>
             {windows.length === 0 ? (
@@ -72,11 +81,11 @@ export const Tomorrow = ({ business, dateKey, figures, rows, windows, free }) =>
             <div className="biz-tomorrow__actions">
                 {windows.length > 0 && shown.length > 0 && (
                     <a className="btn btn--primary" href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">
-                        <MessageCircle size={16} aria-hidden="true" /> Share tomorrow's free times
+                        <MessageCircle size={16} aria-hidden="true" /> <span>Share free times</span>
                     </a>
                 )}
                 <Link className="btn btn--ghost" to={`/portal/calendar?date=${dateKey}`}>
-                    <CalendarDays size={16} aria-hidden="true" /> Open tomorrow
+                    <CalendarDays size={16} aria-hidden="true" /> <span>{title === 'Tomorrow' ? 'Open tomorrow' : `Open ${title}`}</span>
                 </Link>
             </div>
         </section>
