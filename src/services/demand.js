@@ -85,6 +85,18 @@ export const placeInterest = async ({ market = null, zone: area = null, country 
     }
 }
 
+// Browse, "Asked for this week, not here yet": up to three places in the country where a trade was
+// searched and nobody offered it, as { zone, category, searches }. Only trades and places, 3 or more.
+export const askedHere = async (iso) => {
+    try {
+        const { data, error } = await supabase.rpc('public_asked', { p_country: iso, p_days: 7 })
+        if (error || !Array.isArray(data)) return []
+        return data.filter((r) => r && r.zone && r.category && Number(r.searches) >= 3).map((r) => ({ zone: String(r.zone), category: String(r.category), searches: Number(r.searches) }))
+    } catch {
+        return []
+    }
+}
+
 // A contact shown back without all of it: "a***@mail.com", "+234 803 ... 4412".
 export const maskContact = (value) => {
     const v = String(value || '').trim()

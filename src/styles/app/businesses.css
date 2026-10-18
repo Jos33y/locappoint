@@ -19,47 +19,37 @@
 }
 
 
-/* The city first: its pattern across the top of the hero, fading into the canvas. */
-.lc-br-hero {
+/* The country first (design pass, 18 October): a full-width top on ink, the search on the left and the
+   country's four worlds as doorways on the right, at the country's time of day. */
+.lc-br-top {
     position: relative;
+    overflow: hidden;
+    background: var(--ink);
+    border-bottom: 1px solid var(--lc-line);
+}
+
+.lc-br-top__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
+    gap: var(--space-10);
+    width: 100%;
+    max-width: 1140px;
+    min-height: 520px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) 0;
+}
+
+.lc-br-top__text {
     display: flex;
     flex-direction: column;
     gap: var(--space-6);
-    padding-top: 88px;
-}
-
-.lc-br-hero__band {
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    height: 64px;
-    overflow: hidden;
-    border-radius: var(--lc-r-xl);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
-    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
-}
-
-.lc-br-hero__band svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-    max-width: none;
-}
-
-.lc-br-hero.is-light .lc-br-hero__band { opacity: 0.85; }
-
-.lc-br-hero__text {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    max-width: 680px;
+    padding-bottom: var(--space-12);
 }
 
 .lc-br-hero__title {
     margin: 0;
     font-family: var(--lc-font-display);
-    font-size: clamp(2rem, 1.4rem + 1.8vw, 2.75rem);
+    font-size: clamp(2.25rem, 1.2rem + 3vw, 3.5rem);
     font-weight: var(--font-weight-semibold);
     letter-spacing: var(--lc-track-title);
     line-height: var(--lc-lh-tight);
@@ -67,102 +57,280 @@
 }
 
 .lc-br-hero__lede {
-    max-width: 56ch;
-    margin: 0;
+    max-width: 52ch;
+    margin: calc(var(--space-3) * -1) 0 0;
     color: var(--lc-ink-2);
     font-size: 1.0625rem;
     line-height: var(--lc-lh-body);
 }
 
+/* The search sits on the ink: its field a shade up from it. */
+.lc-br-top .lc-eng__what { background: var(--lc-well); }
 
-.lc-br-cities {
+/* Four arches of the country's worlds, standing on the bottom edge. */
+.lc-br-doors {
+    position: relative;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 0.8fr 2fr 1.6fr 2fr;
+    align-items: end;
+    gap: var(--space-5);
+    align-self: end;
+    height: 100%;
+    min-height: 440px;
+}
+
+.lc-br-door {
+    display: block;
+    overflow: hidden;
+    border-radius: 999px 999px 0 0;
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-br-door .lc-pattern { display: block; width: 100%; height: 100%; max-width: none; }
+
+.lc-br-door.is-0 { height: 46%; }
+.lc-br-door.is-1 { height: 82%; }
+.lc-br-door.is-2 { height: 66%; }
+.lc-br-door.is-3 { height: 100%; }
+
+/* The sun (amber, "now") or the moon after dark, with the country's time beside it. */
+.lc-br-doors__sky {
+    position: absolute;
+    top: 4%;
+    right: 34%;
+    display: inline-flex;
+    flex-direction: row-reverse;
+    align-items: center;
     gap: var(--space-3);
+}
+
+.lc-br-doors__sky i {
+    display: block;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    background: var(--signal);
+}
+
+.lc-br-doors__sky.is-night i { background: none; box-shadow: inset 0 0 0 2px var(--lc-ink-2), inset 10px -6px 0 0 var(--lc-ink-2); }
+
+.lc-br-doors__time {
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-label);
+    white-space: nowrap;
+}
+
+/* Just joined: four cards, each in its own world, with its next free times. */
+.lc-br-joined { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.lc-br-seeall {
+    color: var(--lc-info);
+    font-size: var(--lc-t-label);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+}
+
+.lc-br-seeall:hover { text-decoration: underline; }
+
+.lc-br-seeall:focus-visible { outline: 2px solid var(--azure); outline-offset: 2px; border-radius: var(--lc-r-sm); }
+
+.lc-br-joined__list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.lc-br-city {
-    display: flex;
-}
+.lc-br-new { display: flex; min-width: 0; }
 
-/* Each city is a button: tapping one lists its places, the same as the header switcher. */
-.lc-br-city__pick {
+.lc-br-new__link {
     display: flex;
     flex: 1;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
+    min-width: 0;
     overflow: hidden;
-    padding: 0 var(--space-4) var(--space-4);
-    border: 0;
-    border-radius: var(--lc-r-md);
-    background: var(--lc-panel);
+    border-radius: var(--lc-r-lg);
+    background: var(--lc-card);
     box-shadow: inset 0 0 0 1px var(--lc-line);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
+    color: var(--lc-ink-1);
+    text-decoration: none;
     transition: box-shadow var(--lc-fast) var(--lc-ease);
 }
 
-.lc-br-city__pick:hover { box-shadow: inset 0 0 0 1px var(--lc-line-strong); }
+.lc-br-new__link:hover { box-shadow: inset 0 0 0 1px var(--lc-line-strong); }
 
-.lc-br-city__pick:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 1.5px var(--azure), 0 0 0 4px var(--lc-info-tint);
-}
+.lc-br-new__link:focus-visible { outline: 2px solid var(--azure); outline-offset: 2px; }
 
-.lc-br-city.is-here .lc-br-city__pick { box-shadow: inset 0 0 0 1.5px var(--azure); }
-
-/* Each city card wears its city: a strap of its pattern along the top. */
-.lc-br-city__strap {
+.lc-br-new__cover {
+    position: relative;
     display: block;
-    align-self: stretch;
-    height: 20px;
-    margin: 0 calc(var(--space-4) * -1) var(--space-3);
-    border-bottom: 1px solid var(--lc-line-strong);
+    height: 120px;
+    background: var(--lc-well);
 }
 
-.lc-br-city__strap svg {
+.lc-br-new__cover > img,
+.lc-br-new__cover > svg {
     display: block;
     width: 100%;
     height: 100%;
     max-width: none;
+    object-fit: cover;
 }
 
-.lc-br-city:not(.is-here) .lc-br-city__strap { opacity: 0.7; }
-
-/* A country's strap: its four worlds side by side. */
-.lc-br-city__strap.is-four { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-
-.lc-br-city strong {
-    color: var(--lc-ink-2);
+.lc-br-new__mark {
+    position: absolute;
+    left: var(--space-3);
+    bottom: -20px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    overflow: hidden;
+    border-radius: var(--lc-r-md);
+    background: var(--lc-canvas);
+    box-shadow: 0 0 0 3px var(--lc-card);
+    color: var(--lc-ink-1);
     font-family: var(--lc-font-display);
-    font-size: var(--lc-t-heading);
+    font-size: 15px;
     font-weight: var(--font-weight-semibold);
 }
 
-.lc-br-city span {
-    display: inline-flex;
+.lc-br-new__mark img,
+.lc-br-new__mark svg { width: 100%; height: 100%; max-width: none; object-fit: cover; }
+
+.lc-br-new__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding: var(--space-8) var(--space-4) var(--space-4);
+}
+
+.lc-br-new__body strong {
+    overflow: hidden;
+    font-size: 1rem;
+    font-weight: var(--font-weight-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lc-br-new__meta {
+    overflow: hidden;
+    color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lc-br-new__times {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 6px;
+    margin-top: var(--space-2);
+}
+
+.lc-br-new__day { color: var(--lc-ink-3); font-size: 12px; }
+
+.lc-br-new__time {
+    padding: 2px 6px;
+    border-radius: var(--lc-r-sm);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    color: var(--lc-ink-1);
+    font-family: var(--lc-font-mono);
+    font-size: 12px;
+}
+
+/* Asked for this week, not here yet: the most asked trade and place, the others listed on its world. */
+.lc-br-asked {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    overflow: hidden;
+    border-radius: var(--lc-r-xl);
+    background: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+}
+
+.lc-br-asked__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-8);
+}
+
+.lc-br-asked__eyebrow {
+    margin: 0;
     color: var(--lc-ink-3);
+    font-family: var(--lc-font-mono);
     font-size: var(--lc-t-label);
 }
 
-.lc-br-city i {
-    flex: none;
-    width: 7px;
-    height: 7px;
-    border-radius: var(--radius-full);
-    background: var(--lc-ink-4);
+.lc-br-asked h2 {
+    margin: 0;
+    font-family: var(--lc-font-display);
+    font-size: var(--lc-t-title);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--lc-track-title);
+    line-height: var(--lc-lh-tight);
 }
 
-.lc-br-city.is-live strong { color: var(--lc-ink-1); }
-.lc-br-city.is-live span { color: var(--lc-success); }
-.lc-br-city.is-live i { background: var(--lc-success); }
+.lc-br-asked__lede {
+    margin: 0 0 var(--space-2);
+    color: var(--lc-ink-2);
+    font-size: var(--lc-t-body);
+}
+
+.lc-br-asked__side {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: var(--space-6);
+    isolation: isolate;
+}
+
+.lc-br-asked__world { position: absolute; inset: 0; z-index: -1; }
+
+.lc-br-asked__world .lc-pattern { display: block; width: 100%; height: 100%; max-width: none; }
+
+.lc-br-asked__list {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lc-br-asked__list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--lc-r-md);
+    background: color-mix(in srgb, var(--ink) 90%, transparent);
+    box-shadow: inset 0 0 0 1px var(--lc-line);
+    font-size: var(--lc-t-body);
+}
+
+.lc-br-asked__list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lc-br-asked__list b { font-family: var(--lc-font-mono); font-size: var(--lc-t-label); font-weight: var(--font-weight-medium); }
+
+/* The four worlds end to end above the footer. */
+.lc-br-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    height: 20px;
+    border-top: 1px solid var(--lc-line);
+}
+
+.lc-br-strip .lc-pattern { display: block; width: 100%; height: 100%; max-width: none; }
 
 
 .lc-br-places {
@@ -335,25 +503,36 @@
 
 
 
+@media (max-width: 1023px) {
+    .lc-br-joined__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Tablet and phone: the doorways become a short row over the title. */
+@media (max-width: 899px) {
+    .lc-br-top__inner { grid-template-columns: minmax(0, 1fr); gap: 0; min-height: 0; padding: var(--space-6) var(--space-4) 0; }
+    .lc-br-doors { order: -1; min-height: 0; height: 120px; gap: var(--space-3); margin-bottom: var(--space-6); border-bottom: 1px solid var(--lc-line); }
+    .lc-br-doors__sky { top: 0; right: 0; flex-direction: row; }
+    .lc-br-doors__sky i { width: 32px; height: 32px; }
+    .lc-br-top__text { padding-bottom: var(--space-8); }
+    .lc-br-asked { grid-template-columns: minmax(0, 1fr); }
+    .lc-br-asked__side { padding: var(--space-5); }
+}
+
 @media (max-width: 559px) {
     .lc-br__main { gap: var(--space-8); padding: var(--space-8) var(--space-4) var(--space-12); }
-    .lc-br-hero__title { font-size: 1.875rem; }
+    .lc-br-hero__title { font-size: 2rem; }
     .lc-br-hero__lede { font-size: var(--lc-t-body); }
-    .lc-br-hero { padding-top: 64px; }
-    .lc-br-hero__band { height: 44px; }
-    .lc-br-cities { gap: var(--space-2); }
-    .lc-br-city__pick { padding: 0 var(--space-3) var(--space-3); }
-    .lc-br-city__strap { margin: 0 calc(var(--space-3) * -1) var(--space-2); }
-    .lc-br-city strong { font-size: 1rem; }
+    .lc-br-doors { grid-template-columns: 0.8fr 2fr 1.6fr 2fr; height: 96px; }
+    .lc-br-doors__sky { display: none; }
+    .lc-br-joined__list { gap: var(--space-3); }
+    .lc-br-new__cover { height: 88px; }
+    .lc-br-asked__text { padding: var(--space-6) var(--space-5); }
     .lc-br-cta { padding: var(--space-6) var(--space-5); }
     .lc-br-cta__buttons { width: 100%; }
     .lc-br-cta__buttons .ui-btn { flex: 1 1 100%; }
 }
 
-@media (max-width: 359px) {
-    .lc-br-city span { font-size: 12px; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-    .lc-br-join__link { transition: none; }
+    .lc-br-join__link,
+    .lc-br-new__link { transition: none; }
 }

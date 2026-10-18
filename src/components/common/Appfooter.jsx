@@ -27,7 +27,6 @@ const AppFooter = () => {
                         <p className="loca-app-footer__desc">
                             Book anyone, anywhere the service happens. Live across Nigeria and Portugal. Free for businesses during the beta.
                         </p>
-                        <div className="loca-app-footer__cities">Porto · Lagos · Lisbon</div>
                     </div>
 
                     <div className="loca-app-footer__col">

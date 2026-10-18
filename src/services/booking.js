@@ -297,10 +297,10 @@ export const USER_ERRORS = ['22023', 'P0001', 'P0002', '28000', '42501']
 export const loadPlaces = async () => {
     const [places, services, hours, ratings, trust] = await Promise.all([
         supabase.from('businesses')
-            .select('id, business_name, slug, description, category, category_detail, city, neighbourhood, timezone, market, country, currency, banner_url, logo_url, is_demo')
+            .select('id, business_name, slug, description, category, category_detail, city, neighbourhood, region, locality, timezone, market, country, currency, banner_url, logo_url, is_demo, created_at')
             .eq('is_active', true)
             .order('created_at', { ascending: false }),
-        supabase.from('services').select('business_id, price, is_active, is_addon, modes').eq('is_active', true),
+        supabase.from('services').select('id, business_id, service_name, duration_minutes, sort_order, price, is_active, is_addon, modes').eq('is_active', true),
         supabase.from('availability').select('business_id, staff_id, day_of_week, start_time, end_time, is_active').eq('is_active', true),
         supabase.rpc('business_ratings'),
         loadTrust(),
@@ -310,8 +310,12 @@ export const loadPlaces = async () => {
     // add-on at EUR 4) never sets it. A business whose every service is online only meets by video call.
     const prices = new Map()
     const ways = new Map()
+    // The first service on the menu, for the free times a card shows (Browse, Just joined).
+    const firsts = new Map()
+    const before = (a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0) || String(a.service_name || '').localeCompare(String(b.service_name || ''))
     for (const s of services.data || []) {
         if (s.is_addon) continue
+        if (s.id && Number(s.duration_minutes) > 0 && (!firsts.has(s.business_id) || before(s, firsts.get(s.business_id)) < 0)) firsts.set(s.business_id, s)
         const modes = s.modes || []
         ways.set(s.business_id, (ways.get(s.business_id) ?? true) && modes.length > 0 && modes.every((m) => m === 'online'))
         const price = Number(String(s.price ?? '').replace(',', '.'))
@@ -327,7 +331,7 @@ export const loadPlaces = async () => {
     const stars = new Map((ratings.error ? [] : ratings.data || []).map((r) => [r.business_id, { average: Number(r.average), count: Number(r.count) }]))
     // Demo businesses stay findable for walkthroughs but never outrank a real one.
     return (places.data || [])
-        .map((b) => ({ ...b, fromPrice: prices.get(b.id) ?? null, online: ways.get(b.id) === true, hourRows: rows.get(b.id) || [], rating: stars.get(b.id) || null, trust: trust.get(b.id) || null }))
+        .map((b) => ({ ...b, fromPrice: prices.get(b.id) ?? null, online: ways.get(b.id) === true, hourRows: rows.get(b.id) || [], rating: stars.get(b.id) || null, trust: trust.get(b.id) || null, firstService: firsts.get(b.id)?.id || null }))
         .sort((a, b) => Number(Boolean(a.is_demo)) - Number(Boolean(b.is_demo)))
 }
 

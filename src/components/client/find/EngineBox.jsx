@@ -140,7 +140,8 @@ const placeWorld = (place, market) => pickWorld({ id: `place|${place}`, city: pl
 // different reason. A tap opens that business's booking sheet at that time.
 // compact: the one line and the popular chips first; when, what time, how many and where open behind
 // "More options", with what is picked said in words, so a short list never sits under a long form.
-export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/search', compact = false }) => {
+// bare: no box, band or visible title, for a page whose own hero already says it (Browse).
+export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/search', compact = false, bare = false }) => {
     const navigate = useNavigate()
     // The same country as the header switch: changing it in either place changes both.
     const [market, pickMarket] = useCountry()
@@ -336,9 +337,9 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     const missedLine = (place) => (interest.missed > 0 ? `${interest.missed} searches in ${place} found nobody to book this month.` : '')
 
     return (
-        <section className="lc-eng" aria-labelledby="lc-eng-title">
-            <span className="lc-eng__band" aria-hidden="true"><CityPattern world={world} centred size={40} /></span>
-            <h2 id="lc-eng-title" className="lc-eng__title">{title}</h2>
+        <section className={`lc-eng${bare ? ' is-bare' : ''}`} aria-labelledby="lc-eng-title">
+            {!bare && <span className="lc-eng__band" aria-hidden="true"><CityPattern world={world} centred size={40} /></span>}
+            <h2 id="lc-eng-title" className={bare ? 'sr-only' : 'lc-eng__title'}>{title}</h2>
             <form className="lc-eng__form" role="search" onSubmit={(e) => { e.preventDefault(); run() }}>
                 <span className="lc-eng__what">
                     <Search size={18} aria-hidden="true" />

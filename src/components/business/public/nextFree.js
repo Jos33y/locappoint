@@ -57,3 +57,36 @@ export const useNextFree = ({ business, services, week, skip = false }) => {
 
     return next
 }
+
+// A card's free times (Browse, Just joined): up to max times on the first open day that has any,
+// for the business's first service. One lookup, two at most; nothing while it loads or if it fails.
+export const useFirstTimes = ({ businessId, serviceId, week, timeZone = 'Europe/Lisbon', max = 3, skip = false }) => {
+    const [times, setTimes] = useState(null)
+
+    useEffect(() => {
+        setTimes(null)
+        if (skip || !businessId || !serviceId || !week?.some((day) => day.length > 0)) return undefined
+        let cancelled = false
+        const find = async () => {
+            const { dateKey, minutes } = zonedNow(timeZone)
+            const today = parseDateKey(dateKey)
+            let asked = 0
+            for (let offset = 0; offset < AHEAD && asked < LOOKUPS; offset += 1) {
+                const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset)
+                const open = week[date.getDay()]
+                if (!open?.length) continue
+                if (offset === 0 && open[open.length - 1].end <= minutes) continue
+                asked += 1
+                const free = (await loadSlots({ businessId, serviceId, dateKey: toDateKey(date) })).filter((m) => offset > 0 || m > minutes)
+                if (free.length) {
+                    if (!cancelled) setTimes({ day: dayLabel(offset, date), list: free.slice(0, max).map(clock) })
+                    return
+                }
+            }
+        }
+        find().catch((err) => console.error('Free times failed:', err))
+        return () => { cancelled = true }
+    }, [businessId, serviceId, timeZone, week, max, skip])
+
+    return times
+}

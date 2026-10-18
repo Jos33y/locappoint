@@ -34,6 +34,15 @@
     content: "";
 }
 
+/* Bare: the page around it is the box (Browse's hero). */
+.lc-eng.is-bare {
+    padding: 0;
+    overflow: visible;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
 .lc-eng__title {
     margin: 0;
     color: var(--lc-ink-1);

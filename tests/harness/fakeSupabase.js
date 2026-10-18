@@ -221,6 +221,22 @@ if (quiet('lagosareas')) {
 // ?fresh=1: a business on its first day, with no booking ever.
 if (quiet('fresh')) DATA.appointments = []
 if (quiet('demo')) DATA.businesses[0].is_demo = true
+// ?joined=1: five more places in Nigeria, newest first, for Browse's "Just joined". The oldest of them
+// is the one left out of the four.
+if (quiet('joined')) {
+  const ng = [
+    ['b11', 'Fade Republic', 'barbershop', 'Ikeja', 'Lagos', 'Lagos', 1],
+    ['b12', 'Osaro Braids', 'braids', 'GRA', 'Benin City', 'Edo', 2],
+    ['b13', 'Nkem Nails', 'nails', 'New Haven', 'Enugu', 'Enugu', 3],
+    ['b14', 'Amina Lashes', 'lashes_brows', 'Nassarawa', 'Kano', 'Kano', 4],
+    ['b15', 'Bodija Cuts', 'barbershop', 'Bodija', 'Ibadan', 'Oyo', 9],
+  ]
+  ng.forEach(([id, name, category, locality, city, region, days], i) => {
+    DATA.businesses.push({ id, business_name: name, slug: name.toLowerCase().replace(/ /g, '-'), timezone: 'Africa/Lagos', is_active: true, city, country: 'NG', market: 'ng', region, locality, neighbourhood: locality, category, category_detail: null, currency: 'NGN', banner_url: null, logo_url: null, created_at: new Date(Date.now() - days * 86400000).toISOString() })
+    DATA.services.push({ id: `s${id}`, business_id: id, service_name: 'Haircut', duration_minutes: 30, price: 8000 + i * 1000, is_active: true, sort_order: 0 })
+    ;[0, 1, 2, 3, 4, 5, 6].forEach((d) => DATA.availability.push({ id: `a${id}${d}`, business_id: id, staff_id: null, day_of_week: d, start_time: '08:00:00', end_time: '20:00:00' }))
+  })
+}
 // ?opentoday=1: open today as well (the test business is closed on Sundays).
 if (quiet('opentoday')) {
   const dow = new Date(`${key}T12:00:00Z`).getUTCDay()
@@ -547,6 +563,8 @@ adminRpc.admin_demand = ({ p_days = 30 }) => ({
 const openDay = () => { const d = new Date(`${dk(1)}T12:00:00Z`).getUTCDay(); return d === 0 ? dk(2) : dk(1) }
 const engineOption = (label, i, extra = {}) => ({ business_id: `b${i}`, business_name: ['Femtos Barbearia', 'Nove Unhas', 'Barba Rija'][i - 1], slug: 'femtos-barbearia', city: 'Porto', service_id: 's1', service_name: 'Haircut', people: 1, price: 18, price_per: 'booking', currency: 'EUR', mode: 'at_business', date: openDay(), time: ['10:00', '09:30', '11:00'][i - 1], km: i === 3 ? 1.2 : null, rating: i === 3 ? 4.8 : null, reviews: i === 3 ? 12 : 0, rebook_pct: i === 1 ? 70 : null, regular: false, label, ...extra })
 const engineRpc = (name, args) => {
+  // Browse, "Asked for this week": ?asked=1 gives three places in Nigeria.
+  if (name === 'public_asked') return { data: quiet('asked') && args.p_country === 'NG' ? [{ zone: 'Ibadan', category: 'lashes_brows', searches: 23 }, { zone: 'Abeokuta', category: 'barbershop', searches: 14 }, { zone: 'Enugu', category: 'braids', searches: 11 }] : [], error: null }
   if (name === 'engine_popular') return { data: [{ category: 'barbershop', businesses: 2 }, { category: 'nails', businesses: 1 }], error: null }
   // The empty screens' numbers: a place with 14 misses and 6 waiting; a country with 121 searches, 9 asking.
   if (name === 'search_place_interest') return { data: new URLSearchParams(window.location.search).get('few') === '1' ? { missed: 0, waiting: 0 } : args.p_zone ? { missed: 14, waiting: 6 } : { missed: 121, waiting: 9 }, error: null }
