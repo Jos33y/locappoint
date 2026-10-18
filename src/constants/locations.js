@@ -323,6 +323,12 @@ export const NG_CITIES = [
     'Ilorin', 'Owerri', 'Uyo', 'Calabar', 'Warri', 'Asaba', 'Onitsha', 'Akure', 'Osogbo', 'Aba',
 ].map((city) => ({ value: city, label: city }))
 
+// The regions a country is searched and joined by (doc 35): Nigeria's 36 states and the FCT, Portugal's
+// 18 districts and the two autonomous regions. Names as businesses.region keeps them.
+export const NG_STATES = ['Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']
+export const PT_DISTRICTS = ['Aveiro', 'Beja', 'Braga', 'Bragança', 'Castelo Branco', 'Coimbra', 'Évora', 'Faro', 'Guarda', 'Leiria', 'Lisboa', 'Portalegre', 'Porto', 'Santarém', 'Setúbal', 'Viana do Castelo', 'Vila Real', 'Viseu', 'Azores', 'Madeira']
+export const REGIONS = { ng: { word: 'State', all: 'All states', list: NG_STATES }, pt: { word: 'District', all: 'All districts', list: PT_DISTRICTS } }
+
 export const POPULAR_COUNTRIES = ['PT', 'NG', 'BR', 'GB', 'ES', 'FR', 'US', 'AO', 'CV']
 
 const deviceZone = () => {

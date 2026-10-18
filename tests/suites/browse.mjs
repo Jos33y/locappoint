@@ -39,7 +39,7 @@ export default async ({ browser, url, check, root }) => {
     check(/lc-pattern--(azulejo|calcada|minho|arraiolos)\b/.test(v.band) && v.title === 'Book a free time in Portugal.', `geo1: the country first, one of its worlds and its name (${v.title})`)
     const sw = await p.evaluate(() => ({ text: document.querySelector('.lc-country .ui-picker-trigger')?.textContent.trim() || '', disc: document.querySelector('.lc-country__disc .lc-pattern')?.getAttribute('class') || '' }))
     check(/Portugal/.test(sw.text) && /lc-pattern--(azulejo|calcada|minho|arraiolos)\b/.test(sw.disc), `geo1: the header switch says the country, with a disc of one of its worlds, no flag: ${JSON.stringify(sw)}`)
-    check(/^Barbershops taking bookings on Locappoint\./.test(v.lede), `the line says what is really there: ${v.lede}`)
+    check(/^Barbershops, with their real free times\.$/.test(v.lede), `the line says what is really there: ${v.lede}`)
     check(v.straps.length === 8 && ['adire', 'uli', 'arewa', 'benin', 'azulejo', 'calcada', 'minho', 'arraiolos'].every((w, i) => v.straps[i].includes(`lc-pattern--${w}`)), 'each country card wears its four worlds')
     check(v.optionsHidden === true && /^More options/.test(v.more) && /Soonest/.test(v.more), `the search is one line; the options wait behind More options (${v.more})`)
     await p.evaluate(() => document.querySelector('.lc-eng__more').click())

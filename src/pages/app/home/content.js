@@ -16,7 +16,7 @@ export const CITY_SAMPLE = {
 }
 
 export const HERO = {
-    eyebrow: 'For barbers, salons and studios anywhere in Nigeria and Portugal',
+    eyebrow: 'For barbers, salons and studios in Nigeria and Portugal',
     lede: 'One link where clients pick a real free time and book while you work. No more answering messages mid-appointment, and reminders so they turn up.',
     promises: ['No monthly fee', 'No app for your clients', 'Free during the beta'],
 }
@@ -48,10 +48,10 @@ export const PLACES = [
     { key: 'browse', title: 'Locappoint in your country', text: 'Clients browse or say what they need, and we match your services and real free times.' },
 ]
 
-// The two countries, each in its four worlds (doc 30). Anywhere in either can join.
+// The two countries, each in its four worlds (doc 30).
 export const COUNTRY_CARDS = [
-    { code: 'ng', iso: 'NG', name: 'Nigeria', line: 'Clients book on WhatsApp, where they already message you. Prices in naira, and travel time between home visits counted for you.', places: 'Lagos, Abuja, Port Harcourt, Ibadan, Enugu, Kano and every state', trades: 'Barbers, braiders, makeup artists, home cleaners' },
-    { code: 'pt', iso: 'PT', name: 'Portugal', line: 'Clients book while you are with someone, so no more missed calls. Reminders cut the no-shows, and there is no monthly fee for your team.', places: 'Porto, Lisboa, Braga, Coimbra, Faro and every district', trades: 'Barbers, hair salons, nail and lash studios, physios' },
+    { code: 'ng', iso: 'NG', name: 'Nigeria', line: 'Clients book on WhatsApp, where they already message you. Prices in naira, and travel time between home visits counted for you.', trades: 'Barbers, braiders, makeup artists, home cleaners' },
+    { code: 'pt', iso: 'PT', name: 'Portugal', line: 'Clients book while you are with someone, so no more missed calls. Reminders cut the no-shows, and there is no monthly fee for your team.', trades: 'Barbers, hair salons, nail and lash studios, physios' },
 ]
 
 export const FORMATS = [

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Globe, MapPin, MessageCircle, Search, X } from 'lucide-react'
+import { ArrowRight, Globe, MapPin, MessageCircle, Search, SlidersHorizontal, X } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Picker } from '../../ui'
 import { PlaceSearch } from '../../common/PlaceSearch'
 import { COUNTRIES, MARKETS, LABELS, TIMES, WHERE, bookingLink, countryOf, dayLabel, findMatches, keepEnginePlace, loadCountryZones, loadPopular, reasons, timeLabel, whenOptions, whenWords } from '../../../services/engine'
@@ -17,7 +17,7 @@ import { WEB_ORIGIN } from '../../../services/native'
 import CityPattern from '../../brand/CityPattern'
 import { patternOf } from '../../brand/world'
 import { pickWorld } from '../../brand/worlds'
-import { PT_MUNICIPALITIES } from '../../../constants/locations'
+import { PT_MUNICIPALITIES, REGIONS } from '../../../constants/locations'
 import { TellMeWhen } from './TellMeWhen'
 import { AbroadScene, NotedScene, PlaceScene } from './Scenes'
 import '../../../styles/client/engine.css'
@@ -152,6 +152,8 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     const [people, setPeople] = useState('1')
     const [place, setPlace] = useState(null)
     const [zone, setZone] = useState('')
+    // A state (Nigeria) or district (Portugal) picked in More options: only businesses there.
+    const [region, setRegion] = useState('')
     const [zones, setZones] = useState([])
     const [search, setSearch] = useState('checking')
     const [popular, setPopular] = useState([])
@@ -176,7 +178,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     // Numbers for the empty screens, asked only when one shows. A place for "nobody near", the
     // visitor's country before they search from abroad.
     const emptyAt = result.status === 'ready' && (result.data?.options || []).length === 0 && (result.data?.later || []).length === 0
-        ? (result.near || '') : ''
+        ? (result.near || result.region || '') : ''
     useEffect(() => {
         let cancelled = false
         setNoted(null)
@@ -190,6 +192,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
         let cancelled = false
         setPlace(null)
         setZone('')
+        setRegion('')
         setResult({ status: 'idle', data: null, error: '' })
         loadPopular(city).then((list) => { if (!cancelled) setPopular(list) }).catch(() => { if (!cancelled) setPopular([]) })
         loadCountryZones(city).then((list) => { if (!cancelled) setZones(list) }).catch(() => { if (!cancelled) setZones([]) })
@@ -259,10 +262,13 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
         let zoneHere = zone
         let near = null
         const resolvePlace = () => {
-            mk = market; zoneHere = zone; near = null
+            mk = market; zoneHere = zone || region; near = null
             if (!ex.place) return
             const named = cityNamed(ex.place)
             if (named) { mk = countryOf(named.country); if (named.country !== city) pickMarket(named.country); zoneHere = named.name; return }
+            // A state or district ("in Kano", "Braga"): the search stays inside it, in its country.
+            const inRegion = Object.entries(REGIONS).map(([code, r]) => [code, r.list.find((x) => plain(x) === plain(ex.place))]).find(([, x]) => x)
+            if (inRegion) { mk = countryOf(inRegion[0]); if (inRegion[0] !== city) pickMarket(inRegion[0]); zoneHere = inRegion[1]; return }
             const z = zones.find((x) => plain(x) === plain(ex.place))
             if (z) zoneHere = z
             else near = ex.place
@@ -271,7 +277,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
         const settle = () => { setWhen(next.when); setTime(next.time); setPeople(next.people); setMode(next.mode); setFrom(src) }
         const asked = () => ({
             understood: understood.map((c) => (c.field === 'price' ? { ...c, label: priceText(ex.price) } : c)),
-            spans: u.spans, text: typed, what, when: next.when, byAI, near, price: ex.price, cityName: mk.name,
+            spans: u.spans, text: typed, what, when: next.when, byAI, near, region: Object.values(REGIONS).some((r) => r.list.includes(zoneHere)) ? zoneHere : '', price: ex.price, cityName: mk.name,
         })
         resolvePlace()
         settle()
@@ -324,10 +330,10 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     const later = result.data?.later || []
     const world = market.world
     const askedFor = String(result.what || result.text || '').trim()
+    // The place an empty screen speaks of: a place named in the words, or the state or district picked.
+    const here = result.near || result.region || ''
     const shareText = `Take bookings on Locappoint, free: ${WEB_ORIGIN}`
-    const missedLine = (place) => (interest.missed > 0
-        ? `${interest.missed} searches in ${place} found nobody to book this month. Every search is counted, and it decides where we go next.`
-        : 'Every search is counted, and it decides where we go next.')
+    const missedLine = (place) => (interest.missed > 0 ? `${interest.missed} searches in ${place} found nobody to book this month.` : '')
 
     return (
         <section className="lc-eng" aria-labelledby="lc-eng-title">
@@ -354,9 +360,10 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                     </ChipGroup>
                 )}
                 {compact && (
-                    <button type="button" className="lc-eng__more" aria-expanded={more} aria-controls="lc-eng-options" onClick={() => setMore((m) => !m)}>
+                    <button type="button" className={`lc-eng__more${more ? ' is-open' : ''}`} aria-expanded={more} aria-controls="lc-eng-options" onClick={() => setMore((m) => !m)}>
+                        <SlidersHorizontal size={16} aria-hidden="true" />
                         <span>{more ? 'Fewer options' : 'More options'}</span>
-                        <span className="lc-eng__picked">{[whens.find((w) => w.value === when)?.label, timeLabel(time), PEOPLE.find((n) => n.value === people)?.label, WHERE.find((w) => w.value === mode)?.label].filter(Boolean).join(', ')}</span>
+                        <span className="lc-eng__picked">{[region || null, when !== 'soonest' ? whens.find((w) => w.value === when)?.label : null, time !== 'any' ? timeLabel(time) : null, people !== '1' ? PEOPLE.find((n) => n.value === people)?.label : null, mode ? WHERE.find((w) => w.value === mode)?.label : null].filter(Boolean).join(', ') || 'Soonest, anywhere'}</span>
                     </button>
                 )}
                 {result.understood?.length > 0 && (
@@ -368,11 +375,11 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                                 <X size={14} aria-hidden="true" />
                             </button>
                         ))}
-                        <span className="lc-eng__readhint">{result.byAI ? 'Solid: read by the rules. Dashed: understood with AI. Tap one to drop it.' : 'Tap one to drop it.'}</span>
                     </div>
                 )}
                 <div className="lc-eng__row" id="lc-eng-options" hidden={compact && !more}>
                     <Picker value={city} onChange={pickCity} title="Country" options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))} />
+                    <Picker value={region} onChange={setRegion} title={REGIONS[city]?.word || 'Region'} searchable searchPlaceholder={`Search ${(REGIONS[city]?.word || 'region').toLowerCase()}s`} options={[{ value: '', label: REGIONS[city]?.all || 'Everywhere' }, ...(REGIONS[city]?.list || []).map((r) => ({ value: r, label: r }))]} />
                     <Picker value={when} onChange={byHand('when', setWhen)} title="When" options={whens} />
                     <Picker value={time} onChange={byHand('time', setTime)} title="What time" options={times} />
                     <Picker value={people} onChange={byHand('people', setPeople)} title="How many people" options={PEOPLE} />
@@ -410,9 +417,8 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                     <AbroadScene country={countryName(abroad)} />
                     <h3 className="lc-eng__headline">{`We are in Nigeria and Portugal. ${countryName(abroad)} is on the list.`}</h3>
                     <p className="lc-eng__lede">
-                        {`You are in ${countryName(abroad)}. Locappoint books businesses in Nigeria and Portugal, so search here to book for someone there. `}
-                        {interest.missed > 0 ? `${interest.missed} searches came from ${countryName(abroad)} this month. ` : ''}
-                        Where people look is where we open next.
+                        {`Booking for someone in Nigeria or Portugal? Search here.`}
+                        {interest.missed > 0 ? ` ${interest.missed} searches came from ${countryName(abroad)} this month.` : ''}
                     </p>
                     {askHome
                         ? <TellMeWhen country={abroad} title={`Tell me when ${countryName(abroad)} opens`} label="Tell me" done={`Done. We will tell you when Locappoint opens in ${countryName(abroad)}.`} />
@@ -471,17 +477,17 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 )}
                 {result.status === 'ready' && options.length === 0 && later.length === 0 && (noted ? (
                     <div className="lc-eng__none is-noted" role="status">
-                        <NotedScene world={result.near ? placeWorld(result.near, city) : world} place={result.near || market.name} />
+                        <NotedScene world={here ? placeWorld(here, city) : world} place={here || market.name} />
                         <h3 className="lc-eng__headline">Noted. You will be the first to know.</h3>
                         <p className="lc-eng__lede">
                             {offers(result.data) > 0
                                 ? 'When a time opens up, we let you know.'
-                                : `When someone in ${result.near || market.name} starts taking bookings for this, we let you know.`}
+                                : `When someone in ${here || market.name} starts taking bookings for this, we let you know.`}
                         </p>
                         <dl className="lc-eng__facts">
-                            <div><dt>Looking for</dt><dd>{[askedFor, result.near || market.name].filter(Boolean).join(', ')}</dd></div>
+                            <div><dt>Looking for</dt><dd>{[askedFor, here || market.name].filter(Boolean).join(', ')}</dd></div>
                             <div><dt>We tell you on</dt><dd className="is-mono">{`${noted.includes('@') ? 'Email' : 'WhatsApp'} ${maskContact(noted)}`}</dd></div>
-                            {interest.waiting > 0 && <div><dt>{`Asking for ${result.near || market.name}`}</dt><dd>{`You and ${interest.waiting} others`}</dd></div>}
+                            {interest.waiting > 0 && <div><dt>{`Asking for ${here || market.name}`}</dt><dd>{`You and ${interest.waiting} others`}</dd></div>}
                         </dl>
                         <span className="lc-eng__noneactions">
                             <Button variant="secondary" to={browseTo}>Browse every place</Button>
@@ -491,24 +497,26 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                     </div>
                 ) : (
                     <div className="lc-eng__none">
-                        <PlaceScene world={result.near ? placeWorld(result.near, city) : world} place={result.near || market.name} full={offers(result.data) > 0} />
+                        <PlaceScene world={here ? placeWorld(here, city) : world} place={here || market.name} full={offers(result.data) > 0} />
                         <h3 className="lc-eng__headline">
                             {offers(result.data) > 0
                                 ? 'Everyone who does this is fully booked for the next 3 weeks.'
-                                : result.near
-                                    ? `Nobody near ${result.near} offers that yet.`
+                                : here
+                                    ? `Nobody ${result.near ? 'near' : 'in'} ${here} offers that yet.`
                                     : `Nobody in ${market.name} offers that yet${mode === 'at_client' ? ' at your place' : ''}.`}
                         </h3>
-                        <p className="lc-eng__lede">
-                            {offers(result.data) > 0
-                                ? 'Times open up when people move or cancel.'
-                                : result.near ? missedLine(result.near) : 'Try other words, or browse every place.'}
-                        </p>
+                        {(offers(result.data) > 0 || !here || missedLine(here)) && (
+                            <p className="lc-eng__lede">
+                                {offers(result.data) > 0
+                                    ? 'Times open up when people move or cancel.'
+                                    : here ? missedLine(here) : 'Try other words, or browse every place.'}
+                            </p>
+                        )}
                         <TellMeWhen
                             key={`${result.text}-${city}`}
                             text={result.text}
                             market={city}
-                            zone={result.near || place?.zone || zone}
+                            zone={here || place?.zone || zone}
                             title={offers(result.data) > 0 ? 'Want to know when a time opens up?' : 'Want to know when someone near you offers it?'}
                             onDone={setNoted}
                         />
@@ -517,8 +525,8 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                         </span>
                         {offers(result.data) === 0 && (
                             <p className="lc-eng__small">
-                                {`Do this work${result.near ? ` in ${result.near}` : ''}? `}
-                                <Link to="/auth">List your business free</Link> and take the first bookings.
+                                {`Do this work${here ? ` in ${here}` : ''}? `}
+                                <Link to="/auth">List your business free</Link>.
                             </p>
                         )}
                     </div>

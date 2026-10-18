@@ -248,7 +248,7 @@ const AuthPage = () => {
         : signin
             ? ['Sign in to Locappoint', 'Welcome back.']
             : ownerIntent
-                ? ['Get found and booked anywhere in Nigeria and Portugal', 'Free during the beta. No card needed.']
+                ? ['Get found and booked in Nigeria and Portugal', 'Free during the beta. No card needed.']
                 : ['Create your Locappoint account', 'Book local businesses in a few taps. Set up your own business whenever you are ready.']
 
     // The side panel: the owner's day for owners, that day waiting for anyone signing in, the ticket for clients.

@@ -44,8 +44,8 @@ export const AbroadScene = ({ country }) => (
             <circle className="lc-scene__there" cx="292" cy="244" r="5" />
             <text className="lc-scene__label" x="292" y="294" textAnchor="middle">{`You, ${country}`}</text>
         </svg>
-        <span className="lc-scene__country is-pt"><span className="lc-scene__disc"><CityPattern world="azulejo" centred size={24} /></span><span className="lc-scene__name"><b>Portugal</b><span>Open, the whole country</span></span></span>
-        <span className="lc-scene__country is-ng"><span className="lc-scene__disc"><CityPattern world="adire" centred size={24} /></span><span className="lc-scene__name"><b>Nigeria</b><span>Open, the whole country</span></span></span>
+        <span className="lc-scene__country is-pt"><span className="lc-scene__disc"><CityPattern world="azulejo" centred size={24} /></span><span className="lc-scene__name"><b>Portugal</b></span></span>
+        <span className="lc-scene__country is-ng"><span className="lc-scene__disc"><CityPattern world="adire" centred size={24} /></span><span className="lc-scene__name"><b>Nigeria</b></span></span>
     </figure>
 )
 

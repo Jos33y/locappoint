@@ -55,7 +55,7 @@ const Footer = ({ onPartnershipClick }) => {
                         </a>
 
                         <p className="footer__tagline">
-                            {t('footer.tagline', 'The booking platform for local businesses, anywhere in Nigeria and Portugal.')}
+                            {t('footer.tagline', 'The booking platform for local businesses, in Nigeria and Portugal.')}
                         </p>
 
                         <div className="footer__cities">

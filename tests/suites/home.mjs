@@ -34,7 +34,7 @@ export default async ({ browser, url, check, root }) => {
     const text = await p.evaluate(() => document.querySelector('.lc-home main')?.innerText || '')
     const h1 = await p.evaluate(() => document.querySelector('h1')?.textContent.replace(/\s+/g, ' ').trim())
     check(h1 === 'Get found. Get booked.', `the page speaks to businesses first: ${h1}`)
-    check(/anywhere in Nigeria and Portugal/.test(text) && !/Porto, Lagos and Lisbon/.test(text), 'geo1: it names the two countries, not three cities')
+    check(/in Nigeria and Portugal/.test(text) && !/Porto, Lagos and Lisbon/.test(text), 'geo1: it names the two countries, not three cities')
     check(/Sound familiar\?/.test(text) && /Then the chair fills itself\./.test(text), 'it names the problem, then the fix')
     check(!/first ten|Cohort 1|\d+\s*\/\s*\d+\s*live|ten minutes|trial|\bSoon\b/i.test(text), 'no business counts, timing claims, trial wording or Soon tags')
     check(!/[\u2014\u2013]/.test(text), 'no long dashes on the page')

@@ -103,7 +103,7 @@ const Contact = () => {
                             <MapPin size={18} aria-hidden="true" />
                             <div>
                                 <p className="lc-talk__waylabel">Taking bookings in</p>
-                                <p className="lc-talk__wayvalue">Anywhere in Nigeria and Portugal</p>
+                                <p className="lc-talk__wayvalue">Nigeria and Portugal</p>
                             </div>
                         </div>
                     </aside>

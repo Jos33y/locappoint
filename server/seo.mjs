@@ -18,7 +18,7 @@ const clip = (text, n) => {
 const ldJson = (data) => JSON.stringify(data).replace(/</g, '\\u003c')
 
 const HOME = {
-    title: 'Locappoint: get found and booked anywhere in Nigeria and Portugal',
+    title: 'Locappoint: get found and booked in Nigeria and Portugal',
     description: 'A free booking page for local businesses during the beta. Clients find you, pick a real free time and book while you work, with reminders before every visit.',
 }
 

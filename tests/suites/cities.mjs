@@ -87,5 +87,5 @@ export default async ({ check, root, server }) => {
     check(/country: 'PT',\s*city: 'Porto'/.test(read('src/pages/business/Setup.jsx')), 'a new Portuguese business starts on Porto')
     check(/useState\(startDetails\)/.test(read('src/pages/business/Setup.jsx')) && /city === 'lagos'\) return \{ \.\.\.emptyDetails, country: 'NG', city: 'Lagos', phoneCountry: 'NG' \}/.test(read('src/pages/business/Setup.jsx')), 'a new business starts in the city picked in the header')
     check(/Portugal time/.test(read('src/constants/support.js')), 'support hours are given in Portugal time')
-    check(/anywhere in Nigeria and Portugal/.test(read('server/seo.mjs')) && !/Porto, Lagos and Lisbon/.test(read('server/seo.mjs')), 'search titles name the two countries')
+    check(/in Nigeria and Portugal/.test(read('server/seo.mjs')) && !/Porto, Lagos and Lisbon/.test(read('server/seo.mjs')), 'search titles name the two countries')
 }

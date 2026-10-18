@@ -79,11 +79,6 @@
 .lc-home-city.is-pt .lc-home-city__name { color: var(--lc-porto-cobalt); }
 .lc-home-city.is-pt .lc-home-city__trades { color: var(--lc-porto-vinho); }
 
-.lc-home-city__places {
-    font-size: var(--lc-t-label);
-    font-weight: 600;
-}
-
 /* The visitor's own country gets a ring, so the page shows it knows where they are. */
 .lc-home-city.is-picked {
     box-shadow: 0 0 0 2px var(--lc-canvas), 0 0 0 4px var(--azure);

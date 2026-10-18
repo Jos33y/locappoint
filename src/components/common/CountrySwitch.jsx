@@ -4,7 +4,7 @@ import { COUNTRIES } from '../../services/engine'
 import { useCountry } from '../../hooks/useCountry'
 import '../../styles/app/city.css'
 
-const OPTIONS = COUNTRIES.map((c) => ({ value: c.code, label: c.name, meta: 'The whole country' }))
+const OPTIONS = COUNTRIES.map((c) => ({ value: c.code, label: c.name }))
 
 // The country every screen follows (doc 35, geo1), in the header of the site and the client app: a
 // disc of one of the country's worlds, then its name. Remembered on this device; a first visit takes it

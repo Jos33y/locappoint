@@ -21,7 +21,7 @@
     right: 0;
     left: 0;
     z-index: -1;
-    height: 132px;
+    height: 116px;
     border-bottom: 1px solid var(--lc-line);
 }
 
@@ -82,11 +82,8 @@
     gap: var(--space-2);
 }
 
-.lc-eng__row > :last-child { grid-column: 1 / -1; }
-
 @media (min-width: 600px) {
     .lc-eng__row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .lc-eng__row > :last-child { grid-column: auto / span 1; }
 }
 
 .lc-eng__place { display: flex; flex-direction: column; gap: var(--space-2); }
@@ -342,27 +339,38 @@
 .lc-eng__row[hidden] { display: none; }
 
 /* Compact: the options open behind one quiet line that says what is picked. */
+/* A real control, not a link: an outlined bar with the filter icon, what is picked said beside it. */
 .lc-eng__more {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    gap: 2px var(--space-3);
-    align-self: flex-start;
+    align-items: center;
+    gap: 2px var(--space-2);
+    align-self: stretch;
     min-height: 44px;
     margin: 0;
-    padding: var(--space-2) 0;
+    padding: var(--space-2) var(--space-4);
     border: 0;
-    background: none;
-    color: var(--azure-link);
+    border-radius: var(--lc-r-md);
+    background: var(--lc-raised);
+    box-shadow: inset 0 0 0 1px var(--lc-line-strong);
+    color: var(--lc-ink-1);
     font: inherit;
-    font-size: var(--lc-t-label);
+    font-size: var(--lc-t-body);
     font-weight: var(--font-weight-semibold);
     text-align: left;
     cursor: pointer;
 }
 
+.lc-eng__more svg { flex: none; color: var(--azure); }
+
+.lc-eng__more:hover { background: var(--lc-raised-hover); }
+
+.lc-eng__more.is-open { box-shadow: inset 0 0 0 1px var(--azure); }
+
 .lc-eng__picked {
+    margin-left: auto;
     color: var(--lc-ink-3);
+    font-size: var(--lc-t-label);
     font-weight: var(--font-weight-medium);
 }
 

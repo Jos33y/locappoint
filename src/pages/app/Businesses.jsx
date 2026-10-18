@@ -88,13 +88,13 @@ const Businesses = () => {
                             {!open
                                 ? `Businesses in ${market.name} can set up their booking page now. Bookings open as the first ones go live.`
                                 : ready && trades
-                                    ? `${trades} taking bookings on Locappoint. Pick a place, choose a time and you are booked in under a minute.`
-                                    : 'Pick a place, choose a time and you are booked in under a minute.'}
+                                    ? `${trades}, with their real free times.`
+                                    : 'Real free times, booked in a minute.'}
                         </p>
                     </div>
                 </section>
 
-                <EngineBox title="What do you need, and when?" browseTo="/businesses" compact />
+                <EngineBox title="What do you need?" browseTo="/businesses" compact />
 
                 <ul className="lc-br-cities is-countries" aria-label="Countries">
                     {COUNTRIES.map((country, i) => {

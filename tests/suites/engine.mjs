@@ -45,7 +45,7 @@ export default async ({ browser, url, check }) => {
     p = await open('/client')
     await p.type('.lc-eng__what input', 'haircut')
     await p.evaluate(() => {
-        const pick = [...document.querySelectorAll('.lc-eng__row button')][2]
+        const pick = [...document.querySelectorAll('.lc-eng__row button')][3]
         pick?.click()
     })
     await wait(300)
@@ -59,7 +59,7 @@ export default async ({ browser, url, check }) => {
     // Plans ahead: a day in the words becomes When; any day of the next two weeks can be picked.
     p = await open('/client')
     const whens = await p.evaluate(async () => {
-        const pick = [...document.querySelectorAll('.lc-eng__row button')][1]
+        const pick = [...document.querySelectorAll('.lc-eng__row button')][2]
         pick?.click()
         await new Promise((r) => setTimeout(r, 300))
         const list = [...document.querySelectorAll('[role=option]')].map((o) => o.textContent.trim())
@@ -130,7 +130,7 @@ export default async ({ browser, url, check }) => {
     await p.close()
     p = await open('/client')
     await p.evaluate(async () => {
-        const pick = [...document.querySelectorAll('.lc-eng__row button')][1]
+        const pick = [...document.querySelectorAll('.lc-eng__row button')][2]
         pick?.click()
         await new Promise((r) => setTimeout(r, 300))
         ;[...document.querySelectorAll('[role=option]')].find((o) => o.textContent.trim() === 'Next week')?.click()
@@ -210,6 +210,10 @@ export default async ({ browser, url, check }) => {
     check(twice[0].p_max_price === 5 && twice[1].p_max_price === undefined && /Nothing under €5\. These cost more:/.test(await text(p, '.lc-eng__out')), `nothing under the price: what costs more, said: ${await text(p, '.lc-eng__out')}`)
     a4 = await ask4('haircut in Lisbon')
     check(a4.p_market === 'pt' && a4.p_zone === 'Lisbon' && a4.p_query === 'haircut', `geo1: a city named lifts that city, in its country: ${a4.p_market} ${a4.p_zone}`)
+    a4 = await ask4('barber in Kano')
+    check(a4.p_market === 'ng' && a4.p_zone === 'Kano', `geo1b: a state named keeps the search inside it: ${a4.p_market} ${a4.p_zone}`)
+    a4 = await ask4('nails in braga')
+    check(a4.p_market === 'pt' && a4.p_zone === 'Braga', `geo1b: a district too, with its own spelling: ${a4.p_zone}`)
     a4 = await ask4('braids in Lagos')
     check(a4.p_market === 'ng' && a4.p_zone === 'Lagos' && await p.evaluate(() => localStorage.getItem('lc.country')) === 'ng', `naming Lagos from Portugal moves the search to Nigeria: ${a4.p_market}`)
     check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
@@ -271,7 +275,7 @@ export default async ({ browser, url, check }) => {
     await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
     await p.goto(`${url}/?path=${encodeURIComponent('/client')}`, { waitUntil: 'networkidle0' })
     await wait(900)
-    check(/You are in Kenya\. Locappoint books businesses in Nigeria and Portugal/.test(await text(p, '.lc-eng__abroad')), `a visitor from Kenya is told where Locappoint works: ${await text(p, '.lc-eng__abroad')}`)
+    check(/We are in Nigeria and Portugal\. Kenya is on the list\./.test(await text(p, '.lc-eng__abroad')) && /Booking for someone in Nigeria or Portugal\? Search here\./.test(await text(p, '.lc-eng__abroad')), `a visitor from Kenya is told where Locappoint works: ${await text(p, '.lc-eng__abroad')}`)
     const ab = await p.evaluate(() => ({ head: document.querySelector('.lc-eng__abroad .lc-eng__headline')?.textContent || '', scene: Boolean(document.querySelector('.lc-scene--abroad .lc-pattern--adire') && document.querySelector('.lc-scene--abroad .lc-pattern--azulejo')), count: document.querySelector('.lc-eng__abroad .lc-eng__lede')?.textContent || '', pick: [...document.querySelectorAll('.lc-eng__country')].map((b) => b.textContent) }))
     check(ab.head === 'We are in Nigeria and Portugal. Kenya is on the list.' && ab.scene, `the abroad screen: our two worlds and theirs, not yet: ${ab.head}`)
     check(/121 searches came from Kenya this month/.test(ab.count) && ab.pick.join('|') === 'Book in Nigeria|Book in Portugal', `with the count and a country to book in: ${ab.count} / ${ab.pick.join('|')}`)
@@ -290,6 +294,16 @@ export default async ({ browser, url, check }) => {
     await wait(800)
     check(((await calls(p, 'search_note')).pop() || {}).p_origin_country === 'KE', 'their searches carry their country')
     check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth) && p.errors.length === 0, `fits a phone, no page errors: ${p.errors.join(' | ')}`)
+    await p.close()
+
+    // geo1b: More options is a real control, with the state or district beside the country.
+    p = await open('/businesses', '&country=ng', 1272, 900)
+    const more = await p.evaluate(() => { const b = document.querySelector('.lc-eng__more'); const cs = b && getComputedStyle(b); return { text: b?.textContent || '', bg: cs?.backgroundColor, icon: Boolean(b?.querySelector('svg')) } })
+    check(/More options/.test(more.text) && more.icon && more.bg !== 'rgba(0, 0, 0, 0)', `More options looks like a control: ${JSON.stringify(more)}`)
+    await p.evaluate(() => document.querySelector('.lc-eng__more').click())
+    await wait(200)
+    const titles = await p.evaluate(() => [...document.querySelectorAll('.lc-eng__row .ui-picker-trigger')].map((t) => t.textContent.trim()))
+    check(titles[0] === 'Nigeria' && titles[1] === 'All states', `the state picker sits beside the country: ${titles.join(' | ')}`)
     await p.close()
 
     // search1: the lead result in full, the others one line each, every one wearing its world.

@@ -11,7 +11,7 @@ const Cities = () => {
     return (
         <section className="lc-home-section" aria-labelledby="lc-home-cities">
             <div className="lc-home__wrap">
-                <Head id="lc-home-cities" title="Made for your country" lede="Nigeria and Portugal, each with its own way of booking. Join from anywhere in either; your page speaks to your clients." />
+                <Head id="lc-home-cities" title="Made for your country" lede="Each with its own way of booking." />
                 <ul className="lc-home-cities">
                     {COUNTRY_CARDS.map((c) => (
                         <li className={`lc-home-city is-${c.code}${c.code === picked.code ? ' is-picked' : ''}`} key={c.code}>
@@ -21,7 +21,6 @@ const Cities = () => {
                             <div className="lc-home-city__body">
                                 <h3 className="lc-home-city__name">{c.name}</h3>
                                 <p className="lc-home-city__line">{c.line}</p>
-                                <p className="lc-home-city__places">{c.places}</p>
                                 <p className="lc-home-city__trades">{c.trades}</p>
                             </div>
                         </li>
