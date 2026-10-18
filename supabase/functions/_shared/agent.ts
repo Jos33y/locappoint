@@ -160,7 +160,7 @@ Language and style
 const TOOLS = [
     { name: 'find_business', description: 'Find a business taking bookings by its name or page address (slug), even misspelt or partial. Returns up to 5.', input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
     { name: 'business_details', description: 'One business: address, opening hours (days not listed are closed), services with service_id, price_text, minutes, ways (at_business, at_client, online), travel fee for visits, pay (online when booking, or at the visit) and group rules, visit_areas (the areas it goes to for visits at the client\'s place), whether it confirms automatically, cancellation cut-off, phone.', input_schema: { type: 'object', properties: { business_id: { type: 'string' } }, required: ['business_id'] } },
-    { name: 'search', description: 'Find who can do something in a city, with free times. Use when the person has not named a business. With area: only businesses that come to that area.', input_schema: { type: 'object', properties: { city: { type: 'string', enum: ['porto', 'lagos', 'lisbon'] }, what: { type: 'string', description: 'What they need, in their words, e.g. "haircut", "unhas de gel"' }, area: { type: 'string', description: 'Their area, for someone to come to them' }, days: { type: 'array', items: { type: 'string', description: 'YYYY-MM-DD' }, maxItems: 3 }, part: { type: 'string', enum: ['any', 'morning', 'afternoon', 'evening'] }, around: { type: 'string', description: 'HH:MM, instead of part' }, people: { type: 'integer', minimum: 1 } }, required: ['city', 'what'] } },
+    { name: 'search', description: 'Find who can do something in a city, with free times. Use when the person has not named a business. With area: only businesses that come to that area.', input_schema: { type: 'object', properties: { city: { type: 'string', enum: ['porto', 'lagos', 'lisbon'] }, what: { type: 'string', description: 'What they need, in their words, e.g. "haircut", "unhas de gel"' }, area: { type: 'string', description: 'Their area, for someone to come to them' }, days: { type: 'array', items: { type: 'string', description: 'YYYY-MM-DD' }, maxItems: 7, description: 'The days they asked for, up to 7 ("next week"). Leave out for the soonest free times: the search looks ahead up to 3 weeks.' }, part: { type: 'string', enum: ['any', 'morning', 'afternoon', 'evening'] }, around: { type: 'string', description: 'HH:MM, instead of part' }, people: { type: 'integer', minimum: 1 } }, required: ['city', 'what'] } },
     { name: 'free_days', description: 'The next days with free times for one service, from a date (today if left out): up to 5 days, times spread across each day. Use for "when are you free", "this week", "next available". For a visit at their place pass where at_client and area.', input_schema: { type: 'object', properties: { business_id: { type: 'string' }, service_id: { type: 'string' }, from: { type: 'string', description: 'YYYY-MM-DD' }, people: { type: 'integer', minimum: 1 }, where: { type: 'string', enum: ['at_business', 'at_client', 'online'] }, area: { type: 'string' } }, required: ['business_id', 'service_id'] } },
     { name: 'free_times', description: 'All free start times for one service on one date at one business. For a visit at their place pass where at_client and area.', input_schema: { type: 'object', properties: { business_id: { type: 'string' }, service_id: { type: 'string' }, date: { type: 'string', description: 'YYYY-MM-DD' }, people: { type: 'integer', minimum: 1 }, where: { type: 'string', enum: ['at_business', 'at_client', 'online'] }, area: { type: 'string' } }, required: ['business_id', 'service_id', 'date'] } },
     { name: 'my_bookings', description: 'Their upcoming WhatsApp bookings, fresh (the context already lists them).', input_schema: { type: 'object', properties: {} } },
@@ -339,7 +339,7 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
         search: async (i) => {
             const found = await deps.call('wa_search', {
                 p_market: i.city, p_query: String(i.what || ''), p_zone: String(i.area || '').trim() || null,
-                p_dates: Array.isArray(i.days) ? i.days.filter((d: string) => DATE.test(d)).slice(0, 3) : null,
+                p_dates: Array.isArray(i.days) ? i.days.filter((d: string) => DATE.test(d)).slice(0, 7) : null,
                 p_window: i.part || 'any', p_at: TIME.test(String(i.around || '')) ? i.around : null, p_people: Number(i.people) || 1,
             })
             // Kept for Demand in /admin; never in the way of the answer.
@@ -347,7 +347,7 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
                 p_channel: 'whatsapp', p_query: String(i.what || ''), p_market: i.city, p_zone: String(i.area || '').trim() || null,
                 p_people: Number(i.people) || 1, p_origin_country: phoneCountry(o.phone),
                 p_options: Array.isArray(found?.options) ? found.options.length : 0, p_later: Array.isArray(found?.later) ? found.later.length : 0,
-                p_matched: Number(found?.matched) || 0,
+                p_matched: Number(found?.matched) || 0, p_offered: found?.offered == null ? null : Number(found.offered),
             })).catch(() => {})
             return found
         },

@@ -49,6 +49,7 @@ export const noteSearch = async ({ market, text, mode = '', people = 1, place = 
             p_options: (data?.options || []).length,
             p_later: (data?.later || []).length,
             p_matched: Number(data?.matched) || 0,
+            p_offered: data?.offered == null ? null : Number(data.offered),
         })
     } catch { /* the search already answered */ }
 }

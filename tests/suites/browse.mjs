@@ -39,7 +39,7 @@ export default async ({ browser, url, check, root }) => {
     check(v.band.includes('lc-pattern--porto') && v.title === 'Book a free time in Porto.', `the city first: its pattern and its name (${v.title})`)
     check(/^Barbershops taking bookings on Locappoint\./.test(v.lede), `the line says what is really there: ${v.lede}`)
     check(v.straps.length === 3 && ['porto', 'lagos', 'lisbon'].every((c, i) => v.straps[i].includes(`lc-pattern--${c}`)), 'each city card wears its pattern')
-    check(v.optionsHidden === true && /^More options/.test(v.more) && /Today/.test(v.more), `the search is one line; the options wait behind More options (${v.more})`)
+    check(v.optionsHidden === true && /^More options/.test(v.more) && /Soonest/.test(v.more), `the search is one line; the options wait behind More options (${v.more})`)
     await p.evaluate(() => document.querySelector('.lc-eng__more').click())
     await wait(200)
     check(await p.evaluate(() => document.querySelector('.lc-eng__row').hidden === false && document.querySelector('.lc-eng__more').getAttribute('aria-expanded') === 'true'), 'More options opens them')

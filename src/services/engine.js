@@ -61,19 +61,69 @@ const addDays = (key, n) => {
     return toDateKey(d)
 }
 
-// The days asked for, in the city's own calendar.
+// The days asked for, in the city's own calendar. Soonest sends none: the engine looks day by day
+// from today, up to 3 weeks, and never stops at a closed day.
 export const daysFor = (when, timeZone) => {
     const today = zonedNow(timeZone).dateKey
+    const dow = parseDateKey(today).getDay()
+    if (when === 'today') return [today]
     if (when === 'tomorrow') return [addDays(today, 1)]
     if (when === 'soon') return [today, addDays(today, 1), addDays(today, 2)]
-    return [today]
+    if (when === 'weekend') return dow === 0 ? [today] : dow === 6 ? [today, addDays(today, 1)] : [addDays(today, 6 - dow), addDays(today, 7 - dow)]
+    if (when === 'nextweek') {
+        const monday = addDays(today, ((8 - dow) % 7) || 7)
+        return Array.from({ length: 7 }, (_, i) => addDays(monday, i))
+    }
+    if (String(when).startsWith('d:')) return [String(when).slice(2)]
+    return null
 }
 
 export const WHEN = [
+    { value: 'soonest', label: 'Soonest' },
     { value: 'today', label: 'Today' },
     { value: 'tomorrow', label: 'Tomorrow' },
-    { value: 'soon', label: 'Next 3 days' },
+    { value: 'weekend', label: 'This weekend' },
+    { value: 'nextweek', label: 'Next week' },
 ]
+
+// Every choice for "When": the five above, then each of the next two weeks' days by name.
+export const whenOptions = (timeZone) => {
+    const today = zonedNow(timeZone).dateKey
+    return [...WHEN, ...Array.from({ length: 13 }, (_, i) => {
+        const key = addDays(today, i + 2)
+        return { value: `d:${key}`, label: parseDateKey(key).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }) }
+    })]
+}
+
+// "When" in words, for the line under the results: "today", "on Tuesday 20 Oct", "next week".
+export const whenWords = (when, timeZone) => {
+    if (when === 'soonest') return 'soon'
+    if (when === 'weekend') return 'this weekend'
+    if (when === 'nextweek') return 'next week'
+    if (String(when).startsWith('d:')) return `on ${parseDateKey(String(when).slice(2)).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}`
+    return (whenOptions(timeZone).find((w) => w.value === when)?.label || 'then').toLowerCase()
+}
+
+// A day in what they typed ("haircut Tuesday", "unhas sabado", "nails next week"), in English or
+// Portuguese, becomes "When". The words stay in the search: the engine knows they are days.
+const DAY_NAMES = [
+    ['sunday', 'domingo'], ['monday', 'segunda'], ['tuesday', 'terca'], ['wednesday', 'quarta'],
+    ['thursday', 'quinta'], ['friday', 'sexta'], ['saturday', 'sabado'],
+]
+const fold = (text) => String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+export const readWhen = (text, timeZone) => {
+    const t = ` ${fold(text).replace(/[^a-z0-9]+/g, ' ')} `
+    if (/ (next week|proxima semana|semana que vem) /.test(t)) return 'nextweek'
+    if (/ (weekend|fim de semana) /.test(t)) return 'weekend'
+    if (/ (today|tonight|hoje) /.test(t)) return 'today'
+    if (/ (tomorrow|amanha) /.test(t)) return 'tomorrow'
+    const today = zonedNow(timeZone).dateKey
+    const dow = parseDateKey(today).getDay()
+    const hit = DAY_NAMES.findIndex((names) => names.some((n) => t.includes(` ${n} `)))
+    if (hit < 0) return null
+    const ahead = (hit - dow + 7) % 7
+    return ahead === 0 ? 'today' : ahead === 1 ? 'tomorrow' : `d:${addDays(today, ahead)}`
+}
 
 // Any time, a part of the day, or around an hour ("at:15").
 export const TIMES = [
@@ -91,7 +141,7 @@ export const WHERE = [
     { value: 'online', label: 'Online' },
 ]
 
-export const findMatches = async ({ market, text, mode = '', when = 'today', time = 'any', people = 1, place = null, zone = '' }) => {
+export const findMatches = async ({ market, text, mode = '', when = 'soonest', time = 'any', people = 1, place = null, zone = '' }) => {
     const m = marketOf(market)
     const at = time.startsWith('at:') ? `${String(time.slice(3)).padStart(2, '0')}:00` : null
     const { data, error } = await supabase.rpc('engine_match', {

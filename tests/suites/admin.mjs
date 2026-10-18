@@ -89,9 +89,9 @@ export default async ({ browser, url, check }) => {
     p = await open('demand')
     const dem = await p.evaluate(() => document.querySelector('.adm-demand')?.textContent || '')
     const dcards = await p.evaluate(() => [...document.querySelectorAll('.adm-demand .stat-card')].map((c) => c.textContent))
-    check(dcards.some((c) => /Searches\s*42/.test(c) && /Website 30, WhatsApp 12/.test(c)) && dcards.some((c) => /Found nothing\s*7/.test(c) && /17% of searches/.test(c)), `searches and misses are counted: ${JSON.stringify(dcards)}`)
+    check(dcards.some((c) => /Searches\s*42/.test(c) && /Website 30, WhatsApp 12/.test(c)) && dcards.some((c) => /Nobody offers it\s*7/.test(c) && /17% of searches/.test(c)) && dcards.some((c) => /Offered, nobody free\s*3/.test(c)), `searches and misses are counted: ${JSON.stringify(dcards)}`)
     check(dcards.some((c) => /From outside Nigeria and Portugal\s*3/.test(c) && /1 country/.test(c)) && dcards.some((c) => /Asked to be told\s*2/.test(c)), 'searches from abroad and Tell me when are counted')
-    check(/Kenya/.test(dem) && /Lagos, Lekki: 4 found nothing/.test(dem) && /braids, Porto/.test(dem), `countries, places and missed words show: ${dem.slice(0, 400)}`)
+    check(/Kenya/.test(dem) && /Lagos, Lekki: 4 nobody offers/.test(dem) && /braids, Porto/.test(dem) && /Offered, but nobody free/.test(dem) && /haircut, Lagos/.test(dem), `countries, places and missed words show: ${dem.slice(0, 400)}`)
     check(/\+254712345678/.test(dem) && /ana@x\.pt/.test(dem) && /Locappoint in their country/.test(dem), 'the Tell me when contacts are listed')
     const before = (await rpcs(p, 'admin_demand')).length
     await p.evaluate(() => [...document.querySelectorAll('.adm-demand__periods .btn')].find((b) => b.textContent === '7 days')?.click())

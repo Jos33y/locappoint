@@ -1,0 +1,7 @@
+-- Run after engine-days.sql. Every row should say true.
+SELECT 'engine looks ahead (offered, soonest)' AS what, position('v_soonest' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0 AS ok
+UNION ALL SELECT 'engine still keeps travel between visits', position('p_mode, p_zone) sl' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0
+UNION ALL SELECT 'engine callable by visitors', has_function_privilege('anon', 'public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)', 'EXECUTE')
+UNION ALL SELECT 'search log keeps offered', EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'search_log' AND column_name = 'offered')
+UNION ALL SELECT 'search_note takes offered', has_function_privilege('anon', 'public.search_note(text, text, text, text, double precision, double precision, text, integer, text, text, integer, integer, integer, integer)', 'EXECUTE')
+UNION ALL SELECT 'old search_note gone', to_regprocedure('public.search_note(text, text, text, text, double precision, double precision, text, integer, text, text, integer, integer, integer)') IS NULL;

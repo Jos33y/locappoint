@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Globe, MapPin, RotateCw, Search } from 'lucide-react'
+import { ArrowRight, Globe, MapPin, Search } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Picker } from '../../ui'
 import { PlaceSearch } from '../../common/PlaceSearch'
-import { MARKETS, LABELS, TIMES, WHEN, WHERE, bookingLink, dayWord, findMatches, keepEnginePlace, loadPopular, reasons } from '../../../services/engine'
+import { MARKETS, LABELS, TIMES, WHERE, bookingLink, dayWord, findMatches, keepEnginePlace, loadPopular, readWhen, reasons, whenOptions, whenWords } from '../../../services/engine'
 import { useCity } from '../../../hooks/useCity'
 import { pickAddress, placesOn } from '../../../services/places'
 import { loadZones } from '../../../services/setup'
@@ -14,6 +14,17 @@ import { ReliableBadge, VerifiedBadge } from '../../trust/Trust'
 import { SERVED, countryName, noteSearch, visitorCountry } from '../../../services/demand'
 import { TellMeWhen } from './TellMeWhen'
 import '../../../styles/client/engine.css'
+
+// How many businesses offer it at all, free or not. Older answers without it: what had free times.
+const offers = (data) => Number(data?.offered ?? data?.matched ?? 0)
+
+// "Nobody is free on Tuesday 20 Oct. Next free:" or, the same day at another time, "These are free close to it".
+const nobodyFree = (result, time, timeZone, count) => {
+    const part = time === 'any' ? '' : `, ${TIMES.find((t) => t.value === time)?.label.toLowerCase() || ''}`
+    const when = whenWords(result.when || 'soonest', timeZone)
+    if (result.data?.ahead) return `Nobody is free ${when === 'soon' ? 'soon' : when}${part}. Next free:`
+    return `Nobody is free ${when === 'soon' ? 'then' : when}${part}. ${count === 1 ? 'One is free' : 'These are free'} close to it:`
+}
 
 const PEOPLE = Array.from({ length: 6 }, (_, i) => ({ value: String(i + 1), label: i === 0 ? 'Just me' : `${i + 1} people` }))
 
@@ -47,7 +58,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     const city = market.code
     const [text, setText] = useState('')
     const [mode, setMode] = useState('')
-    const [when, setWhen] = useState('today')
+    const [when, setWhen] = useState('soonest')
     const [time, setTime] = useState('any')
     const [people, setPeople] = useState('1')
     const [place, setPlace] = useState(null)
@@ -86,16 +97,20 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     }, [mode])
 
     const pickCity = (code) => pickMarket(code)
+    const whens = whenOptions(market.timeZone)
 
     const run = async (over = {}) => {
         const what = (over.text ?? text).trim()
-        const days = over.when ?? when
+        // A day in the words ("haircut Tuesday") becomes When, and shows there.
+        const said = over.when ? null : readWhen(what, market.timeZone)
+        if (said && said !== when) setWhen(said)
+        const days = over.when ?? said ?? when
         if (!what) { setResult({ status: 'error', data: null, error: 'Say what you need, like "haircut" or "nails".' }); return }
         if (mode === 'at_client' && !place && !zone) { setResult({ status: 'error', data: null, error: 'Tell us where you are, so we only show people who come to you.' }); return }
         setResult({ status: 'loading', data: null, error: '' })
         try {
             const data = await findMatches({ market: city, text: what, mode, when: days, time, people: Number(people), place, zone })
-            setResult({ status: 'ready', data, error: '', text: what })
+            setResult({ status: 'ready', data, error: '', text: what, when: days })
             noteSearch({ market: city, text: what, mode, people, place, zone, data })
         } catch (err) {
             console.error('Engine failed:', err)
@@ -137,12 +152,12 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 {compact && (
                     <button type="button" className="lc-eng__more" aria-expanded={more} aria-controls="lc-eng-options" onClick={() => setMore((m) => !m)}>
                         <span>{more ? 'Fewer options' : 'More options'}</span>
-                        <span className="lc-eng__picked">{[WHEN.find((w) => w.value === when)?.label, TIMES.find((t) => t.value === time)?.label, PEOPLE.find((n) => n.value === people)?.label, WHERE.find((w) => w.value === mode)?.label].filter(Boolean).join(', ')}</span>
+                        <span className="lc-eng__picked">{[whens.find((w) => w.value === when)?.label, TIMES.find((t) => t.value === time)?.label, PEOPLE.find((n) => n.value === people)?.label, WHERE.find((w) => w.value === mode)?.label].filter(Boolean).join(', ')}</span>
                     </button>
                 )}
                 <div className="lc-eng__row" id="lc-eng-options" hidden={compact && !more}>
                     <Picker value={city} onChange={pickCity} title="City" options={MARKETS.map((m) => ({ value: m.code, label: m.name }))} />
-                    <Picker value={when} onChange={setWhen} title="When" options={WHEN} />
+                    <Picker value={when} onChange={setWhen} title="When" options={whens} />
                     <Picker value={time} onChange={setTime} title="What time" options={TIMES} />
                     <Picker value={people} onChange={setPeople} title="How many people" options={PEOPLE} />
                     <Picker value={mode} onChange={(v) => { setMode(v); setResult((r) => ({ ...r, error: '' })) }} title="Where" options={WHERE} />
@@ -202,7 +217,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 )}
                 {result.status === 'ready' && options.length === 0 && later.length > 0 && (
                     <>
-                        <p className="lc-eng__note">{`Nobody is free ${time === 'any' ? 'then' : TIMES.find((t) => t.value === time)?.label.toLowerCase() || 'then'}. ${later.length === 1 ? 'One is free' : 'These are free'} close to it:`}</p>
+                        <p className="lc-eng__note">{nobodyFree(result, time, market.timeZone, later.length)}</p>
                         <ul className="lc-eng__opts">
                             {later.map((o) => <Option key={o.business_id} o={o} timeZone={market.timeZone} onBook={book} />)}
                         </ul>
@@ -211,20 +226,15 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 {result.status === 'ready' && options.length === 0 && later.length === 0 && (
                     <div className="lc-eng__none">
                         <p className="lc-eng__note">
-                            {Number(result.data?.matched) > 0
-                                ? `Nobody that does this has a free time ${WHEN.find((w) => w.value === when)?.label.toLowerCase()}. Try another day.`
+                            {offers(result.data) > 0
+                                ? 'Everyone who does this is fully booked for the next 3 weeks.'
                                 : `Nobody in ${market.name} offers that yet${mode === 'at_client' ? ' at your place' : ''}. Try other words, or browse every place.`}
                         </p>
                         <span className="lc-eng__noneactions">
-                            {when !== 'soon' && Number(result.data?.matched) > 0 && <Button size="sm" variant="secondary" icon={RotateCw} onClick={() => { setWhen('soon'); run({ when: 'soon' }) }}>Look at the next 3 days</Button>}
                             <Button size="sm" variant="quiet" to={browseTo}>Browse every place</Button>
                         </span>
-                        {Number(result.data?.matched) === 0 && (
-                            <>
-                                <p className="lc-eng__note">Want to know when someone near you offers it?</p>
-                                <TellMeWhen key={`${result.text}-${city}`} text={result.text} market={city} zone={place?.zone || zone} />
-                            </>
-                        )}
+                        <p className="lc-eng__note">{offers(result.data) > 0 ? 'Want to know when a time opens up?' : 'Want to know when someone near you offers it?'}</p>
+                        <TellMeWhen key={`${result.text}-${city}`} text={result.text} market={city} zone={place?.zone || zone} done={offers(result.data) > 0 ? 'Done. We will tell you when a time opens up.' : undefined} />
                     </div>
                 )}
             </div>

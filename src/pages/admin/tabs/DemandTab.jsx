@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Bell, Globe, MapPinned, Radar, RotateCw, Search, SearchX } from 'lucide-react'
+import { Bell, CalendarX, Globe, MapPinned, Radar, RotateCw, Search, SearchX } from 'lucide-react'
 import SectionHead from '../components/SectionHead'
 import StatCard from '../components/StatCard'
 import BarList from '../components/BarList'
@@ -11,7 +11,7 @@ const PERIODS = [7, 30, 90]
 const CHANNEL = { web: 'Website', app: 'App', whatsapp: 'WhatsApp' }
 const CITY = { porto: 'Porto', lisbon: 'Lisbon', lagos: 'Lagos' }
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
-const missLine = (row) => (row.misses ? `${row.misses} found nothing` : 'all answered')
+const missLine = (row) => (row.misses ? `${row.misses} nobody offers` : 'all offered')
 
 // Where people want Locappoint (doc 35): every search from the website, the app and WhatsApp, where the
 // searcher is, where they asked for, what we could not answer, and who asked to be told.
@@ -62,7 +62,8 @@ const DemandTab = () => {
 
             <div className="kpi-grid adm-kpis">
                 <StatCard icon={Search} label="Searches" value={data.searches} subtitle={data.by_channel.map((c) => `${CHANNEL[c.channel] || c.channel} ${c.searches}`).join(', ') || 'None yet'} />
-                <StatCard icon={SearchX} label="Found nothing" value={data.misses} accent={data.misses ? 'danger' : 'success'} subtitle={data.searches ? `${missPct}% of searches` : 'None yet'} />
+                <StatCard icon={SearchX} label="Nobody offers it" value={data.misses} accent={data.misses ? 'danger' : 'success'} subtitle={data.searches ? `${missPct}% of searches` : 'None yet'} />
+                <StatCard icon={CalendarX} label="Offered, nobody free" value={data.full ?? 0} accent={data.full ? 'signal' : 'success'} subtitle="Booked out for 3 weeks" />
                 <StatCard icon={Globe} label="From outside Nigeria and Portugal" value={abroad.reduce((n, r) => n + r.searches, 0)} accent="signal" subtitle={abroad.length ? plural(abroad.length, 'country', 'countries') : 'None yet'} />
                 <StatCard icon={Bell} label="Asked to be told" value={data.wishes} accent="success" subtitle="Tell me when" />
             </div>
@@ -105,7 +106,21 @@ const DemandTab = () => {
                         <BarList
                             items={data.missed.map((r) => ({ label: `${r.query}${r.market ? `, ${CITY[r.market] || r.market}` : ''}`, value: r.times }))}
                             total={data.misses}
-                            emptyLabel="Every search found someone"
+                            emptyLabel="Someone offered everything asked for"
+                        />
+                    </div>
+                </section>
+
+                <section className="panel" aria-labelledby="adm-dem-out">
+                    <div className="panel__head">
+                        <h3 className="panel__title" id="adm-dem-out"><CalendarX size={12} className="panel__title-icon" aria-hidden="true" />Offered, but nobody free</h3>
+                        <span className="panel__meta">More hours or more businesses</span>
+                    </div>
+                    <div className="panel__body">
+                        <BarList
+                            items={(data.booked_out || []).map((r) => ({ label: `${r.query}${r.market ? `, ${CITY[r.market] || r.market}` : ''}`, value: r.times }))}
+                            total={data.full || 0}
+                            emptyLabel="Always someone free"
                         />
                     </div>
                 </section>

@@ -500,11 +500,12 @@ const placesFn = (body) => {
 }
 // Demand (doc 35): searches from Nigeria, Portugal and Kenya, two misses, one "Tell me when".
 adminRpc.admin_demand = ({ p_days = 30 }) => ({
-  days: p_days, searches: 42, misses: 7, people: 9, wishes: 2,
+  days: p_days, searches: 42, misses: 7, full: 3, people: 9, wishes: 2,
   by_channel: [{ channel: 'web', searches: 30, misses: 5 }, { channel: 'whatsapp', searches: 12, misses: 2 }],
   by_origin: [{ country: 'PT', searches: 25, misses: 3 }, { country: 'NG', searches: 14, misses: 2 }, { country: 'KE', searches: 3, misses: 2 }],
   by_place: [{ market: 'porto', zone: null, searches: 20, misses: 2 }, { market: 'lagos', zone: 'Lekki', searches: 12, misses: 4 }, { market: 'lisbon', zone: null, searches: 10, misses: 1 }],
   missed: [{ query: 'braids', market: 'porto', times: 3 }, { query: 'lash lift', market: 'lagos', times: 2 }],
+  booked_out: [{ query: 'haircut', market: 'lagos', times: 3 }],
   latest_wishes: [
     { created_at: new Date(Date.now() - 3600000).toISOString(), query: null, market: null, zone: null, target_country: 'KE', origin_country: 'KE', email: null, phone: '+254712345678', told_at: null },
     { created_at: new Date(Date.now() - 86400000).toISOString(), query: 'braids', market: 'porto', zone: 'Bonfim', target_country: 'PT', origin_country: 'PT', email: 'ana@x.pt', phone: null, told_at: null },
@@ -517,9 +518,12 @@ const engineOption = (label, i, extra = {}) => ({ business_id: `b${i}`, business
 const engineRpc = (name, args) => {
   if (name === 'engine_popular') return { data: [{ category: 'barbershop', businesses: 2 }, { category: 'nails', businesses: 1 }], error: null }
   if (name !== 'engine_match') return null
-  if (/nothing/.test(args.p_query || '')) return { data: { options: [], later: [], matched: 0, words: ['nothing'] }, error: null }
-  if (args.p_at === '21:00') return { data: { options: [], later: [engineOption('later', 1, { time: '18:30' })], matched: 1 }, error: null }
-  return { data: { options: [engineOption('best', 1, { people: args.p_people, service_name: 'Haircut', reliable: true, kept_pct: 98 }), engineOption('earliest', 2), engineOption('closest', 3)], later: [], matched: 3 }, error: null }
+  if (/nothing/.test(args.p_query || '')) return { data: { options: [], later: [], matched: 0, offered: 0, words: ['nothing'] }, error: null }
+  // Offered, closed on the day asked: the next free time ahead.
+  if (/closed/.test(args.p_query || '')) return { data: { options: [], later: [engineOption('later', 1, { date: openDay(), time: '09:00' })], matched: 0, offered: 1, ahead: true }, error: null }
+  if (/booked out/.test(args.p_query || '')) return { data: { options: [], later: [], matched: 0, offered: 2, ahead: false }, error: null }
+  if (args.p_at === '21:00') return { data: { options: [], later: [engineOption('later', 1, { time: '18:30' })], matched: 1, offered: 1 }, error: null }
+  return { data: { options: [engineOption('best', 1, { people: args.p_people, service_name: 'Haircut', reliable: true, kept_pct: 98 }), engineOption('earliest', 2), engineOption('closest', 3)], later: [], matched: 3, offered: 3, soonest: !args.p_dates }, error: null }
 }
 
 // Live trips: minutes only, kept per booking for the page's lifetime.

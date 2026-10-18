@@ -24,14 +24,14 @@ export default async ({ browser, url, check }) => {
     await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
     await wait(700)
     const sent = (await calls(p, 'engine_match')).pop() || {}
-    check(sent.p_query === 'haircut' && sent.p_market === 'porto' && sent.p_people === 1 && Array.isArray(sent.p_dates), `the request goes to the engine: ${JSON.stringify(sent)}`)
+    check(sent.p_query === 'haircut' && sent.p_market === 'porto' && sent.p_people === 1 && sent.p_dates === null, `the request goes to the engine, for the soonest free times by default: ${JSON.stringify(sent)}`)
     const opts = await p.evaluate(() => [...document.querySelectorAll('.lc-eng__opt')].map((o) => ({ tag: o.querySelector('.lc-eng__tag')?.textContent, why: o.querySelector('.lc-eng__why')?.textContent || '', book: o.querySelector('.ui-btn')?.textContent.trim() })))
     check(opts.length === 3 && opts[0].tag === 'Best match' && opts[1].tag === 'Earliest' && opts[2].tag === 'Closest', `three options, three reasons: ${JSON.stringify(opts.map((o) => o.tag))}`)
     check(/70% of clients book again/.test(opts[0].why) && /1\.2 km away/.test(opts[2].why) && /4\.8 from 12 reviews/.test(opts[2].why), `each says why: ${JSON.stringify(opts.map((o) => o.why))}`)
     check(opts[0].book === 'Book 10:00', `one tap books the time: ${opts[0].book}`)
     await wait(300)
     const noted = (await calls(p, 'search_note')).pop() || {}
-    check(noted.p_channel === 'web' && noted.p_query === 'haircut' && noted.p_market === 'porto' && noted.p_options === 3 && noted.p_matched === 3 && noted.p_people === 1, `every search is kept for Demand, with what we found: ${JSON.stringify(noted)}`)
+    check(noted.p_channel === 'web' && noted.p_query === 'haircut' && noted.p_market === 'porto' && noted.p_options === 3 && noted.p_matched === 3 && noted.p_offered === 3 && noted.p_people === 1, `every search is kept for Demand, with what we found: ${JSON.stringify(noted)}`)
     check(!/You are in/.test(await text(p, '.lc-eng')), 'no country line when the country is unknown')
     check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
     await p.evaluate(() => document.querySelector('.lc-eng__opt .ui-btn')?.click())
@@ -53,7 +53,45 @@ export default async ({ browser, url, check }) => {
     await wait(300)
     await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
     await wait(700)
-    check(/Nobody is free around 21:00/.test(await text(p, '.lc-eng__out')) && /Book 18:30/.test(await text(p, '.lc-eng__out')), `nobody at 21:00, the nearest time instead: ${await text(p, '.lc-eng__out')}`)
+    check(/Nobody is free then, around 21:00/.test(await text(p, '.lc-eng__out')) && /Book 18:30/.test(await text(p, '.lc-eng__out')), `nobody at 21:00, the nearest time instead: ${await text(p, '.lc-eng__out')}`)
+    await p.close()
+
+    // Plans ahead: a day in the words becomes When; any day of the next two weeks can be picked.
+    p = await open('/client')
+    const whens = await p.evaluate(async () => {
+        const pick = [...document.querySelectorAll('.lc-eng__row button')][1]
+        pick?.click()
+        await new Promise((r) => setTimeout(r, 300))
+        const list = [...document.querySelectorAll('[role=option]')].map((o) => o.textContent.trim())
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+        return list
+    })
+    check(whens[0] === 'Soonest' && whens.includes('This weekend') && whens.includes('Next week') && whens.some((w) => /^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) \d+ /.test(w)) && whens.length === 18, `When reaches two weeks ahead: ${JSON.stringify(whens)}`)
+    await p.close()
+    p = await open('/client')
+    await p.type('.lc-eng__what input', 'haircut tuesday')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(700)
+    let ask = (await calls(p, 'engine_match')).pop() || {}
+    const tue = ask.p_dates?.[0]
+    check(ask.p_dates?.length === 1 && new Date(`${tue}T12:00:00Z`).getUTCDay() === 2 && tue >= new Date().toISOString().slice(0, 10), `"haircut tuesday" searches the coming Tuesday: ${JSON.stringify(ask.p_dates)}`)
+    await p.$eval('.lc-eng__what input', (el) => el.select())
+    await p.type('.lc-eng__what input', 'nails next week')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(700)
+    ask = (await calls(p, 'engine_match')).pop() || {}
+    check(ask.p_dates?.length === 7 && new Date(`${ask.p_dates[0]}T12:00:00Z`).getUTCDay() === 1, `"next week" searches Monday to Sunday: ${JSON.stringify(ask.p_dates)}`)
+    await p.$eval('.lc-eng__what input', (el) => el.select())
+    await p.type('.lc-eng__what input', 'closed today')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(700)
+    check(/Nobody is free today\. Next free:/.test(await text(p, '.lc-eng__out')) && /Book 09:00/.test(await text(p, '.lc-eng__out')) && !/offers that yet/.test(await text(p, '.lc-eng__out')), `closed today: never "nobody offers", the next free time instead: ${await text(p, '.lc-eng__out')}`)
+    await p.$eval('.lc-eng__what input', (el) => el.select())
+    await p.type('.lc-eng__what input', 'booked out')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(700)
+    check(/fully booked for the next 3 weeks/.test(await text(p, '.lc-eng__out')) && /Want to know when a time opens up/.test(await text(p, '.lc-eng__out')), 'booked out for 3 weeks: said plainly, and they can ask to be told')
+    check(((await calls(p, 'search_note')).pop() || {}).p_offered === 2, 'the search log keeps how many offer it')
     await p.close()
 
     // Nothing that fits: says so and offers every place.
