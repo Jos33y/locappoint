@@ -113,16 +113,22 @@ const DAY_NAMES = [
 const fold = (text) => String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 export const readWhen = (text, timeZone) => {
     const t = ` ${fold(text).replace(/[^a-z0-9]+/g, ' ')} `
-    if (/ (next week|proxima semana|semana que vem) /.test(t)) return 'nextweek'
+    const today = zonedNow(timeZone).dateKey
+    const dow = parseDateKey(today).getDay()
+    const nextWeek = / (next week|proxima semana|semana que vem) /.test(t)
+    const hit = DAY_NAMES.findIndex((names) => names.some((n) => t.includes(` ${n} `)))
+    // A weekday wins over the week around it: "next week Friday" is that Friday, not the whole week.
+    if (hit >= 0) {
+        const ahead = nextWeek
+            ? (((8 - dow) % 7) || 7) + ((hit + 6) % 7)
+            : (hit - dow + 7) % 7
+        return ahead === 0 ? 'today' : ahead === 1 ? 'tomorrow' : `d:${addDays(today, ahead)}`
+    }
+    if (nextWeek) return 'nextweek'
     if (/ (weekend|fim de semana) /.test(t)) return 'weekend'
     if (/ (today|tonight|hoje) /.test(t)) return 'today'
     if (/ (tomorrow|amanha) /.test(t)) return 'tomorrow'
-    const today = zonedNow(timeZone).dateKey
-    const dow = parseDateKey(today).getDay()
-    const hit = DAY_NAMES.findIndex((names) => names.some((n) => t.includes(` ${n} `)))
-    if (hit < 0) return null
-    const ahead = (hit - dow + 7) % 7
-    return ahead === 0 ? 'today' : ahead === 1 ? 'tomorrow' : `d:${addDays(today, ahead)}`
+    return null
 }
 
 // Any time, a part of the day, or around an hour ("at:15").
@@ -178,6 +184,16 @@ export const LABELS = {
     top_rated: 'Top rated',
     another: 'Also free',
     later: 'Later',
+}
+
+// "Tomorrow, Mon 19 Oct" or "Fri 23 Oct": the date is always there, so a week ahead never reads as tomorrow.
+export const dayLabel = (dateKey, timeZone) => {
+    const today = zonedNow(timeZone).dateKey
+    const d = parseDateKey(dateKey)
+    const date = `${d.toLocaleDateString('en-GB', { weekday: 'short' })} ${d.getDate()} ${d.toLocaleDateString('en-GB', { month: 'short' })}`
+    if (dateKey === today) return `Today, ${date}`
+    if (dateKey === addDays(today, 1)) return `Tomorrow, ${date}`
+    return date
 }
 
 export const dayWord = (dateKey, timeZone) => {

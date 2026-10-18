@@ -122,7 +122,7 @@ const AdminView = () => {
   return <div className="admin"><main className="admin__content"><AdminDash activeSection={active} setActiveSection={setActive} loading={false} formatDate={fmtDate} formatTime={fmtTime} /></main><span id="__admin" hidden>{active}</span></div>
 }
 
-const Where = () => { const l = useLocation(); window.__path = l.pathname; return <span id="__path" hidden>{l.pathname}</span> }
+const Where = () => { const l = useLocation(); window.__path = l.pathname; window.__search = l.search; return <span id="__path" hidden>{l.pathname}</span> }
 
 const Auth = ({ children }) => {
   const [mode, setMode] = useState('business')

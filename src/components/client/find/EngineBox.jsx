@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Globe, MapPin, Search } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Picker } from '../../ui'
 import { PlaceSearch } from '../../common/PlaceSearch'
-import { MARKETS, LABELS, TIMES, WHERE, bookingLink, dayWord, findMatches, keepEnginePlace, loadPopular, readWhen, reasons, whenOptions, whenWords } from '../../../services/engine'
+import { MARKETS, LABELS, TIMES, WHERE, bookingLink, dayLabel, findMatches, keepEnginePlace, loadPopular, readWhen, reasons, whenOptions, whenWords } from '../../../services/engine'
 import { useCity } from '../../../hooks/useCity'
 import { pickAddress, placesOn } from '../../../services/places'
 import { loadZones } from '../../../services/setup'
@@ -28,21 +28,43 @@ const nobodyFree = (result, time, timeZone, count) => {
 
 const PEOPLE = Array.from({ length: 6 }, (_, i) => ({ value: String(i + 1), label: i === 0 ? 'Just me' : `${i + 1} people` }))
 
-const Option = ({ o, timeZone, onBook }) => {
+// One business: the service that fits the words best at its best time, the other free times that
+// day, and its other services that fit, each with a time. One option alone carries no "Best match".
+const Option = ({ o, timeZone, onBook, only = false }) => {
     const why = reasons(o)
+    const more = (o.times || []).filter((t) => t !== o.time).slice(0, 6)
+    const others = o.others || []
     return (
-        <li className={`lc-eng__opt is-${o.label}`}>
-            <span className="lc-eng__tag">{LABELS[o.label] || 'Free'}</span>
+        <li className={`lc-eng__opt is-${o.label}${only ? ' is-only' : ''}`}>
+            {!only && <span className="lc-eng__tag">{LABELS[o.label] || 'Free'}</span>}
             <span className="lc-eng__main">
                 <b className="lc-eng__biz">{o.business_name}{o.verified && <> <VerifiedBadge small /></>}{o.reliable && <> <ReliableBadge small /></>}</b>
-                <span className="lc-eng__svc">{withPeople(o.service_name, Number(o.people))}{o.mode === 'at_client' ? ', at your place' : o.mode === 'online' ? ', online' : ''}</span>
-                <span className="lc-eng__when">{dayWord(o.date, timeZone)} at <b>{o.time}</b></span>
+                {o.area && <span className="lc-eng__area">{o.area}</span>}
+                <span className="lc-eng__svc">{withPeople(o.service_name, Number(o.people))}{o.mode === 'at_client' ? ', at your place' : o.mode === 'online' ? ', online' : ''}{o.minutes ? `, ${o.minutes} min` : ''}</span>
+                <span className="lc-eng__when">{dayLabel(o.date, timeZone)} at <b>{o.time}</b></span>
                 {why.length > 0 && <span className="lc-eng__why">{why.join(' · ')}</span>}
             </span>
             <span className="lc-eng__side">
                 {o.price !== null && o.price !== undefined && <span className="lc-eng__price">{payMoney(o.price, o.currency || 'EUR')}</span>}
                 <Button size="sm" iconRight={ArrowRight} onClick={() => onBook(o)}>{`Book ${o.time}`}</Button>
             </span>
+            {more.length > 0 && (
+                <span className="lc-eng__times" role="group" aria-label={`Other times for ${o.service_name}`}>
+                    <span className="lc-eng__label">Other times</span>
+                    {more.map((t) => <Button key={t} size="sm" variant="secondary" onClick={() => onBook({ ...o, time: t })}>{t}</Button>)}
+                    <Button size="sm" variant="quiet" onClick={() => onBook(o)}>More times</Button>
+                </span>
+            )}
+            {others.length > 0 && (
+                <span className="lc-eng__also" role="group" aria-label="Other services here">
+                    <span className="lc-eng__label">Also here</span>
+                    {others.map((x) => (
+                        <Button key={x.service_id} size="sm" variant="secondary" onClick={() => onBook({ ...o, service_id: x.service_id, service_name: x.service_name, date: x.date, time: x.time })}>
+                            {`${x.service_name}, ${x.price !== null && x.price !== undefined ? `${payMoney(x.price, o.currency || 'EUR')}, ` : ''}${x.time}`}
+                        </Button>
+                    ))}
+                </span>
+            )}
         </li>
     )
 }
@@ -212,7 +234,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 )}
                 {result.status === 'ready' && options.length > 0 && (
                     <ul className="lc-eng__opts">
-                        {options.map((o) => <Option key={o.business_id} o={o} timeZone={market.timeZone} onBook={book} />)}
+                        {options.map((o) => <Option key={o.business_id} o={o} timeZone={market.timeZone} onBook={book} only={options.length === 1} />)}
                     </ul>
                 )}
                 {result.status === 'ready' && options.length === 0 && later.length > 0 && (

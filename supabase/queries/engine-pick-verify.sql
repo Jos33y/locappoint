@@ -1,0 +1,6 @@
+-- Run after engine-pick.sql. Every row should say true.
+SELECT 'service picked by fit, then closeness' AS what, position('fit DESC, extra, score DESC' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0 AS ok
+UNION ALL SELECT 'options carry other times and services', position('''others''' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0
+UNION ALL SELECT 'still looks ahead', position('v_soonest' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0
+UNION ALL SELECT 'still keeps travel between visits', position('p_mode, p_zone) sl' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0
+UNION ALL SELECT 'callable by visitors', has_function_privilege('anon', 'public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)', 'EXECUTE');

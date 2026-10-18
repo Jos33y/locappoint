@@ -82,6 +82,14 @@ export default async ({ browser, url, check }) => {
     ask = (await calls(p, 'engine_match')).pop() || {}
     check(ask.p_dates?.length === 7 && new Date(`${ask.p_dates[0]}T12:00:00Z`).getUTCDay() === 1, `"next week" searches Monday to Sunday: ${JSON.stringify(ask.p_dates)}`)
     await p.$eval('.lc-eng__what input', (el) => el.select())
+    await p.type('.lc-eng__what input', 'haircut next week friday')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(700)
+    ask = (await calls(p, 'engine_match')).pop() || {}
+    const fri = ask.p_dates?.[0]
+    const gap = (Date.parse(`${fri}T12:00:00Z`) - Date.parse(`${new Date().toISOString().slice(0, 10)}T12:00:00Z`)) / 86400000
+    check(ask.p_dates?.length === 1 && new Date(`${fri}T12:00:00Z`).getUTCDay() === 5 && gap >= 5 && gap <= 12, `"next week friday" is that Friday, not the whole week: ${JSON.stringify(ask.p_dates)}`)
+    await p.$eval('.lc-eng__what input', (el) => el.select())
     await p.type('.lc-eng__what input', 'closed today')
     await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
     await wait(700)
@@ -92,6 +100,30 @@ export default async ({ browser, url, check }) => {
     await wait(700)
     check(/fully booked for the next 3 weeks/.test(await text(p, '.lc-eng__out')) && /Want to know when a time opens up/.test(await text(p, '.lc-eng__out')), 'booked out for 3 weeks: said plainly, and they can ask to be told')
     check(((await calls(p, 'search_note')).pop() || {}).p_offered === 2, 'the search log keeps how many offer it')
+    await p.close()
+
+    // One business: no "Best match"; the area, how long, the date, its other times and its other services.
+    p = await open('/client')
+    await p.type('.lc-eng__what input', 'kids')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(700)
+    const one = await p.evaluate(() => {
+        const o = document.querySelector('.lc-eng__opt')
+        return { tag: !!o?.querySelector('.lc-eng__tag'), text: o?.textContent || '', times: [...(o?.querySelectorAll('.lc-eng__times .ui-btn') || [])].map((b) => b.textContent.trim()), also: [...(o?.querySelectorAll('.lc-eng__also .ui-btn') || [])].map((b) => b.textContent.trim()) }
+    })
+    check(!one.tag && /Bonfim/.test(one.text) && /Haircut, 45 min/.test(one.text) && /(Today|Tomorrow), \w{3} \d+ \w{3} at 10:00/.test(one.text), `one business: no Best match, its area, how long and the date: ${one.text}`)
+    check(JSON.stringify(one.times) === '["10:30","11:00","15:00","More times"]' && one.also.length === 1 && /^Kids cut \(under 12\), €12, 09:45$/.test(one.also[0]), `its other times and other services: ${JSON.stringify(one)}`)
+    await p.evaluate(() => [...document.querySelectorAll('.lc-eng__times .ui-btn')].find((b) => b.textContent.trim() === '11:00')?.click())
+    await wait(600)
+    check(/book=s1\.\d{4}-\d{2}-\d{2}\.1100/.test(await p.evaluate(() => window.__search || '')), `another time books that time: ${await p.evaluate(() => window.__search)}`)
+    await p.close()
+    p = await open('/client')
+    await p.type('.lc-eng__what input', 'kids')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(700)
+    await p.evaluate(() => document.querySelector('.lc-eng__also .ui-btn')?.click())
+    await wait(600)
+    check(/book=s9\.\d{4}-\d{2}-\d{2}\.0945/.test(await p.evaluate(() => window.__search || '')), `another service books that service: ${await p.evaluate(() => window.__search)}`)
     await p.close()
 
     // Nothing that fits: says so and offers every place.

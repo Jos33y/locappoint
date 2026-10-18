@@ -89,7 +89,7 @@
 .lc-eng__opt {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "tag tag" "main side";
+    grid-template-areas: "tag tag" "main side" "times times" "also also";
     gap: var(--space-2) var(--space-3);
     padding: var(--space-4);
     border-radius: var(--lc-r-md);
@@ -138,6 +138,24 @@
 
 .lc-eng__why { color: var(--lc-ink-3); font-size: 12px; line-height: var(--lc-lh-snug); }
 
+.lc-eng__area { color: var(--lc-ink-3); font-size: var(--lc-t-label); }
+
+/* More of the same business: the other times that day, and its other services that fit. */
+.lc-eng__opt.is-only { grid-template-areas: "main side" "times times" "also also"; }
+.lc-eng__times,
+.lc-eng__also {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--lc-line);
+}
+.lc-eng__times { grid-area: times; }
+.lc-eng__also { grid-area: also; }
+.lc-eng__label { flex-basis: 100%; color: var(--lc-ink-3); font-size: 12px; font-weight: var(--font-weight-semibold); }
+.lc-eng__times .ui-btn { font-variant-numeric: tabular-nums; }
+
 .lc-eng__side {
     grid-area: side;
     display: flex;
@@ -159,7 +177,8 @@
 
 @media (max-width: 479px) {
     .lc-eng { padding: var(--space-4); }
-    .lc-eng__opt { grid-template-areas: "tag tag" "main main" "side side"; }
+    .lc-eng__opt { grid-template-areas: "tag tag" "main main" "side side" "times times" "also also"; }
+    .lc-eng__opt.is-only { grid-template-areas: "main main" "side side" "times times" "also also"; }
     .lc-eng__side { flex-direction: row; align-items: center; }
 }
 

@@ -523,6 +523,8 @@ const engineRpc = (name, args) => {
   if (/closed/.test(args.p_query || '')) return { data: { options: [], later: [engineOption('later', 1, { date: openDay(), time: '09:00' })], matched: 0, offered: 1, ahead: true }, error: null }
   if (/booked out/.test(args.p_query || '')) return { data: { options: [], later: [], matched: 0, offered: 2, ahead: false }, error: null }
   if (args.p_at === '21:00') return { data: { options: [], later: [engineOption('later', 1, { time: '18:30' })], matched: 1, offered: 1 }, error: null }
+  // One business only: no "Best match"; its other times and its other services that fit.
+  if (/kids/.test(args.p_query || '')) return { data: { options: [engineOption('best', 1, { service_name: 'Haircut', area: 'Bonfim', minutes: 45, times: ['10:00', '10:30', '11:00', '15:00'], others: [{ service_id: 's9', service_name: 'Kids cut (under 12)', date: openDay(), time: '09:45', price: 12, minutes: 30 }] })], later: [], matched: 2, offered: 1 }, error: null }
   return { data: { options: [engineOption('best', 1, { people: args.p_people, service_name: 'Haircut', reliable: true, kept_pct: 98 }), engineOption('earliest', 2), engineOption('closest', 3)], later: [], matched: 3, offered: 3, soonest: !args.p_dates }, error: null }
 }
 
