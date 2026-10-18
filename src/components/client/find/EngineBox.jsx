@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Globe, MapPin, Search } from 'lucide-react'
+import { ArrowRight, Globe, MapPin, Search, X } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Picker } from '../../ui'
 import { PlaceSearch } from '../../common/PlaceSearch'
-import { MARKETS, LABELS, TIMES, WHERE, bookingLink, dayLabel, findMatches, keepEnginePlace, loadPopular, readWhen, reasons, whenOptions, whenWords } from '../../../services/engine'
+import { MARKETS, LABELS, TIMES, WHERE, bookingLink, dayLabel, findMatches, keepEnginePlace, loadPopular, reasons, timeLabel, whenOptions, whenWords } from '../../../services/engine'
+import { understand, without } from '../../../services/understand'
 import { useCity } from '../../../hooks/useCity'
 import { pickAddress, placesOn } from '../../../services/places'
 import { loadZones } from '../../../services/setup'
@@ -15,18 +16,27 @@ import { SERVED, countryName, noteSearch, visitorCountry } from '../../../servic
 import { TellMeWhen } from './TellMeWhen'
 import '../../../styles/client/engine.css'
 
+const WHEN_LABEL = { soonest: 'Soonest', today: 'Today', tomorrow: 'Tomorrow', weekend: 'This weekend', nextweek: 'Next week' }
+
 // How many businesses offer it at all, free or not. Older answers without it: what had free times.
 const offers = (data) => Number(data?.offered ?? data?.matched ?? 0)
 
 // "Nobody is free on Tuesday 20 Oct. Next free:" or, the same day at another time, "These are free close to it".
 const nobodyFree = (result, time, timeZone, count) => {
-    const part = time === 'any' ? '' : `, ${TIMES.find((t) => t.value === time)?.label.toLowerCase() || ''}`
+    const part = time === 'any' ? '' : `, ${timeLabel(time).toLowerCase()}`
     const when = whenWords(result.when || 'soonest', timeZone)
     if (result.data?.ahead) return `Nobody is free ${when === 'soon' ? 'soon' : when}${part}. Next free:`
     return `Nobody is free ${when === 'soon' ? 'then' : when}${part}. ${count === 1 ? 'One is free' : 'These are free'} close to it:`
 }
 
-const PEOPLE = Array.from({ length: 6 }, (_, i) => ({ value: String(i + 1), label: i === 0 ? 'Just me' : `${i + 1} people` }))
+const PEOPLE = Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), label: i === 0 ? 'Just me' : `${i + 1} people` }))
+
+// Search that understands (doc 36). Every choice remembers where it came from: the words, a hand pick,
+// or the default. Choices from the words reset when the words change, so a new search with no day goes
+// back to Soonest; hand picks stay until changed.
+const DEFAULTS = { when: 'soonest', time: 'any', people: '1', mode: '' }
+const READ = { day: 'when', time: 'time', people: 'people', mode: 'mode' }
+const withOption = (list, value, label) => (value && !list.some((o) => o.value === value) ? [...list, { value, label }] : list)
 
 // One business: the service that fits the words best at its best time, the other free times that
 // day, and its other services that fit, each with a time. One option alone carries no "Best match".
@@ -90,6 +100,8 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     const [popular, setPopular] = useState([])
     const [result, setResult] = useState({ status: 'idle', data: null, error: '' })
     const [more, setMore] = useState(false)
+    const [from, setFrom] = useState({ when: 'default', time: 'default', people: 'default', mode: 'default' })
+    const byHand = (field, set) => (v) => { set(v); setFrom((f) => ({ ...f, [field]: 'hand' })) }
     // Someone searching from a country we are not in: they may be booking for someone here, or asking
     // for Locappoint at home. Either way they are told, and can ask for their country.
     const [abroad, setAbroad] = useState(null)
@@ -119,25 +131,45 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     }, [mode])
 
     const pickCity = (code) => pickMarket(code)
-    const whens = whenOptions(market.timeZone)
+    const whenText = (v) => (String(v).startsWith('d:') ? dayLabel(String(v).slice(2), market.timeZone) : WHEN_LABEL[v] || v)
+    const whens = withOption(whenOptions(market.timeZone), when, whenText(when))
+    const times = withOption(TIMES, time, timeLabel(time))
 
     const run = async (over = {}) => {
-        const what = (over.text ?? text).trim()
-        // A day in the words ("haircut Tuesday") becomes When, and shows there.
-        const said = over.when ? null : readWhen(what, market.timeZone)
-        if (said && said !== when) setWhen(said)
-        const days = over.when ?? said ?? when
-        if (!what) { setResult({ status: 'error', data: null, error: 'Say what you need, like "haircut" or "nails".' }); return }
-        if (mode === 'at_client' && !place && !zone) { setResult({ status: 'error', data: null, error: 'Tell us where you are, so we only show people who come to you.' }); return }
-        setResult({ status: 'loading', data: null, error: '' })
+        const typed = (over.text ?? text).trim()
+        if (!typed) { setResult({ status: 'error', data: null, error: 'Say what you need, like "haircut" or "nails".' }); return }
+        // Read the day, time, people and where from the words; what is left is what they want.
+        const u = understand(typed, market.timeZone)
+        const next = { when: over.when ?? when, time, people, mode }
+        const src = { ...from }
+        Object.entries(READ).forEach(([k, f]) => {
+            if (u[k] != null) { next[f] = u[k]; src[f] = 'words' } else if (src[f] === 'words') { next[f] = DEFAULTS[f]; src[f] = 'default' }
+        })
+        if (over.when) { next.when = over.when; src.when = 'hand' }
+        setWhen(next.when); setTime(next.time); setPeople(next.people); setMode(next.mode); setFrom(src)
+        const understood = Object.entries(READ).filter(([k]) => u[k] != null).map(([k]) => ({ field: k, label: k === 'day' ? whenText(u.day) : u.labels[k] }))
+        const asked = { understood, spans: u.spans, text: typed, when: next.when }
+        if (next.mode === 'at_client' && !place && !zone) {
+            if (compact) setMore(true)
+            setResult({ status: 'error', data: null, error: 'Tell us where you are, so we only show people who come to you.', ...asked })
+            return
+        }
+        setResult({ status: 'loading', data: null, error: '', ...asked })
         try {
-            const data = await findMatches({ market: city, text: what, mode, when: days, time, people: Number(people), place, zone })
-            setResult({ status: 'ready', data, error: '', text: what, when: days })
-            noteSearch({ market: city, text: what, mode, people, place, zone, data })
+            const data = await findMatches({ market: city, text: u.what, mode: next.mode, when: next.when, time: next.time, people: Number(next.people), place, zone })
+            setResult({ status: 'ready', data, error: '', ...asked })
+            noteSearch({ market: city, text: typed, mode: next.mode, people: next.people, place, zone, data })
         } catch (err) {
             console.error('Engine failed:', err)
-            setResult({ status: 'error', data: null, error: USER_ERRORS.includes(err?.code) || err?.code === '22023' ? err.message : 'We could not search right now. Try again.' })
+            setResult({ status: 'error', data: null, error: USER_ERRORS.includes(err?.code) || err?.code === '22023' ? err.message : 'We could not search right now. Try again.', ...asked })
         }
+    }
+
+    // A chip's remove takes its phrase out of the words and searches again.
+    const drop = (field) => {
+        const next = without(result.text, result.spans || [], field)
+        setText(next)
+        run({ text: next })
     }
 
     const book = (o) => {
@@ -174,15 +206,26 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 {compact && (
                     <button type="button" className="lc-eng__more" aria-expanded={more} aria-controls="lc-eng-options" onClick={() => setMore((m) => !m)}>
                         <span>{more ? 'Fewer options' : 'More options'}</span>
-                        <span className="lc-eng__picked">{[whens.find((w) => w.value === when)?.label, TIMES.find((t) => t.value === time)?.label, PEOPLE.find((n) => n.value === people)?.label, WHERE.find((w) => w.value === mode)?.label].filter(Boolean).join(', ')}</span>
+                        <span className="lc-eng__picked">{[whens.find((w) => w.value === when)?.label, timeLabel(time), PEOPLE.find((n) => n.value === people)?.label, WHERE.find((w) => w.value === mode)?.label].filter(Boolean).join(', ')}</span>
                     </button>
+                )}
+                {result.understood?.length > 0 && (
+                    <div className="lc-eng__understood" role="group" aria-label="What we understood">
+                        <span className="lc-eng__label">Understood</span>
+                        {result.understood.map((c) => (
+                            <button key={c.field} type="button" className="lc-eng__read" onClick={() => drop(c.field)} aria-label={`Remove ${c.label}`}>
+                                {c.label}
+                                <X size={14} aria-hidden="true" />
+                            </button>
+                        ))}
+                    </div>
                 )}
                 <div className="lc-eng__row" id="lc-eng-options" hidden={compact && !more}>
                     <Picker value={city} onChange={pickCity} title="City" options={MARKETS.map((m) => ({ value: m.code, label: m.name }))} />
-                    <Picker value={when} onChange={setWhen} title="When" options={whens} />
-                    <Picker value={time} onChange={setTime} title="What time" options={TIMES} />
-                    <Picker value={people} onChange={setPeople} title="How many people" options={PEOPLE} />
-                    <Picker value={mode} onChange={(v) => { setMode(v); setResult((r) => ({ ...r, error: '' })) }} title="Where" options={WHERE} />
+                    <Picker value={when} onChange={byHand('when', setWhen)} title="When" options={whens} />
+                    <Picker value={time} onChange={byHand('time', setTime)} title="What time" options={times} />
+                    <Picker value={people} onChange={byHand('people', setPeople)} title="How many people" options={PEOPLE} />
+                    <Picker value={mode} onChange={(v) => { byHand('mode', setMode)(v); setResult((r) => ({ ...r, error: '' })) }} title="Where" options={WHERE} />
                 </div>
                 {mode === 'at_client' && (!compact || more) && (
                     <div className="lc-eng__place">

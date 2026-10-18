@@ -102,6 +102,52 @@ export default async ({ browser, url, check }) => {
     check(((await calls(p, 'search_note')).pop() || {}).p_offered === 2, 'the search log keeps how many offer it')
     await p.close()
 
+    // Search that understands (doc 36): day, time, people and where read from the words, shown as chips,
+    // each removable; a day from the words resets when the words change; a hand pick stays.
+    p = await open('/client')
+    const ask2 = async (words) => {
+        await p.$eval('.lc-eng__what input', (el) => el.select())
+        await p.type('.lc-eng__what input', words)
+        await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+        await wait(700)
+        return (await calls(p, 'engine_match')).pop() || {}
+    }
+    const chipsNow = () => p.evaluate(() => [...document.querySelectorAll('.lc-eng__read')].map((c) => c.textContent.trim()))
+    let a2 = await ask2('kids cut friday after 5')
+    check(a2.p_query === 'kids cut' && a2.p_window === '17:00-23:59' && a2.p_dates?.length === 1 && new Date(`${a2.p_dates[0]}T12:00:00Z`).getUTCDay() === 5, `"kids cut friday after 5": what, day and time apart: ${JSON.stringify([a2.p_query, a2.p_window, a2.p_dates])}`)
+    let read = await chipsNow()
+    check(read.length === 2 && read.includes('After 17:00') && read.some((c) => /Fri/.test(c)), `what was understood shows as chips: ${JSON.stringify(read)}`)
+    await p.evaluate(() => [...document.querySelectorAll('.lc-eng__read')].find((c) => /After/.test(c.textContent))?.click())
+    await wait(700)
+    a2 = (await calls(p, 'engine_match')).pop() || {}
+    check(a2.p_window === 'any' && a2.p_dates?.length === 1 && await p.$eval('.lc-eng__what input', (el) => el.value) === 'kids cut friday', `removing a chip takes its words out and searches again: ${await p.$eval('.lc-eng__what input', (el) => el.value)}`)
+    a2 = await ask2('haircut')
+    check(a2.p_dates === null && a2.p_window === 'any' && (await chipsNow()).length === 0, `a day from the words does not stick to the next search: ${JSON.stringify(a2.p_dates)}`)
+    a2 = await ask2('braids for 3 people at 3pm')
+    check(a2.p_people === 3 && a2.p_at === '15:00' && a2.p_query === 'braids', `people and time from the words: ${JSON.stringify([a2.p_people, a2.p_at, a2.p_query])}`)
+    a2 = await ask2('braids')
+    check(a2.p_people === 1 && a2.p_at === null, 'and they reset when the words change')
+    await p.close()
+    p = await open('/client')
+    await p.evaluate(async () => {
+        const pick = [...document.querySelectorAll('.lc-eng__row button')][1]
+        pick?.click()
+        await new Promise((r) => setTimeout(r, 300))
+        ;[...document.querySelectorAll('[role=option]')].find((o) => o.textContent.trim() === 'Next week')?.click()
+    })
+    await wait(300)
+    await p.type('.lc-eng__what input', 'haircut')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(700)
+    check(((await calls(p, 'engine_match')).pop() || {}).p_dates?.length === 7, 'a day picked by hand stays')
+    await p.$eval('.lc-eng__what input', (el) => el.select())
+    await p.type('.lc-eng__what input', 'haircut home service')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(500)
+    check(/Tell us where you are/.test(await text(p, '.lc-eng__out')) && (await chipsNow()).includes('At your place'), 'home service from the words asks where they are')
+    check(p.errors.length === 0, `no page errors: ${p.errors.join(' | ')}`)
+    await p.close()
+
     // One business: no "Best match"; the area, how long, the date, its other times and its other services.
     p = await open('/client')
     await p.type('.lc-eng__what input', 'kids')

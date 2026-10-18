@@ -131,6 +131,19 @@ export const readWhen = (text, timeZone) => {
     return null
 }
 
+// What a time choice says: "After 17:00", "Around 15:30", "11:30 to 14:00", "Morning".
+export const timeLabel = (value) => {
+    const v = String(value || 'any')
+    if (v.startsWith('r:')) {
+        const [from, to] = v.slice(2).split('-')
+        if (to === '23:59') return `After ${from}`
+        if (from === '00:00') return `Before ${String(Number(to.slice(0, 2)) + 1).padStart(2, '0')}:00`
+        return `${from} to ${to}`
+    }
+    if (v.startsWith('at:')) return `Around ${v.slice(3).includes(':') ? v.slice(3) : `${v.slice(3).padStart(2, '0')}:00`}`
+    return TIMES.find((t) => t.value === v)?.label || 'Any time'
+}
+
 // Any time, a part of the day, or around an hour ("at:15").
 export const TIMES = [
     { value: 'any', label: 'Any time' },
@@ -149,13 +162,15 @@ export const WHERE = [
 
 export const findMatches = async ({ market, text, mode = '', when = 'soonest', time = 'any', people = 1, place = null, zone = '' }) => {
     const m = marketOf(market)
-    const at = time.startsWith('at:') ? `${String(time.slice(3)).padStart(2, '0')}:00` : null
+    // "at:15" or "at:15:30" around an hour; "r:17:00-23:59" a range read from the words ("after 5").
+    const at = time.startsWith('at:') ? (time.slice(3).includes(':') ? time.slice(3) : `${String(time.slice(3)).padStart(2, '0')}:00`) : null
+    const range = time.startsWith('r:') ? time.slice(2) : null
     const { data, error } = await supabase.rpc('engine_match', {
         p_market: m.code,
         p_query: text,
         p_mode: mode || null,
         p_dates: daysFor(when, m.timeZone),
-        p_window: at ? 'any' : time,
+        p_window: at ? 'any' : range || time,
         p_at: at,
         p_people: people,
         p_lat: place?.lat ?? null,

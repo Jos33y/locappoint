@@ -1,0 +1,7 @@
+-- Run after engine-time.sql. Every row should say true.
+SELECT 'earliest time per business, never random' AS what, position('ELSE extract(epoch FROM (day + at)) END,' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0 AS ok
+UNION ALL SELECT 'soon measured across the window', position('v_span' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0
+UNION ALL SELECT 'time ranges ("after 5")', position('split_part(p_window' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0
+UNION ALL SELECT 'still picks the right service', position('fit DESC, extra,' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0
+UNION ALL SELECT 'still keeps travel between visits', position('p_mode, p_zone) sl' IN pg_get_functiondef('public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)'::regprocedure)) > 0
+UNION ALL SELECT 'callable by visitors', has_function_privilege('anon', 'public.engine_match(text, text, text, date[], text, time without time zone, integer, double precision, double precision, text)', 'EXECUTE');
