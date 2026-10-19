@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowUpRight, EyeOff, House, MapPin, Search, Trash2, TriangleAlert, Video, X } from 'lucide-react'
+import { ArrowUpRight, EyeOff, House, Search, Trash2, TriangleAlert, Video, X } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Input, Picker, Sheet, Skeleton } from '../../components/ui'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { ServiceEditor, isOnline, menuPrice, serviceFromRow, serviceProblems, visitsClients } from '../../components/business/ServiceEditor'
@@ -8,8 +8,9 @@ import { useAutosave } from '../../components/business/useAutosave'
 import { suggestionsFor } from '../../constants/categories'
 import { loadSetup, loadZones, saveServices, serviceBookingCount, serviceRow, travelsBetween, updateBusiness } from '../../services/setup'
 import { pageUrl } from '../../services/links'
-import { PlaceSearch } from '../../components/common/PlaceSearch'
-import { MAP_KEY, kmLabel, loadMaps, placeShop, placesOn } from '../../services/places'
+import { MAP_KEY, kmLabel, loadMaps } from '../../services/places'
+import { ShopPin } from '../../components/business/ShopPin'
+import { districtOf } from '../../constants/locations'
 import '../../styles/business/services-hours.css'
 import '../../styles/business/formats.css'
 
@@ -179,16 +180,10 @@ const ReachMap = ({ lat, lng, km }) => {
 
 const DISTANCES = [3, 5, 10, 15, 25]
 
-// How far the business travels from its shop, straight line. The shop is placed once with Google.
+// How far the business travels from its shop. The shop is pinned with the phone's position or found
+// with Google (ShopPin, geo2), so this works anywhere, with or without address search.
 const Distance = ({ businessId, address, shop, radius, onShop, onRadius }) => {
-    const [search, setSearch] = useState('checking')
-    const [moving, setMoving] = useState(false)
     const [error, setError] = useState('')
-    useEffect(() => {
-        let cancelled = false
-        placesOn().then((on) => { if (!cancelled) setSearch(on ? 'on' : 'off') })
-        return () => { cancelled = true }
-    }, [])
     const placed = shop.lat !== null && shop.lat !== undefined
     const pick = async (km) => {
         const before = radius
@@ -202,36 +197,13 @@ const Distance = ({ businessId, address, shop, radius, onShop, onRadius }) => {
             setError('Not saved. Check your connection and try again.')
         }
     }
-    const resolve = (placeId, session) => placeShop({ businessId, placeId, session })
-
-    // Without address search there is no way to place the shop: the whole option stays out of sight
-    // rather than telling owners about a setting they cannot change. A shop placed earlier still shows.
-    if (search === 'off' && !placed) return null
 
     return (
         <div className="biz-reach">
             <p className="biz-reach__title">Or by distance from your shop</p>
-            {(!placed || moving) && (
-                search === 'checking' ? <Skeleton height={48} radius={10} />
-                    : search === 'off' ? null : (
-                        <Field label="Your shop's address" hint="Pick it from the list. Distance is measured from here, in a straight line.">
-                            <PlaceSearch
-                                businessId={businessId}
-                                resolve={resolve}
-                                onPicked={(spot) => { onShop(spot); setMoving(false) }}
-                                onOff={() => setSearch('off')}
-                                placeholder={address || 'Rua de Cedofeita 120'}
-                            />
-                        </Field>
-                    )
-            )}
-            {placed && !moving && (
+            <ShopPin business={{ id: businessId, lat: shop.lat, lng: shop.lng }} address={address} onPinned={onShop} />
+            {placed && (
                 <>
-                    <div className="lc-place-picked">
-                        <MapPin size={16} aria-hidden="true" />
-                        <span className="lc-place-picked__text">{shop.address || address || 'Your shop is placed on the map'}</span>
-                        <button type="button" className="lc-place-picked__change" onClick={() => setMoving(true)}>Move</button>
-                    </div>
                     <ChipGroup label="How far you go">
                         <Chip selected={!radius} onClick={() => pick(null)}>Off</Chip>
                         {DISTANCES.map((km) => <Chip key={km} selected={Number(radius) === km} onClick={() => pick(km)}>{kmLabel(km)}</Chip>)}
@@ -250,6 +222,12 @@ const Distance = ({ businessId, address, shop, radius, onShop, onRadius }) => {
 }
 
 const MAX_AREAS = 40
+
+const nearFirst = (zones, region) => {
+    if (!region) return zones
+    const home = (z) => z === region || districtOf(z) === region
+    return [...zones.filter(home), ...zones.filter((z) => !home(z))]
+}
 
 // Where the visits start from: free times leave room to get from here to each visit and back.
 const StartFrom = ({ businessId, zones, value, onSaved }) => {
@@ -328,17 +306,19 @@ const AreaPicker = ({ zones, picked, onToggle }) => {
 }
 
 // Where the business travels for visits at the client's place: areas, a distance, or both. Saved on every tap.
-const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius, onShop, onRadius, base, onBase }) => {
+const WhereYouGo = ({ businessId, market, region, value, onSaved, address, shop, radius, onShop, onRadius, base, onBase }) => {
     const [zones, setZones] = useState(null)
     const [picked, setPicked] = useState(value || [])
     const [error, setError] = useState('')
     const [travels, setTravels] = useState(false)
     useEffect(() => {
         let cancelled = false
-        loadZones(market).then((list) => { if (!cancelled) setZones(list) }).catch(() => { if (!cancelled) setZones([]) })
+        // A whole country's list (every municipality in Portugal, every state in Nigeria): the business's
+        // own district or state first.
+        loadZones(market).then((list) => { if (!cancelled) setZones(nearFirst(list, region)) }).catch(() => { if (!cancelled) setZones([]) })
         travelsBetween(market).then((on) => { if (!cancelled) setTravels(on) }).catch(() => {})
         return () => { cancelled = true }
-    }, [market])
+    }, [market, region])
     const toggle = async (zone) => {
         // The database keeps up to 40 areas a business covers; past that, a distance says it better.
         if (!picked.includes(zone) && picked.length >= MAX_AREAS) {
@@ -364,7 +344,7 @@ const WhereYouGo = ({ businessId, market, value, onSaved, address, shop, radius,
             <h2 id="zones-title" className="biz-sh__meettitle"><House size={18} aria-hidden="true" />Where you go</h2>
             <p className="biz-sh__tip">Clients can book a visit at their place when they are in an area you pick.</p>
             {zones === null ? <Skeleton height={44} radius={10} /> : zones.length === 0 ? (
-                <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Areas for your city are not set up yet. Message us and we add them.</p>
+                <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Areas are not set up here yet. Set a distance from your shop below, or message us and we add them.</p>
             ) : (
                 <AreaPicker zones={zones} picked={picked} onToggle={toggle} />
             )}
@@ -382,6 +362,7 @@ const ServicesPage = () => {
     const [category, setCategory] = useState('')
     const [meetingUrl, setMeetingUrl] = useState(null)
     const [market, setMarket] = useState(null)
+    const [region, setRegion] = useState('')
     const [serviceZones, setServiceZones] = useState([])
     const [baseZone, setBaseZone] = useState(null)
     const [shop, setShop] = useState({ lat: null, lng: null, address: '' })
@@ -405,6 +386,7 @@ const ServicesPage = () => {
             setCategory(data.business.category || '')
             setMeetingUrl(data.business.meeting_url || null)
             setMarket(data.business.market || null)
+            setRegion(data.business.region || '')
             setServiceZones(data.business.service_zones || [])
             setBaseZone(data.business.base_zone || null)
             setShop({ lat: data.business.lat ?? null, lng: data.business.lng ?? null, address: '' })
@@ -525,6 +507,7 @@ const ServicesPage = () => {
                     <WhereYouGo
                         businessId={shellBusiness.id}
                         market={market}
+                        region={region}
                         value={serviceZones}
                         onSaved={setServiceZones}
                         address={shopAddress}

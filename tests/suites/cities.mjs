@@ -28,12 +28,14 @@ const walk = (dir, out = []) => {
 export default async ({ check, root, server }) => {
     const read = (rel) => fs.readFileSync(path.join(root, ...rel.split('/')), 'utf8')
 
-    const { inLaunchArea, PT_GROUPS } = await import(pathToFileURL(path.join(root, 'src', 'constants', 'locations.js')).href)
-    check(['Porto', 'Matosinhos', 'Vila Nova de Gaia'].every((city) => inLaunchArea('PT', city)), 'Greater Porto is in the launch area')
-    check(['Lisbon', 'Cascais'].every((city) => inLaunchArea('PT', city)), 'Greater Lisbon stays in the launch area')
-    check(inLaunchArea('NG', 'Lagos'), 'Lagos is in the launch area')
-    check(!inLaunchArea('PT', 'Faro') && !inLaunchArea('NG', 'Abuja'), 'places outside the live cities are told we are coming later')
-    check(PT_GROUPS[0] === 'Greater Porto', 'the city picker lists Greater Porto first')
+    const loc = await import(pathToFileURL(path.join(root, 'src', 'constants', 'locations.js')).href)
+    // geo2: anywhere in Nigeria or Portugal joins. No launch area.
+    check(!('inLaunchArea' in loc), 'no launch area: every place in Nigeria and Portugal can join')
+    check(loc.regionsOf('NG').length === 37 && loc.regionsOf('PT').length === 20, 'every state and district can be picked')
+    check(loc.townsIn('PT', 'Braga').some((t) => t.value === 'Guimarães') && loc.townsIn('PT', 'Braga').every((t) => t.district === 'Braga'), 'a district lists its own municipalities')
+    check(loc.firstTown('PT', 'Porto') === 'Porto' && loc.firstTown('PT', 'Lisboa') === 'Lisbon' && loc.firstTown('NG', 'FCT') === 'Abuja', 'a district or state brings its main town')
+    check(loc.regionOfTown('NG', 'Port Harcourt') === 'Rivers' && loc.regionOfTown('PT', 'Cascais') === 'Lisboa', 'a town knows its state or district')
+    check(loc.PT_GROUPS[0] === 'Greater Porto', 'the city picker lists Greater Porto first')
 
     const files = ['src', 'server', 'public', 'supabase/functions', 'supabase/email-templates', 'supabase/templates']
         .flatMap((dir) => walk(path.join(root, ...dir.split('/'))))
@@ -84,8 +86,8 @@ export default async ({ check, root, server }) => {
     check(!/prefix="\u20ac"/.test(read('src/components/business/ServiceEditor.jsx')), 'the service price field shows the business currency')
     const editor = read('src/components/business/ServiceEditor.jsx')
     check(/TRAVEL_MAX = \{ EUR: 500, NGN: 200000 \}/.test(editor) && /serviceProblems\(service, currency\)/.test(editor) && /servicesValid\(services, details\.country === 'NG' \? 'NGN' : 'EUR'\)/.test(read('src/pages/business/Setup.jsx')), 'a Lagos travel fee is checked in naira, not capped at 500')
-    check(/country: 'PT',\s*city: 'Porto'/.test(read('src/pages/business/Setup.jsx')), 'a new Portuguese business starts on Porto')
-    check(/useState\(startDetails\)/.test(read('src/pages/business/Setup.jsx')) && /city === 'lagos'\) return \{ \.\.\.emptyDetails, country: 'NG', city: 'Lagos', phoneCountry: 'NG' \}/.test(read('src/pages/business/Setup.jsx')), 'a new business starts in the city picked in the header')
+    check(/country: 'PT',\s*region: 'Porto',\s*city: 'Porto'/.test(read('src/pages/business/Setup.jsx')), 'a new Portuguese business starts on Porto, in the Porto district')
+    check(/useState\(startDetails\)/.test(read('src/pages/business/Setup.jsx')) && /city === 'lagos'\) return \{ \.\.\.emptyDetails, country: 'NG', region: 'Lagos', city: 'Lagos', phoneCountry: 'NG' \}/.test(read('src/pages/business/Setup.jsx')), 'a new business starts in the city picked in the header')
     check(/Portugal time/.test(read('src/constants/support.js')), 'support hours are given in Portugal time')
     check(/in Nigeria and Portugal/.test(read('server/seo.mjs')) && !/Porto, Lagos and Lisbon/.test(read('server/seo.mjs')), 'search titles name the two countries')
 }

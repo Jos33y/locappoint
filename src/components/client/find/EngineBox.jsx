@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Globe, MapPin, MessageCircle, Search, SlidersHorizontal, X } from 'lucide-react'
+import { ArrowRight, Globe, LocateFixed, MapPin, MessageCircle, Search, SlidersHorizontal, X } from 'lucide-react'
 import { Button, Chip, ChipGroup, Field, Picker } from '../../ui'
 import { PlaceSearch } from '../../common/PlaceSearch'
 import { COUNTRIES, MARKETS, LABELS, TIMES, WHERE, bookingLink, countryOf, dayLabel, findMatches, keepEnginePlace, loadCountryZones, loadPopular, reasons, timeLabel, whenOptions, whenWords } from '../../../services/engine'
 import { understand, without } from '../../../services/understand'
 import { askAI, needsAI } from '../../../services/ai'
 import { useCountry } from '../../../hooks/useCountry'
-import { pickAddress, placesOn } from '../../../services/places'
+import { hereNow, pickAddress, placesOn, whereIs } from '../../../services/places'
 import { payMoney } from '../../../services/payments'
 import { withPeople } from '../../../services/formats'
 import { USER_ERRORS } from '../../../services/booking'
@@ -169,6 +169,10 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     // The empty screens: how many asked here before, and the contact once "Tell me when" is done.
     const [interest, setInterest] = useState({ missed: 0, waiting: 0 })
     const [noted, setNoted] = useState(null)
+    // geo3: "Near me", the phone's own position, kept until removed. The nearest rank first.
+    const [spot, setSpot] = useState(null)
+    const [locating, setLocating] = useState(false)
+    const [spotError, setSpotError] = useState('')
 
     useEffect(() => {
         let cancelled = false
@@ -194,6 +198,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
         setPlace(null)
         setZone('')
         setRegion('')
+        setSpot(null)
         setResult({ status: 'idle', data: null, error: '' })
         loadPopular(city).then((list) => { if (!cancelled) setPopular(list) }).catch(() => { if (!cancelled) setPopular([]) })
         loadCountryZones(city).then((list) => { if (!cancelled) setZones(list) }).catch(() => { if (!cancelled) setZones([]) })
@@ -214,6 +219,7 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
 
     const run = async (over = {}) => {
         const typed = (over.text ?? text).trim()
+        const mine = over.spot !== undefined ? over.spot : spot
         if (!typed) { setResult({ status: 'error', data: null, error: 'Say what you need, like "haircut" or "nails".' }); return }
         // Read the day, time, people and where from the words; what is left is what they want.
         const u = understand(typed, market.timeZone)
@@ -276,27 +282,33 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
         }
         const priceText = (v) => `Under ${payMoney(v, (mk || market).currency || 'EUR')}`
         const settle = () => { setWhen(next.when); setTime(next.time); setPeople(next.people); setMode(next.mode); setFrom(src) }
+        // A place named that is not one of our areas: Google finds it as a point (when on), so the
+        // nearest to it rank first and the screen can say how far they are.
+        let named = null
         const asked = () => ({
-            understood: understood.map((c) => (c.field === 'price' ? { ...c, label: priceText(ex.price) } : c)),
+            understood: [...understood.map((c) => (c.field === 'price' ? { ...c, label: priceText(ex.price) } : c)), ...(mine && !named ? [{ field: 'spot', label: 'Near you' }] : [])],
             spans: u.spans, text: typed, what, when: next.when, byAI, near, region: Object.values(REGIONS).some((r) => r.list.includes(zoneHere)) ? zoneHere : '', price: ex.price, cityName: mk.name,
         })
         resolvePlace()
         settle()
+        if (near && next.mode !== 'at_client') named = await whereIs(near, (mk || market).iso)
         if (next.mode === 'at_client' && !place && !zoneHere) {
             if (compact) setMore(true)
             setResult({ status: 'error', data: null, error: 'Tell us where you are, so we only show people who come to you.', ...asked() })
             return
         }
         setResult({ status: 'loading', data: null, error: '', ...asked() })
-        const search = (withPrice = true) => findMatches({ market: mk.code, text: what, mode: next.mode, when: next.when, time: next.time, people: Number(next.people), place, zone: zoneHere, maxPrice: withPrice ? ex.price : null, order: ex.order || '' })
+        // From where: the client's address for a visit at their place, else the place named, else near me.
+        const spotOf = () => (next.mode === 'at_client' ? place : named || mine)
+        const search = (withPrice = true) => findMatches({ market: mk.code, text: what, mode: next.mode, when: next.when, time: next.time, people: Number(next.people), place: spotOf(), zone: zoneHere, maxPrice: withPrice ? ex.price : null, order: ex.order || '' })
         try {
             // A long sentence: the AI first. A short one the engine cannot place: the AI after.
             let asking = !over.noAI && needsAI(u.what)
-            if (asking) { withAI(await askAI({ text: typed, market: city })); resolvePlace(); settle() }
+            if (asking) { withAI(await askAI({ text: typed, market: city })); resolvePlace(); settle(); if (near && !named && next.mode !== 'at_client') named = await whereIs(near, (mk || market).iso) }
             let data = await search().catch((err) => { if (!over.noAI && !asking && err?.code === '22023') return null; throw err })
             if (!over.noAI && !asking && (!data || offers(data) === 0)) {
                 asking = true
-                if (withAI(await askAI({ text: typed, market: city }))) { resolvePlace(); settle(); data = await search() }
+                if (withAI(await askAI({ text: typed, market: city }))) { resolvePlace(); settle(); if (near && !named && next.mode !== 'at_client') named = await whereIs(near, (mk || market).iso); data = await search() }
             }
             if (!data) throw Object.assign(new Error('Say what you need, like "haircut" or "nails"'), { code: '22023' })
             // Loosen one thing and say which: nothing under the price asked, so what costs more.
@@ -305,17 +317,38 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 const dearer = await search(false)
                 if (offers(dearer) > 0) { data = dearer; loosened = 'price' }
             }
-            setResult({ status: 'ready', data, error: '', loosened, ...asked() })
-            noteSearch({ market: mk.code, text: typed, mode: next.mode, people: next.people, place, zone: near || zoneHere, data })
+            // The nearest found, from the spot: "nobody near Abeokuta" only when nobody is close.
+            const kms = [...(data?.options || []), ...(data?.later || [])].map((o) => Number(o.km)).filter((k) => Number.isFinite(k))
+            const nearest = (named || mine) && next.mode !== 'at_client' && kms.length ? Math.min(...kms) : null
+            setResult({ status: 'ready', data, error: '', loosened, nearest, ...asked() })
+            noteSearch({ market: mk.code, text: typed, mode: next.mode, people: next.people, place: spotOf(), zone: near || zoneHere, data, maxPrice: ex.price, window: next.time })
         } catch (err) {
             console.error('Engine failed:', err)
             setResult({ status: 'error', data: null, error: USER_ERRORS.includes(err?.code) || err?.code === '22023' ? err.message : 'We could not search right now. Try again.', ...asked() })
         }
     }
 
+    // Near me: the phone's own position, asked once when tapped (no Google, no cost). Tapped again, off.
+    const nearMe = async () => {
+        setSpotError('')
+        if (spot) { setSpot(null); if (result.text) run({ text: result.text, spot: null }); return }
+        setLocating(true)
+        try {
+            const here = await hereNow()
+            const mine = { lat: here.lat, lng: here.lng, label: 'you' }
+            setSpot(mine)
+            if (text.trim()) run({ spot: mine })
+        } catch (err) {
+            setSpotError(err.message.replace(', or find the address', ''))
+        } finally {
+            setLocating(false)
+        }
+    }
+
     // A chip's remove takes its phrase out of the words and searches again.
     // An AI reading has no words of its own to take out: it is cleared and the search runs on the rules.
     const drop = (chip) => {
+        if (chip.field === 'spot') { setSpot(null); run({ text: result.text, spot: null }); return }
         if (chip.ai) { run({ text: result.text, noAI: true, clear: chip.field === 'what' ? undefined : chip.field }); return }
         const next = without(result.text, result.spans || [], chip.field)
         setText(next)
@@ -333,6 +366,8 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
     const askedFor = String(result.what || result.text || '').trim()
     // The place an empty screen speaks of: a place named in the words, or the state or district picked.
     const here = result.near || result.region || ''
+    // A place named and found as a point: someone within 15 km is near it; further, say how far.
+    const farFrom = result.near && !(result.nearest != null && result.nearest <= 15) ? result.near : ''
     const shareText = `Take bookings on Locappoint, free: ${WEB_ORIGIN}`
     const missedLine = (place) => (interest.missed > 0 ? `${interest.missed} searches in ${place} found nobody to book this month.` : '')
 
@@ -355,11 +390,13 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                     />
                     <Button type="submit" size="sm" loading={result.status === 'loading'}>Find a time</Button>
                 </span>
-                {popular.length > 0 && (
-                    <ChipGroup label="Popular">
-                        {popular.map((c) => <Chip key={c.value} onClick={() => { setText(c.words); run({ text: c.words }) }}>{c.label}</Chip>)}
-                    </ChipGroup>
-                )}
+                <ChipGroup label="Popular">
+                    <Chip selected={Boolean(spot)} onClick={nearMe}>
+                        <span className="lc-eng__near"><LocateFixed size={14} aria-hidden="true" />{locating ? 'Finding you' : 'Near me'}</span>
+                    </Chip>
+                    {popular.map((c) => <Chip key={c.value} onClick={() => { setText(c.words); run({ text: c.words }) }}>{c.label}</Chip>)}
+                </ChipGroup>
+                {spotError && <p className="lc-eng__note" role="alert">{spotError}</p>}
                 {compact && (
                     <button type="button" className={`lc-eng__more${more ? ' is-open' : ''}`} aria-expanded={more} aria-controls="lc-eng-options" onClick={() => setMore((m) => !m)}>
                         <SlidersHorizontal size={16} aria-hidden="true" />
@@ -448,20 +485,22 @@ export const EngineBox = ({ title = 'What do you need?', browseTo = '/client/sea
                 {result.status === 'error' && result.error && (
                     <p className="lc-eng__note" role="alert">{result.error}</p>
                 )}
-                {result.status === 'ready' && (options.length > 0 || later.length > 0) && result.near && (
-                    <PlaceScene world={placeWorld(result.near, city)} place={result.near} toCity={result.cityName} small />
+                {result.status === 'ready' && (options.length > 0 || later.length > 0) && farFrom && (
+                    <PlaceScene world={placeWorld(farFrom, city)} place={farFrom} toCity={result.cityName} small />
                 )}
-                {result.status === 'ready' && (options.length > 0 || later.length > 0) && (result.near || result.loosened) && (
+                {result.status === 'ready' && (options.length > 0 || later.length > 0) && (farFrom || result.loosened) && (
                     <p className="lc-eng__note">
                         {[
-                            result.near ? `Nobody near ${result.near} is on Locappoint yet. These are in ${result.cityName}:` : '',
+                            farFrom ? (result.nearest != null
+                                ? `Nobody near ${farFrom} is on Locappoint yet. The nearest, from ${Math.round(result.nearest)} km:`
+                                : `Nobody near ${farFrom} is on Locappoint yet. These are in ${result.cityName}:`) : '',
                             result.loosened === 'price' ? `Nothing ${(result.understood.find((c) => c.field === 'price')?.label || '').toLowerCase()}. These cost more:` : '',
                         ].filter(Boolean).join(' ')}
                     </p>
                 )}
                 {result.status === 'ready' && options.length > 0 && (
                     <>
-                        {!result.near && !result.loosened && (
+                        {!farFrom && !result.loosened && (
                             <p className="lc-eng__count">
                                 <b>{[result.when && result.when !== 'soonest' ? whenText(result.when) : 'Soonest free', time !== 'any' ? timeLabel(time).toLowerCase() : ''].filter(Boolean).join(', ')}</b>
                                 <span>{`${options.length === 1 ? '1 place' : `${options.length} places`}, ${options.reduce((n, o) => n + Math.max(1, (o.times || []).length), 0)} times`}</span>

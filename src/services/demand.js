@@ -32,7 +32,7 @@ export const countryName = (code) => {
 const zone = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null } catch { return null } }
 
 // One search, after its results show. Never in the way: a failure is ignored.
-export const noteSearch = async ({ market, text, mode = '', people = 1, place = null, zone: area = '', data }) => {
+export const noteSearch = async ({ market, text, mode = '', people = 1, place = null, zone: area = '', data, maxPrice = null, window: when = null }) => {
     try {
         const origin = await visitorCountry()
         await supabase.rpc('search_note', {
@@ -50,6 +50,9 @@ export const noteSearch = async ({ market, text, mode = '', people = 1, place = 
             p_later: (data?.later || []).length,
             p_matched: Number(data?.matched) || 0,
             p_offered: data?.offered == null ? null : Number(data.offered),
+            // geo3: the top price and the time asked, for Demand ("over their price", "not then").
+            p_max_price: Number(maxPrice) > 0 ? Number(maxPrice) : null,
+            p_window: when && when !== 'any' ? String(when).slice(0, 20) : null,
         })
     } catch { /* the search already answered */ }
 }

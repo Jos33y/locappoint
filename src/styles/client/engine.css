@@ -583,3 +583,6 @@
 .lc-scene__name b { color: var(--lc-ink-1); font-family: var(--lc-font-display); font-size: var(--lc-t-body); font-weight: var(--font-weight-semibold); }
 
 .lc-scene--abroad .lc-scene__lines { position: absolute; inset: 0; }
+
+/* geo3: Near me, first among the chips. */
+.lc-eng__near { display: inline-flex; align-items: center; gap: 6px; }

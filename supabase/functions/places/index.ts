@@ -7,6 +7,7 @@
 //   (market) when no business is chosen yet, as in "What do you need?".
 // - place: the chosen address, the municipality it is in, and how far from the shop. The booking
 //   checks the distance again in the database; this is only so the client sees it before booking.
+// - where: a place named in a search ("barber in Abeokuta") as a point, so the nearest rank first.
 // - shop: the owner places their shop (signed in, owner of the business). Written by
 //   set_shop_location, never by the browser.
 // - refresh: the nightly job (x-notify-secret) refreshes shop spots every 25 days, as Google asks.
@@ -16,7 +17,7 @@
 // Secrets: GOOGLE_MAPS_SERVER_KEY, NOTIFY_SECRET.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { GoogleError, MAPS_KEY, autocomplete, fold, kmBetween, placeDetails } from '../_shared/google.ts'
+import { GoogleError, MAPS_KEY, autocomplete, findPlace, fold, kmBetween, placeDetails } from '../_shared/google.ts'
 
 const NOTIFY = Deno.env.get('NOTIFY_SECRET') || ''
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } })
@@ -109,6 +110,18 @@ Deno.serve(async (req) => {
         if (!MAPS_KEY) return off()
         if (tooFast(req)) return reply(429, { error: 'Too many searches. Wait a minute.' })
 
+        // geo3: a place named in a search, as a point to rank from. Only inside Nigeria or Portugal.
+        if (action === 'where') {
+            const text = String(input.input || '').replace(/\s+/g, ' ').trim()
+            const country = String(input.country || '').toUpperCase()
+            if (text.length < 2 || text.length > 80 || !['NG', 'PT'].includes(country)) return reply(200, { on: true, spot: null })
+            try {
+                return reply(200, { on: true, spot: await findPlace({ text, country }) })
+            } catch (err) {
+                return googleFailed(err)
+            }
+        }
+
         const session = String(input.session || '')
         if (!SESSION.test(session)) return reply(400, { error: 'Start the search again' })
         // A business, or only a city: "What do you need?" asks for an address before any business is chosen.
@@ -147,7 +160,9 @@ Deno.serve(async (req) => {
             const codes = marketCode && ['ng', 'pt'].includes(marketCode) ? (same || []).map((m: { code: string }) => m.code) : [marketCode || '']
             const { data: zones } = await db.from('market_zones').select('name').in('market', codes.length ? codes : [''])
             const byFold = new Map((zones || []).map((z: { name: string }) => [fold(z.name), z.name]))
-            const zone = place.areas.map((a) => byFold.get(fold(a))).find(Boolean) || null
+            // Google names a state "Enugu State" or "Federal Capital Territory"; our areas say Enugu, FCT.
+            const asArea = (a: string) => fold(a).replace(/ state$/, '').replace(/^federal capital territory$/, 'fct')
+            const zone = place.areas.map((a) => byFold.get(fold(a)) || byFold.get(asArea(a))).find(Boolean) || null
             const listed = (business?.service_zones || []) as string[]
             const radius = business && business.service_radius_km !== null ? Number(business.service_radius_km) : null
             const km = shop && radius !== null ? Math.round(kmBetween(shop, place) * 10) / 10 : null

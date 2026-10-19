@@ -75,12 +75,14 @@ export const defaultCity = () => countryOf(defaultCountry()).sample
 
 export const marketOf = (code) => MARKETS.find((m) => m.code === code) || countryOf(code)
 
-// The areas of a country: every area of every city under it, in order, without repeats.
+// The areas of a country: every area of every city under it, then the country's own (geo2: every
+// state or municipality), in order, without repeats.
 export const loadCountryZones = async (code) => {
     const c = countryOf(code)
-    const { data, error } = await supabase.from('market_zones').select('market, name, sort_order').in('market', c.cities).order('sort_order')
+    const markets = [...c.cities, c.code]
+    const { data, error } = await supabase.from('market_zones').select('market, name, sort_order').in('market', markets).order('sort_order')
     if (error) throw error
-    const order = (row) => c.cities.indexOf(row.market)
+    const order = (row) => markets.indexOf(row.market)
     return [...new Set((data || []).slice().sort((a, b) => order(a) - order(b) || a.sort_order - b.sort_order).map((z) => z.name))]
 }
 
@@ -214,16 +216,12 @@ export const findMatches = async ({ market, text, mode = '', when = 'soonest', t
     return data
 }
 
-// The chips under the box: the categories with the most live businesses in the country, counted
-// across its cities.
+// The chips under the box: the categories with the most live businesses anywhere in the country
+// (geo3: engine_popular takes the country, not only its cities).
 export const loadPopular = async (market) => {
-    const counts = new Map()
-    for (const city of countryOf(market).cities) {
-        const { data, error } = await supabase.rpc('engine_popular', { p_market: city })
-        if (error) throw error
-        for (const row of data || []) counts.set(row.category, (counts.get(row.category) || 0) + (Number(row.businesses) || 0))
-    }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([category]) => ({ category }))
+    const { data, error } = await supabase.rpc('engine_popular', { p_market: countryOf(market).code })
+    if (error) throw error
+    return (data || []).map((row) => ({ category: row.category }))
         .map((row) => CATEGORIES.find((c) => c.value === row.category))
         .filter(Boolean)
         .map((c) => ({ value: c.value, label: c.label, words: c.services?.[0]?.[0] || c.label }))

@@ -84,8 +84,31 @@ export const placeDetails = async (o: { id: string; session?: string; country: s
         address: String(data.formattedAddress || '').replace(/,\s*(Portugal|Nigeria)$/i, ''),
         lat,
         lng,
-        areas: [...of('administrative_area_level_2'), ...of('locality'), ...of('administrative_area_level_3')].filter(Boolean),
+        // Most precise first; the state or district last (geo2: Nigeria's states are areas too).
+        areas: [...of('administrative_area_level_2'), ...of('locality'), ...of('administrative_area_level_3'), ...of('administrative_area_level_1')].filter(Boolean),
     }
+}
+
+// geo3: a place someone named ("Abeokuta", "Bodija, Ibadan") as a point, kept inside the country.
+const BOUNDS: Record<string, { low: { latitude: number; longitude: number }; high: { latitude: number; longitude: number } }> = {
+    NG: { low: { latitude: 4, longitude: 2.5 }, high: { latitude: 14, longitude: 15 } },
+    PT: { low: { latitude: 32.3, longitude: -31.4 }, high: { latitude: 42.2, longitude: -6.1 } },
+}
+
+export const findPlace = async (o: { text: string; country: string }) => {
+    const body: Record<string, unknown> = { textQuery: o.text, languageCode: languageFor(o.country), regionCode: regionFor(o.country), maxResultCount: 1 }
+    if (BOUNDS[o.country]) body.locationRestriction = { rectangle: BOUNDS[o.country] }
+    const data = await call('https://places.googleapis.com/v1/places:searchText', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        mask: 'places.location,places.displayName,places.formattedAddress',
+        body: JSON.stringify(body),
+    })
+    const p = data.places?.[0]
+    const lat = Number(p?.location?.latitude)
+    const lng = Number(p?.location?.longitude)
+    if (!p || !Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return { lat, lng, label: String(p.displayName?.text || p.formattedAddress || o.text).slice(0, 80) }
 }
 
 // Driving time now, with traffic, from a point to a place. Seconds and metres.

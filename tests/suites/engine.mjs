@@ -360,4 +360,36 @@ export default async ({ browser, url, check }) => {
         check(!r.overflow && r.spill === 0, `${words} fits at ${w}px`)
         await p.close()
     }
+
+    // geo3: Near me ranks from the phone's own position, no Google needed; it shows as a chip to remove.
+    p = await open('/client', '&nobiz=1')
+    await p.browserContext().overridePermissions(new URL(p.url()).origin, ['geolocation'])
+    await p.setGeolocation({ latitude: 41.15, longitude: -8.61, accuracy: 30 })
+    await p.type('.lc-eng__what input', 'haircut')
+    await p.evaluate(() => [...document.querySelectorAll('.lc-eng .ui-chip')].find((c) => /Near me/.test(c.textContent)).click())
+    await wait(1200)
+    let sentNear = (await calls(p, 'engine_match')).pop() || {}
+    check(sentNear.p_lat === 41.15 && sentNear.p_lng === -8.61, `near me sends where the phone is: ${JSON.stringify([sentNear.p_lat, sentNear.p_lng])}`)
+    check((await p.evaluate(() => [...document.querySelectorAll('.lc-eng__read')].map((c) => c.textContent.trim()))).includes('Near you'), 'and says Near you, to remove')
+    const notedNear = (await calls(p, 'search_note')).pop() || {}
+    check(notedNear.p_lat === 41.15, 'Demand keeps the spot (rounded on the server)')
+    await p.evaluate(() => [...document.querySelectorAll('.lc-eng__read')].find((c) => /Near you/.test(c.textContent)).click())
+    await wait(900)
+    sentNear = (await calls(p, 'engine_match')).pop() || {}
+    check(sentNear.p_lat === null, 'removed, the next search is from nowhere in particular again')
+    check(p.errors.length === 0, `near me: no errors (${p.errors[0] || ''})`)
+    await p.close()
+
+    // geo3: with address search on, a place named is found as a point; someone 1.2 km from it is near it.
+    p = await open('/client', '&nobiz=1&places=1')
+    await p.type('.lc-eng__what input', 'haircut at abeokuta under 20 euros tonight')
+    await p.evaluate(() => document.querySelector('.lc-eng__form').requestSubmit())
+    await wait(1400)
+    const sentAt = (await calls(p, 'engine_match')).pop() || {}
+    check(sentAt.p_lat === 7.15 && sentAt.p_lng === 3.35, `the place named is the spot: ${JSON.stringify([sentAt.p_lat, sentAt.p_lng])}`)
+    check(!/Nobody near Abeokuta/.test(await text(p, '.lc-eng__out')), `someone close is not "nobody near": ${await text(p, '.lc-eng__out')}`)
+    const notedAt = (await calls(p, 'search_note')).pop() || {}
+    check(notedAt.p_max_price === 20 && notedAt.p_zone === 'Abeokuta' && /evening|r:/.test(String(notedAt.p_window)), `Demand keeps the place, the top price and the time asked: ${JSON.stringify([notedAt.p_max_price, notedAt.p_window])}`)
+    check(p.errors.length === 0, `place as a point: no errors (${p.errors[0] || ''})`)
+    await p.close()
 }

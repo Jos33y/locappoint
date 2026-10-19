@@ -158,11 +158,32 @@ export default async ({ browser, url, check, cover, root }) => {
     p = await open('/portal/page')
     const countryBtn = await p.evaluateHandle(() => [...document.querySelectorAll('#location .ui-field')].find((f) => f.textContent.startsWith('Country')).querySelector('button'))
     await countryBtn.click(); await wait(300)
-    await p.keyboard.type('Nigeria'); await wait(300); await p.keyboard.press('Enter'); await wait(1300)
+    await p.evaluate(() => [...document.querySelectorAll('[role="option"]')].find((o) => o.textContent.trim() === 'Nigeria').click()); await wait(1300)
+    // geo2: a country alone is not a place yet. The state comes next, and its main town with it.
+    const held = (await updates(p)).length
+    const stateBtn = await p.evaluateHandle(() => [...document.querySelectorAll('#location .ui-field')].find((f) => f.textContent.startsWith('State'))?.querySelector('button'))
+    check(await stateBtn.evaluate((b) => Boolean(b)), 'Nigeria asks for the state')
+    await stateBtn.click(); await wait(300)
+    await p.keyboard.type('Enugu'); await wait(300); await p.keyboard.press('Enter'); await wait(1300)
     u = await updates(p)
-    check(u.slice(-1)[0]?.country === 'NG' && u.slice(-1)[0].city === 'Lagos' && u.slice(-1)[0].timezone === 'Africa/Lagos', `country saved ${JSON.stringify(u.slice(-1))}`)
-    check(await p.evaluate(() => !document.querySelector('.biz-bp__note')), 'Lagos is a live city, so no coming-later note')
+    const last = u.slice(-1)[0] || {}
+    check(u.length === held + 1 && last.country === 'NG' && last.region === 'Enugu' && last.city === 'Enugu' && last.timezone === 'Africa/Lagos' && last.currency === 'NGN', `a business anywhere in Nigeria: country, state and town saved together ${JSON.stringify(last)}`)
+    check(await p.evaluate(() => !document.querySelector('.biz-bp__note') && !/We are open in Porto/.test(document.body.innerText)), 'no "we are open in Porto, Lagos and Lisbon" note anywhere')
     check(p.errors.length === 0, `errors ${p.errors}`)
+    await p.close()
+
+    // geo2: the shop pinned where the owner stands, with the phone's own position.
+    p = await open('/portal/page')
+    await p.browserContext().overridePermissions(new URL(p.url()).origin, ['geolocation'])
+    await p.setGeolocation({ latitude: 38.72, longitude: -9.14, accuracy: 20 })
+    const pin = await p.evaluate(() => [...document.querySelectorAll('.biz-pin button')].map((b) => b.textContent))
+    check(pin.includes('Use where I am now'), `the page offers a pin from where you stand: ${pin.join(', ')}`)
+    await p.evaluate(() => [...document.querySelectorAll('.biz-pin button')].find((b) => b.textContent === 'Use where I am now').click())
+    await wait(900)
+    const pinned = await p.evaluate(() => window.__calls.filter((c) => c[0] === 'rpc' && c[1] === 'set_my_shop_spot').map((c) => c[2]))
+    check(pinned.length === 1 && pinned[0].p_lat === 38.72 && pinned[0].p_lng === -9.14, `the shop is pinned at the phone's position ${JSON.stringify(pinned)}`)
+    check(await p.evaluate(() => /Pinned at|pinned on the map/.test(document.querySelector('.biz-pin')?.textContent || '')), 'then it says it is pinned, with Move')
+    check(p.errors.length === 0, `pin errors ${p.errors}`)
     await p.close()
 
     p = await open('/portal/page#photos')

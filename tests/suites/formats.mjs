@@ -148,7 +148,8 @@ export default async ({ browser, url, check, server, root }) => {
     p = await open('/portal/services', '&home=1')
     await wait(400)
     const noSearch = await p.evaluate(() => document.body.textContent)
-    check(!(await p.$('.biz-reach')) && !/not switched on/.test(noSearch) && !/within the distance/.test(noSearch), 'without address search, owners see areas only, no talk of a setting they cannot change')
+    // geo2: the shop can be pinned with the phone's position, so distance works without Google too.
+    check(Boolean(await p.$('.biz-reach .biz-pin')) && /Use where I am now/.test(noSearch) && !(await p.$('.biz-reach .lc-place')) && !/not switched on/.test(noSearch), 'without address search, owners pin the shop where they stand; no Google field, no talk of a setting they cannot change')
     await p.close()
 
     // On the way: the client sees minutes and steps, never a place.

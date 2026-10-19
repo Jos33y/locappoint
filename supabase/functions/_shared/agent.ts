@@ -23,6 +23,7 @@
 // 3c: visits at their place booked in the chat (area, address, directions; travel time and fee);
 // problems reported to Locappoint Support from the chat, with replies coming back here; search in
 // Lagos; a Nigerian number is assumed to be in Lagos; free shows as free; one goodbye only.
+// geo4: the whole of Nigeria and Portugal. A number's country is known; where in it is asked.
 //
 // Launch polish (1.3, from the 30-of-30 evaluation): an area the business does not go to gets the same
 // service at the business's own place offered in the same message; "em Lisboa", "no Porto"; a free
@@ -78,7 +79,7 @@ export type Turn = {
     usage: { input: number; output: number; cost: number }
 }
 
-const SYSTEM = `You are the Locappoint booking assistant on WhatsApp. Locappoint is where people book local businesses in Porto, Lagos and Lisbon: barbers, salons, nails, beauty and wellness, and also studios, consultants, tutors, repairs and any other business listed. The businesses taking bookings right now are in the context, with what they offer.
+const SYSTEM = `You are the Locappoint booking assistant on WhatsApp. Locappoint is where people book local businesses anywhere in Nigeria and Portugal: barbers, salons, nails, beauty and wellness, and also studios, consultants, tutors, repairs and any other business listed. The businesses taking bookings right now are in the context, with what they offer.
 
 Your job: get each person the booking they want in as few messages as possible. You find businesses, answer questions about them (services, prices, hours, address), and book, move and cancel.
 
@@ -94,7 +95,7 @@ Understanding people
 Look before you answer
 - Never say nobody offers something, or that you cannot help, before you have looked: check the live list, then business_details or search.
 - They name a business: call find_business. Not found: say it is not taking bookings on Locappoint yet, and offer what is live that fits, by name.
-- Nothing live fits in their city: if the other Portuguese city has it (Porto and Lisbon are both in Portugal), offer that, saying where it is. Otherwise say so in one line and say what kinds of businesses they can book now in their city. Never send them to the phone of a business that is not on Locappoint.
+- Nothing live fits where they are: offer the nearest that does in their country, saying where it is ("nobody in Abeokuta yet; Trimline in Lagos has 10:00"). If nobody in the country does, say so in one line and say what kinds of businesses they can book now. Never send them to the phone of a business that is not on Locappoint.
 - Every fact you state (business, service, price, duration, payment, time, hours, address, availability) comes from a tool result or the context. Never guess one.
 - What you told them earlier in this conversation was checked at the time: do not re-check it, correct it or apologise for it unless they question it or a tool now says otherwise. Never say you checked something unless you called a tool for it in this reply.
 
@@ -119,7 +120,7 @@ Visits at their place
 Problems and Support
 - When something went wrong (the business did not turn up or came very late, a visit or service went badly, a payment, a refund or a double charge, rudeness or anything unsafe, a problem with Locappoint itself), call report_problem with their own words in full, the kind of problem, and the booking when it is about one (their upcoming bookings and recent visits are in the context). Then tell them the ticket number and that a person at Locappoint replies here in this chat, usually within a working day.
 - Never promise a refund, a compensation or an outcome, and never decide who was right. Support does that.
-- Anyone in danger: tell them to call the emergency number first (112 in Portugal; 112 or 767 in Lagos), then report it.
+- Anyone in danger: tell them to call the emergency number first (112 in Portugal; 112 in Nigeria, or 767 in Lagos), then report it.
 - Their open requests to Support are in the context with their numbers. When they answer one, or add to it, call support_reply with its number and their words.
 - The request number (#1041) is the only reference they ever need. Never give them any other code or id.
 - To change or cancel a booking, use the booking tools, not Support.
@@ -145,7 +146,9 @@ Limits
 - When they say thanks or goodbye and nothing is waiting, answer in one short line. Do not repeat the details and do not offer anything else. If you already said goodbye and they only thank you or say bye again, write exactly (no reply).
 - When a day or time is taken, offer the nearest free time ("the nearest free time is Thursday at 10:00"), never "the earliest I can offer".
 - The first reply of a conversation opens with a short hello as Locappoint's booking assistant, then helps with what they asked.
-- Their city: a Nigerian number (+234) is in Lagos and a Portuguese number (+351) is in Porto or Lisbon, unless they say otherwise. Offer only businesses in their country, and in their city when you know it; never a business in another country unless they ask for it. When it matters and you do not know their city, ask in the same message as everything else. Do not ask a +234 number which city.
+- Where they are: a Nigerian number (+234) is in Nigeria and a Portuguese number (+351) is in Portugal, unless they say otherwise. Businesses can be anywhere in the country, not only Lagos, Porto or Lisbon. Search their country; when they name a state, district, town or area, pass it as place. When you do not know where in the country and it matters (most services happen at the business), ask in the same message as everything else: "Which town or area are you in?". Never assume Lagos, Porto or Lisbon.
+- Any other number: they may be booking for someone in Nigeria or Portugal. Ask which country and where, in one line. If they want it where they live and that is not Nigeria or Portugal, say Locappoint is in Nigeria and Portugal for now.
+- Offer only businesses in the country asked for; never a business in another country unless they ask for it.
 
 Language and style
 - Answer in the language of their latest message: English, or Portuguese from Portugal (você, not Brazilian forms). Pidgin or any other language: simple English. If they ask to switch, switch. Set language on every propose call.
@@ -153,14 +156,14 @@ Language and style
 - A short direct question (how much, how long, where is it, are they open on Sunday, can I bring my child) gets its answer first, in one line, from a tool or the context; then carry on. Never skip it to push the booking.
 - Say each thing once. Do not repeat what a summary or a [Locappoint] line already told them, and never add "tap Yes to confirm" or "once you confirm" lines: the summary has its own buttons. After a booking is done, answer only what they ask.
 - An open time is "a free time" or "free at 10:00". Never "a free haircut", "a free appointment" or "a free session": that sounds like it costs nothing.
-- In Portuguese, cities take their own words: "no Porto", "em Lisboa", "em Lagos" (never "na Lisboa" or "no Lisboa").
+- In Portuguese, places take their own words: "no Porto", "em Lisboa", "em Braga", "em Lagos", "na Nigéria" (never "na Lisboa" or "no Lisboa").
 - Never write ids or codes from the tools or the context (booking_id, business_id, service_id or anything like 3f2a9c1e-...).
 - Bold with single asterisks like *this*, never double. No headings, tables, emojis or long dashes. Times as 14:30. Dates in words ("Monday 12 October"), never 2026-10-12.`
 
 const TOOLS = [
     { name: 'find_business', description: 'Find a business taking bookings by its name or page address (slug), even misspelt or partial. Returns up to 5.', input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
     { name: 'business_details', description: 'One business: address, opening hours (days not listed are closed), services with service_id, price_text, minutes, ways (at_business, at_client, online), travel fee for visits, pay (online when booking, or at the visit) and group rules, visit_areas (the areas it goes to for visits at the client\'s place), whether it confirms automatically, cancellation cut-off, phone.', input_schema: { type: 'object', properties: { business_id: { type: 'string' } }, required: ['business_id'] } },
-    { name: 'search', description: 'Find who can do something in a city, with free times. Use when the person has not named a business. With area: only businesses that come to that area.', input_schema: { type: 'object', properties: { city: { type: 'string', enum: ['porto', 'lagos', 'lisbon'] }, what: { type: 'string', description: 'What they need, in their words, e.g. "haircut", "unhas de gel"' }, area: { type: 'string', description: 'Their area, for someone to come to them' }, days: { type: 'array', items: { type: 'string', description: 'YYYY-MM-DD' }, maxItems: 7, description: 'The days they asked for, up to 7 ("next week"). Leave out for the soonest free times: the search looks ahead up to 3 weeks.' }, part: { type: 'string', enum: ['any', 'morning', 'afternoon', 'evening'] }, around: { type: 'string', description: 'HH:MM, instead of part' }, people: { type: 'integer', minimum: 1 } }, required: ['city', 'what'] } },
+    { name: 'search', description: 'Find who can do something in a country, with free times, nearest to the place they named first. Use when the person has not named a business. With area: only businesses that come to that area for a visit at their place.', input_schema: { type: 'object', properties: { country: { type: 'string', enum: ['ng', 'pt'], description: 'ng Nigeria, pt Portugal' }, what: { type: 'string', description: 'What they need, in their words, e.g. "haircut", "unhas de gel"' }, place: { type: 'string', description: 'Where in the country they want it: a state or district (Enugu, Braga) keeps the search inside it; a town or area (Ikeja, Cascais) puts businesses there first' }, area: { type: 'string', description: 'For a visit at their place only: their area, state or municipality' }, days: { type: 'array', items: { type: 'string', description: 'YYYY-MM-DD' }, maxItems: 7, description: 'The days they asked for, up to 7 ("next week"). Leave out for the soonest free times: the search looks ahead up to 3 weeks.' }, part: { type: 'string', enum: ['any', 'morning', 'afternoon', 'evening'] }, around: { type: 'string', description: 'HH:MM, instead of part' }, people: { type: 'integer', minimum: 1 } }, required: ['country', 'what'] } },
     { name: 'free_days', description: 'The next days with free times for one service, from a date (today if left out): up to 5 days, times spread across each day. Use for "when are you free", "this week", "next available". For a visit at their place pass where at_client and area.', input_schema: { type: 'object', properties: { business_id: { type: 'string' }, service_id: { type: 'string' }, from: { type: 'string', description: 'YYYY-MM-DD' }, people: { type: 'integer', minimum: 1 }, where: { type: 'string', enum: ['at_business', 'at_client', 'online'] }, area: { type: 'string' } }, required: ['business_id', 'service_id'] } },
     { name: 'free_times', description: 'All free start times for one service on one date at one business. For a visit at their place pass where at_client and area.', input_schema: { type: 'object', properties: { business_id: { type: 'string' }, service_id: { type: 'string' }, date: { type: 'string', description: 'YYYY-MM-DD' }, people: { type: 'integer', minimum: 1 }, where: { type: 'string', enum: ['at_business', 'at_client', 'online'] }, area: { type: 'string' } }, required: ['business_id', 'service_id', 'date'] } },
     { name: 'my_bookings', description: 'Their upcoming WhatsApp bookings, fresh (the context already lists them).', input_schema: { type: 'object', properties: {} } },
@@ -182,15 +185,15 @@ const TIME = /^\d{2}:\d{2}$/
 class ToolError extends Error {}
 const need = (ok: unknown, message: string) => { if (!ok) throw new ToolError(message) }
 
-// The clock of the city the conversation is about: the business in focus, or else the person's
-// own number (+234 is Lagos). Portugal and Lagos differ by an hour from late October to March.
-const cityNow = (lagos: boolean) => {
-    const timeZone = lagos ? 'Africa/Lagos' : 'Europe/Lisbon'
+// The clock of the country the conversation is about: the business in focus, or else the person's
+// own number (+234 is Nigeria). Portugal and Nigeria differ by an hour from late October to March.
+const cityNow = (nigeria: boolean) => {
+    const timeZone = nigeria ? 'Africa/Lagos' : 'Europe/Lisbon'
     const now = new Date()
     const date = new Intl.DateTimeFormat('en-CA', { timeZone }).format(now)
     const day = new Intl.DateTimeFormat('en-GB', { timeZone, weekday: 'long' }).format(now)
     const time = new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now)
-    return { date, day, time, place: lagos ? 'Lagos' : 'Portugal' }
+    return { date, day, time, place: nigeria ? 'Nigeria' : 'Portugal' }
 }
 
 // Two weeks of dates, so "Monday" or "next Friday" becomes a date without arithmetic.
@@ -228,6 +231,10 @@ export const phoneCountry = (phone: string) => {
     if (digits.startsWith('1')) return 'US'
     return CALLING.find(([code]) => digits.startsWith(code))?.[1] || null
 }
+
+// A business's city in Nigeria: Lagos, or any of the towns businesses there name.
+const NG_TOWNS = /\b(lagos|abuja|port harcourt|ibadan|kano|benin|enugu|abeokuta|kaduna|zaria|jos|ilorin|owerri|uyo|calabar|warri|asaba|onitsha|awka|akure|osogbo|aba|umuahia|abakaliki|katsina|sokoto|maiduguri|bauchi|yola|ado ekiti|yenagoa|lokoja|makurdi|minna|lafia|gombe|jalingo|damaturu|gusau|dutse|birnin kebbi|nsukka|ikeja|lekki)\b/i
+export const inNigeria = (city: unknown) => NG_TOWNS.test(String(city || ''))
 
 const SYMBOL: Record<string, string> = { EUR: '€', NGN: '₦', USD: '$', GBP: '£' }
 export const priceText = (price: unknown, currency: unknown, per?: unknown) => {
@@ -275,7 +282,7 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
     let answer: 'yes' | 'no' | null = null
     const usage = { input: 0, output: 0, cost: 0 }
 
-    const now = cityNow(t.business ? /lagos/i.test(String(t.business.city || '')) : String(o.phone || '').replace(/\D/g, '').startsWith('234'))
+    const now = cityNow(t.business ? inNigeria(t.business.city) : String(o.phone || '').replace(/\D/g, '').startsWith('234'))
     const mine: any[] = await deps.call('wa_my', { p_phone: o.phone }).catch(() => [])
     const recent: any[] = await deps.call('wa_recent', { p_phone: o.phone }).catch(() => [])
     const tickets: any[] = await deps.call('wa_tickets', { p_phone: o.phone }).catch(() => [])
@@ -286,7 +293,7 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
     const context = [
         `Now in ${now.place}: ${now.day} ${now.date}, ${now.time}.`,
         `Calendar: ${calendar(now.date)}.`,
-        nigerian ? 'Their number is Nigerian: they are in Lagos unless they say otherwise.' : portuguese ? 'Their number is Portuguese: they are in Porto or Lisbon unless they say otherwise.' : '',
+        nigerian ? 'Their number is Nigerian: they are in Nigeria unless they say otherwise; where in Nigeria is not known until they say.' : portuguese ? 'Their number is Portuguese: they are in Portugal unless they say otherwise; where in Portugal is not known until they say.' : 'Their number is from outside Nigeria and Portugal: ask which country and where they want it.',
         o.directory?.length ? `Businesses live on Locappoint now (name, slug, city, what they do):\n${o.directory.map((b) => `- ${b.name} (${b.slug}, ${b.city}): ${b.category}; ${b.services}`).join('\n')}` : 'No businesses are live on Locappoint right now.',
         t.business ? `Business in focus: ${t.business.name} (business_id ${t.business.business_id}, slug ${t.business.slug}, ${t.business.city}).` : 'No business in focus yet.',
         name ? `Their name: ${name}.` : (o.profileName ? `Their WhatsApp name is "${o.profileName}"; confirm their name before booking.` : 'Their name is not known yet.'),
@@ -337,14 +344,18 @@ export const runAgent = async (deps: Deps, o: { phone: string; profileName: stri
             return { ...r, services }
         },
         search: async (i) => {
+            // geo4: a country, and where in it. Old city codes still mean their country.
+            const country = i.country === 'ng' || i.country === 'pt' ? i.country : i.city === 'lagos' ? 'ng' : i.city ? 'pt' : null
+            need(country, 'Give country: ng (Nigeria) or pt (Portugal). Ask them if you do not know.')
+            const where = String(i.place || '').trim().slice(0, 60) || null
             const found = await deps.call('wa_search', {
-                p_market: i.city, p_query: String(i.what || ''), p_zone: String(i.area || '').trim() || null,
+                p_market: country, p_query: String(i.what || ''), p_zone: String(i.area || '').trim() || null, p_place: where,
                 p_dates: Array.isArray(i.days) ? i.days.filter((d: string) => DATE.test(d)).slice(0, 7) : null,
                 p_window: i.part || 'any', p_at: TIME.test(String(i.around || '')) ? i.around : null, p_people: Number(i.people) || 1,
             })
             // Kept for Demand in /admin; never in the way of the answer.
             await Promise.resolve(deps.call('search_note', {
-                p_channel: 'whatsapp', p_query: String(i.what || ''), p_market: i.city, p_zone: String(i.area || '').trim() || null,
+                p_channel: 'whatsapp', p_query: String(i.what || ''), p_market: country, p_zone: String(i.area || '').trim() || where,
                 p_people: Number(i.people) || 1, p_origin_country: phoneCountry(o.phone),
                 p_options: Array.isArray(found?.options) ? found.options.length : 0, p_later: Array.isArray(found?.later) ? found.later.length : 0,
                 p_matched: Number(found?.matched) || 0, p_offered: found?.offered == null ? null : Number(found.offered),

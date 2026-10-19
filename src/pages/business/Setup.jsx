@@ -15,15 +15,16 @@ import { HoursEditor } from '../../components/business/HoursEditor'
 import { PublicPageView } from '../../components/business/PublicPageView'
 import { useIsDesktop } from '../../components/business/useIsDesktop'
 import { CATEGORIES, POPULAR_CATEGORIES, suggestionsFor } from '../../constants/categories'
-import { NG_CITIES, POPULAR_COUNTRIES, PT_MUNICIPALITIES, inLaunchArea, neighbourhoodHint } from '../../constants/locations'
-import { COUNTRY_OPTIONS } from '../../components/ui/PhoneField'
+import { POPULAR_COUNTRIES, regionOfTown } from '../../constants/locations'
+import { LocationFields } from '../../components/business/LocationFields'
+import { ShopPin } from '../../components/business/ShopPin'
 import { pageStrength } from '../../services/business'
 import { defaultWeek, hasOpenDay, rowsFromWeek, weekFromRows, weekProblems } from '../../services/hours'
 import { MEDIA_SHAPES, prepareImage, removeBusinessImage, uploadBusinessImage } from '../../services/media'
 import {
     createDraft, findOwnBusiness, goLive, loadSetup, saveDetails, saveHours, saveServices, setupError, slugFrom, updateBusiness,
 } from '../../services/setup'
-import { ABOUT_MAX, OTHER_CITY, aboutExample, cityOf, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
+import { ABOUT_MAX, aboutExample, cityOf, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
 import { useSlugStatus } from '../../hooks/useSlugStatus'
 import { savedCity } from '../../services/engine'
 import { CityWall, ExamplePage, GoLiveCard, patternOf, worldOf } from './SetupScenes'
@@ -39,6 +40,7 @@ const emptyDetails = {
     category: '',
     categoryDetail: '',
     country: 'PT',
+    region: 'Porto',
     city: 'Porto',
     cityOther: '',
     neighbourhood: '',
@@ -51,8 +53,8 @@ const emptyDetails = {
 // A new business starts in the city picked in the header: Lagos with a Nigerian phone, Lisbon or Porto.
 const startDetails = () => {
     const city = savedCity()
-    if (city === 'lagos') return { ...emptyDetails, country: 'NG', city: 'Lagos', phoneCountry: 'NG' }
-    if (city === 'lisbon') return { ...emptyDetails, city: 'Lisbon' }
+    if (city === 'lagos') return { ...emptyDetails, country: 'NG', region: 'Lagos', city: 'Lagos', phoneCountry: 'NG' }
+    if (city === 'lisbon') return { ...emptyDetails, region: regionOfTown('PT', 'Lisbon'), city: 'Lisbon' }
     return emptyDetails
 }
 
@@ -512,36 +514,18 @@ const Setup = () => {
                                     )}
                                 </p>
 
-                                <div className="lc-setup__pair">
-                                    <Field label="Type of business" error={problems.category}>
-                                        <Picker
-                                            value={details.category}
-                                            onChange={(category) => setDetail({ category })}
-                                            options={CATEGORIES}
-                                            popular={POPULAR_CATEGORIES}
-                                            searchable
-                                            title="Type of business"
-                                            searchPlaceholder="Search, like barber or pilates"
-                                            emptyText="Nothing matches. Choose Something else at the end."
-                                        />
-                                    </Field>
-                                    <Field label="Country">
-                                        <Picker
-                                            value={details.country}
-                                            onChange={(country) => setDetail({
-                                                country,
-                                                city: country === 'PT' ? 'Porto' : country === 'NG' ? 'Lagos' : '',
-                                                cityOther: '',
-                                                ...(details.phone ? {} : { phoneCountry: country }),
-                                            })}
-                                            options={COUNTRY_OPTIONS}
-                                            popular={POPULAR_COUNTRIES}
-                                            searchable
-                                            title="Country"
-                                            searchPlaceholder="Search country"
-                                        />
-                                    </Field>
-                                </div>
+                                <Field label="Type of business" error={problems.category}>
+                                    <Picker
+                                        value={details.category}
+                                        onChange={(category) => setDetail({ category })}
+                                        options={CATEGORIES}
+                                        popular={POPULAR_CATEGORIES}
+                                        searchable
+                                        title="Type of business"
+                                        searchPlaceholder="Search, like barber or pilates"
+                                        emptyText="Nothing matches. Choose Something else at the end."
+                                    />
+                                </Field>
                                 {details.category === 'other' && (
                                     <Field label="What kind of business?" error={problems.categoryDetail} hint="Shown on your page, like Surf school">
                                         <Input
@@ -553,43 +537,13 @@ const Setup = () => {
                                     </Field>
                                 )}
 
-                                <div className="lc-setup__pair">
-                                    {details.country === 'PT' && (
-                                        <Field label="Municipality" error={problems.city}>
-                                            <Picker
-                                                value={details.city}
-                                                onChange={(city) => setDetail({ city })}
-                                                options={PT_MUNICIPALITIES}
-                                                searchable
-                                                title="Municipality"
-                                                searchPlaceholder="Search, like Cascais or Porto"
-                                            />
-                                        </Field>
-                                    )}
-                                    {details.country === 'NG' && (
-                                        <Field label="City" error={details.city !== OTHER_CITY ? problems.city : undefined}>
-                                            <Picker
-                                                value={details.city}
-                                                onChange={(city) => setDetail({ city })}
-                                                options={[...NG_CITIES, { value: OTHER_CITY, label: 'Somewhere else' }]}
-                                                title="City"
-                                            />
-                                        </Field>
-                                    )}
-                                    {(details.country !== 'PT' && (details.country !== 'NG' || details.city === OTHER_CITY)) && (
-                                        <Field label={details.country === 'NG' ? 'Which city?' : 'City'} error={problems.city}>
-                                            <Input value={details.cityOther} onChange={(e) => setDetail({ cityOther: e.target.value })} maxLength={80} autoComplete="address-level2" />
-                                        </Field>
-                                    )}
-                                    <Field label="Neighbourhood" optional hint={neighbourhoodHint(details.country)}>
-                                        <Input value={details.neighbourhood} onChange={(e) => setDetail({ neighbourhood: e.target.value })} maxLength={60} autoComplete="off" />
-                                    </Field>
-                                </div>
-                                {cityOf(details) && !inLaunchArea(details.country, cityOf(details)) && (
-                                    <p className="lc-setup__note" role="note">
-                                        We are open in Porto, Lagos and Lisbon. Your page works anywhere, and we will be in touch as we grow into {cityOf(details)}.
-                                    </p>
-                                )}
+                                <LocationFields
+                                    value={details}
+                                    onChange={setDetail}
+                                    problems={problems}
+                                    pairClass="lc-setup__pair"
+                                    onCountry={(country) => { if (!details.phone) setDetail({ phoneCountry: country }) }}
+                                />
 
                                 <Field label="Business phone" error={problems.phone} hint="Shown on your page so clients can call you">
                                     <PhoneField
@@ -685,6 +639,7 @@ const Setup = () => {
                                         placeholder={details.country === 'PT' ? 'Rua dos Anjos 42' : 'Street and number'}
                                     />
                                 </Field>
+                                {business && <ShopPin business={business} address={[extras.address.trim(), cityOf(details)].filter(Boolean).join(', ')} onPinned={(spot) => setBusiness((b) => ({ ...b, lat: spot.lat, lng: spot.lng }))} />}
                                 <div className="lc-setup__golive">
                                     <p className="lc-setup__golivelink">
                                         Your page goes live at <strong>{publicHost()}/{details.slug}</strong>

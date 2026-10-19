@@ -1,5 +1,6 @@
 import { CATEGORIES, categoryKey } from '../constants/categories'
-import { NG_CITIES } from '../constants/locations'
+import { regionOfTown, regionsOf, townsIn } from '../constants/locations'
+import { regionOf } from '../components/brand/worlds'
 import { slugProblem } from '../constants/reservedSlugs'
 import { COUNTRY_OPTIONS, parsePhone } from '../components/ui/PhoneField'
 
@@ -7,11 +8,8 @@ export const OTHER_CITY = '__other'
 
 export const ABOUT_MAX = 300
 
-export const cityOf = (d) => {
-    if (d.country === 'PT') return d.city
-    if (d.country === 'NG' && d.city !== OTHER_CITY) return d.city
-    return d.cityOther.trim()
-}
+// The town: picked from the list, or typed ("Somewhere else").
+export const cityOf = (d) => (d.city && d.city !== OTHER_CITY ? d.city : String(d.cityOther || '').trim())
 
 const ABOUT_EXAMPLES = {
     barbershop: 'Skin fades and beard work in {area}. Walk-ins welcome when the chair is free.',
@@ -39,7 +37,10 @@ export const countryName = (code) => COUNTRY_OPTIONS.find((c) => c.value === cod
 
 export const detailsFromBusiness = (b) => {
     const country = b.country || 'PT'
-    const knownNg = NG_CITIES.some((c) => c.value === b.city)
+    // The state or district: as saved, else read from the town (businesses from before geo2).
+    const saved = regionsOf(country).find((r) => r.toLowerCase() === String(b.region || '').toLowerCase())
+    const region = saved || regionOfTown(country, b.city) || (regionsOf(country).includes(regionOf(b)) ? regionOf(b) : '')
+    const listed = townsIn(country, region).some((t) => t.value === b.city)
     const phone = parsePhone(b.phone, country)
     return {
         business_name: b.business_name,
@@ -48,8 +49,9 @@ export const detailsFromBusiness = (b) => {
         category: categoryKey(b.category),
         categoryDetail: b.category_detail || '',
         country,
-        city: country === 'PT' ? b.city : country === 'NG' ? (knownNg ? b.city : OTHER_CITY) : '',
-        cityOther: country === 'PT' || knownNg ? '' : b.city,
+        region,
+        city: listed ? b.city : b.city ? OTHER_CITY : '',
+        cityOther: listed ? '' : b.city || '',
         neighbourhood: b.neighbourhood || '',
         phone: phone.e164 || b.phone,
         phoneValid: phone.valid,
@@ -63,7 +65,8 @@ export const detailProblems = (d, slugState) => {
     if (!d.business_name.trim()) p.business_name = 'Enter the name clients know you by'
     if (!d.category) p.category = 'Choose what kind of business you run'
     else if (d.category === 'other' && !d.categoryDetail.trim()) p.categoryDetail = 'Tell clients what you do, in a few words'
-    if (!cityOf(d)) p.city = d.country === 'PT' ? 'Choose your municipality' : 'Enter your city'
+    if (regionsOf(d.country).length && !d.region) p.region = d.country === 'NG' ? 'Choose your state' : 'Choose your district'
+    else if (!cityOf(d)) p.city = d.country === 'PT' ? 'Choose your municipality' : 'Enter your town or city'
     if (!d.phone) p.phone = 'Enter the number clients can call'
     else if (!d.phoneValid) p.phone = `That does not look like a ${countryName(d.phoneCountry)} number. Check the digits or the country code.`
     const local = slugProblem(d.slug)

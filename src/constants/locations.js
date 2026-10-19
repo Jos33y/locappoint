@@ -341,8 +341,52 @@ export const timezoneForPlace = (country, city) => {
     return deviceZone()
 }
 
-// Where Locappoint is open: Greater Porto, Greater Lisbon and Lagos, all live.
-export const inLaunchArea = (country, city) => (country === 'PT' && (GREATER_PORTO.has(city) || GREATER_LISBON.has(city))) || (country === 'NG' && city === 'Lagos')
+// geo2: a business joins anywhere in Nigeria or Portugal. Its state or district, then its town.
+export const JOIN_COUNTRIES = [{ value: 'NG', label: 'Nigeria' }, { value: 'PT', label: 'Portugal' }]
+export const regionsOf = (country) => (country === 'NG' ? NG_STATES : country === 'PT' ? PT_DISTRICTS : [])
+export const regionWord = (country) => (country === 'NG' ? 'State' : country === 'PT' ? 'District' : 'Region')
 
-// An example neighbourhood for the country picked.
-export const neighbourhoodHint = (country) => (country === 'NG' ? 'Like Lekki or Yaba' : 'Like Anjos or Baixa')
+// The main towns of each state, to pick from; anywhere else is typed. Lagos is one city here: its
+// areas (Lekki, Yaba, Ikorodu) are the neighbourhood.
+export const NG_TOWNS = {
+    Abia: ['Umuahia', 'Aba'], Adamawa: ['Yola', 'Mubi'], 'Akwa Ibom': ['Uyo', 'Eket', 'Ikot Ekpene'], Anambra: ['Awka', 'Onitsha', 'Nnewi'],
+    Bauchi: ['Bauchi'], Bayelsa: ['Yenagoa'], Benue: ['Makurdi', 'Gboko', 'Otukpo'], Borno: ['Maiduguri'], 'Cross River': ['Calabar', 'Ogoja'],
+    Delta: ['Asaba', 'Warri', 'Sapele', 'Ughelli'], Ebonyi: ['Abakaliki'], Edo: ['Benin City', 'Auchi', 'Ekpoma'], Ekiti: ['Ado Ekiti'],
+    Enugu: ['Enugu', 'Nsukka'], FCT: ['Abuja', 'Gwagwalada', 'Kubwa'], Gombe: ['Gombe'], Imo: ['Owerri', 'Orlu', 'Okigwe'], Jigawa: ['Dutse'],
+    Kaduna: ['Kaduna', 'Zaria', 'Kafanchan'], Kano: ['Kano'], Katsina: ['Katsina'], Kebbi: ['Birnin Kebbi'], Kogi: ['Lokoja', 'Okene'],
+    Kwara: ['Ilorin', 'Offa'], Lagos: ['Lagos'], Nasarawa: ['Lafia', 'Keffi', 'Karu'], Niger: ['Minna', 'Suleja', 'Bida'],
+    Ogun: ['Abeokuta', 'Ijebu Ode', 'Sagamu', 'Ota'], Ondo: ['Akure', 'Ondo', 'Owo'], Osun: ['Osogbo', 'Ile-Ife', 'Ilesa'],
+    Oyo: ['Ibadan', 'Ogbomoso', 'Oyo'], Plateau: ['Jos'], Rivers: ['Port Harcourt', 'Bonny'], Sokoto: ['Sokoto'], Taraba: ['Jalingo'],
+    Yobe: ['Damaturu', 'Potiskum'], Zamfara: ['Gusau'],
+}
+
+// The towns to pick from in a state or district.
+export const townsIn = (country, region) => (country === 'PT'
+    ? PT_MUNICIPALITIES.filter((m) => m.district === region)
+    : (NG_TOWNS[region] || []).map((t) => ({ value: t, label: t })))
+
+// The district a Portuguese municipality is in, by either of its names (Lisbon, Lisboa).
+export const districtOf = (name) => {
+    const n = String(name || '').trim().toLowerCase()
+    return PT_MUNICIPALITIES.find((m) => m.value.toLowerCase() === n || (n === 'lisboa' && m.value === 'Lisbon'))?.district || ''
+}
+
+// The state or district a town is in, when it is one we list.
+export const regionOfTown = (country, town) => {
+    const t = String(town || '').trim().toLowerCase()
+    if (!t) return ''
+    if (country === 'PT') return PT_MUNICIPALITIES.find((m) => m.value.toLowerCase() === t)?.district || ''
+    if (country === 'NG') return Object.entries(NG_TOWNS).find(([, list]) => list.some((x) => x.toLowerCase() === t))?.[0] || ''
+    return ''
+}
+
+// A district's own town, when one shares its name (Porto, Braga), so picking the district is enough.
+export const firstTown = (country, region) => {
+    if (country === 'PT' && region === 'Lisboa') return 'Lisbon'
+    const list = townsIn(country, region)
+    return (list.find((t) => t.value === region) || (country === 'NG' ? list[0] : null))?.value || ''
+}
+
+// An example neighbourhood for the place picked.
+const HINTS = { Lagos: 'Like Lekki or Yaba', FCT: 'Like Wuse or Garki', Rivers: 'Like GRA or Rumuola', Lisboa: 'Like Anjos or Baixa', Porto: 'Like Bonfim or Boavista' }
+export const neighbourhoodHint = (country, region = '') => HINTS[region] || (country === 'NG' ? 'Like GRA' : country === 'PT' ? 'Your parish or area' : 'Your area')

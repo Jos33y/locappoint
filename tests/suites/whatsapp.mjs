@@ -101,7 +101,7 @@ export default async ({ browser, url, check, server, root }) => {
         check(/At your place: 14 Fola Osibo Road, Lekki Phase 1/.test(visitNews.text) && !/Admiralty/.test(visitNews.text), 'a confirmed visit shows their address, not the shop')
         const agentSrc = fs.readFileSync(path.join(fns, '_shared', 'agent.ts'), 'utf8')
         check(/wa_report/.test(agentSrc) && /wa_support_reply/.test(agentSrc) && /Never promise a refund/.test(agentSrc), 'the agent can open a Support request and add to it, and never promises an outcome')
-        check(/enum: \['porto', 'lagos', 'lisbon'\]/.test(agentSrc) && typeof ag.runAgent === 'function', 'the agent searches Lagos')
+        check(/country: \{ type: 'string', enum: \['ng', 'pt'\]/.test(agentSrc) && typeof ag.runAgent === 'function', 'geo4: the agent searches a whole country, Lagos included')
         check(/same service at the business's own place/.test(agentSrc) && /"em Lisboa"/.test(agentSrc) && /Never "a free haircut"/.test(agentSrc) && /Never promise Support will find it/.test(agentSrc) && /never add "tap Yes to confirm"/.test(agentSrc) && /short direct question/.test(agentSrc) && /Never call a date a week away "this Saturday"/.test(agentSrc) && /Never describe how paying works in general/.test(agentSrc) && /in the third person/.test(agentSrc), 'launch polish (1.3): the studio when the area is not covered, em Lisboa, a free time, Support needs the email or phone, one confirm line, small questions first')
         check(/p_zone: a\.zone/.test(hook) && /p_address: a\.address/.test(hook), 'the Yes books the visit at the address that was shown')
         check(/CREATE TRIGGER support_messages_whatsapp/.test(a7) && /wa_phone = coalesce\(wa_phone, p_phone\)/.test(a7) && /support_report_open\(a\)/.test(a7), 'Support replies go back to WhatsApp; reports about a visit close 48 hours after it')
@@ -248,7 +248,18 @@ export default async ({ browser, url, check, server, root }) => {
     }
     const finder = script([use('search', { city: 'lisbon', what: 'haircut' }), { stop_reason: 'end_turn', content: [{ type: 'text', text: 'Femtos Barbearia has 10:00.' }], usage: {} }])
     await agent.runAgent({ call: recCall, claude: finder, nonce: () => 'abcdef012345' }, { phone: '254712345678', profileName: '', message: 'haircut in lisbon', thread: { ...thread, history: [] } })
-    check(noted.length === 1 && noted[0].p_channel === 'whatsapp' && noted[0].p_query === 'haircut' && noted[0].p_market === 'lisbon' && noted[0].p_origin_country === 'KE' && noted[0].p_options === 1 && noted[0].p_matched === 1, `a WhatsApp search is kept for Demand: ${JSON.stringify(noted)}`)
+    check(noted.length === 1 && noted[0].p_channel === 'whatsapp' && noted[0].p_query === 'haircut' && noted[0].p_market === 'pt' && noted[0].p_origin_country === 'KE' && noted[0].p_options === 1 && noted[0].p_matched === 1, `a WhatsApp search is kept for Demand, an old city meaning its country: ${JSON.stringify(noted)}`)
+    // geo4: a country and where in it; the place is passed to the search and kept for Demand.
+    const sent = []
+    const placeCall = async (fn, args) => { if (fn === 'wa_search') sent.push(args); return recCall(fn, args) }
+    noted.length = 0
+    const finder3 = script([use('search', { country: 'ng', what: 'braids', place: 'Enugu' }), { stop_reason: 'end_turn', content: [{ type: 'text', text: 'Femtos Barbearia has 10:00.' }], usage: {} }])
+    await agent.runAgent({ call: placeCall, claude: finder3, nonce: () => 'abcdef012345' }, { phone: '2348031234567', profileName: '', message: 'braids in enugu', thread: { ...thread, business: null, history: [] } })
+    check(sent[0]?.p_market === 'ng' && sent[0]?.p_place === 'Enugu' && sent[0]?.p_zone === null && noted[0]?.p_zone === 'Enugu', `Enugu is searched inside Nigeria: ${JSON.stringify([sent[0], noted[0]?.p_zone])}`)
+    let ngBody
+    await agent.runAgent({ call: fakeCall, claude: async (b) => { ngBody = b; return { stop_reason: 'end_turn', content: [{ type: 'text', text: 'Hi' }], usage: {} } }, nonce: () => 'abcdef012345' }, { phone: '2348031234567', profileName: '', message: 'hi', thread: { ...thread, business: null, history: [] } })
+    check(/in Nigeria unless they say otherwise; where in Nigeria is not known/.test(ngBody.system[1].text) && /^Now in Nigeria/.test(ngBody.system[1].text) && !/in Lagos unless/.test(ngBody.system[1].text), 'a Nigerian number is Nigeria, not assumed Lagos')
+    check(/anywhere in Nigeria and Portugal/.test(ngBody.system[0].text) && !/Porto, Lagos and Lisbon/.test(ngBody.system[0].text) && /Never assume Lagos, Porto or Lisbon/.test(ngBody.system[0].text), 'the agent knows it is the whole of both countries')
     const failing = async (fn, args) => { if (fn === 'search_note') throw new Error('down'); return recCall(fn, args) }
     const finder2 = script([use('search', { city: 'lisbon', what: 'haircut' }), { stop_reason: 'end_turn', content: [{ type: 'text', text: 'Femtos Barbearia has 10:00.' }], usage: {} }])
     const kept = await agent.runAgent({ call: failing, claude: finder2, nonce: () => 'abcdef012345' }, { phone: '254712345678', profileName: '', message: 'haircut in lisbon', thread: { ...thread, history: [] } })

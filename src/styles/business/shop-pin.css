@@ -1,0 +1,36 @@
+/* The shop's pin (geo2): the phone's position or the address found, then a quiet way to move it. */
+.biz-pin {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    width: 100%;
+}
+
+.biz-pin > .lc-place-picked,
+.biz-pin > .lc-place { align-self: stretch; }
+
+.biz-pin__keep {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--lc-ink-3);
+    font: inherit;
+    font-size: var(--lc-t-label);
+    cursor: pointer;
+}
+
+.biz-pin__keep:hover { color: var(--lc-ink-1); }
+
+.biz-pin__keep:focus-visible { outline: 2px solid var(--azure); outline-offset: 2px; border-radius: var(--lc-r-sm); }
+
+.biz-pin__note,
+.biz-pin__error {
+    margin: 0;
+    font-size: var(--lc-t-label);
+    line-height: var(--lc-lh-snug);
+}
+
+.biz-pin__note { color: var(--lc-ink-2); }
+
+.biz-pin__error { color: var(--lc-danger); }

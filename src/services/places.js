@@ -90,3 +90,35 @@ export const kmBetween = (a, b) => {
     const h = Math.sin(rad(b.lat - a.lat) / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lng - a.lng) / 2) ** 2
     return 6371.0088 * 2 * Math.asin(Math.sqrt(h))
 }
+
+// The phone's own position, once: { lat, lng, metres } or an error said plainly. No Google, no cost.
+export const hereNow = () => new Promise((resolve, reject) => {
+    if (!globalThis.navigator?.geolocation) { reject(new Error('This device cannot tell where it is. Find the address instead.')); return }
+    navigator.geolocation.getCurrentPosition(
+        (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, metres: Math.round(p.coords.accuracy || 0) }),
+        (err) => reject(new Error(err?.code === 1
+            ? 'Location is off for Locappoint. Turn it on in your browser or phone settings, or find the address.'
+            : 'We could not get your position. Try again by a window, or find the address.')),
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    )
+})
+
+// geo2: the owner pins the shop where they stand (set_my_shop_spot). Kept until moved: it is the
+// owner's own position, not Google's, so it is never forgotten after 30 days.
+export const pinShopHere = async ({ businessId, lat, lng }) => {
+    const { error } = await supabase.rpc('set_my_shop_spot', { p_business: businessId, p_lat: lat, p_lng: lng })
+    if (error) throw new Error(error.message || 'Not saved. Check your connection and try again.')
+    return { lat, lng }
+}
+
+// geo3: a place named in a search ("barber in Abeokuta") as a point, so the nearest rank first.
+// null when Google is off or does not know it; the search then says the place plainly as before.
+export const whereIs = async (text, country) => {
+    try {
+        const data = await callPlaces('where', { input: String(text || '').slice(0, 80), country })
+        const s = data?.spot
+        return s && Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lng)) ? { lat: Number(s.lat), lng: Number(s.lng), label: s.label || text } : null
+    } catch {
+        return null
+    }
+}

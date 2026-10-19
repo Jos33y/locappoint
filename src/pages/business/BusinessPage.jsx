@@ -8,11 +8,13 @@ import { useAuth } from '../../hooks/useAuth'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { BusinessCover, BusinessMark } from '../../components/brand/BusinessFace'
 import { AddressField } from '../../components/business/AddressField'
-import { COUNTRY_OPTIONS, nationalFormat, parsePhone } from '../../components/ui/PhoneField'
+import { nationalFormat, parsePhone } from '../../components/ui/PhoneField'
 import { CATEGORIES, POPULAR_CATEGORIES, categoryLabel } from '../../constants/categories'
-import { NG_CITIES, POPULAR_COUNTRIES, PT_MUNICIPALITIES, inLaunchArea, neighbourhoodHint, timezoneForPlace } from '../../constants/locations'
+import { POPULAR_COUNTRIES, timezoneForPlace } from '../../constants/locations'
+import { LocationFields } from '../../components/business/LocationFields'
+import { ShopPin } from '../../components/business/ShopPin'
 import { slugProblem } from '../../constants/reservedSlugs'
-import { ABOUT_MAX, OTHER_CITY, aboutExample, cityOf, countryName, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
+import { ABOUT_MAX, aboutExample, cityOf, countryName, detailProblems, detailsFromBusiness } from '../../services/businessDetails'
 import { useSlugStatus } from '../../hooks/useSlugStatus'
 import SaveState from '../../components/business/SaveState'
 import { useAutosave } from '../../components/business/useAutosave'
@@ -72,7 +74,7 @@ const formProblems = (form) => {
 const GROUPS = [
     { key: 'name', fields: ['business_name'], problems: ['business_name'] },
     { key: 'category', fields: ['category', 'category_detail'], problems: ['category', 'categoryDetail'] },
-    { key: 'place', fields: ['country', 'city', 'neighbourhood'], problems: ['city'], extra: (v) => ({ timezone: timezoneForPlace(v.country, v.city) }) },
+    { key: 'place', fields: ['country', 'region', 'city', 'neighbourhood'], problems: ['region', 'city'], extra: (v) => ({ timezone: timezoneForPlace(v.country, v.city), locality: (v.neighbourhood || v.city || '').slice(0, 80) || null, currency: v.country === 'NG' ? 'NGN' : v.country === 'PT' ? 'EUR' : undefined }) },
     { key: 'phone', fields: ['phone'], problems: ['phone'] },
     { key: 'whatsapp', fields: ['whatsapp'], problems: ['whatsapp'] },
     { key: 'description', fields: ['description'], problems: [] },
@@ -84,6 +86,7 @@ const valuesFromForm = (form) => ({
     category: form.category,
     category_detail: form.category === 'other' ? form.categoryDetail.trim() : null,
     country: form.country,
+    region: form.region || null,
     city: cityOf(form),
     neighbourhood: clean(form.neighbourhood),
     phone: form.phone,
@@ -732,54 +735,7 @@ const BusinessPage = () => {
                             </Field>
                         )}
                         <div id="location" className="biz-bp__group">
-                            <div className="biz-bp__pair">
-                                <Field label="Country">
-                                    <Picker
-                                        value={form.country}
-                                        onChange={(country) => set({ country, city: country === 'PT' ? 'Porto' : country === 'NG' ? 'Lagos' : '', cityOther: '' })}
-                                        options={COUNTRY_OPTIONS}
-                                        popular={POPULAR_COUNTRIES}
-                                        searchable
-                                        title="Country"
-                                        searchPlaceholder="Search country"
-                                    />
-                                </Field>
-                                {form.country === 'PT' && (
-                                    <Field label="Municipality" error={problems.city}>
-                                        <Picker
-                                            value={form.city}
-                                            onChange={(value) => set({ city: value })}
-                                            options={PT_MUNICIPALITIES}
-                                            searchable
-                                            title="Municipality"
-                                            searchPlaceholder="Search, like Cascais or Porto"
-                                        />
-                                    </Field>
-                                )}
-                                {form.country === 'NG' && (
-                                    <Field label="City" error={form.city !== OTHER_CITY ? problems.city : undefined}>
-                                        <Picker
-                                            value={form.city}
-                                            onChange={(value) => set({ city: value })}
-                                            options={[...NG_CITIES, { value: OTHER_CITY, label: 'Somewhere else' }]}
-                                            title="City"
-                                        />
-                                    </Field>
-                                )}
-                                {form.country !== 'PT' && (form.country !== 'NG' || form.city === OTHER_CITY) && (
-                                    <Field label={form.country === 'NG' ? 'Which city?' : 'City'} error={problems.city}>
-                                        <Input value={form.cityOther} onChange={(e) => set({ cityOther: e.target.value })} maxLength={80} autoComplete="address-level2" />
-                                    </Field>
-                                )}
-                            </div>
-                            {city && !inLaunchArea(form.country, city) && (
-                                <p className="biz-bp__note" role="note">
-                                    We are open in Porto, Lagos and Lisbon. Your page works anywhere, and we will be in touch as we grow into {city}.
-                                </p>
-                            )}
-                            <Field label="Neighbourhood" optional hint={form.neighbourhood.trim() ? undefined : neighbourhoodHint(form.country)}>
-                                <Input value={form.neighbourhood} onChange={(e) => set({ neighbourhood: e.target.value })} maxLength={60} autoComplete="off" />
-                            </Field>
+                            <LocationFields value={form} onChange={set} problems={problems} pairClass="biz-bp__pair" />
                             <div className="biz-bp__address">
                                 <Field label="Address" optional hint={hasAddress ? undefined : 'Adds a Directions button to your page'}>
                                     <AddressField
@@ -791,6 +747,7 @@ const BusinessPage = () => {
                                     />
                                 </Field>
                             </div>
+                            <ShopPin business={business} address={[form.address.trim(), city].filter(Boolean).join(', ')} onPinned={(spot) => setBusiness((b) => ({ ...b, lat: spot.lat, lng: spot.lng }))} />
                         </div>
                     </Section>
 

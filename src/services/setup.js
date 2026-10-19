@@ -5,7 +5,7 @@ import { rowsFromWeek } from './hours'
 import { claimStoredReferral } from './referrals'
 
 export const BUSINESS_FIELDS =
-    'id, business_name, slug, category, category_detail, city, neighbourhood, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes, buffer_minutes, meeting_url, market, currency, service_zones, service_radius_km, lat, lng, base_zone'
+    'id, business_name, slug, category, category_detail, city, neighbourhood, region, locality, country, timezone, phone, whatsapp, description, address, logo_url, banner_url, is_active, launched_at, auto_confirm, cancel_cutoff_minutes, buffer_minutes, meeting_url, market, currency, service_zones, service_radius_km, lat, lng, base_zone'
 
 export const slugFrom = (name) =>
     (name || '')
@@ -50,6 +50,10 @@ const detailsPayload = (details) => ({
     city: details.city.trim(),
     neighbourhood: details.neighbourhood?.trim() || null,
     country: details.country,
+    // geo2: the state or district, and the area or town the business is in.
+    region: details.region || null,
+    locality: (details.neighbourhood?.trim() || details.city.trim()).slice(0, 80) || null,
+    currency: details.country === 'NG' ? 'NGN' : details.country === 'PT' ? 'EUR' : undefined,
     timezone: timezoneForPlace(details.country, details.city.trim()),
     phone: details.phone,
     whatsapp: details.whatsappSame ? details.phone : null,

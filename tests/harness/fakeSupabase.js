@@ -513,6 +513,8 @@ const PLACES = {
 const placesFn = (body) => {
   if (!quiet('places')) return { data: { on: false }, error: null }
   if (body.action === 'ping') return { data: { on: true }, error: null }
+  // geo3: a place named in a search, as a point.
+  if (body.action === 'where') return { data: { on: true, spot: /abeokuta/i.test(body.input || '') ? { lat: 7.15, lng: 3.35, label: 'Abeokuta' } : null }, error: null }
   if (body.action === 'suggest') return { data: { on: true, items: [{ id: 'ChIJnear00000001', main: 'Rua Brito Capelo 200', rest: '4450-073 Matosinhos' }, { id: 'ChIJfar000000001', main: 'Rua de Camilo 10', rest: '4780-373 Santo Tirso' }] }, error: null }
   const b = DATA.businesses[0]
   const p = PLACES[body.place_id]

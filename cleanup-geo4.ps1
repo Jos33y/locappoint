@@ -1,30 +1,13 @@
 $ErrorActionPreference = 'Stop'
-$name = 'geo1b'
+$name = 'geo4'
 $root = (Get-Location).Path
 $pj = Join-Path $root 'package.json'
 if (-not (Test-Path $pj) -or (Get-Content $pj -Raw | ConvertFrom-Json).name -ne 'locappoint') { Write-Host 'Run this from the locappoint repo root.'; exit 1 }
 
 $paths = @(
-  'index.html.backup-geo1b',
-  'server/seo.mjs.backup-geo1b',
-  'src/components/Footer.jsx.backup-geo1b',
-  'src/components/client/find/EngineBox.jsx.backup-geo1b',
-  'src/components/client/find/Scenes.jsx.backup-geo1b',
-  'src/components/common/CountrySwitch.jsx.backup-geo1b',
-  'src/constants/locations.js.backup-geo1b',
-  'src/pages/app/Businesses.jsx.backup-geo1b',
-  'src/pages/app/Contact.jsx.backup-geo1b',
-  'src/pages/app/auth/AuthPage.jsx.backup-geo1b',
-  'src/pages/app/home/Cities.css.backup-geo1b',
-  'src/pages/app/home/Cities.jsx.backup-geo1b',
-  'src/pages/app/home/content.js.backup-geo1b',
-  'src/styles/client/engine.css.backup-geo1b',
-  'tests/suites/browse.mjs.backup-geo1b',
-  'tests/suites/cities.mjs.backup-geo1b',
-  'tests/suites/engine.mjs.backup-geo1b',
-  'tests/suites/home.mjs.backup-geo1b',
-  'tests/suites/seo.mjs.backup-geo1b',
-  'geo1b.zip',
+  'supabase/functions/_shared/agent.ts.backup-geo4',
+  'tests/suites/whatsapp.mjs.backup-geo4',
+  'geo4.zip',
   'payload'
 )
 

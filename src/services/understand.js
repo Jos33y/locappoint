@@ -58,7 +58,7 @@ const fuzzyDay = (word) => FULL_DAYS.findIndex((names) => names.some((n) => word
 
 // Places that are not search words. "in the morning", "at home", "at 3" are read before places.
 const NOT_PLACE = new Set(['home', 'my', 'me', 'the', 'a', 'an', 'work', 'night', 'casa', 'minha', 'meu', 'all', 'any', 'least', 'once', 'least', 'time', 'least'])
-const PLACE_STOP = /^(on|at|for|this|next|tomorrow|today|tonight|after|before|by|from|around|with|and|please|para|amanha|hoje|de|depois|antes|com|e|por|in|em|no|na)$/
+const PLACE_STOP = /^(on|at|for|this|next|tomorrow|today|tonight|after|before|by|from|around|with|and|please|para|amanha|hoje|de|depois|antes|com|e|por|in|em|no|na|under|below|less|max|cheapest|cheap|abaixo|menos|ate)$/
 
 const money = (raw) => {
     const n = /^\d{1,3}([.,]\d{3})+$/.test(raw) ? Number(raw.replace(/[.,]/g, '')) : Number(raw.replace(',', '.'))
