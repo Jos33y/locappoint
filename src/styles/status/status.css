@@ -621,6 +621,10 @@ body:has(.lc-st),
     .lc-st-worlds {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+
+    .lc-st-worlds.is-two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (min-width: 640px) and (max-width: 959px) {
@@ -723,6 +727,20 @@ body:has(.lc-st),
     flex-shrink: 0;
     border-radius: var(--radius-xs);
     box-shadow: inset 0 0 0 1px var(--lc-paper-line);
+}
+
+/* A country's four patterns as chips (two countries, eight worlds). */
+.lc-world__chip.is-pattern {
+    width: 22px;
+    height: 22px;
+    overflow: hidden;
+}
+
+.lc-world__chip.is-pattern .lc-pattern {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
 }
 
 .lc-world__chip--lagos-indigo { background: var(--lc-lagos-indigo); }

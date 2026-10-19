@@ -4,7 +4,7 @@ import { NEXT_PIECES, TILE_SAMPLES } from './content'
 
 const Brand = () => (
     <section className="lc-st-section reveal" aria-labelledby="lc-st-brand">
-        <SectionHead id="lc-st-brand" eyebrow="05 / Our own look" title="Every business gets a tile" lede="Sixteen cells cut from our mark, picked by the business's name and coloured by its city. The same name always draws the same tile. It is the cover when there is no photo, the ticket stub and the link preview." />
+        <SectionHead id="lc-st-brand" eyebrow="05 / Our own look" title="Every business gets a tile" lede="Sixteen cells cut from our mark, picked by the business's name and coloured by its world. The same name always draws the same tile. It is the cover when there is no photo, the ticket stub and the link preview." />
         <ul className="lc-st-tiles">
             {TILE_SAMPLES.map((t) => (
                 <li className="lc-st-tiles__item" key={t.name}>

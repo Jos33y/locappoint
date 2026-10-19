@@ -4,7 +4,7 @@ const count = (key, state) => SLIP.find((s) => s.key === key).lines.filter((l) =
 
 const Hero = () => {
     const stats = [
-        { label: 'Cities live', value: '3', of: 'of 3', note: 'Porto, Lagos and Lisbon' },
+        { label: 'Countries live', value: '2', of: 'of 2', note: 'Nigeria and Portugal, every state and district' },
         { label: 'Launch fixes done', value: String(count('code', 'done')), of: `of ${count('code')}`, note: NEXT_FIX },
         { label: 'Switch-ons done', value: String(count('switch', 'done')), of: `of ${count('switch')}`, note: NEXT_SWITCH },
     ]
@@ -15,10 +15,10 @@ const Hero = () => {
                 Status <span aria-hidden="true">/</span> updated <time className="js-relative" dateTime={UPDATED.iso}>{UPDATED.label}</time>
             </p>
             <h1 className="lc-st-hero__title" id="lc-st-hero-title">
-                Three cities live. <em>WhatsApp and Paystack are on.</em>
+                Two countries live. <em>WhatsApp and Paystack are on.</em>
             </h1>
             <p className="lc-st-hero__lede">
-                Clients book in Porto, Lagos and Lisbon on the web and on WhatsApp, pay ahead in Lagos and at the visit in Portugal, and owners run their day from the app. The first real Lagos booking was paid through Paystack on 17 October. Left before launch: one live refund and the test data cleared.
+                Businesses join anywhere in Nigeria and Portugal. Clients search from where they are, on the web and on WhatsApp, pay ahead in Nigeria and at the visit in Portugal, and owners run their day from the app. Left before launch: one live refund, the test data cleared, a clean-up pass, the English copy, then Portuguese.
             </p>
             <dl className="lc-st-hero__stats">
                 {stats.map((s) => (

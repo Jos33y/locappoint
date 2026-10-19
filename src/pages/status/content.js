@@ -1,14 +1,14 @@
-export const UPDATED = { iso: '2026-10-17T21:30:00Z', label: '17 October 2026' }
+export const UPDATED = { iso: '2026-10-19T20:00:00Z', label: '19 October 2026' }
 
 export const NEXT_FIX = 'Left: the test data clean-up, on launch day'
 
 export const NEXT_SWITCH = 'Next: one live refund'
 
 export const WAVES = [
-    { key: 'w1', name: 'Wave 1', title: 'The launch product', sub: 'Payments, three cities, visits at home and online, the booking engine, WhatsApp, trust and policies.', state: 'done', tag: 'Done' },
-    { key: 'fixes', name: 'Now', title: 'Launch fixes and switch-ons', sub: 'WhatsApp and Paystack are live. Left: one live refund and the test data cleared.', state: 'now', tag: 'Building' },
-    { key: 'system', name: 'Next', title: 'One system, our own look', sub: 'Every page on one design system, then city worlds, business tiles and the ticket you keep. This page is the first piece.', state: 'started', tag: 'Started' },
-    { key: 'w2', name: 'Wave 2', title: 'Why owners stay', sub: 'Portuguese screens for Portugal, Fill the gap, Momentum and owner launch videos, Quote first, Pins.', state: 'planned', tag: 'After launch' },
+    { key: 'w1', name: 'Wave 1', title: 'The launch product', sub: 'Payments, visits at home and online, the booking engine, WhatsApp, trust and policies.', state: 'done', tag: 'Done' },
+    { key: 'fixes', name: 'Now', title: 'Launch fixes and switch-ons', sub: 'WhatsApp and Paystack are live. Left: one live refund, the test data cleared, a clean-up pass on every screen, the English copy, then Portuguese for Portugal.', state: 'now', tag: 'Building' },
+    { key: 'system', name: 'Built', title: 'Countries, and our own look', sub: 'Join and book anywhere in Nigeria and Portugal, search from where you are, travel priced by road, eight country worlds, Today in daylight.', state: 'done', tag: 'Done' },
+    { key: 'w2', name: 'Wave 2', title: 'Why owners stay', sub: 'Fill the gap, Momentum and owner launch videos, Quote first.', state: 'planned', tag: 'After launch' },
     { key: 'scale', name: 'At 100 to 200 businesses', title: 'Found everywhere', sub: 'Book on Google, and booking from AI assistants.', state: 'planned', tag: 'Later' },
     { key: 'w3', name: 'Wave 3', title: 'Deeper', sub: 'Loca AI for owners, packages and classes, MB Way.', state: 'planned', tag: 'Later' },
 ]
@@ -20,6 +20,7 @@ export const BUILT = [
             'Book end to end, with emails and calendar invites',
             'Move or cancel from the email, no account needed',
             '"What do you need?": three free times, each for a reason',
+            'Anywhere in Nigeria and Portugal: near me, a state, a town',
             'Book, move and cancel on WhatsApp, Support from the chat',
             'Visits at your place, online sessions, group bookings',
             'Reminders the day before and two hours before',
@@ -36,6 +37,7 @@ export const BUILT = [
             'Services with extras, hours with breaks and closed days',
             'Insights in money and the Monday statement',
             'Bookings list with download, QR poster, referrals',
+            'Join anywhere: state or district, town, a pin where you stand',
             'Android app with push, from locappoint.com/app',
             'WhatsApp for owners: accept, decline, on my way',
         ],
@@ -43,13 +45,13 @@ export const BUILT = [
     {
         label: 'Money',
         items: [
-            'Lagos: pay ahead by transfer or card through Paystack, live',
-            'Porto and Lisbon: pay at the visit',
+            'Nigeria: pay ahead by transfer or card through Paystack, live',
+            'Portugal: pay at the visit',
             'Payouts to the business, account name checked',
             'Support check for a different registered name',
             'Receipts for paid and completed visits',
             'Refunds and no-shows by written policy',
-            'Travel fee, and travel time between Lagos visits',
+            'Travel by road from the shop\'s pin: time held, fee by distance',
         ],
     },
     {
@@ -101,77 +103,72 @@ export const SLIP = [
         lines: [
             { n: 'D&B', text: 'D-U-N-S number, requested 7 October', state: 'wait' },
             { n: 'Vincent', text: 'Portuguese company, Stripe live, fees locked', state: 'wait' },
-            { n: 'Vincent', text: 'Porto and Lisbon owners signed', state: 'wait' },
-            { n: 'Joseey', text: 'Lagos owners onboarded', state: 'wait' },
+            { n: 'Vincent', text: 'Owners in Portugal signed', state: 'wait' },
+            { n: 'Joseey', text: 'Owners in Nigeria onboarded', state: 'wait' },
             { n: 'Both', text: 'Naira business fee and VAT agreed', state: 'wait' },
         ],
     },
 ]
 
-export const CITIES = [
+// Two countries (geo1 to geo5, 18 and 19 October): businesses join anywhere in each, and each has
+// four worlds from four regions. style picks the card colours checked for contrast.
+export const COUNTRIES = [
     {
-        key: 'porto',
-        name: 'Porto',
-        world: 'Azulejo cobalt, porcelain, port wine, granite',
-        greeting: 'Bom dia, Porto.',
+        key: 'ng',
+        style: 'lagos',
+        name: 'Nigeria',
+        world: 'adire',
+        kind: 'Four worlds: south-west, south-east, north, south-south',
+        greeting: 'Good morning, Nigeria.',
+        lang: 'en',
         facts: [
-            ['Status', 'Live'],
-            ['Clients pay', 'At the visit. Online once the Portuguese company has Stripe'],
-            ['On the ground', 'Vincent'],
-        ],
-        swatches: [['cobalt', 'porto-cobalt'], ['porcelain', 'porto-porcelain'], ['vinho', 'porto-vinho'], ['granito', 'porto-granito']],
-    },
-    {
-        key: 'lagos',
-        name: 'Lagos',
-        world: 'Adire indigo, lagoon light, ember, sand',
-        greeting: 'Good morning, Lagos.',
-        facts: [
-            ['Status', 'Live'],
+            ['Status', 'Live, every state and the FCT'],
             ['Clients pay', 'Ahead, by transfer or card through Paystack. Live since 17 October'],
-            ['On the ground', 'Joseey and the Lagos side'],
+            ['On the ground', 'Joseey, in Lagos'],
         ],
-        swatches: [['indigo', 'lagos-indigo'], ['lagoon', 'lagos-lagoon'], ['ember', 'lagos-ember'], ['sand', 'lagos-sand']],
+        patterns: [['adire', 'Adire'], ['uli', 'Uli'], ['arewa', 'Arewa knot'], ['benin', 'Benin guilloche']],
     },
     {
-        key: 'lisbon',
-        name: 'Lisbon',
-        world: 'Tram yellow, terracotta, pastel fronts, the Tejo',
-        greeting: 'Bom dia, Lisboa.',
+        key: 'pt',
+        style: 'porto',
+        name: 'Portugal',
+        world: 'azulejo',
+        kind: 'Four worlds: Porto, Lisbon, the Minho, the Alentejo',
+        greeting: 'Bom dia, Portugal.',
+        lang: 'pt',
         facts: [
-            ['Status', 'Live, the same as Porto'],
-            ['Clients pay', 'At the visit'],
-            ['On the ground', 'Vincent'],
+            ['Status', 'Live, every district, the Azores and Madeira'],
+            ['Clients pay', 'At the visit. Online once the Portuguese company has Stripe'],
+            ['On the ground', 'Vincent, in Porto'],
         ],
-        swatches: [['elétrico', 'lisbon-eletrico'], ['telha', 'lisbon-telha'], ['fachada', 'lisbon-fachada'], ['Tejo', 'lisbon-tejo']],
+        patterns: [['azulejo', 'Azulejo'], ['calcada', 'Calçada'], ['minho', 'Minho filigree'], ['arraiolos', 'Arraiolos']],
     },
 ]
 
 export const TILE_SAMPLES = [
-    { name: 'A barber in Ribeira', city: 'porto' },
-    { name: 'A braider in Yaba', city: 'lagos' },
-    { name: 'A physio in Alfama', city: 'lisbon' },
-    { name: 'A nail studio in Lekki', city: 'lagos' },
-    { name: 'A tutor in Bonfim', city: 'porto' },
-    { name: 'A cleaner in Benfica', city: 'lisbon' },
+    { name: 'A braider in Enugu', city: 'uli' },
+    { name: 'A barber in Kano', city: 'arewa' },
+    { name: 'A nail studio in Benin City', city: 'benin' },
+    { name: 'A tutor in Braga', city: 'minho' },
+    { name: 'A physio in Évora', city: 'arraiolos' },
+    { name: 'A cleaner in Lisbon', city: 'calcada' },
 ]
 
 export const NEXT_PIECES = [
     ['The ticket you keep', 'Porcelain paper, the business tile on the stub, an amber stamp on confirmation.'],
-    ['Membership you can see', 'Founding businesses keep their number for good: "No. 007 in Porto".'],
-    ['Today has daylight', 'The owner\'s Today screen takes the light of the hour in their own city.'],
+    ['Membership you can see', 'Founding businesses keep their number for good: "No. 007 in Portugal".'],
+    ['Today has daylight', 'Built: the owner\'s Today screen takes the light of the hour where the business is.'],
 ]
 
 export const AFTER = [
     {
         label: 'Wave 2, right after launch',
         items: [
-            'Portuguese screens for Portugal: booking, emails and WhatsApp first, then the owner app',
             'Fill the gap: a freed slot goes first to clients who wanted earlier',
             'Momentum and the Monday recap, ready for WhatsApp Status',
             'Owner launch videos made from each business page',
-            'Quote first, for Lagos home services',
-            'Pins; iPhone after the D-U-N-S number; USSD in Nigeria when Lagos asks',
+            'Quote first, for home services',
+            'iPhone after the D-U-N-S number; USSD in Nigeria when owners ask',
         ],
     },
     {
@@ -187,24 +184,24 @@ export const AFTER = [
             'Loca AI for owners: "what is my day", "block 2 to 4"',
             'Pickup and return; packages, repeats and classes',
             'Split the bill in groups',
-            'MB Way when Porto and Lisbon pay online',
+            'MB Way when Portugal pays online',
         ],
     },
 ]
 
 export const LINKS = [
-    { url: 'https://locappoint.com', label: 'locappoint.com', desc: 'The booking platform. Live in Porto, Lagos and Lisbon.', state: 'live', tag: 'Live' },
+    { url: 'https://locappoint.com', label: 'locappoint.com', desc: 'The booking platform. Live across Nigeria and Portugal.', state: 'live', tag: 'Live' },
     { url: 'https://locappoint.com/app', label: 'locappoint.com/app', desc: 'Android, live here now. Google Play and iPhone wait on the D-U-N-S number.', state: 'part', tag: 'Android live' },
     { url: 'https://status.locappoint.com', label: 'status.locappoint.com', desc: 'This page.', state: 'live', tag: 'Live' },
 ]
 
 export const NEEDS = [
-    { who: 'Vincent', title: 'Porto and Lisbon owners', when: 'Before launch', text: 'Barbers, salons, clinics and home services ready to go live. The goal is 20 or more businesses taking real bookings every week across the three cities.' },
+    { who: 'Vincent', title: 'Owners in Portugal', when: 'Before launch', text: 'Barbers, salons, clinics and home services ready to go live, with Porto in person first. The goal is 20 or more businesses taking real bookings every week.' },
     { who: 'Vincent', title: 'Portuguese company', when: 'Before paying online in Portugal', text: 'A Lda run by Vincent, for Stripe, euro invoices and EU data rules. Nigeria stays with Locappoint Technologies Ltd and Paystack. Needs a certified accountant from day one.' },
-    { who: 'Vincent', title: 'Lock the fees', when: 'Before fees are charged', text: 'Lagos client fee decided on 17 October: NGN 100 under NGN 5,000, NGN 200 up to NGN 15,000, then 1.5% capped at NGN 2,000. Still to agree: the business fee and VAT in naira, and the Portugal fees (proposed: client fee 2%, EUR 0.49 to 4.90, business fee 1.5%). Decided: the first 100 businesses across all three cities get their first month of fees free, with no rate lock.' },
+    { who: 'Vincent', title: 'Lock the fees', when: 'Before fees are charged', text: 'Lagos client fee decided on 17 October: NGN 100 under NGN 5,000, NGN 200 up to NGN 15,000, then 1.5% capped at NGN 2,000. Still to agree: the business fee and VAT in naira, and the Portugal fees (proposed: client fee 2%, EUR 0.49 to 4.90, business fee 1.5%). Decided: the first 100 businesses across both countries get their first month of fees free, with no rate lock.' },
     { who: 'Vincent', title: 'Stripe tax reporting', when: 'With the Lda', text: 'Request access to Stripe\'s tax reporting preview. Stripe collects each business\'s tax number and prepares the yearly EU report (DAC7); the accountant files it by 31 January.' },
     { who: 'D&B', title: 'App store accounts', when: 'Waiting', text: 'The D-U-N-S number for Locappoint Technologies Ltd, requested through Apple on 7 October. It opens Google Play, Apple and Aptoide.' },
-    { who: 'Joseey', title: 'Google Maps billing', when: 'When owners ask', text: 'A one-time prepayment turns on address search and live minutes for home visits. Not needed for launch: areas already work without it.' },
+    { who: 'Joseey', title: 'Google Maps billing', when: 'Before launch', text: 'A one-time prepayment turns on address search, places named in a search, and travel by road for home visits. Without it, the phone pin, near me and the area lists still work.' },
 ]
 
 export const COSTS = {

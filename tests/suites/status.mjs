@@ -22,7 +22,7 @@ export default async ({ browser, url, check, server, root }) => {
 
     let p = await open()
     const text = await p.evaluate(() => document.body.innerText || '')
-    check(/Three cities live/.test(text), 'the page leads with three cities live')
+    check(/Two countries live/.test(text) && !/Three cities|Porto, Lagos and Lisbon/.test(text), 'the page leads with two countries live, not three cities')
     check(!/Porto beta|95%|Phase 2|of 4\b|Five Porto owners/.test(text), 'nothing from the 7 October page comes back')
     check(!/[\u2014\u2013]/.test(text), 'no long dashes on the page')
     check(!/waitlist\.locappoint\.com/.test(text), 'the retired waitlist is not offered as a live link')
@@ -43,7 +43,9 @@ export default async ({ browser, url, check, server, root }) => {
     check(slip.hero[2] === String(slip.sw[0]), 'the headline switch-on count is the slip\'s count')
 
     const cities = await p.evaluate(() => [...document.querySelectorAll('.lc-world__name')].map((n) => n.textContent))
-    check(cities.join() === 'Porto,Lagos,Lisbon', `cities in order: ${cities.join(', ')}`)
+    check(cities.join() === 'Nigeria,Portugal', `countries in order: ${cities.join(', ')}`)
+    const chips = await p.evaluate(() => document.querySelectorAll('.lc-world__chip.is-pattern .lc-pattern').length)
+    check(chips === 8, `each country shows its four worlds: ${chips}`)
 
     // Every text on paper and in the city worlds clears 4.5:1 against what is really behind it.
     const low = await p.evaluate(() => {
