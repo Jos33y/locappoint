@@ -520,7 +520,9 @@ const placesFn = (body) => {
   const p = PLACES[body.place_id]
   if (body.action === 'place' && p) {
     const radius = b.lat != null ? Number(b.service_radius_km) || null : null
-    return { data: { on: true, place: { ...p, km: radius ? p.km : null, in_zone: Boolean(p.zone && (b.service_zones || []).includes(p.zone)), in_reach: Boolean(radius && p.km <= radius) } }, error: null }
+    // geo5: ?road=1 adds the drive by road from the shop, as a quote with its fee.
+    const travel = quiet('road') ? { quote_id: '00000000-0000-4000-8000-0000000000q1', km: 9.4, minutes: 25, fee: 7.5 } : null
+    return { data: { on: true, place: { ...p, km: radius ? p.km : null, in_zone: Boolean(p.zone && (b.service_zones || []).includes(p.zone)), in_reach: Boolean(radius && p.km <= radius), travel } }, error: null }
   }
   if (body.action === 'shop' && p) return { data: { on: true, shop: { address: p.address, lat: p.lat, lng: p.lng } }, error: null }
   return { data: { error: 'Unknown action' }, error: null }

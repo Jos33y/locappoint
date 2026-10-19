@@ -28,7 +28,11 @@ const Reach = ({ place, zones, radius, business }) => {
         const why = place.in_zone
             ? <>In <b>{place.zone}</b>, an area {business} covers{place.km !== null && place.km !== undefined ? `, ${kmLabel(place.km)} from them` : ''}.</>
             : <><b>{kmLabel(place.km)}</b> from {business}, inside the {kmLabel(radius)} they travel.</>
-        return <p className="lc-place-reach"><CircleCheck size={15} aria-hidden="true" /><span>{why}</span></p>
+        // geo5: the drive by road, from Google, when the shop is pinned.
+        const road = place.travel && Number(place.travel.km) > 0
+            ? ` ${kmLabel(Number(place.travel.km))} by road, about ${Number(place.travel.minutes)} min.`
+            : ''
+        return <p className="lc-place-reach"><CircleCheck size={15} aria-hidden="true" /><span>{why}{road}</span></p>
     }
     const far = place.km !== null && place.km !== undefined && radius
         ? <><b>{kmLabel(place.km)}</b> from {business}. They travel up to {kmLabel(radius)}{zones.length ? ' and to the areas they list' : ''}.</>

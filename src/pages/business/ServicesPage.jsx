@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowUpRight, EyeOff, House, Search, Trash2, TriangleAlert, Video, X } from 'lucide-react'
-import { Button, Chip, ChipGroup, Field, Input, Picker, Sheet, Skeleton } from '../../components/ui'
+import { AffixInput, Button, Chip, ChipGroup, Field, Input, Picker, Sheet, Skeleton, Switch } from '../../components/ui'
 import { useWorkspace } from '../../components/business/WorkspaceContext'
 import { ServiceEditor, isOnline, menuPrice, serviceFromRow, serviceProblems, visitsClients } from '../../components/business/ServiceEditor'
 import SaveState from '../../components/business/SaveState'
@@ -8,6 +8,7 @@ import { useAutosave } from '../../components/business/useAutosave'
 import { suggestionsFor } from '../../constants/categories'
 import { loadSetup, loadZones, saveServices, serviceBookingCount, serviceRow, travelsBetween, updateBusiness } from '../../services/setup'
 import { pageUrl } from '../../services/links'
+import { currencySign } from '../../services/business'
 import { MAP_KEY, kmLabel, loadMaps } from '../../services/places'
 import { ShopPin } from '../../components/business/ShopPin'
 import { districtOf } from '../../constants/locations'
@@ -180,9 +181,74 @@ const ReachMap = ({ lat, lng, km }) => {
 
 const DISTANCES = [3, 5, 10, 15, 25]
 
+// geo5: travel charged by distance, by road from the pin to the client's address (Google). Off, each
+// service's own travel fee applies. Saved a moment after typing stops.
+const SUGGESTED = { NGN: { travel_base: 1000, travel_per_km: 150, travel_min: 1500, travel_max: 10000 }, EUR: { travel_base: 3, travel_per_km: 0.5, travel_min: 5, travel_max: 25 } }
+const PRICE_FIELDS = [['travel_base', 'Base'], ['travel_per_km', 'Per km'], ['travel_min', 'Minimum'], ['travel_max', 'Maximum']]
+const asNumber = (v) => (String(v ?? '').trim() === '' ? null : Number(String(v).replace(',', '.')))
+
+const TravelPrice = ({ businessId, currency, value, onSaved }) => {
+    const on = value.travel_per_km !== null && value.travel_per_km !== undefined
+    const [draft, setDraft] = useState(() => Object.fromEntries(PRICE_FIELDS.map(([k]) => [k, value[k] ?? ''])))
+    const [error, setError] = useState('')
+    const timer = useRef(null)
+    const save = async (patch) => {
+        setError('')
+        try {
+            await updateBusiness(businessId, patch)
+            onSaved(patch)
+        } catch (err) {
+            console.error('Travel price failed:', err)
+            setError('Not saved. Check your connection and try again.')
+        }
+    }
+    const toggle = (next) => {
+        const patch = next ? SUGGESTED[currency] || SUGGESTED.EUR : { travel_base: null, travel_per_km: null, travel_min: null, travel_max: null }
+        setDraft(Object.fromEntries(PRICE_FIELDS.map(([k]) => [k, patch[k] ?? ''])))
+        save(patch)
+    }
+    const type = (key, text) => {
+        const clean = text.replace(/[^\d.,]/g, '')
+        setDraft((d) => ({ ...d, [key]: clean }))
+        clearTimeout(timer.current)
+        timer.current = setTimeout(() => {
+            const n = asNumber(clean)
+            if (key === 'travel_per_km' && n === null) return
+            if (n !== null && (Number.isNaN(n) || n < 0)) { setError('Use a number, like 150.'); return }
+            save({ [key]: n })
+        }, 700)
+    }
+    useEffect(() => () => clearTimeout(timer.current), [])
+    return (
+        <div className="biz-travel">
+            <Switch
+                checked={on}
+                onChange={toggle}
+                label="Charge travel by distance"
+                description={on ? 'Worked out by road from your pin to the client\'s address, shown before they book.' : 'Off: each service\'s own travel fee applies.'}
+            />
+            {on && (
+                <div className="biz-travel__grid">
+                    {PRICE_FIELDS.map(([key, label]) => (
+                        <Field key={key} label={label}>
+                            <AffixInput prefix={currencySign(currency)} mono inputMode="decimal" value={draft[key]} onChange={(e) => type(key, e.target.value)} autoComplete="off" />
+                        </Field>
+                    ))}
+                </div>
+            )}
+            {on && (
+                <p className="biz-sh__tip">
+                    {`A 10 km drive costs ${currencySign(currency)}${Math.min(Math.max((asNumber(draft.travel_base) || 0) + (asNumber(draft.travel_per_km) || 0) * 10, asNumber(draft.travel_min) || 0), asNumber(draft.travel_max) ?? Infinity).toLocaleString('en-GB', { maximumFractionDigits: 2 })}. Without Google, or with an area picked instead of an address, each service's own travel fee applies.`}
+                </p>
+            )}
+            {error && <p className="biz-sh__meetwarn" role="alert"><TriangleAlert size={16} aria-hidden="true" />{error}</p>}
+        </div>
+    )
+}
+
 // How far the business travels from its shop. The shop is pinned with the phone's position or found
 // with Google (ShopPin, geo2), so this works anywhere, with or without address search.
-const Distance = ({ businessId, address, shop, radius, onShop, onRadius }) => {
+const Distance = ({ businessId, address, shop, radius, onShop, onRadius, currency, price, onPrice }) => {
     const [error, setError] = useState('')
     const placed = shop.lat !== null && shop.lat !== undefined
     const pick = async (km) => {
@@ -214,6 +280,7 @@ const Distance = ({ businessId, address, shop, radius, onShop, onRadius }) => {
                             ? `Clients up to ${kmLabel(radius)} away, in a straight line, can book a visit at their place, as well as clients in the areas you picked.`
                             : 'Pick a distance to take visits around your shop as well as in your areas.'}
                     </p>
+                    <TravelPrice businessId={businessId} currency={currency} value={price} onSaved={onPrice} />
                 </>
             )}
             {error && <p className="biz-sh__meetwarn" role="alert"><TriangleAlert size={16} aria-hidden="true" />{error}</p>}
@@ -306,7 +373,7 @@ const AreaPicker = ({ zones, picked, onToggle }) => {
 }
 
 // Where the business travels for visits at the client's place: areas, a distance, or both. Saved on every tap.
-const WhereYouGo = ({ businessId, market, region, value, onSaved, address, shop, radius, onShop, onRadius, base, onBase }) => {
+const WhereYouGo = ({ businessId, market, region, value, onSaved, address, shop, radius, onShop, onRadius, base, onBase, currency, price, onPrice }) => {
     const [zones, setZones] = useState(null)
     const [picked, setPicked] = useState(value || [])
     const [error, setError] = useState('')
@@ -350,7 +417,7 @@ const WhereYouGo = ({ businessId, market, region, value, onSaved, address, shop,
             )}
             {error && <p className="biz-sh__meetwarn" role="alert"><TriangleAlert size={16} aria-hidden="true" />{error}</p>}
             {travels && zones?.length > 0 && <StartFrom businessId={businessId} zones={zones} value={base} onSaved={onBase} />}
-            <Distance businessId={businessId} address={address} shop={shop} radius={radius} onShop={onShop} onRadius={onRadius} />
+            <Distance businessId={businessId} address={address} shop={shop} radius={radius} onShop={onShop} onRadius={onRadius} currency={currency} price={price} onPrice={onPrice} />
             {zones !== null && picked.length === 0 && !byDistance && !error && <p className="biz-sh__meetwarn"><TriangleAlert size={16} aria-hidden="true" />Pick at least one area, or clients cannot book a visit at their place.</p>}
         </section>
     )
@@ -363,6 +430,7 @@ const ServicesPage = () => {
     const [meetingUrl, setMeetingUrl] = useState(null)
     const [market, setMarket] = useState(null)
     const [region, setRegion] = useState('')
+    const [travelPrice, setTravelPrice] = useState({})
     const [serviceZones, setServiceZones] = useState([])
     const [baseZone, setBaseZone] = useState(null)
     const [shop, setShop] = useState({ lat: null, lng: null, address: '' })
@@ -387,6 +455,7 @@ const ServicesPage = () => {
             setMeetingUrl(data.business.meeting_url || null)
             setMarket(data.business.market || null)
             setRegion(data.business.region || '')
+            setTravelPrice({ travel_base: data.business.travel_base ?? null, travel_per_km: data.business.travel_per_km ?? null, travel_min: data.business.travel_min ?? null, travel_max: data.business.travel_max ?? null })
             setServiceZones(data.business.service_zones || [])
             setBaseZone(data.business.base_zone || null)
             setShop({ lat: data.business.lat ?? null, lng: data.business.lng ?? null, address: '' })
@@ -508,6 +577,9 @@ const ServicesPage = () => {
                         businessId={shellBusiness.id}
                         market={market}
                         region={region}
+                        currency={shellBusiness?.currency || 'EUR'}
+                        price={travelPrice}
+                        onPrice={(patch) => setTravelPrice((p) => ({ ...p, ...patch }))}
                         value={serviceZones}
                         onSaved={setServiceZones}
                         address={shopAddress}

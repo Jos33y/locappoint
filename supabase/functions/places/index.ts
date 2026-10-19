@@ -7,6 +7,8 @@
 //   (market) when no business is chosen yet, as in "What do you need?".
 // - place: the chosen address, the municipality it is in, and how far from the shop. The booking
 //   checks the distance again in the database; this is only so the client sees it before booking.
+//   geo5: with the shop pinned, also the drive by road (Google Routes) as a quote: its minutes block
+//   the calendar and, when the business charges by distance, its fee is the travel fee.
 // - where: a place named in a search ("barber in Abeokuta") as a point, so the nearest rank first.
 // - shop: the owner places their shop (signed in, owner of the business). Written by
 //   set_shop_location, never by the browser.
@@ -17,7 +19,7 @@
 // Secrets: GOOGLE_MAPS_SERVER_KEY, NOTIFY_SECRET.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { GoogleError, MAPS_KEY, autocomplete, findPlace, fold, kmBetween, placeDetails } from '../_shared/google.ts'
+import { GoogleError, MAPS_KEY, autocomplete, driveTime, findPlace, fold, kmBetween, placeDetails } from '../_shared/google.ts'
 
 const NOTIFY = Deno.env.get('NOTIFY_SECRET') || ''
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } })
@@ -166,6 +168,19 @@ Deno.serve(async (req) => {
             const listed = (business?.service_zones || []) as string[]
             const radius = business && business.service_radius_km !== null ? Number(business.service_radius_km) : null
             const km = shop && radius !== null ? Math.round(kmBetween(shop, place) * 10) / 10 : null
+            // geo5: by road from the shop's pin, with Google: the drive each way blocks the calendar and,
+            // when the business charges by distance, sets the travel fee. Kept as a quote the booking checks.
+            let travel = null
+            if (business && shop) {
+                try {
+                    const road = await driveTime({ from: shop, toPlace: place.id })
+                    const { data: q, error: qe } = await db.rpc('travel_quote_make', { p_business: business.id, p_place_id: place.id, p_metres: Math.round(road.metres), p_seconds: Math.round(road.seconds) })
+                    if (qe) throw qe
+                    travel = q
+                } catch (err) {
+                    console.error('Road quote failed:', err instanceof Error ? err.message : err)
+                }
+            }
             return reply(200, {
                 on: true,
                 place: {
@@ -177,6 +192,7 @@ Deno.serve(async (req) => {
                     km,
                     in_zone: Boolean(zone && listed.includes(zone)),
                     in_reach: km !== null && radius !== null && km <= radius,
+                    travel,
                 },
             })
         }

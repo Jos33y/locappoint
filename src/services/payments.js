@@ -13,13 +13,14 @@ const readError = async (error) => {
     return 'The payment page could not open. Check your connection and try again.'
 }
 
-export const loadQuote = async ({ businessId, serviceId, addonIds = [], mode = null, people = 1 }) => {
+export const loadQuote = async ({ businessId, serviceId, addonIds = [], mode = null, people = 1, travelQuote = null }) => {
     const { data, error } = await supabase.rpc('payment_quote', {
         p_business_id: businessId,
         p_service_id: serviceId,
         p_addon_ids: addonIds.length ? addonIds : null,
         p_mode: mode,
         p_people: people,
+        ...(travelQuote ? { p_travel_quote: travelQuote } : {}),
     })
     if (error) throw error
     return data || { online: false }

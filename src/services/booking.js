@@ -45,7 +45,7 @@ export const hasTimeLeft = (day, duration, nowMinutes) =>
     })
 
 // mode and zone: where the booking happens, so free times leave room to travel between visits.
-export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null, ignore = null, addonIds = [], people = null, mode = null, zone = null }) => {
+export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null, ignore = null, addonIds = [], people = null, mode = null, zone = null, travelMinutes = null }) => {
     const { data, error } = await supabase.rpc('get_available_slots', {
         p_business_id: businessId,
         p_service_id: serviceId,
@@ -56,12 +56,14 @@ export const loadSlots = async ({ businessId, serviceId, dateKey, staffId = null
         p_people: people,
         ...(mode ? { p_mode: mode } : {}),
         ...(zone ? { p_zone: zone } : {}),
+        // geo5: the drive each way for a visit, from the road quote.
+        ...(Number(travelMinutes) > 0 ? { p_travel_minutes: Math.round(Number(travelMinutes)) } : {}),
     })
     if (error) throw error
     return [...new Set((data || []).map((row) => toMinutes(row.slot_time)))].sort((a, b) => a - b)
 }
 
-export const requestBooking = async ({ businessId, serviceId, staffId = null, dateKey, minutes, name, email, phone, notes, addonIds = [], mode = null, clientAddress = null, clientLandmark = null, clientZone = null, clientLat = null, clientLng = null, clientPlaceId = null, people = 1 }) => {
+export const requestBooking = async ({ businessId, serviceId, staffId = null, dateKey, minutes, name, email, phone, notes, addonIds = [], mode = null, clientAddress = null, clientLandmark = null, clientZone = null, clientLat = null, clientLng = null, clientPlaceId = null, people = 1, travelQuote = null }) => {
     const { data, error } = await supabase.rpc('book_appointment', {
         p_business_id: businessId,
         p_service_id: serviceId,
@@ -81,6 +83,7 @@ export const requestBooking = async ({ businessId, serviceId, staffId = null, da
         p_client_lng: clientLng,
         p_client_place_id: clientPlaceId,
         p_people: people,
+        ...(travelQuote ? { p_travel_quote: travelQuote } : {}),
     })
     if (error) throw error
     return data

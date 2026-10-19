@@ -92,7 +92,12 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
         placesOn().then((on) => { if (!cancelled) setSearch((s) => (s === 'checking' ? (on ? 'on' : 'off') : s)) })
         return () => { cancelled = true }
     }, [askAddress])
-    const travel = mode === 'at_client' ? Number(move ? move.travel_fee : baseService.travel_fee) || 0 : 0
+    // geo5: by road from the shop, when the address came from Google: the quote's fee (when the
+    // business charges by distance) and the drive each way, which free times leave room for.
+    const road = mode === 'at_client' && !move && !owner ? visit.place?.travel || null : null
+    const travel = mode === 'at_client' ? Number(move ? move.travel_fee : road?.fee ?? baseService.travel_fee) || 0 : 0
+    const tripMinutes = road ? Number(road.minutes) || 0 : 0
+    const travelQuote = road?.quote_id || null
     // Free times depend on where it happens: a visit needs time to get there and back. A booking
     // being moved keeps its own place, so the database reads it from the booking.
     const visitZone = mode === 'at_client' ? ((visit.place && (visit.place.zone || visit.zone)) || (visit.place ? null : visit.zone) || null) : null
@@ -158,12 +163,12 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     }, [counts, step, business.id])
 
     const quoting = !move && !owner && step === 'review'
-    const quoteKey = `${business.id}:${baseService.id}:${addonKey}:${mode}:${people}:${quoteTry}`
+    const quoteKey = `${business.id}:${baseService.id}:${addonKey}:${mode}:${people}:${travelQuote || ''}:${quoteTry}`
     useEffect(() => {
         if (!quoting) return undefined
         let cancelled = false
         setQuote((q) => (q.key === quoteKey && q.state === 'ready' ? q : { state: 'loading', data: null, key: quoteKey }))
-        loadQuote({ businessId: business.id, serviceId: baseService.id, addonIds, mode, people })
+        loadQuote({ businessId: business.id, serviceId: baseService.id, addonIds, mode, people, travelQuote })
             .then((data) => { if (!cancelled) setQuote({ state: 'ready', data, key: quoteKey }) })
             .catch((err) => {
                 console.error('Quote failed:', err)
@@ -178,20 +183,20 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
     const fetchDay = useCallback(async (key) => {
         setBusy((b) => ({ ...b, [key]: { state: 'loading' } }))
         try {
-            const free = await loadSlots({ businessId: business.id, serviceId: service.id, dateKey: key, staffId, ignore: move?.id || null, addonIds, people: people > 1 ? people : null, mode: slotMode, zone: slotZone })
+            const free = await loadSlots({ businessId: business.id, serviceId: service.id, dateKey: key, staffId, ignore: move?.id || null, addonIds, people: people > 1 ? people : null, mode: slotMode, zone: slotZone, travelMinutes: tripMinutes })
             setBusy((b) => ({ ...b, [key]: { state: 'ready', free } }))
         } catch (err) {
             console.error('Busy times failed:', err)
             setBusy((b) => ({ ...b, [key]: { state: 'error' } }))
         }
-    }, [business.id, service.id, staffId, move?.id, addonIds, people, slotMode, slotZone])
+    }, [business.id, service.id, staffId, move?.id, addonIds, people, slotMode, slotZone, tripMinutes])
 
     useEffect(() => {
         if (!busy[dayKey]) fetchDay(dayKey)
     }, [dayKey, busy, fetchDay])
 
     // Extras picked last time arrive after the sheet opens; the times must fit the whole booking.
-    useEffect(() => { setBusy({}) }, [addonKey, people, slotMode, slotZone])
+    useEffect(() => { setBusy({}) }, [addonKey, people, slotMode, slotZone, tripMinutes])
 
     // Picking "At your place" or the area after the time: the time is checked again with the travel,
     // and the client is told before they confirm if it no longer works.
@@ -287,6 +292,7 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                     clientLandmark: visit.landmark.trim(),
                     clientZone: (visit.place && (visit.place.zone || visit.zone)) || (visit.place ? null : visit.zone),
                     ...(visit.place ? { clientLat: visit.place.lat, clientLng: visit.place.lng, clientPlaceId: visit.place.id } : {}),
+                    travelQuote,
                 } : {}),
             })
             clearPending()
@@ -523,8 +529,8 @@ export const BookingSheet = ({ business, service: baseService, extras: givenExtr
                     <BookingTicket business={business} service={service} dateKey={dayKey} minutes={minutes} pay={!owner} quote={online ? quote.data : movedPaid} paid={Boolean(movedPaid)} mode={mode} travel={travel} zone={move?.client_zone || visit.place?.zone || visit.zone} />
                     {clash && (
                         <p className="lc-bk-notice" role="alert">
-                            {slotZone
-                                ? `With the travel to ${slotZone}, ${clock(minutes)} no longer works for ${business.business_name}.`
+                            {slotZone || tripMinutes
+                                ? `With the travel to ${slotZone || 'your address'}, ${clock(minutes)} no longer works for ${business.business_name}.`
                                 : `${clock(minutes)} is no longer free.`}
                             {' '}<button type="button" className="lc-bk-link" onClick={() => { setMinutes(null); setStep('time') }}>Pick another time</button>
                         </p>
